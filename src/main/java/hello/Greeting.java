@@ -2,19 +2,20 @@ package hello;
 
 public class Greeting {
 
-    private final long id;
-    private final String content;
+    private final long m_id;
+    
+    private final String m_content;
 
     public Greeting(long id, String content) {
-        this.id = id;
-        this.content = content;
+	m_id = id;
+	m_content = content;
     }
 
     public long getId() {
-        return id;
+	return m_id;
     }
 
     public String getContent() {
-        return content;
+	return m_content;
     }
 }
