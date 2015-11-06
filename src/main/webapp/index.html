@@ -1,17 +1,22 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" ng-app="BreakingTheRules">
 <head>
 	<meta charset="UTF-8">
 	<title>BreakingTheRules</title>
 	<link rel="stylesheet" href="./styles/index.css"></link>
+	<script src="./scripts/ext/jquery.min.js"></script>
+	<script src="./scripts/ext/angular.min.js"></script>
 	<script src="./scripts/index.js"></script>
 </head>
-<body>
+<body ng-controller="HitStatController as hits">
 	<h1>BreakingTheRules</h1>
 	<h2>All Hits</h2>
 	<table class="hits-table">
-		<tr>
-			<td>FirstHit..</td>
+		<tr ng-repeat="hit in hits.allHits">
+			<td>{{hit.id}}</td>
+			<td>{{hit.sourceIp}}</td>
+			<td>{{hit.destIp}}</td>
+			<td>{{hit.service}}</td>
 		</tr>
 	</table>
 

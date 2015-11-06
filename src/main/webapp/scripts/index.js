@@ -1,22 +1,59 @@
+(function() {
+	
+	var app = angular.module('BreakingTheRules', []);
 
-function ajax_str(callback) {
-	var xhttp = new XMLHttpRequest();
-	xhttp.onreadystatechange = function() {
-		if (xhttp.readyState == 4 && xhttp.status == 200) {
-			callback(xhttp.responseText);
-		}
-	}
-	xhttp.open("POST", "./greeting", true);
-	xhttp.send();
-}
-
-function update_td() {
-	ajax_str(function (response) {
-		document.querySelector("table.hits-table td").innerText = response;	
+	app.controller("HitStatController", function () {
+		var that = this;
+		getHits(function (hits) {
+			console.log(hits);
+			that.allHits = hits;
+		});
 	});
-}
 
-window.onload = function() {
-	window.setTimeout(update_td, 1000);
-};
+	function getHits(callback) {
 
+		getHitsMock(callback); // mock
+		return;
+
+		$.get('./hits', function (response) {
+			// Sucessful GET
+			callback(response.data);
+		}).fail(function (error) {
+			console.log("GET request failed.");
+		});
+
+	}
+
+	function getHitsMock(callback) {
+		callback( [{
+				id: 0,
+				sourceIp: "127.0.0.1",
+				destIp: "127.0.0.1",
+				service: "TCP 80"
+			}, {
+				id: 1,
+				sourceIp: "127.0.0.1",
+				destIp: "127.0.0.1",
+				service: "TCP 80"
+			}, {
+				id: 2,
+				sourceIp: "127.0.0.1",
+				destIp: "127.0.0.1",
+				service: "TCP 80"
+			}, {
+				id: 3,
+				sourceIp: "127.0.0.1",
+				destIp: "127.0.0.1",
+				service: "TCP 80"
+			}, {
+				id: 4,
+				sourceIp: "127.0.0.1",
+				destIp: "127.0.0.1",
+				service: "TCP 80"
+			}
+		] );
+	}
+
+
+
+})();
