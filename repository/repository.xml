@@ -1,0 +1,8 @@
+<Repository>
+	<hit id="a" source="a" destination="a" service="a"></hit>
+	<hit id="b" source="b" destination="b" service="b"></hit>
+	<hit id="c" source="c" destination="c" service="c"></hit>
+	<hit id="d" source="d" destination="d" service="d"></hit>
+	<hit id="e" source="e" destination="e" service="e"></hit>
+	<hit id="f" source="f" destination="f" service="f"></hit>
+</Repository>
