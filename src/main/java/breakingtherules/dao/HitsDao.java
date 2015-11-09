@@ -2,12 +2,9 @@ package breakingtherules.dao;
 
 import java.util.List;
 
-import org.springframework.stereotype.Component;
-
 /**
  * Component that supply data from repository
  */
-@Component
 public interface HitsDao {
 
     /**

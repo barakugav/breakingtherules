@@ -23,88 +23,88 @@ import org.xml.sax.SAXException;
 @Component
 public class HitsXmlDao implements HitsDao {
 
-    /**
-     * Document of this repository
-     */
-    private Document m_doc;
+	/**
+	 * Document of this repository
+	 */
+	private Document m_doc;
 
-    /**
-     * Constructor
-     */
-    public HitsXmlDao() {
-	loadRepository("repository/repository.xml");
-    }
-
-    public String loadRepository(String path) {
-	try {
-	    File repoFile = new File(path);
-
-	    DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-	    DocumentBuilder builder = factory.newDocumentBuilder();
-	    m_doc = builder.parse(repoFile);
-	    return null;
-
-	} catch (IOException e) {
-	    e.printStackTrace();
-	    return "IO Exception";
-	} catch (SAXException e) {
-	    e.printStackTrace();
-	    return "SAX Exception";
-	} catch (ParserConfigurationException e) {
-	    e.printStackTrace();
-	    return "Parser Configuration Exception";
+	/**
+	 * Constructor
+	 */
+	public HitsXmlDao() {
+		loadRepository("repository/repository.xml");
 	}
-    }
 
-    public List<Hit> getHits(Filter filter) {
-	// Get all hits from repository
-	NodeList hitsList = m_doc.getElementsByTagName("hit");
+	public String loadRepository(String path) {
+		try {
+			File repoFile = new File(path);
 
-	// Extract only hits that match the filter
-	List<Hit> matchedHits = new ArrayList<Hit>();
-	for (int i = 0; i < hitsList.getLength(); i++) {
-	    Node hitNode = hitsList.item(i);
-	    if (hitNode.getNodeType() == Element.ELEMENT_NODE) {
-		Element hitElm = (Element) hitNode;
+			DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+			DocumentBuilder builder = factory.newDocumentBuilder();
+			m_doc = builder.parse(repoFile);
+			return null;
 
-		Hit hit = createHit(hitElm);
-
-		if (filter.isMatch(hit)) {
-		    matchedHits.add(hit);
+		} catch (IOException e) {
+			e.printStackTrace();
+			return "IO Exception";
+		} catch (SAXException e) {
+			e.printStackTrace();
+			return "SAX Exception";
+		} catch (ParserConfigurationException e) {
+			e.printStackTrace();
+			return "Parser Configuration Exception";
 		}
-	    }
 	}
 
-	return matchedHits;
-    }
+	public List<Hit> getHits(Filter filter) {
+		// Get all hits from repository
+		NodeList hitsList = m_doc.getElementsByTagName("hit");
 
-    /**
-     * Creates {@link Hit} object from {@link Element} xml object
-     * 
-     * @param hitElm
-     *            xml element with hit attributes
-     * @return hit object with the element attributes
-     */
-    private Hit createHit(Element hitElm) {
-	// Read attributes from element
-	String id = hitElm.getAttribute("id");
-	String source = hitElm.getAttribute("source");
-	String destination = hitElm.getAttribute("destination");
-	String service = hitElm.getAttribute("service");
+		// Extract only hits that match the filter
+		List<Hit> matchedHits = new ArrayList<Hit>();
+		for (int i = 0; i < hitsList.getLength(); i++) {
+			Node hitNode = hitsList.item(i);
+			if (hitNode.getNodeType() == Element.ELEMENT_NODE) {
+				Element hitElm = (Element) hitNode;
 
-	// Convert strings to attributes
-	int newId = Integer.parseInt(id);
-	Source newSource = new Source(source);
-	Destination newDestination = new Destination(destination);
-	Service newService = new Service(service);
+				Hit hit = createHit(hitElm);
 
-	// Create attributes vector
-	Vector<Attribute> attributes = new Vector<Attribute>();
-	attributes.add(newSource);
-	attributes.add(newDestination);
-	attributes.add(newService);
+				if (filter.isMatch(hit)) {
+					matchedHits.add(hit);
+				}
+			}
+		}
 
-	return new Hit(newId, attributes);
-    }
+		return matchedHits;
+	}
+
+	/**
+	 * Creates {@link Hit} object from {@link Element} xml object
+	 * 
+	 * @param hitElm
+	 *            xml element with hit attributes
+	 * @return hit object with the element attributes
+	 */
+	private Hit createHit(Element hitElm) {
+		// Read attributes from element
+		String id = hitElm.getAttribute("id");
+		String source = hitElm.getAttribute("source");
+		String destination = hitElm.getAttribute("destination");
+		String service = hitElm.getAttribute("service");
+
+		// Convert strings to attributes
+		int newId = Integer.parseInt(id);
+		Source newSource = new Source(source);
+		Destination newDestination = new Destination(destination);
+		Service newService = new Service(service);
+
+		// Create attributes vector
+		Vector<Attribute> attributes = new Vector<Attribute>();
+		attributes.add(newSource);
+		attributes.add(newDestination);
+		attributes.add(newService);
+
+		return new Hit(newId, attributes);
+	}
 
 }
