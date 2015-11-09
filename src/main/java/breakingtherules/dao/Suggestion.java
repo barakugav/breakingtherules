@@ -1,4 +1,4 @@
-package dao;
+package breakingtherules.dao;
 
 /**
  * Suggestion of a part of rule - specific attribute

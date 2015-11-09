@@ -1,8 +1,8 @@
-package dao;
+package breakingtherules.dao;
 
 import java.util.Vector;
 
-import dao.Attribute.AttType;
+import breakingtherules.dao.Attribute.AttType;
 
 /**
  * Hit with attributes

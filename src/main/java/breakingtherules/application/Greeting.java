@@ -1,4 +1,4 @@
-package main;
+package breakingtherules.application;
 
 public class Greeting {
 

@@ -1,9 +1,9 @@
-package dao;
+package breakingtherules.dao;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import dao.Attribute.AttType;
+import breakingtherules.dao.Attribute.AttType;
 
 public class ServerImp implements ServerAPI {
 
@@ -14,11 +14,10 @@ public class ServerImp implements ServerAPI {
     private List<Hit> hits;
 
     /*---------------------------------------------*/
-    
+
     public ServerImp() {
 
     }
-
 
     public void init(String job) {
 	currentRules = new ArrayList<Rule>();
@@ -26,16 +25,13 @@ public class ServerImp implements ServerAPI {
 	// hits = job.getHits();
     }
 
-
     public void addRule(Rule rule) {
 	currentRules.add(rule);
     }
 
-
     public void removeRule(Rule rule) {
 	currentRules.remove(rule);
     }
-
 
     public List<Hit> getHits(int startIndex, int endIndex) {
 	List<Hit> matchedHits = new ArrayList<Hit>();
@@ -53,16 +49,13 @@ public class ServerImp implements ServerAPI {
 	return false;
     }
 
-
     public List<Suggestion> getSuggestions(AttType attType, int startIndex, int endIndex) {
 	return new SimpleAlgorithm().getSuggestions(hits, currentRules, currentFilter, attType, startIndex, endIndex);
     }
 
-
     public void setFilter(Filter filter) {
 	currentFilter = filter;
     }
-
 
     public void clearFilter() {
 	currentFilter = new Filter();

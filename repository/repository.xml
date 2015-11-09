@@ -1,8 +1,8 @@
 <Repository>
-	<hit id="a" source="a" destination="a" service="a"></hit>
-	<hit id="b" source="b" destination="b" service="b"></hit>
-	<hit id="c" source="c" destination="c" service="c"></hit>
-	<hit id="d" source="d" destination="d" service="d"></hit>
-	<hit id="e" source="e" destination="e" service="e"></hit>
-	<hit id="f" source="f" destination="f" service="f"></hit>
+	<hit id="1" source="IPv4 165.5.4.23" destination="IPv4 127.0.0.1" service="a"></hit>
+	<hit id="2" source="IPv4 65.5.4.23" destination="IPv4 127.55.0.1" service="a"></hit>
+	<hit id="3" source="IPv4 164.5.4.23" destination="IPv4 127.0.66.1" service="a"></hit>
+	<hit id="4" source="IPv4 14.5.4.23" destination="IPv4 124.0.0.1" service="a"></hit>
+	<hit id="5" source="IPv4 15.5.4.23" destination="IPv4 201.0.0.1" service="a"></hit>
+	<hit id="6" source="IPv4 29.5.4.23" destination="IPv4 8.0.0.4" service="a"></hit>
 </Repository>

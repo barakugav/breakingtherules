@@ -1,4 +1,4 @@
-package dao;
+package breakingtherules.dao;
 
 public class Source extends Attribute {
 

@@ -1,4 +1,4 @@
-package dao;
+package breakingtherules.dao;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -6,7 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Vector;
 
-import dao.Attribute.AttType;
+import breakingtherules.dao.Attribute.AttType;
 
 /**
  * Simple algorithm the implements {@link Algorithm} methods

@@ -1,4 +1,4 @@
-package dao;
+package breakingtherules.dao;
 
 /**
  * Attribute of a hit

@@ -1,8 +1,8 @@
-package dao;
+package breakingtherules.dao;
 
 import java.util.List;
 
-import dao.Attribute.AttType;
+import breakingtherules.dao.Attribute.AttType;
 
 /**
  * Algorithm interface to get suggestion to filters and rules

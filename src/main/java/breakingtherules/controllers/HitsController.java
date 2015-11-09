@@ -1,4 +1,4 @@
-package controllers;
+package breakingtherules.controllers;
 
 import java.util.List;
 
@@ -6,9 +6,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import dao.Filter;
-import dao.Hit;
-import dao.HitsDao;
+import breakingtherules.dao.Filter;
+import breakingtherules.dao.Hit;
+import breakingtherules.dao.HitsDao;
 
 @RestController
 public class HitsController {
@@ -18,6 +18,7 @@ public class HitsController {
     
     @RequestMapping("/hits")
     public List<Hit> hits() {
+	// Empty filter
 	Filter f = new Filter();
 	List<Hit> hits = hitsDao.getHits(f);
 	return hits;
