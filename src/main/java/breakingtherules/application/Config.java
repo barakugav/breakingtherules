@@ -4,7 +4,7 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-@ComponentScan({ "dao", "controllers" })
+@ComponentScan({ "breakingtherules.dao", "breakingtherules.controllers" })
 public class Config {
 
 }

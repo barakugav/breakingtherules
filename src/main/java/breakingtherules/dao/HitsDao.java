@@ -2,13 +2,16 @@ package breakingtherules.dao;
 
 import java.util.List;
 
+import breakingtherules.firewall.Filter;
+import breakingtherules.firewall.Hit;
+
 /**
  * Component that supply data from repository
  */
 public interface HitsDao {
 
     /**
-     * Load repository from xml file
+     * Load repository from XML file
      * 
      * @param path
      *            String path to repository

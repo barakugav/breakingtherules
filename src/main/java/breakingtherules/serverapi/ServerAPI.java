@@ -1,8 +1,12 @@
-package breakingtherules.dao;
+package breakingtherules.serverapi;
 
 import java.util.List;
 
-import breakingtherules.dao.Attribute.AttType;
+import breakingtherules.algorithms.Suggestion;
+import breakingtherules.firewall.Filter;
+import breakingtherules.firewall.Hit;
+import breakingtherules.firewall.Rule;
+import breakingtherules.firewall.Attribute.AttType;
 
 public interface ServerAPI {
 

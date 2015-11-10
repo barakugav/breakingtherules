@@ -1,4 +1,4 @@
-package breakingtherules.dao;
+package breakingtherules.firewall;
 
 /**
  * Attribute of a hit
@@ -15,7 +15,7 @@ public abstract class Attribute {
     /**
      * Type of the attribute
      */
-    private AttType m_type;
+    private AttType m_AttType;
 
     /**
      * Constructor
@@ -24,7 +24,7 @@ public abstract class Attribute {
      *            type of the attribute
      */
     public Attribute(AttType type) {
-	m_type = type;
+	m_AttType = type;
     }
 
     /**
@@ -32,8 +32,8 @@ public abstract class Attribute {
      * 
      * @return type of the attribute
      */
-    public AttType getType() {
-	return m_type;
+    public AttType getAttType() {
+	return m_AttType;
     }
 
     /**
@@ -43,6 +43,6 @@ public abstract class Attribute {
      *            another attribute to compare to
      * @return true if this attribute contains other, else - false
      */
-    public abstract boolean contain(Attribute other);
+    public abstract boolean contains(Attribute other);
 
 }

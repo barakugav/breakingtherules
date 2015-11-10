@@ -1,8 +1,9 @@
-package breakingtherules.dao;
+package breakingtherules.firewall;
 
 import java.util.Vector;
 
-import breakingtherules.dao.Attribute.AttType;
+import breakingtherules.dao.HitsDao;
+import breakingtherules.firewall.Attribute.AttType;
 
 /**
  * Filter of hits
@@ -17,7 +18,7 @@ public class Filter {
     /*--------------------Methods--------------------*/
 
     /**
-     * Constructor
+     * Constructor of empty filter
      * 
      * Creates an empty filter
      */
@@ -38,6 +39,15 @@ public class Filter {
     }
 
     /**
+     * Get the attributes of this filter
+     * 
+     * @return vector of this filter's attributes
+     */
+    public Vector<Attribute> getAttributes() {
+	return m_attributes;
+    }
+
+    /**
      * Get specific attribute of this filter
      * 
      * @param type
@@ -46,7 +56,7 @@ public class Filter {
      */
     public Attribute getAttribute(AttType type) {
 	for (Attribute attribute : m_attributes)
-	    if (attribute.getType() == type)
+	    if (attribute.getAttType() == type)
 		return attribute;
 	return null;
     }
@@ -60,10 +70,10 @@ public class Filter {
      */
     public boolean isMatch(Hit hit) {
 	for (Attribute filterAttribute : m_attributes) {
-	    AttType attributeType = filterAttribute.getType();
+	    AttType attributeType = filterAttribute.getAttType();
 	    Attribute hitAttribute = hit.getAttribute(attributeType);
 
-	    if (!filterAttribute.contain(hitAttribute))
+	    if (!filterAttribute.contains(hitAttribute))
 		return false;
 	}
 	return true;

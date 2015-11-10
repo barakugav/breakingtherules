@@ -1,4 +1,4 @@
-package breakingtherules.dao;
+package breakingtherules.firewall;
 
 import java.util.Vector;
 
@@ -31,6 +31,15 @@ public class Rule {
      */
     public Rule(Vector<Attribute> attributes) {
 	m_filter = new Filter(attributes);
+    }
+
+    /**
+     * Get the attributes of this rule
+     * 
+     * @return vector of this rule's attributes
+     */
+    public Vector<Attribute> getAttributes() {
+	return m_filter.getAttributes();
     }
 
     /**

@@ -1,4 +1,6 @@
-package breakingtherules.dao;
+package breakingtherules.algorithms;
+
+import breakingtherules.firewall.Attribute;
 
 /**
  * Suggestion of a part of rule - specific attribute

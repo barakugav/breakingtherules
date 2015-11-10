@@ -1,8 +1,11 @@
-package breakingtherules.dao;
+package breakingtherules.algorithms;
 
 import java.util.List;
 
-import breakingtherules.dao.Attribute.AttType;
+import breakingtherules.firewall.Filter;
+import breakingtherules.firewall.Hit;
+import breakingtherules.firewall.Rule;
+import breakingtherules.firewall.Attribute.AttType;
 
 /**
  * Algorithm interface to get suggestion to filters and rules

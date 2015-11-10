@@ -1,6 +1,8 @@
-package breakingtherules.dao;
+package breakingtherules.firewall;
 
 import java.util.Vector;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 /**
  * IP address, can be {@link IPv4} or {@link IPv6}
@@ -61,18 +63,51 @@ public abstract class IP {
 	    String stNum = ip.substring(0, separetorIndex);
 	    int intNum = Integer.parseInt(stNum);
 	    address.addElement(intNum);
-	    ip = ip.substring(separetorIndex);
+	    ip = ip.substring(separetorIndex + 1);
 	    separetorIndex = ip.indexOf(expectedSeparator);
 	}
 
 	// Read suffix of IP - last block
-	int intNum = Integer.parseInt(ip);
-	address.addElement(intNum);
+	separetorIndex = ip.indexOf('/');
+	if (separetorIndex < 0) {
+	    // No const prefix specification
+	    address.addElement(Integer.parseInt(ip));
+	    m_prefixLength = getMaxLength();
+	} else {
+	    // Has const prefix specification
+	    String stNum = ip.substring(0, separetorIndex);
+	    ip = ip.substring(separetorIndex + 1);
+
+	    int intNum = Integer.parseInt(stNum);
+	    address.addElement(intNum);
+
+	    // Read const prefix length
+	    if (ip.length() > 0)
+		m_prefixLength = Integer.parseInt(ip);
+	}
 
 	// Copy blocks values to m_address
 	m_address = new int[address.size()];
 	for (int i = 0; i < address.size(); i++)
 	    m_address[i] = address.elementAt(i);
+    }
+
+    /**
+     * Get the address of the IP
+     * 
+     * @return address of the IP
+     */
+    public int[] getAddress() {
+	return m_address;
+    }
+
+    /**
+     * Get the length of the const prefix of the IP
+     * 
+     * @return length of the const prefix of the IP
+     */
+    public int getConstPrefixLength() {
+	return m_prefixLength;
     }
 
     /**
@@ -89,6 +124,7 @@ public abstract class IP {
      * 
      * @return this IP's parent
      */
+    @JsonIgnore
     public abstract IP getParent();
 
     /**
@@ -105,6 +141,7 @@ public abstract class IP {
      * 
      * @return this IP's children
      */
+    @JsonIgnore
     public abstract IP[] getChildren();
 
     /**
@@ -195,12 +232,12 @@ public abstract class IP {
 
 	// IPv4 format
 	if (ip.substring(0, 5).equals("IPv4 ")) {
-	    return new IPv4(ip.substring(4));
+	    return new IPv4(ip.substring(5));
 	}
 
 	// IPv6 format
 	if (ip.substring(0, 5).equals("IPv6 ")) {
-	    return new IPv6(ip.substring(4));
+	    return new IPv6(ip.substring(5));
 	}
 
 	// Unknown format
@@ -212,6 +249,7 @@ public abstract class IP {
      * 
      * @return number of blocks in the IP
      */
+    @JsonIgnore
     protected abstract int getNumberOfBlocks();
 
     /**
@@ -226,6 +264,7 @@ public abstract class IP {
      * 
      * @return max length of the IP's address
      */
+    @JsonIgnore
     protected abstract int getMaxLength();
 
     /**
@@ -233,6 +272,7 @@ public abstract class IP {
      * 
      * @return string separator of this IP
      */
+    @JsonIgnore
     protected abstract String getStringSeparator();
 
     /**
@@ -240,19 +280,35 @@ public abstract class IP {
      * 
      * @return address of this IP's parent
      */
-    protected int[] getParentAdress() {
+    @JsonIgnore
+    protected int[] getParentAddress() {
 	if (!hasParent()) {
 	    return null;
 	}
 
-	int[] parentAdress = m_address.clone();
+	int[] parentAddress = m_address.clone();
 	/*
-	 * int andHelper = ~(1 << m_prefixLength); int blockNum = getMaxLength()
-	 * * getNumberOfBlocks() / m_prefixLength;
+	 * TODO int andHelper = ~(1 << m_prefixLength); int blockNum =
+	 * getMaxLength() * getNumberOfBlocks() / m_prefixLength;
 	 * 
 	 * parentAdress[blockNum] &= andHelper;
 	 */
-	return parentAdress;
+	return parentAddress;
+    }
+
+    /**
+     * Get the addresses of this IP's children - more specific IPs
+     * 
+     * @return addresses of this IP's children
+     */
+    @JsonIgnore
+    protected int[][] getChildrenAdress() {
+	if (!hasParent()) {
+	    return null;
+	}
+
+	// TODO
+	return null;
     }
 
     /**
@@ -260,6 +316,7 @@ public abstract class IP {
      * 
      * @return max value of a block
      */
+    @JsonIgnore
     private int getMaxBlockValue() {
 	return 1 << getBlockSize();
     }

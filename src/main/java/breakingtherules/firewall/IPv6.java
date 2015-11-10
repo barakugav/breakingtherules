@@ -1,4 +1,4 @@
-package breakingtherules.dao;
+package breakingtherules.firewall;
 
 /**
  * IP on protocol IPv6
@@ -58,26 +58,25 @@ public class IPv6 extends IP {
 	    return null;
 	}
 
-	int[] parentAddress = super.getParentAdress();
+	int[] parentAddress = super.getParentAddress();
 	int parentPrefixLength = m_prefixLength - 1;
 
 	return new IPv6(parentAddress, parentPrefixLength);
     }
 
     @Override
-    public IP[] getChildren() {
-	// TODO Auto-generated method stub
-	return null;
-    }
+    public IPv6[] getChildren() {
+	if (!hasChildren()) {
+	    return null;
+	}
 
-    @Override
-    public boolean equals(Object o) {
-	if (o == null)
-	    return false;
-	if (!(o instanceof IPv6))
-	    return false;
+	int[][] childrenAddresses = getChildrenAdress();
+	
+	IPv6[] children = new IPv6[2];
+	children[0] = new IPv6(childrenAddresses[0], m_prefixLength + 1);
+	children[1] = new IPv6(childrenAddresses[1], m_prefixLength + 1);
 
-	return super.equals((IP) o);
+	return children;
     }
 
     @Override
@@ -98,6 +97,16 @@ public class IPv6 extends IP {
     @Override
     protected String getStringSeparator() {
 	return STRING_SEPARATOR;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+	if (o == null)
+	    return false;
+	if (!(o instanceof IPv6))
+	    return false;
+
+	return super.equals((IP) o);
     }
 
 }

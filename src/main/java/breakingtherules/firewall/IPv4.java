@@ -1,4 +1,4 @@
-package breakingtherules.dao;
+package breakingtherules.firewall;
 
 /**
  * IP on protocol IPv4
@@ -58,7 +58,7 @@ public class IPv4 extends IP {
 	    return null;
 	}
 
-	int[] parentAddress = getParentAdress();
+	int[] parentAddress = getParentAddress();
 	int parentPrefixLength = m_prefixLength - 1;
 
 	return new IPv4(parentAddress, parentPrefixLength);
@@ -70,19 +70,13 @@ public class IPv4 extends IP {
 	    return null;
 	}
 
+	int[][] childrenAddresses = getChildrenAdress();
+	
 	IPv4[] children = new IPv4[2];
+	children[0] = new IPv4(childrenAddresses[0], m_prefixLength + 1);
+	children[1] = new IPv4(childrenAddresses[1], m_prefixLength + 1);
 
 	return children;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-	if (o == null)
-	    return false;
-	if (!(o instanceof IPv4))
-	    return false;
-
-	return super.equals((IP) o);
     }
 
     @Override
@@ -103,6 +97,16 @@ public class IPv4 extends IP {
     @Override
     protected String getStringSeparator() {
 	return STRING_SEPARATOR;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+	if (o == null)
+	    return false;
+	if (!(o instanceof IPv4))
+	    return false;
+
+	return super.equals((IP) o);
     }
 
 }
