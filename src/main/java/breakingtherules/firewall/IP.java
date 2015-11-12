@@ -35,7 +35,7 @@ public abstract class IP {
 	if (prefixLength < 0 || prefixLength > getMaxLength())
 	    return;
 
-	for (long blockValue : address) {
+	for (int blockValue : address) {
 	    if (blockValue < 0)
 		return;
 	    if (blockValue > getMaxBlockValue())
@@ -44,6 +44,8 @@ public abstract class IP {
 
 	m_address = address;
 	m_prefixLength = prefixLength;
+
+	resetSufix();
     }
 
     /**
@@ -90,6 +92,8 @@ public abstract class IP {
 	m_address = new int[address.size()];
 	for (int i = 0; i < address.size(); i++)
 	    m_address[i] = address.elementAt(i);
+
+	resetSufix();
     }
 
     /**
@@ -181,7 +185,10 @@ public abstract class IP {
 	String st = "" + m_address[0];
 	for (int i = 1; i < m_address.length; i++)
 	    st += getStringSeparator() + m_address[i];
-	st += m_prefixLength;
+	if (m_prefixLength != getMaxLength()) {
+	    st += "/";
+	    st += m_prefixLength;
+	}
 	return st;
     }
 
@@ -276,39 +283,25 @@ public abstract class IP {
     protected abstract String getStringSeparator();
 
     /**
-     * Get the address of this IP's parent - more general IP
-     * 
-     * @return address of this IP's parent
-     */
-    @JsonIgnore
-    protected int[] getParentAddress() {
-	if (!hasParent()) {
-	    return null;
-	}
-
-	int[] parentAddress = m_address.clone();
-	/*
-	 * TODO int andHelper = ~(1 << m_prefixLength); int blockNum =
-	 * getMaxLength() * getNumberOfBlocks() / m_prefixLength;
-	 * 
-	 * parentAdress[blockNum] &= andHelper;
-	 */
-	return parentAddress;
-    }
-
-    /**
      * Get the addresses of this IP's children - more specific IPs
      * 
      * @return addresses of this IP's children
      */
     @JsonIgnore
     protected int[][] getChildrenAdress() {
-	if (!hasParent()) {
+	if (!hasChildren()) {
 	    return null;
 	}
 
-	// TODO
-	return null;
+	// Set helper variable
+	int[][] childrenAddresses = new int[][] { m_address.clone(), m_address.clone() };
+	int helper = 1 << (getBlockSize() - m_prefixLength % getBlockSize()) - 1;
+	int blockNum = m_prefixLength * getNumberOfBlocks() / getMaxLength();
+
+	childrenAddresses[0][blockNum] &= ~helper;
+	childrenAddresses[1][blockNum] |= helper;
+
+	return childrenAddresses;
     }
 
     /**
@@ -319,6 +312,17 @@ public abstract class IP {
     @JsonIgnore
     private int getMaxBlockValue() {
 	return 1 << getBlockSize();
+    }
+
+    /**
+     * Set all bits after const prefix to zeros
+     */
+    protected void resetSufix() {
+	for (int bit = getMaxLength() - 1; bit >= m_prefixLength; bit--) {
+	    int andHelper = ~(1 << (getBlockSize() - (bit % getBlockSize())) - 1);
+	    int blockNum = bit * getNumberOfBlocks() / getMaxLength();
+	    m_address[blockNum] &= andHelper;
+	}
     }
 
 }

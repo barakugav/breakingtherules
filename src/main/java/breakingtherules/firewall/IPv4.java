@@ -58,10 +58,8 @@ public class IPv4 extends IP {
 	    return null;
 	}
 
-	int[] parentAddress = getParentAddress();
-	int parentPrefixLength = m_prefixLength - 1;
-
-	return new IPv4(parentAddress, parentPrefixLength);
+	IPv4 newIP = new IPv4(m_address.clone(), m_prefixLength - 1);
+	return newIP;
     }
 
     @Override
@@ -71,7 +69,7 @@ public class IPv4 extends IP {
 	}
 
 	int[][] childrenAddresses = getChildrenAdress();
-	
+
 	IPv4[] children = new IPv4[2];
 	children[0] = new IPv4(childrenAddresses[0], m_prefixLength + 1);
 	children[1] = new IPv4(childrenAddresses[1], m_prefixLength + 1);

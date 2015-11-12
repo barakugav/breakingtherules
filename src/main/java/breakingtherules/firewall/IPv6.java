@@ -58,10 +58,10 @@ public class IPv6 extends IP {
 	    return null;
 	}
 
-	int[] parentAddress = super.getParentAddress();
-	int parentPrefixLength = m_prefixLength - 1;
+	IPv6 newIP = new IPv6(m_address.clone(), m_prefixLength - 1);
+	newIP.resetSufix();
 
-	return new IPv6(parentAddress, parentPrefixLength);
+	return newIP;
     }
 
     @Override
@@ -71,7 +71,7 @@ public class IPv6 extends IP {
 	}
 
 	int[][] childrenAddresses = getChildrenAdress();
-	
+
 	IPv6[] children = new IPv6[2];
 	children[0] = new IPv6(childrenAddresses[0], m_prefixLength + 1);
 	children[1] = new IPv6(childrenAddresses[1], m_prefixLength + 1);
