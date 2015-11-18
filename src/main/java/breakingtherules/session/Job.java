@@ -1,5 +1,6 @@
 package breakingtherules.session;
 
+import java.io.IOException;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,14 +18,10 @@ import breakingtherules.firewall.Rule;
 public class Job {
 
     public static final int NO_CURRENT_JOB = -1;
-    
+
     @Autowired
-    HitsDao hitsDao;
-    
-    
-    /***************************/
-    
-    
+    private HitsDao hitsDao;
+
     /**
      * Index of the job
      * 
@@ -48,12 +45,12 @@ public class Job {
      * match this filter.
      */
     private Filter m_filter;
-    
+
     /**
      * All the rules of the current job
      * 
-     * First - original base rule. Not modified
-     * Others - created with the user, constantly modified.
+     * First - original base rule. Not modified Others - created with the user,
+     * constantly modified.
      */
     private List<Rule> m_rules;
 
@@ -74,7 +71,7 @@ public class Job {
      * Return all the suggestions computed by the algorithm.
      * 
      * @return Current job's suggestions.
-     * @throws NoCurrentJobException 
+     * @throws NoCurrentJobException
      */
     public JobSuggestions getSuggestions() throws NoCurrentJobException {
 	if (m_job_id == NO_CURRENT_JOB)
@@ -88,18 +85,19 @@ public class Job {
      */
     public List<Rule> getRules() {
 	return m_rules;
-    }    
-    
+    }
+
     /**
      * Uses the filter to filter out relevant hits.
      * 
      * @return All the hits caught by the filter.
+     * @throws IOException
      */
-    public List<Hit> getRelevantHits() throws NoCurrentJobException {
-	hitsDao.loadRepository(getRepositoryLocation());
-	return hitsDao.getHits(m_filter);
+    public List<Hit> getRelevantHits() throws NoCurrentJobException, IOException {
+	List<Hit> hits = hitsDao.getHits(this, 0, 10);
+	return hits;
     }
-    
+
     /**
      * Every job has its own repository location (until there will be a proper
      * database)
@@ -113,11 +111,11 @@ public class Job {
 	System.out.println("repository/" + m_job_id + "/repository.xml");
 	return "repository/" + m_job_id + "/repository.xml";
     }
-    
+
     public void setFilter(Filter f) {
 	m_filter = f;
     }
-    
+
     public Filter getFilter() {
 	return m_filter;
     }

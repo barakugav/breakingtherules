@@ -1,5 +1,6 @@
 package breakingtherules.controllers;
 
+import java.io.IOException;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,26 +26,28 @@ public class HitsController {
      * Has the current job that is being worked on
      */
     @Autowired
-    Job job;
+    private Job job;
 
     /**
      * Answers the GET hits query
      * 
      * @return List of all the appropriate hits
-     * @throws NoCurrentJobException 
+     * @throws NoCurrentJobException
+     * @throws IOException
      */
     @RequestMapping(value = "/hits", method = RequestMethod.GET)
-    public List<Hit> hits() throws NoCurrentJobException {
+    public List<Hit> hits() throws NoCurrentJobException, IOException {
 	try {
-	    hitsDao.loadRepository(job.getRepositoryLocation());
-	}
-	catch (NoCurrentJobException e) {
+	    List<Hit> hits = hitsDao.getHits(job, 0, 10);
+	    return hits;
+
+	} catch (NoCurrentJobException e) {
 	    System.err.println("Tried recieving hits without initializing job.");
-	    throw new NoCurrentJobException();
+	    throw e;
+	} catch (IOException e) {
+	    System.err.println(e.getMessage());
+	    throw e;
 	}
-	
-	List<Hit> hits = hitsDao.getHits(job.getFilter());
-	
-	return hits;
+
     }
 }

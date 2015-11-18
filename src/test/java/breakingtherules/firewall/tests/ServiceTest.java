@@ -1,21 +1,22 @@
-package firewall;
+package breakingtherules.firewall.tests;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertTrue;
 
-import org.junit.BeforeClass;
+import org.junit.Before;
 import org.junit.Test;
 
 import breakingtherules.firewall.Service;
 
 public class ServiceTest {
 
-    static String EX_SERVICE = "TCP";
-    static int EX_PORT = 80;
+    private String EX_SERVICE = "TCP";
 
-    static Service s;
+    private int EX_PORT = 80;
 
-    @BeforeClass
-    public static void before() {
+    private Service s;
+
+    @Before
+    public void before() {
 	s = new Service(EX_SERVICE, EX_PORT);
     }
 
@@ -33,15 +34,14 @@ public class ServiceTest {
     public void anyContainsService() {
 	Service any;
 
-	any = new Service(Service.ANY_PROTOCOL, Service.ANY_PORT);
+	any = new Service(Service.ANY_PROTOCOL, Service.ANY_PORT_START_RANGE, Service.ANY_PORT_END_RANGE);
 	assertTrue(any.contains(s));
 
-	any = new Service(EX_SERVICE, Service.ANY_PORT);
+	any = new Service(EX_SERVICE, Service.ANY_PORT_START_RANGE, Service.ANY_PORT_END_RANGE);
 	assertTrue(any.contains(s));
 
 	any = new Service(Service.ANY_PROTOCOL, EX_PORT);
 	assertTrue(any.contains(s));
-
     }
 
 }

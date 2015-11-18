@@ -23,6 +23,8 @@ import breakingtherules.firewall.Filter;
 import breakingtherules.firewall.Hit;
 import breakingtherules.firewall.Service;
 import breakingtherules.firewall.Source;
+import breakingtherules.session.Job;
+import breakingtherules.session.NoCurrentJobException;
 
 /**
  * Implementation of {@link HitsDao} by XML repository
@@ -30,57 +32,30 @@ import breakingtherules.firewall.Source;
 @Component
 public class HitsXmlDao implements HitsDao {
 
-    /**
-     * Document of this repository
-     */
-    private Document m_doc;
+    public List<Hit> getHits(Job job, int startIndex, int endIndex) throws IOException, NoCurrentJobException {
+	// Load from file
+	String repoPath = job.getRepositoryLocation();
+	Document repositoryDoc = loadRepository(repoPath);
 
-    /**
-     * Constructor
-     */
-    public HitsXmlDao() {
-    }
-
-    public String loadRepository(String path) {
-	try {
-	    File repoFile = new File(path);
-
-	    DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-	    DocumentBuilder builder = factory.newDocumentBuilder();
-	    m_doc = builder.parse(repoFile);
-	    return null;
-
-	} catch (IOException e) {
-	    e.printStackTrace();
-	    return "IO Exception";
-	} catch (SAXException e) {
-	    e.printStackTrace();
-	    return "SAX Exception";
-	} catch (ParserConfigurationException e) {
-	    e.printStackTrace();
-	    return "Parser Configuration Exception";
-	}
-    }
-
-    public List<Hit> getHits(Filter filter) {
 	// Get all hits from repository
-	NodeList hitsList = m_doc.getElementsByTagName("hit");
+	NodeList hitsList = repositoryDoc.getElementsByTagName("hit");
 
 	// Extract only hits that match the filter
 	List<Hit> matchedHits = new ArrayList<Hit>();
-	for (int i = 0; i < hitsList.getLength(); i++) {
+	for (int i = 0; i < hitsList.getLength() && matchedHits.size() < endIndex; i++) {
 	    Node hitNode = hitsList.item(i);
 	    if (hitNode.getNodeType() == Element.ELEMENT_NODE) {
 		Element hitElm = (Element) hitNode;
 
 		Hit hit = createHit(hitElm);
 
+		Filter filter = job.getFilter();
 		if (filter.isMatch(hit))
 		    matchedHits.add(hit);
 	    }
 	}
 
-	return matchedHits;
+	return matchedHits.subList(startIndex, Math.min(endIndex, matchedHits.size()));
     }
 
     /**
@@ -98,18 +73,44 @@ public class HitsXmlDao implements HitsDao {
 	String service = hitElm.getAttribute("service");
 
 	// Convert strings to attributes
-	int newId = Integer.parseInt(id);
-	Source newSource = new Source(source);
-	Destination newDestination = new Destination(destination);
-	Service newService = new Service(service);
+	int intID = Integer.parseInt(id);
+	Source sourceObj = new Source(source);
+	Destination destinationObj = new Destination(destination);
+	Service serviceObj = new Service(service);
 
 	// Create attributes vector
 	Vector<Attribute> attributes = new Vector<Attribute>();
-	attributes.add(newSource);
-	attributes.add(newDestination);
-	attributes.add(newService);
+	attributes.add(sourceObj);
+	attributes.add(destinationObj);
+	attributes.add(serviceObj);
 
-	return new Hit(newId, attributes);
+	return new Hit(intID, attributes);
+    }
+
+    /**
+     * Load document from a file
+     * 
+     * @param path
+     *            String path to repository file
+     * @return repository document loaded from file
+     * @throws IOException
+     *             if read from file failed
+     */
+    private static Document loadRepository(String path) throws IOException {
+	Document repositoryDoc;
+
+	try {
+	    File repoFile = new File(path);
+
+	    DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+	    DocumentBuilder builder = factory.newDocumentBuilder();
+	    repositoryDoc = builder.parse(repoFile);
+	    return repositoryDoc;
+
+	} catch (IOException | ParserConfigurationException | SAXException e) {
+	    e.printStackTrace();
+	    throw new IOException(e.getMessage());
+	}
     }
 
 }

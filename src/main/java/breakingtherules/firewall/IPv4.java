@@ -26,7 +26,7 @@ public class IPv4 extends IP {
      * @param ip
      *            String IP
      */
-    public IPv4(String ip) {
+    public IPv4(String ip) throws IllegalArgumentException {
 	super(ip, STRING_SEPARATOR);
     }
 
@@ -36,7 +36,7 @@ public class IPv4 extends IP {
      * @param address
      *            address of the IP
      */
-    public IPv4(int[] address) {
+    public IPv4(int[] address) throws IllegalArgumentException {
 	this(address, BLOCK_SIZE * NUMBER_OF_BLOCKS);
     }
 
@@ -48,7 +48,7 @@ public class IPv4 extends IP {
      * @param prefixLength
      *            length of the constant prefix
      */
-    public IPv4(int[] address, int prefixLength) {
+    public IPv4(int[] address, int prefixLength) throws IllegalArgumentException {
 	super(address, prefixLength);
     }
 
@@ -78,6 +78,16 @@ public class IPv4 extends IP {
     }
 
     @Override
+    public boolean equals(Object o) {
+	if (o == null)
+	    return false;
+	if (!(o instanceof IPv4))
+	    return false;
+
+	return super.equals((IP) o);
+    }
+
+    @Override
     protected int getNumberOfBlocks() {
 	return NUMBER_OF_BLOCKS;
     }
@@ -88,23 +98,24 @@ public class IPv4 extends IP {
     }
 
     @Override
-    protected int getMaxLength() {
-	return BLOCK_SIZE * NUMBER_OF_BLOCKS;
-    }
-
-    @Override
     protected String getStringSeparator() {
 	return STRING_SEPARATOR;
     }
 
     @Override
-    public boolean equals(Object o) {
-	if (o == null)
-	    return false;
-	if (!(o instanceof IPv4))
-	    return false;
+    protected String checkFormat(String ip) throws IllegalArgumentException {
+	if (ip == null) {
+	    throw new IllegalArgumentException("Null arg");
+	}
 
-	return super.equals((IP) o);
+	if (ip.length() < 5) {
+	    throw new IllegalArgumentException("Unknown format");
+	}
+
+	if (!ip.substring(0, 5).equals("IPv4 "))
+	    throw new IllegalArgumentException("Unknown format: " + ip.substring(0, 5) + " (expected: IPv4)");
+
+	return ip.substring(5);
     }
 
 }

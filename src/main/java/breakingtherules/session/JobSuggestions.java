@@ -10,13 +10,13 @@ public class JobSuggestions {
     /**
      * A suggestion object for each attribute.
      */
-    List<AttributeSuggestions> m_attribute_suggestions;
+    private List<AttributeSuggestions> m_attribute_suggestions;
 
     @Autowired
-    Job job;
+    private Job job;
 
     public JobSuggestions() {
-	m_attribute_suggestions = new ArrayList<AttributeSuggestions>();	
+	m_attribute_suggestions = new ArrayList<AttributeSuggestions>();
     }
 
     /**

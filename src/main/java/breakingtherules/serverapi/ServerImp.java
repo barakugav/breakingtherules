@@ -5,8 +5,8 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
-import breakingtherules.algorithms.Algorithm;
 import breakingtherules.algorithms.Suggestion;
+import breakingtherules.algorithms.SuggestionsAlgorithm;
 import breakingtherules.firewall.Attribute.AttType;
 import breakingtherules.firewall.Filter;
 import breakingtherules.firewall.Hit;
@@ -25,7 +25,7 @@ public class ServerImp implements ServerAPI {
     private Job job;
 
     @Autowired
-    private Algorithm algorithm;
+    private SuggestionsAlgorithm algorithm;
 
     /*---------------------------------------------*/
 

@@ -1,5 +1,7 @@
 package breakingtherules.firewall;
 
+import org.springframework.util.StringUtils;
+
 /**
  * Service attribute
  * 
@@ -12,12 +14,15 @@ public class Service extends Attribute {
      */
     private String m_protocol;
 
-    
-    // TODO port range
     /**
-     * Port number of the service
+     * Start of the ports range
      */
-    private int m_port;
+    private int m_portRangeStart;
+
+    /**
+     * End of the ports range
+     */
+    private int m_portRangeEnd;
 
     /**
      * Service of protocol 'Any protocol'
@@ -25,9 +30,24 @@ public class Service extends Attribute {
     public static final String ANY_PROTOCOL = null;
 
     /**
-     * Port number 'Any port'
+     * The minimum legal port number
      */
-    public static final int ANY_PORT = -1;
+    public static final int MIN_PORT = 0;
+
+    /**
+     * The maximum legal port number
+     */
+    public static final int MAX_PORT = (1 << 16) - 1;
+
+    /**
+     * Port number 'Any start range port'
+     */
+    public static final int ANY_PORT_START_RANGE = Integer.MIN_VALUE;
+
+    /**
+     * Port number 'Any end range port'
+     */
+    public static final int ANY_PORT_END_RANGE = Integer.MAX_VALUE;
 
     /**
      * Constructor
@@ -40,7 +60,37 @@ public class Service extends Attribute {
     public Service(String protocol, int port) {
 	super(AttType.Service);
 	m_protocol = protocol;
-	m_port = port;
+	if (port < MIN_PORT || port > MAX_PORT)
+	    throw new IllegalArgumentException(
+		    "Port not in range: " + port + ". should be in range [" + MIN_PORT + ", " + MAX_PORT + "]");
+	m_portRangeStart = m_portRangeEnd = port;
+    }
+
+    /**
+     * Constructor
+     * 
+     * @param type
+     *            type of the service
+     * @param portRangeStart
+     *            start of the port range of the service
+     * @param portRangeEnd
+     *            end of the port range of the service
+     */
+    public Service(String protocol, int portRangeStart, int portRangeEnd) throws IllegalArgumentException {
+	super(AttType.Service);
+	m_protocol = protocol;
+
+	if (portRangeStart != ANY_PORT_START_RANGE)
+	    if (portRangeStart < MIN_PORT || portRangeStart > MAX_PORT)
+		throw new IllegalArgumentException("Port not in range: " + portRangeStart + ". should be in range ["
+			+ MIN_PORT + ", " + MAX_PORT + "]");
+	if (portRangeEnd != ANY_PORT_END_RANGE)
+	    if (portRangeEnd < MIN_PORT || portRangeEnd > MAX_PORT)
+		throw new IllegalArgumentException("Port not in range: " + portRangeEnd + ". should be in range ["
+			+ MIN_PORT + ", " + MAX_PORT + "]");
+
+	m_portRangeStart = portRangeStart;
+	m_portRangeEnd = portRangeEnd;
     }
 
     /**
@@ -49,43 +99,78 @@ public class Service extends Attribute {
      * @param service
      *            String service in format ('port' 'service type')
      */
-    public Service(String service) {
+    public Service(String service) throws IllegalArgumentException {
 	super(AttType.Service);
-	int separatorIndex = service.indexOf(' ');
 
-	if (separatorIndex < 0) {
-	    // String `service` is a name of a protocol or "Any"
-	    m_port = ANY_PORT;
-	    
-	    if (service == "Any")
-		m_protocol = ANY_PROTOCOL; 
-	    else 
-		m_protocol = service;
-	    
-	    return;
+	int separatorIndex;
+
+	switch (StringUtils.countOccurrencesOf(service, " ")) {
+	case 0:
+	    break;
+	case 1:
+	    // only one port number
+	    separatorIndex = service.indexOf(' ');
+	    String portStr = service.substring(0, separatorIndex);
+	    if (portStr.equals("Any")) {
+		m_portRangeStart = ANY_PORT_START_RANGE;
+		m_portRangeEnd = ANY_PORT_END_RANGE;
+	    } else {
+		m_portRangeStart = m_portRangeEnd = Integer.parseInt(portStr);
+	    }
+	    service = service.substring(separatorIndex + 1);
+	    break;
+	case 2:
+	    // start port
+	    separatorIndex = service.indexOf(' ');
+	    String portRangeStartStr = service.substring(0, separatorIndex);
+	    if (portRangeStartStr.equals("Any")) {
+		m_portRangeStart = ANY_PORT_START_RANGE;
+	    } else {
+		m_portRangeStart = Integer.parseInt(portRangeStartStr);
+	    }
+	    service = service.substring(separatorIndex + 1);
+	    // end port
+	    separatorIndex = service.indexOf(' ');
+	    String portRangeEndStr = service.substring(0, separatorIndex);
+	    if (portRangeEndStr.equals("Any")) {
+		m_portRangeEnd = ANY_PORT_END_RANGE;
+	    } else {
+		m_portRangeEnd = Integer.parseInt(portRangeEndStr);
+	    }
+	    service = service.substring(separatorIndex + 1);
+	    break;
+	default:
+	    throw new IllegalArgumentException("Unknow format: too many words");
 	}
 
-	String stPort = service.substring(0, separatorIndex);
-	m_port = Integer.parseInt(stPort);
-	m_protocol = service.substring(separatorIndex + 1);
+	m_protocol = service.equals("Any") ? ANY_PROTOCOL : service;
     }
 
     /**
-     * Get the type of the service
+     * Get the protocol of the service
      * 
-     * @return String type of the service
+     * @return String protocol of the service
      */
-    public String getType() {
+    public String getProtocol() {
 	return m_protocol;
     }
 
     /**
-     * Get the port of the service
+     * Get the start of the port range of the service
      * 
-     * @return port number of the service
+     * @return start of the port range of the service
      */
-    public int getPort() {
-	return m_port;
+    public int getPortRangeStart() {
+	return m_portRangeStart;
+    }
+
+    /**
+     * Get the start of the port range of the service
+     * 
+     * @return start of the port range of the service
+     */
+    public int getPortRangeEnd() {
+	return m_portRangeStart;
     }
 
     @Override
@@ -95,27 +180,36 @@ public class Service extends Attribute {
 	}
 
 	Service o = (Service) other;
-	if (this.m_protocol == ANY_PROTOCOL)
-	    return true;
+	if (m_protocol == ANY_PROTOCOL)
+	    return containsPort(o);
 	if (o.m_protocol == ANY_PROTOCOL)
 	    return false;
-	if (!this.m_protocol.equals(o.m_protocol)) {
+	if (!m_protocol.equals(o.m_protocol)) {
 	    return false;
 	}
 
-	if (this.m_port == ANY_PORT)
-	    return true;
-	if (o.m_port == ANY_PORT)
-	    return false;
-	if (this.m_port != o.m_port)
-	    return false;
+	return containsPort(o);
+    }
 
+    /**
+     * Check if this contains the other service only by port range parameters
+     * 
+     * @param other
+     *            other service to compare to
+     * @return true if this service contains the other service by only port
+     *         range comparing
+     */
+    private boolean containsPort(Service other) {
+	if (m_portRangeStart > other.m_portRangeStart)
+	    return false;
+	if (m_portRangeEnd < other.m_portRangeEnd)
+	    return false;
 	return true;
     }
 
     @Override
     public int hashCode() {
-	return m_protocol.hashCode() + m_port;
+	return m_protocol.hashCode() + m_portRangeStart * (1 << 16) + m_portRangeEnd;
     }
 
     @Override
@@ -126,7 +220,9 @@ public class Service extends Attribute {
 	    return false;
 
 	Service other = (Service) o;
-	if (m_port != other.m_port)
+	if (m_portRangeStart != other.m_portRangeStart)
+	    return false;
+	if (m_portRangeEnd != other.m_portRangeEnd)
 	    return false;
 	if (!m_protocol.equals(other.m_protocol))
 	    return false;
@@ -135,8 +231,12 @@ public class Service extends Attribute {
 
     @Override
     public String toString() {
-	if (m_port == ANY_PORT)
-	    return "Any " + m_protocol;
-	return m_protocol + " " + m_port;
+	if (m_portRangeStart == ANY_PORT_START_RANGE && m_portRangeEnd == ANY_PORT_END_RANGE)
+	    return "Any " + (m_protocol == ANY_PROTOCOL ? "Any " : m_protocol);
+	if (m_portRangeStart == m_portRangeEnd)
+	    return m_portRangeStart + (m_protocol == ANY_PROTOCOL ? "Any " : m_protocol);
+	return (m_portRangeStart == ANY_PORT_START_RANGE ? "Any " : ("" + m_portRangeStart))
+		+ (m_portRangeEnd == ANY_PORT_START_RANGE ? "Any " : ("" + m_portRangeEnd))
+		+ (m_protocol == ANY_PROTOCOL ? "Any " : m_protocol);
     }
 }

@@ -1,9 +1,11 @@
 package breakingtherules.dao;
 
+import java.io.IOException;
 import java.util.List;
 
-import breakingtherules.firewall.Filter;
 import breakingtherules.firewall.Hit;
+import breakingtherules.session.Job;
+import breakingtherules.session.NoCurrentJobException;
 
 /**
  * Component that supply data from repository
@@ -11,21 +13,17 @@ import breakingtherules.firewall.Hit;
 public interface HitsDao {
 
     /**
-     * Load repository from XML file
+     * Get a list of hits from DAO
      * 
-     * @param path
-     *            String path to repository
-     * @return null if success, else - error message
+     * @param currentJob
+     *            the current job
+     * @param startIndex
+     *            start index of the hits list
+     * @param endIndex
+     *            end index of the hits list
+     * @return list of the hits from DAO
+     * @throws IOException
      */
-    public String loadRepository(String path);
-
-    /**
-     * Get hits from repository by filter
-     * 
-     * @param filter
-     *            filter of the hits
-     * @return array of hits that match the filter
-     */
-    public List<Hit> getHits(Filter filter);
+    public List<Hit> getHits(Job currentJob, int startIndex, int endIndex) throws IOException, NoCurrentJobException;
 
 }

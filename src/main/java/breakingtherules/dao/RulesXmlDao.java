@@ -74,7 +74,6 @@ public class RulesXmlDao implements RulesDao {
 
 		Rule rule = createRule(ruleElm);
 		matchedRules.add(rule);
-
 	    }
 	}
 

@@ -14,6 +14,9 @@ public class Rule {
      */
     private Filter m_filter;
     
+    /**
+     * Id of the rule
+     */
     @JsonProperty("id")    
     private int m_id;
 

@@ -8,7 +8,7 @@ import breakingtherules.session.Job;
 /**
  * Algorithm interface to get suggestion to filters and rules
  */
-public interface Algorithm {
+public interface SuggestionsAlgorithm {
 
     /**
      * Get suggestion of a attribute type for filters and rules

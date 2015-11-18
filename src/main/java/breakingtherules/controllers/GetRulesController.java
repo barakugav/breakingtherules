@@ -19,13 +19,13 @@ public class GetRulesController {
      * Used to get the rules
      */
     @Autowired
-    RulesDao rulesDao;
+    private RulesDao rulesDao;
 
     /**
      * Has the current job that is being worked on
      */
     @Autowired
-    Job job;
+    private Job job;
 
     @RequestMapping(value = "/rules", method = RequestMethod.GET)
     public List<Rule> rules() throws NoCurrentJobException {

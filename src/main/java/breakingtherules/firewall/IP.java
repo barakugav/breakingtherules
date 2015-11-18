@@ -1,6 +1,7 @@
 package breakingtherules.firewall;
 
-import java.util.Vector;
+import java.util.ArrayList;
+import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
@@ -27,20 +28,19 @@ public abstract class IP {
      * @param prefixLength
      *            length of the constant prefix
      */
-    public IP(int[] address, int prefixLength) {
+    public IP(int[] address, int prefixLength) throws IllegalArgumentException {
 	if (address == null)
-	    return;
+	    throw new IllegalArgumentException("Null arg");
 	if (address.length != getNumberOfBlocks())
-	    return;
+	    throw new IllegalArgumentException(
+		    "Number of IP blocks doesn't match: " + address.length + " (Expected " + getNumberOfBlocks());
 	if (prefixLength < 0 || prefixLength > getMaxLength())
-	    return;
+	    throw new IllegalArgumentException("Const prefix length out of range: " + prefixLength);
 
-	for (int blockValue : address) {
-	    if (blockValue < 0)
-		return;
-	    if (blockValue > getMaxBlockValue())
-		return;
-	}
+	for (int blockValue : address)
+	    if (blockValue < 0 || blockValue > getMaxBlockValue())
+		throw new IllegalArgumentException("IP address block isn't in range: " + blockValue
+			+ ". Should be in range [0, " + getMaxBlockValue() + "]");
 
 	m_address = address;
 	m_prefixLength = prefixLength;
@@ -56,42 +56,61 @@ public abstract class IP {
      * @param expectedSeparator
      *            String separator between two blocks in the String IP
      */
-    public IP(String ip, String expectedSeparator) {
-	Vector<Integer> address = new Vector<Integer>();
+    public IP(String ip, String expectedSeparator) throws IllegalArgumentException {
+	ip = checkFormat(ip);
+
+	List<Integer> address = new ArrayList<Integer>();
 	int separetorIndex = ip.indexOf(expectedSeparator);
 
-	// Read address blocks
-	while (separetorIndex >= 0) {
-	    String stNum = ip.substring(0, separetorIndex);
-	    int intNum = Integer.parseInt(stNum);
-	    address.addElement(intNum);
-	    ip = ip.substring(separetorIndex + 1);
-	    separetorIndex = ip.indexOf(expectedSeparator);
+	try {
+	    // Read address blocks
+	    while (separetorIndex >= 0) {
+		String stNum = ip.substring(0, separetorIndex);
+		int intNum = Integer.parseInt(stNum);
+		address.add(intNum);
+		ip = ip.substring(separetorIndex + 1);
+		separetorIndex = ip.indexOf(expectedSeparator);
+	    }
+
+	    // Read suffix of IP - last block
+	    separetorIndex = ip.indexOf('/');
+	    if (separetorIndex < 0) {
+		// No const prefix specification
+		address.add(Integer.parseInt(ip));
+		m_prefixLength = getMaxLength();
+	    } else {
+		// Has const prefix specification
+		String stNum = ip.substring(0, separetorIndex);
+		ip = ip.substring(separetorIndex + 1);
+
+		int intNum = Integer.parseInt(stNum);
+		address.add(intNum);
+
+		// Read const prefix length
+		if (ip.length() > 0) {
+		    m_prefixLength = Integer.parseInt(ip);
+		    if (m_prefixLength < 0)
+			throw new IllegalArgumentException("Negative prefix length");
+		    if (m_prefixLength > getMaxLength())
+			throw new IllegalArgumentException("Prefix length over max length");
+		}
+	    }
+	} catch (NumberFormatException e) {
+	    throw new IllegalArgumentException("Integer parse failed: " + e.getMessage());
 	}
 
-	// Read suffix of IP - last block
-	separetorIndex = ip.indexOf('/');
-	if (separetorIndex < 0) {
-	    // No const prefix specification
-	    address.addElement(Integer.parseInt(ip));
-	    m_prefixLength = getMaxLength();
-	} else {
-	    // Has const prefix specification
-	    String stNum = ip.substring(0, separetorIndex);
-	    ip = ip.substring(separetorIndex + 1);
-
-	    int intNum = Integer.parseInt(stNum);
-	    address.addElement(intNum);
-
-	    // Read const prefix length
-	    if (ip.length() > 0)
-		m_prefixLength = Integer.parseInt(ip);
-	}
+	if (address.size() != getNumberOfBlocks())
+	    throw new IllegalArgumentException(
+		    "Number of blocks is " + address.size() + " instead of " + getNumberOfBlocks());
+	for (int blockValue : address)
+	    if (blockValue < 0 || blockValue > getMaxBlockValue())
+		throw new IllegalArgumentException("IP address block isn't in range: " + blockValue
+			+ ". Should be in range [0, " + getMaxBlockValue() + "]");
 
 	// Copy blocks values to m_address
-	m_address = new int[address.size()];
+	m_address = new int[getNumberOfBlocks()];
 	for (int i = 0; i < address.size(); i++)
-	    m_address[i] = address.elementAt(i);
+	    m_address[i] = address.get(i);
 
 	resetSuffix();
     }
@@ -176,13 +195,14 @@ public abstract class IP {
 	if (blockNum == getNumberOfBlocks())
 	    return true;
 
-	int bitsLeft = m_prefixLength % getBlockSize();
+	int bitsLeft = getBlockSize() - (m_prefixLength % getBlockSize());
 	return (m_address[blockNum] ^ other.m_address[blockNum]) < (1 << bitsLeft);
     }
 
     @Override
     public String toString() {
-	if (m_prefixLength == 0) return "Any";
+	if (m_prefixLength == 0)
+	    return "Any";
 	String st = Integer.toString(m_address[0]);
 	for (int i = 1; i < m_address.length; i++)
 	    st += getStringSeparator() + m_address[i];
@@ -228,14 +248,13 @@ public abstract class IP {
      *            String IP
      * @return IP object based on the String IP
      */
-    public static IP fromString(String ip) {
+    public static IP fromString(String ip) throws IllegalArgumentException {
 	if (ip == null) {
-	    return null;
+	    throw new IllegalArgumentException("Null arg");
 	}
 
-	// Unknown format
 	if (ip.length() < 5) {
-	    return null;
+	    throw new IllegalArgumentException("Unknown format");
 	}
 
 	// IPv4 format
@@ -248,9 +267,21 @@ public abstract class IP {
 	    return new IPv6(ip.substring(5));
 	}
 
-	// Unknown format
-	return null;
+	throw new IllegalArgumentException("Unknown format");
     }
+
+    /**
+     * Check if a string IP is in the right format, throw exception if isn't.
+     * Return the String read to convert
+     * 
+     * @param ip
+     *            String IP to check his format
+     * @return String without prefix format
+     * 
+     * @throws IllegalArgumentException
+     *             if format isn't OK
+     */
+    protected abstract String checkFormat(String ip) throws IllegalArgumentException;
 
     /**
      * Get the number of blocks in this IP
@@ -268,20 +299,22 @@ public abstract class IP {
     protected abstract int getBlockSize();
 
     /**
-     * Get the max length of this IP's address
-     * 
-     * @return max length of the IP's address
-     */
-    @JsonIgnore
-    protected abstract int getMaxLength();
-
-    /**
      * Get the string separator used when converting IP to string
      * 
      * @return string separator of this IP
      */
     @JsonIgnore
     protected abstract String getStringSeparator();
+
+    /**
+     * Get the max length of this IP's address
+     * 
+     * @return max length of the IP's address
+     */
+    @JsonIgnore
+    protected int getMaxLength() {
+	return getBlockSize() * getNumberOfBlocks();
+    }
 
     /**
      * Get the addresses of this IP's children - more specific IPs
@@ -306,16 +339,6 @@ public abstract class IP {
     }
 
     /**
-     * Get the max value of block in this IP's address
-     * 
-     * @return max value of a block
-     */
-    @JsonIgnore
-    private int getMaxBlockValue() {
-	return 1 << getBlockSize();
-    }
-
-    /**
      * Set all bits after const prefix to zeros
      */
     protected void resetSuffix() {
@@ -324,6 +347,16 @@ public abstract class IP {
 	    int blockNum = bit * getNumberOfBlocks() / getMaxLength();
 	    m_address[blockNum] &= andHelper;
 	}
+    }
+
+    /**
+     * Get the max value of block in this IP's address
+     * 
+     * @return max value of a block
+     */
+    @JsonIgnore
+    private int getMaxBlockValue() {
+	return 1 << getBlockSize();
     }
 
 }

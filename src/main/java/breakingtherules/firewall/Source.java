@@ -29,7 +29,7 @@ public class Source extends Attribute {
      * @param ip
      *            String IP of the source
      */
-    public Source(String ip) {
+    public Source(String ip) throws IllegalArgumentException {
 	this(IP.fromString(ip));
     }
 
