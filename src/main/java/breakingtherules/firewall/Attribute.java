@@ -1,5 +1,7 @@
 package breakingtherules.firewall;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 /**
  * Attribute of a hit
  */
@@ -44,5 +46,8 @@ public abstract class Attribute {
      * @return true if this attribute contains other, else - false
      */
     public abstract boolean contains(Attribute other);
+    
+    @JsonProperty("str")
+    public abstract String toString();
 
 }

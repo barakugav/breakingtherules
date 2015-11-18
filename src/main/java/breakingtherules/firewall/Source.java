@@ -53,4 +53,8 @@ public class Source extends Attribute {
 	return m_ip.contain(o.m_ip);
     }
 
+    @Override
+    public String toString() {
+	return m_ip.toString();
+    }
 }

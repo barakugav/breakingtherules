@@ -10,7 +10,7 @@ public class Service extends Attribute {
     /**
      * Type of the service (HTTP, HTTPS, etc)
      */
-    private String m_type;
+    private String m_protocol;
 
     /**
      * Port number of the service
@@ -18,9 +18,9 @@ public class Service extends Attribute {
     private int m_port;
 
     /**
-     * Service of type 'Any service'
+     * Service of type 'Any protocol'
      */
-    private static final String ANY_TYPE = null;
+    private static final String ANY_PROTOCOL = null;
 
     /**
      * Port number 'Any port'
@@ -37,7 +37,7 @@ public class Service extends Attribute {
      */
     public Service(String type, int port) {
 	super(AttType.Service);
-	m_type = type;
+	m_protocol = type;
 	m_port = port;
     }
 
@@ -53,13 +53,13 @@ public class Service extends Attribute {
 
 	if (separatorIndex < 0) {
 	    m_port = ANY_PORT;
-	    m_type = service;
+	    m_protocol = service;
 	    return;
 	}
 
 	String stPort = service.substring(0, separatorIndex);
 	m_port = Integer.parseInt(stPort);
-	m_type = service.substring(separatorIndex + 1);
+	m_protocol = service.substring(separatorIndex + 1);
     }
 
     /**
@@ -68,7 +68,7 @@ public class Service extends Attribute {
      * @return String type of the service
      */
     public String getType() {
-	return m_type;
+	return m_protocol;
     }
 
     /**
@@ -87,11 +87,11 @@ public class Service extends Attribute {
 	}
 
 	Service o = (Service) other;
-	if (this.m_type == ANY_TYPE)
+	if (this.m_protocol == ANY_PROTOCOL)
 	    return true;
-	if (o.m_type == ANY_TYPE)
+	if (o.m_protocol == ANY_PROTOCOL)
 	    return false;
-	if (!this.m_type.equals(o.m_type)) {
+	if (!this.m_protocol.equals(o.m_protocol)) {
 	    return false;
 	}
 
@@ -107,7 +107,7 @@ public class Service extends Attribute {
 
     @Override
     public int hashCode() {
-	return m_type.hashCode() + m_port;
+	return m_protocol.hashCode() + m_port;
     }
 
     @Override
@@ -120,9 +120,13 @@ public class Service extends Attribute {
 	Service other = (Service) o;
 	if (m_port != other.m_port)
 	    return false;
-	if (!m_type.equals(other.m_type))
+	if (!m_protocol.equals(other.m_protocol))
 	    return false;
 	return true;
     }
 
+    @Override
+    public String toString() {
+	return m_protocol + " " + m_port;
+    }
 }
