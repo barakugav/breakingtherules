@@ -45,7 +45,7 @@ public abstract class IP {
 	m_address = address;
 	m_prefixLength = prefixLength;
 
-	resetSufix();
+	resetSuffix();
     }
 
     /**
@@ -93,7 +93,7 @@ public abstract class IP {
 	for (int i = 0; i < address.size(); i++)
 	    m_address[i] = address.elementAt(i);
 
-	resetSufix();
+	resetSuffix();
     }
 
     /**
@@ -182,7 +182,8 @@ public abstract class IP {
 
     @Override
     public String toString() {
-	String st = "" + m_address[0];
+	if (m_prefixLength == 0) return "Any";
+	String st = Integer.toString(m_address[0]);
 	for (int i = 1; i < m_address.length; i++)
 	    st += getStringSeparator() + m_address[i];
 	if (m_prefixLength != getMaxLength()) {
@@ -317,7 +318,7 @@ public abstract class IP {
     /**
      * Set all bits after const prefix to zeros
      */
-    protected void resetSufix() {
+    protected void resetSuffix() {
 	for (int bit = getMaxLength() - 1; bit >= m_prefixLength; bit--) {
 	    int andHelper = ~(1 << (getBlockSize() - (bit % getBlockSize())) - 1);
 	    int blockNum = bit * getNumberOfBlocks() / getMaxLength();

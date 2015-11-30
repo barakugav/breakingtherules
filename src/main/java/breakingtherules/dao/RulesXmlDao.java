@@ -19,16 +19,15 @@ import org.xml.sax.SAXException;
 
 import breakingtherules.firewall.Attribute;
 import breakingtherules.firewall.Destination;
-import breakingtherules.firewall.Filter;
-import breakingtherules.firewall.Hit;
+import breakingtherules.firewall.Rule;
 import breakingtherules.firewall.Service;
 import breakingtherules.firewall.Source;
 
 /**
- * Implementation of {@link HitsDao} by XML repository
+ * Implementation of {@link RulesDao} by XML repository
  */
 @Component
-public class HitsXmlDao implements HitsDao {
+public class RulesXmlDao implements RulesDao {
 
     /**
      * Document of this repository
@@ -38,7 +37,7 @@ public class HitsXmlDao implements HitsDao {
     /**
      * Constructor
      */
-    public HitsXmlDao() {
+    public RulesXmlDao() {
     }
 
     public String loadRepository(String path) {
@@ -62,40 +61,39 @@ public class HitsXmlDao implements HitsDao {
 	}
     }
 
-    public List<Hit> getHits(Filter filter) {
-	// Get all hits from repository
-	NodeList hitsList = m_doc.getElementsByTagName("hit");
+    public List<Rule> getRules() {
+	// Get all rules from repository
+	NodeList rulesList = m_doc.getElementsByTagName("rule");
 
-	// Extract only hits that match the filter
-	List<Hit> matchedHits = new ArrayList<Hit>();
-	for (int i = 0; i < hitsList.getLength(); i++) {
-	    Node hitNode = hitsList.item(i);
-	    if (hitNode.getNodeType() == Element.ELEMENT_NODE) {
-		Element hitElm = (Element) hitNode;
+	// Parse into rule objects
+	List<Rule> matchedRules = new ArrayList<Rule>();
+	for (int i = 0; i < rulesList.getLength(); i++) {
+	    Node ruleNode = rulesList.item(i);
+	    if (ruleNode.getNodeType() == Element.ELEMENT_NODE) {
+		Element ruleElm = (Element) ruleNode;
 
-		Hit hit = createHit(hitElm);
+		Rule rule = createRule(ruleElm);
+		matchedRules.add(rule);
 
-		if (filter.isMatch(hit))
-		    matchedHits.add(hit);
 	    }
 	}
 
-	return matchedHits;
+	return matchedRules;
     }
 
     /**
-     * Creates {@link Hit} object from {@link Element} XML object
+     * Creates {@link Rule} object from {@link Element} XML object
      * 
-     * @param hitElm
-     *            XML element with hit attributes
-     * @return hit object with the element attributes
+     * @param ruleElm
+     *            XML element with rule attributes
+     * @return rule object with the element attributes
      */
-    private Hit createHit(Element hitElm) {
+    private Rule createRule(Element ruleElm) {
 	// Read attributes from element
-	String id = hitElm.getAttribute("id");
-	String source = hitElm.getAttribute("source");
-	String destination = hitElm.getAttribute("destination");
-	String service = hitElm.getAttribute("service");
+	String id = ruleElm.getAttribute("id");
+	String source = ruleElm.getAttribute("source");
+	String destination = ruleElm.getAttribute("destination");
+	String service = ruleElm.getAttribute("service");
 
 	// Convert strings to attributes
 	int newId = Integer.parseInt(id);
@@ -108,8 +106,8 @@ public class HitsXmlDao implements HitsDao {
 	attributes.add(newSource);
 	attributes.add(newDestination);
 	attributes.add(newService);
-
-	return new Hit(newId, attributes);
+	
+	return new Rule(newId, attributes);
     }
 
 }

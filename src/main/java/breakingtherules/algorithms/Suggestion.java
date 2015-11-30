@@ -1,11 +1,13 @@
 package breakingtherules.algorithms;
 
 import breakingtherules.firewall.Attribute;
+import java.lang.Double;
 
 /**
  * Suggestion of a part of rule - specific attribute
  * 
- * Hold the number of hits that match the attribute
+ * Hold the number of hits that match the attribute.
+ * Is comparable, but comparison is inconsistent with equals.
  */
 public class Suggestion implements Comparable<Suggestion> {
 
@@ -53,7 +55,7 @@ public class Suggestion implements Comparable<Suggestion> {
     }
 
     /**
-     * Join this suggestion
+     * Join this suggestion - add a new hit to it
      */
     public void join() {
 	m_size++;
@@ -69,8 +71,14 @@ public class Suggestion implements Comparable<Suggestion> {
 	this.m_score = score;
     }
 
+    
+    /**
+     * Compare two Suggestions objects.
+     * 
+     * Is inconsistent with x.equals(y)
+     */
     public int compareTo(Suggestion other) {
-	return (int) (this.m_score - other.m_score);
+	return  (new Double(this.m_score)).compareTo(other.m_score);
     }
 
 }

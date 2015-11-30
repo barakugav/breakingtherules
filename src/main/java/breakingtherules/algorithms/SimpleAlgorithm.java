@@ -1,27 +1,51 @@
 package breakingtherules.algorithms;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Vector;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+import breakingtherules.dao.HitsDao;
 import breakingtherules.firewall.Attribute;
-import breakingtherules.firewall.Filter;
-import breakingtherules.firewall.Hit;
-import breakingtherules.firewall.Rule;
 import breakingtherules.firewall.Attribute.AttType;
+import breakingtherules.firewall.Hit;
+import breakingtherules.session.Job;
+import breakingtherules.session.NoCurrentJobException;
 
 /**
  * Simple algorithm the implements {@link Algorithm} methods
  */
+@Component
 public class SimpleAlgorithm implements Algorithm {
 
-    public List<Suggestion> getSuggestions(List<Hit> hits, List<Rule> rules, Filter filter, AttType attType,
-	    int startIndex, int endIndex) {
-	// Map all hits to suggestion
-	Vector<Suggestion> allSuggestionsVector = new Vector<Suggestion>();
+    
+    @Autowired
+    HitsDao hitsDao;
+    
+    
+    public List<Suggestion> getSuggestions(Job job, AttType attType) {
+
+	// The answer list
+	List<Suggestion> allSuggestionsList = new ArrayList<Suggestion>();
+	
+	// Every possible single attribute becomes a suggestion.
 	HashMap<Attribute, Suggestion> allSuggestionsMap = new HashMap<Attribute, Suggestion>();
+	
+	
+	// hits = hits under filter
+	List<Hit> hits;
+	try {
+	    hits = job.getRelevantHits();
+	}
+	catch(NoCurrentJobException e) {
+	    return new ArrayList<Suggestion>();
+	}
+	
+	// Create a suggestion for every attribute, count the number of hits that apply to it
 	for (Hit hit : hits) {
 	    Attribute att = hit.getAttribute(attType);
 	    if (att == null)
@@ -31,38 +55,40 @@ public class SimpleAlgorithm implements Algorithm {
 	    if (suggestion == null) {
 		suggestion = new Suggestion(att);
 		allSuggestionsMap.put(att, suggestion);
-		allSuggestionsVector.add(suggestion);
+		allSuggestionsList.add(suggestion);
 	    }
 
 	    suggestion.join();
 	}
 
 	// Calculate scores
-	for (Suggestion suggestion : allSuggestionsVector)
+	for (Suggestion suggestion : allSuggestionsList)
 	    suggestion.setScore(suggestion.getSize());
 
 	// Put suggestions in array for sorting
-	allSuggestionsVector.sort(new Comparator<Suggestion>() {
+	Collections.sort(allSuggestionsList);
 
-	    public int compare(Suggestion o1, Suggestion o2) {
-		return o1.compareTo(o2);
-	    }
-
-	});
-
+	
+	return allSuggestionsList;
+		
+		
+	// Partial list code : 
+	
+	
+	
 	// If request is over suggestion cup
-	if (allSuggestionsVector.size() < startIndex) {
-	    return new ArrayList<Suggestion>();
-	}
+//	if (allSuggestionsList.size() < startIndex) {
+//	    return new ArrayList<Suggestion>();
+//	}
 
 	// Extract wanted interval from general suggestion list
-	ArrayList<Suggestion> suggestions = new ArrayList<Suggestion>();
-	for (int i = startIndex; i < allSuggestionsVector.size() && i < endIndex; i++) {
-	    Suggestion suggestion = allSuggestionsVector.get(i);
-	    suggestions.add(suggestion);
-	}
+//	ArrayList<Suggestion> suggestions = new ArrayList<Suggestion>();
+//	for (int i = startIndex; i < allSuggestionsList.size() && i < endIndex; i++) {
+//	    Suggestion suggestion = allSuggestionsList.get(i);
+//	    suggestions.add(suggestion);
+//	}
 
-	return suggestions;
+//	return suggestions;
     }
 
 }

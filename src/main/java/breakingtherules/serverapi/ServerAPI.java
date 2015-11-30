@@ -17,11 +17,13 @@ public interface ServerAPI {
     public void removeRule(Rule rule);
 
     public List<Hit> getHits(int startIndex, int endIndex);
+    
+    public List<Rule> getRules();
 
     public List<Suggestion> getSuggestions(AttType attType, int startIndex, int endIndex);
 
     public void setFilter(Filter filter);
 
-    public void clearFilter();
+    // public void clearFilter();
 
 }

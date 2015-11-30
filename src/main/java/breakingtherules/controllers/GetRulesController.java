@@ -7,19 +7,19 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
-import breakingtherules.dao.HitsDao;
-import breakingtherules.firewall.Hit;
+import breakingtherules.dao.RulesDao;
+import breakingtherules.firewall.Rule;
 import breakingtherules.session.Job;
 import breakingtherules.session.NoCurrentJobException;
 
 @RestController
-public class HitsController {
+public class GetRulesController {
 
     /**
-     * Used to get the hits that match the filter
+     * Used to get the rules
      */
     @Autowired
-    private HitsDao hitsDao;
+    RulesDao rulesDao;
 
     /**
      * Has the current job that is being worked on
@@ -27,24 +27,19 @@ public class HitsController {
     @Autowired
     Job job;
 
-    /**
-     * Answers the GET hits query
-     * 
-     * @return List of all the appropriate hits
-     * @throws NoCurrentJobException 
-     */
-    @RequestMapping(value = "/hits", method = RequestMethod.GET)
-    public List<Hit> hits() throws NoCurrentJobException {
+    @RequestMapping(value = "/rules", method = RequestMethod.GET)
+    public List<Rule> rules() throws NoCurrentJobException {
+
+	// TODO structure issue - what if multiple requests do `loadRepository`?
+	// Applies to HitsDao and RulesDao
+
 	try {
-	    hitsDao.loadRepository(job.getRepositoryLocation());
-	}
-	catch (NoCurrentJobException e) {
+	    rulesDao.loadRepository(job.getRepositoryLocation());
+	} catch (NoCurrentJobException e) {
 	    System.err.println("Tried recieving hits without initializing job.");
 	    throw new NoCurrentJobException();
 	}
-	
-	List<Hit> hits = hitsDao.getHits(job.getFilter());
-	
-	return hits;
+
+	return rulesDao.getRules();
     }
 }

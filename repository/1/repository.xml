@@ -1,0 +1,10 @@
+<Repository>
+	<hit id="1" source="IPv4 165.5.4.23" destination="IPv4 127.0.0.1" service="80 TCP"></hit>
+	<hit id="2" source="IPv4 65.5.4.44" destination="IPv4 127.55.0.1" service="80 TCP"></hit>
+	<hit id="3" source="IPv4 165.5.4.23" destination="IPv4 127.0.66.0" service="40 TCP"></hit>
+	<hit id="4" source="IPv4 14.5.98.23" destination="IPv4 124.0.0.1" service="443 TCP"></hit>
+	<hit id="5" source="IPv4 15.5.4.58" destination="IPv4 201.0.0.1" service="246 TCP"></hit>
+	<hit id="6" source="IPv4 29.11.4.23" destination="IPv4 8.0.0.4" service="4888 TCP"></hit>
+
+	<rule id="1" source="IPv4 0.0.0.0/0" destination="IPv4 0.0.0.0/0" service="TCP"></rule>
+</Repository>

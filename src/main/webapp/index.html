@@ -4,25 +4,44 @@
 	<meta charset="UTF-8">
 	<title>BreakingTheRules</title>
 	<link rel="stylesheet" href="./styles/index.css"></link>
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css"></link>
 	<script src="./scripts/ext/jquery.min.js"></script>
 	<script src="./scripts/ext/angular.min.js"></script>
 	<script src="./scripts/index.js"></script>
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
 </head>
-<body ng-controller="HitStatController as hitsCtrl">
-	<h1>BreakingTheRules</h1>
-	<h2>All Hits</h2>
-	<table class="hits-table">
-		<tr>
-			<th></th>
-			<th>Source</th>
-			<th>Destination</th>
-			<th>Service</th>
-		</tr>
-		<tr ng-repeat="hit in hitsCtrl.allHits">
-			<td> {{ hit.id }} </td>
-			<td ng-repeat="attribute in hit.attributes"> {{ attribute.str }} </td>
-		</tr>
-	</table>
+<body>
+	<div class="container-fluid">
+		<h1>BreakingTheRules</h1>
+		<h2>All Rules</h2>
+		<p>The rules are ordered bottom-up: the bottom rule is the base rule, and the new rules are placed on top of it, until the base rule will be no longer needed.</p>
+		<table ng-controller="RulesController as rulesCtrl" class="big-table">
+			<tr>
+				<th></th>
+				<th>Source</th>
+				<th>Destination</th>
+				<th>Service</th>
+			</tr>
+			<tr ng-repeat="rule in rulesCtrl.rules">
+				<td> {{ rule.id }} </td>
+				<td ng-repeat="attribute in rule.attributes"> {{ attribute.str }} </td>
+			</tr>
+		</table>
+		<h2>All Hits</h2>
+		<table ng-controller="HitsTableController as hitsCtrl" class="big-table">
+			<tr>
+				<th></th>
+				<th>Source</th>
+				<th>Destination</th>
+				<th>Service</th>
+			</tr>
+			<tr ng-repeat="hit in hitsCtrl.allHits">
+				<td> {{ hit.id }} </td>
+				<td ng-repeat="attribute in hit.attributes"> {{ attribute.str }} </td>
+			</tr>
+		</table>	
+	</div>
+	
 
 </body>
 </html>

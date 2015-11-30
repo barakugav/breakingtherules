@@ -59,7 +59,7 @@ public class IPv6 extends IP {
 	}
 
 	IPv6 newIP = new IPv6(m_address.clone(), m_prefixLength - 1);
-	newIP.resetSufix();
+	newIP.resetSuffix();
 
 	return newIP;
     }

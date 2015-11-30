@@ -2,6 +2,8 @@ package breakingtherules.firewall;
 
 import java.util.Vector;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 /**
  * Rule that apply on hits by {@link Filter}
  */
@@ -11,6 +13,9 @@ public class Rule {
      * Filter of the rule
      */
     private Filter m_filter;
+    
+    @JsonProperty("id")    
+    private int m_id;
 
     /**
      * Constructor
@@ -29,7 +34,8 @@ public class Rule {
      * @param attributes
      *            attributes that represent the rule
      */
-    public Rule(Vector<Attribute> attributes) {
+    public Rule(int id, Vector<Attribute> attributes) {
+	m_id = id;
 	m_filter = new Filter(attributes);
     }
 

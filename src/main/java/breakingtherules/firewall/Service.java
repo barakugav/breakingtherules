@@ -3,7 +3,7 @@ package breakingtherules.firewall;
 /**
  * Service attribute
  * 
- * Have a type member and port number
+ * Has a protocol member and port number
  */
 public class Service extends Attribute {
 
@@ -12,20 +12,22 @@ public class Service extends Attribute {
      */
     private String m_protocol;
 
+    
+    // TODO port range
     /**
      * Port number of the service
      */
     private int m_port;
 
     /**
-     * Service of type 'Any protocol'
+     * Service of protocol 'Any protocol'
      */
-    private static final String ANY_PROTOCOL = null;
+    public static final String ANY_PROTOCOL = null;
 
     /**
      * Port number 'Any port'
      */
-    private static final int ANY_PORT = -1;
+    public static final int ANY_PORT = -1;
 
     /**
      * Constructor
@@ -35,9 +37,9 @@ public class Service extends Attribute {
      * @param port
      *            port number of the service
      */
-    public Service(String type, int port) {
+    public Service(String protocol, int port) {
 	super(AttType.Service);
-	m_protocol = type;
+	m_protocol = protocol;
 	m_port = port;
     }
 
@@ -52,8 +54,14 @@ public class Service extends Attribute {
 	int separatorIndex = service.indexOf(' ');
 
 	if (separatorIndex < 0) {
+	    // String `service` is a name of a protocol or "Any"
 	    m_port = ANY_PORT;
-	    m_protocol = service;
+	    
+	    if (service == "Any")
+		m_protocol = ANY_PROTOCOL; 
+	    else 
+		m_protocol = service;
+	    
 	    return;
 	}
 
@@ -127,6 +135,8 @@ public class Service extends Attribute {
 
     @Override
     public String toString() {
+	if (m_port == ANY_PORT)
+	    return "Any " + m_protocol;
 	return m_protocol + " " + m_port;
     }
 }
