@@ -8,18 +8,18 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
-import breakingtherules.algorithms.Suggestion;
-import breakingtherules.algorithms.SuggestionsAlgorithm;
 import breakingtherules.dao.HitsDao;
+import breakingtherules.services.algorithms.Suggestion;
+import breakingtherules.services.algorithms.SuggestionsAlgorithm;
 
 @RestController
 public class SuggestionsController {
 
     @Autowired
-    private SuggestionsAlgorithm algorithm;
+    private SuggestionsAlgorithm m_algorithm;
 
     @Autowired
-    private HitsDao hitsDao;
+    private HitsDao m_hitsDao;
 
     @RequestMapping(value = "/suggestions", method = RequestMethod.GET)
     public List<Suggestion> getSuggestions() {

@@ -15,7 +15,7 @@ public class InitController {
      * The session job to be initiated
      */
     @Autowired
-    private Job job;
+    private Job m_job;
 
     /**
      * Request to handle a new job.
@@ -31,7 +31,7 @@ public class InitController {
     @RequestMapping(value = "/job", method = RequestMethod.PUT)
     public boolean init(@RequestParam(value = "job_id") int job_id) {
 	System.out.println("Job id " + job_id);
-	job.setJob(job_id);
+	m_job.setJob(job_id);
 	return true;
     }
 }

@@ -1,4 +1,4 @@
-package breakingtherules.algorithms;
+package breakingtherules.services.algorithms;
 
 import breakingtherules.firewall.Attribute;
 import java.lang.Double;

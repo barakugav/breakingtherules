@@ -20,13 +20,13 @@ public class HitsController {
      * Used to get the hits that match the filter
      */
     @Autowired
-    private HitsDao hitsDao;
+    private HitsDao m_hitsDao;
 
     /**
      * Has the current job that is being worked on
      */
     @Autowired
-    private Job job;
+    private Job m_job;
 
     /**
      * Answers the GET hits query
@@ -38,7 +38,7 @@ public class HitsController {
     @RequestMapping(value = "/hits", method = RequestMethod.GET)
     public List<Hit> hits() throws NoCurrentJobException, IOException {
 	try {
-	    List<Hit> hits = hitsDao.getHits(job, 0, 10);
+	    List<Hit> hits = m_hitsDao.getHits(m_job, 0, 10);
 	    return hits;
 
 	} catch (NoCurrentJobException e) {

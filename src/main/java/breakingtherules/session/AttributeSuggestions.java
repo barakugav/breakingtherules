@@ -2,8 +2,8 @@ package breakingtherules.session;
 
 import java.util.List;
 
-import breakingtherules.algorithms.Suggestion;
 import breakingtherules.firewall.Attribute;
+import breakingtherules.services.algorithms.Suggestion;
 
 public class AttributeSuggestions {
 

@@ -20,7 +20,7 @@ public class Job {
     public static final int NO_CURRENT_JOB = -1;
 
     @Autowired
-    private HitsDao hitsDao;
+    private HitsDao m_hitsDao;
 
     /**
      * Index of the job
@@ -28,7 +28,7 @@ public class Job {
      * Every job has a unique index. In the start of the session, there is no
      * active job, so the job_id is NO_CURRENT_JOB.
      */
-    private int m_job_id = NO_CURRENT_JOB;
+    private int m_jobId = NO_CURRENT_JOB;
 
     /**
      * Suggestions for the job
@@ -61,7 +61,7 @@ public class Job {
      *            The id of the job that needs to be worked on.
      */
     public void setJob(int id) {
-	m_job_id = id;
+	m_jobId = id;
 	m_suggestions = new JobSuggestions();
 	m_filter = new Filter();
 	m_suggestions.update();
@@ -74,7 +74,7 @@ public class Job {
      * @throws NoCurrentJobException
      */
     public JobSuggestions getSuggestions() throws NoCurrentJobException {
-	if (m_job_id == NO_CURRENT_JOB)
+	if (m_jobId == NO_CURRENT_JOB)
 	    throw new NoCurrentJobException();
 	return m_suggestions;
     }
@@ -94,7 +94,7 @@ public class Job {
      * @throws IOException
      */
     public List<Hit> getRelevantHits() throws NoCurrentJobException, IOException {
-	List<Hit> hits = hitsDao.getHits(this, 0, 10);
+	List<Hit> hits = m_hitsDao.getHits(this, 0, 10);
 	return hits;
     }
 
@@ -106,10 +106,10 @@ public class Job {
      * @throws NoCurrentJobException
      */
     public String getRepositoryLocation() throws NoCurrentJobException {
-	if (m_job_id == NO_CURRENT_JOB)
+	if (m_jobId == NO_CURRENT_JOB)
 	    throw new NoCurrentJobException();
-	System.out.println("repository/" + m_job_id + "/repository.xml");
-	return "repository/" + m_job_id + "/repository.xml";
+	System.out.println("repository/" + m_jobId + "/repository.xml");
+	return "repository/" + m_jobId + "/repository.xml";
     }
 
     public void setFilter(Filter f) {

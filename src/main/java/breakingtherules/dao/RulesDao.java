@@ -1,8 +1,11 @@
 package breakingtherules.dao;
 
+import java.io.IOException;
 import java.util.List;
 
 import breakingtherules.firewall.Rule;
+import breakingtherules.session.Job;
+import breakingtherules.session.NoCurrentJobException;
 
 /**
  * Component that supply data from repository
@@ -10,19 +13,12 @@ import breakingtherules.firewall.Rule;
 public interface RulesDao {
 
     /**
-     * Load repository from XML file
+     * Get rules from repository by filter in current job
      * 
-     * @param path
-     *            String path to repository
-     * @return null if success, else - error message
+     * @param currentJob
+     *            the current job
+     * @return list of rules that match the filter
      */
-    public String loadRepository(String path);
-
-    /**
-     * Get rules from repository by filter
-     * 
-     * @return array of rules that match the filter
-     */
-    public List<Rule> getRules();
+    public List<Rule> getRules(Job currentJob) throws IOException, NoCurrentJobException;
 
 }

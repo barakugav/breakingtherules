@@ -1,5 +1,6 @@
 package breakingtherules.controllers;
 
+import java.io.IOException;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,27 +20,26 @@ public class GetRulesController {
      * Used to get the rules
      */
     @Autowired
-    private RulesDao rulesDao;
+    private RulesDao m_rulesDao;
 
     /**
      * Has the current job that is being worked on
      */
     @Autowired
-    private Job job;
+    private Job m_job;
 
     @RequestMapping(value = "/rules", method = RequestMethod.GET)
-    public List<Rule> rules() throws NoCurrentJobException {
+    public List<Rule> rules() throws NoCurrentJobException, IOException {
 
 	// TODO structure issue - what if multiple requests do `loadRepository`?
 	// Applies to HitsDao and RulesDao
 
 	try {
-	    rulesDao.loadRepository(job.getRepositoryLocation());
+	    return m_rulesDao.getRules(m_job);
 	} catch (NoCurrentJobException e) {
 	    System.err.println("Tried recieving hits without initializing job.");
-	    throw new NoCurrentJobException();
+	    throw e;
 	}
 
-	return rulesDao.getRules();
     }
 }

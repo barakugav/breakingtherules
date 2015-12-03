@@ -1,4 +1,4 @@
-package breakingtherules.algorithms;
+package breakingtherules.services.algorithms;
 
 import java.io.IOException;
 import java.util.ArrayList;

@@ -2,11 +2,11 @@ package breakingtherules.serverapi;
 
 import java.util.List;
 
-import breakingtherules.algorithms.Suggestion;
 import breakingtherules.firewall.Filter;
 import breakingtherules.firewall.Hit;
 import breakingtherules.firewall.Rule;
 import breakingtherules.firewall.Attribute.AttType;
+import breakingtherules.services.algorithms.Suggestion;
 
 public interface ServerAPI {
 

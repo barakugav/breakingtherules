@@ -1,4 +1,4 @@
-package breakingtherules.algorithms;
+package breakingtherules.services.algorithms;
 
 import java.util.List;
 

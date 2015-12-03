@@ -22,6 +22,8 @@ import breakingtherules.firewall.Destination;
 import breakingtherules.firewall.Rule;
 import breakingtherules.firewall.Service;
 import breakingtherules.firewall.Source;
+import breakingtherules.session.Job;
+import breakingtherules.session.NoCurrentJobException;
 
 /**
  * Implementation of {@link RulesDao} by XML repository
@@ -29,41 +31,27 @@ import breakingtherules.firewall.Source;
 @Component
 public class RulesXmlDao implements RulesDao {
 
-    /**
-     * Document of this repository
-     */
-    private Document m_doc;
-
-    /**
-     * Constructor
-     */
-    public RulesXmlDao() {
-    }
-
-    public String loadRepository(String path) {
+    public static Document loadRepository(String path) throws IOException {
 	try {
 	    File repoFile = new File(path);
 
 	    DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 	    DocumentBuilder builder = factory.newDocumentBuilder();
-	    m_doc = builder.parse(repoFile);
-	    return null;
+	    Document repositoryDocument = builder.parse(repoFile);
+	    return repositoryDocument;
 
-	} catch (IOException e) {
+	} catch (IOException | SAXException | ParserConfigurationException e) {
 	    e.printStackTrace();
-	    return "IO Exception";
-	} catch (SAXException e) {
-	    e.printStackTrace();
-	    return "SAX Exception";
-	} catch (ParserConfigurationException e) {
-	    e.printStackTrace();
-	    return "Parser Configuration Exception";
+	    throw new IOException("Unable to load repository: " + e.getMessage());
 	}
     }
 
-    public List<Rule> getRules() {
+    public List<Rule> getRules(Job currentJob) throws IOException, NoCurrentJobException {
+	String repoPath = currentJob.getRepositoryLocation();
+	Document repositoryDoc = loadRepository(repoPath);
+
 	// Get all rules from repository
-	NodeList rulesList = m_doc.getElementsByTagName("rule");
+	NodeList rulesList = repositoryDoc.getElementsByTagName("rule");
 
 	// Parse into rule objects
 	List<Rule> matchedRules = new ArrayList<Rule>();
@@ -105,7 +93,7 @@ public class RulesXmlDao implements RulesDao {
 	attributes.add(newSource);
 	attributes.add(newDestination);
 	attributes.add(newService);
-	
+
 	return new Rule(newId, attributes);
     }
 

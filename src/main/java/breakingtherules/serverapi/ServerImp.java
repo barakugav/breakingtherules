@@ -5,9 +5,9 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
-import breakingtherules.algorithms.Suggestion;
-import breakingtherules.algorithms.SuggestionsAlgorithm;
 import breakingtherules.firewall.Attribute.AttType;
+import breakingtherules.services.algorithms.Suggestion;
+import breakingtherules.services.algorithms.SuggestionsAlgorithm;
 import breakingtherules.firewall.Filter;
 import breakingtherules.firewall.Hit;
 import breakingtherules.firewall.Rule;

@@ -10,20 +10,20 @@ public class JobSuggestions {
     /**
      * A suggestion object for each attribute.
      */
-    private List<AttributeSuggestions> m_attribute_suggestions;
+    private List<AttributeSuggestions> m_attributeSuggestions;
 
     @Autowired
-    private Job job;
+    private Job m_job;
 
     public JobSuggestions() {
-	m_attribute_suggestions = new ArrayList<AttributeSuggestions>();
+	m_attributeSuggestions = new ArrayList<AttributeSuggestions>();
     }
 
     /**
      * Update the suggestions for each attribute
      */
     public void update() {
-	for (AttributeSuggestions attr_sug : m_attribute_suggestions) {
+	for (AttributeSuggestions attr_sug : m_attributeSuggestions) {
 	    attr_sug.update();
 	}
     }
