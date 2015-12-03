@@ -56,7 +56,7 @@ public abstract class IP {
      * @param expectedSeparator
      *            String separator between two blocks in the String IP
      */
-    public IP(String ip, String expectedSeparator) throws IllegalArgumentException {
+    protected IP(String ip, String expectedSeparator) throws IllegalArgumentException {
 	ip = checkFormat(ip);
 
 	List<Integer> address = new ArrayList<Integer>();
@@ -259,12 +259,12 @@ public abstract class IP {
 
 	// IPv4 format
 	if (ip.substring(0, 5).equals("IPv4 ")) {
-	    return new IPv4(ip.substring(5));
+	    return new IPv4(ip);
 	}
 
 	// IPv6 format
 	if (ip.substring(0, 5).equals("IPv6 ")) {
-	    return new IPv6(ip.substring(5));
+	    return new IPv6(ip);
 	}
 
 	throw new IllegalArgumentException("Unknown format");

@@ -13,17 +13,20 @@ import breakingtherules.session.NoCurrentJobException;
 public interface HitsDao {
 
     /**
-     * Get a list of hits from DAO
+     * Get list of his by filter of a job
      * 
-     * @param currentJob
+     * @param job
      *            the current job
      * @param startIndex
      *            start index of the hits list
      * @param endIndex
      *            end index of the hits list
-     * @return list of the hits from DAO
+     * @return list of hits in range [startIndex, endIndex]
      * @throws IOException
+     *             if failed to load repository
+     * @throws NoCurrentJobException
+     *             if there is no current job
      */
-    public List<Hit> getHits(Job currentJob, int startIndex, int endIndex) throws IOException, NoCurrentJobException;
+    public List<Hit> getHits(Job job, int startIndex, int endIndex) throws IOException, NoCurrentJobException;
 
 }

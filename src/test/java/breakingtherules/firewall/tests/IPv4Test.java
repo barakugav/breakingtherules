@@ -63,7 +63,7 @@ public class IPv4Test {
 	    int[] address = getRandomAddress();
 	    int prefixLength = -1;
 	    new IPv4(address, prefixLength);
-	    fail("Allowed IPv4 creation will illegal prefix length arg");
+	    fail("Allowed IPv4 creation with illegal prefix length arg");
 
 	} catch (IllegalArgumentException e) {
 	    // Success
@@ -73,7 +73,7 @@ public class IPv4Test {
 	    int[] address = getRandomAddress();
 	    int prefixLength = 33;
 	    new IPv4(address, prefixLength);
-	    fail("Allowed IPv4 creation will illegal prefix length arg");
+	    fail("Allowed IPv4 creation with illegal prefix length arg");
 
 	} catch (IllegalArgumentException e) {
 	    // Success
@@ -87,7 +87,7 @@ public class IPv4Test {
 	    new IPv4(ipStr);
 
 	} catch (IllegalArgumentException e) {
-	    fail("Excetion should not created: " + e.getMessage());
+	    fail("Exception should not created: " + e.getMessage());
 	}
 
 	try {
@@ -102,7 +102,7 @@ public class IPv4Test {
 	try {
 	    String ipStr = "IPv4 255.0.46";
 	    new IPv4(ipStr);
-	    fail("Allowed IPv4 creation will illegal format (3 blocks)");
+	    fail("Allowed IPv4 creation with illegal format (3 blocks)");
 
 	} catch (IllegalArgumentException e) {
 	    // success
@@ -111,7 +111,7 @@ public class IPv4Test {
 	try {
 	    String ipStr = "IPv4 255.0.2.2.46";
 	    new IPv4(ipStr);
-	    fail("Allowed IPv4 creation will illegal format (5 blocks)");
+	    fail("Allowed IPv4 creation with illegal format (5 blocks)");
 
 	} catch (IllegalArgumentException e) {
 	    // success
@@ -120,7 +120,7 @@ public class IPv4Test {
 	try {
 	    String ipStr = "IPv4 255.300.4.46";
 	    new IPv4(ipStr);
-	    fail("Allowed IPv4 creation will illegal format (block over 255)");
+	    fail("Allowed IPv4 creation with illegal format (block over 255)");
 
 	} catch (IllegalArgumentException e) {
 	    // success
@@ -129,7 +129,7 @@ public class IPv4Test {
 	try {
 	    String ipStr = "IPv4 255.-55.4.46";
 	    new IPv4(ipStr);
-	    fail("Allowed IPv4 creation will illegal format (block under 0)");
+	    fail("Allowed IPv4 creation with illegal format (block under 0)");
 
 	} catch (IllegalArgumentException e) {
 	    // success
@@ -138,7 +138,7 @@ public class IPv4Test {
 	try {
 	    String ipStr = "IPv4 255..2.4.46";
 	    new IPv4(ipStr);
-	    fail("Allowed IPv4 creation will illegal format (two dots)");
+	    fail("Allowed IPv4 creation with illegal format (two dots)");
 
 	} catch (IllegalArgumentException e) {
 	    // success
@@ -147,7 +147,7 @@ public class IPv4Test {
 	try {
 	    String ipStr = "IPv4 255.2.4.46/-1";
 	    new IPv4(ipStr);
-	    fail("Allowed IPv4 creation will illegal format (prefix length < 0). ");
+	    fail("Allowed IPv4 creation with illegal format (prefix length < 0). ");
 
 	} catch (IllegalArgumentException e) {
 	    // success
@@ -156,7 +156,7 @@ public class IPv4Test {
 	try {
 	    String ipStr = "IPv4 255.2.4.46/33";
 	    new IPv4(ipStr);
-	    fail("Allowed IPv4 creation will illegal format (prefix length > 32)");
+	    fail("Allowed IPv4 creation with illegal format (prefix length > 32)");
 
 	} catch (IllegalArgumentException e) {
 	    // success
@@ -165,7 +165,7 @@ public class IPv4Test {
 	try {
 	    String ipStr = "IPv4 255.2.4.46/1 5";
 	    new IPv4(ipStr);
-	    fail("Allowed IPv4 creation will illegal format (extra numbers)");
+	    fail("Allowed IPv4 creation with illegal format (extra numbers)");
 
 	} catch (IllegalArgumentException e) {
 	    // success
