@@ -1,0 +1,48 @@
+/* General
+******************************************/
+
+$c-back-gray: #e0e0e0;
+
+/* Arrows */
+
+$directions: top, bottom, left, right;
+
+@function opposite($direction) {
+  @if ($direction == left) { @return right; }
+  @if ($direction == right) { @return left; }
+  @if ($direction == top) { @return bottom; }
+  @if ($direction == bottom) { @return top; }
+}
+
+%arrow {
+  display: inline-block;
+  width: 0; height: 0px;
+  transition: border 1s;
+}
+
+$c-arrow: black; /* applies only to @for arrow classes */
+$w-arrow: 7px;
+
+@each $direction in $directions {
+  .arrow-#{$direction} {
+     @extend %arrow;
+     border: $w-arrow solid transparent;
+     border-#{opposite($direction)}: $w-arrow solid $c-arrow;  
+   }
+}
+
+
+
+/* Hits table
+*************************************************/
+
+$m-table: 2.5rem;
+
+.table {
+  margin-top: $m-table;
+  margin-bottom: $m-table;
+}
+
+nav > .pagination {
+  border: 1px solid gray;
+}

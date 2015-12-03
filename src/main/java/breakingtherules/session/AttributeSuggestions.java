@@ -2,16 +2,16 @@ package breakingtherules.session;
 
 import java.util.List;
 
-import breakingtherules.firewall.Attribute;
+import breakingtherules.firewall.Attribute.AttType;
 import breakingtherules.services.algorithms.Suggestion;
 
 public class AttributeSuggestions {
 
-    private Attribute.AttType m_type;
+    private AttType m_type;
 
     private List<Suggestion> m_suggestions;
 
-    public AttributeSuggestions(Attribute.AttType type) {
+    public AttributeSuggestions(AttType type) {
 	m_type = type;
     }
 

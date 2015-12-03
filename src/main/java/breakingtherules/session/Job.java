@@ -54,6 +54,8 @@ public class Job {
      */
     private List<Rule> m_rules;
 
+    /***************************/
+
     /**
      * Restore all relevant parameters about the job to be worked on.
      * 
@@ -114,6 +116,7 @@ public class Job {
 
     public void setFilter(Filter f) {
 	m_filter = f;
+	m_suggestions.update();
     }
 
     public Filter getFilter() {

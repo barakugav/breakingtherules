@@ -3,19 +3,21 @@
 <head>
 	<meta charset="UTF-8">
 	<title>BreakingTheRules</title>
-	<link rel="stylesheet" href="./styles/index.css"></link>
-	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css"></link>
+	
+	<link rel="stylesheet" href="./styles/ext/bootstrap.min.css"></link>
 	<script src="./scripts/ext/jquery.min.js"></script>
 	<script src="./scripts/ext/angular.min.js"></script>
+	<script src="./scripts/ext/bootstrap.min.js"></script>
+
 	<script src="./scripts/index.js"></script>
-	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+	<link rel="stylesheet" href="./styles/index.css"></link>
 </head>
 <body>
-	<div class="container-fluid">
+	<div class="container">
 		<h1>BreakingTheRules</h1>
 		<h2>All Rules</h2>
 		<p>The rules are ordered bottom-up: the bottom rule is the base rule, and the new rules are placed on top of it, until the base rule will be no longer needed.</p>
-		<table ng-controller="RulesController as rulesCtrl" class="big-table">
+		<table ng-controller="RulesController as rulesCtrl" class="	table">
 			<tr>
 				<th></th>
 				<th>Source</th>
@@ -28,18 +30,47 @@
 			</tr>
 		</table>
 		<h2>All Hits</h2>
-		<table ng-controller="HitsTableController as hitsCtrl" class="big-table">
-			<tr>
-				<th></th>
-				<th>Source</th>
-				<th>Destination</th>
-				<th>Service</th>
-			</tr>
-			<tr ng-repeat="hit in hitsCtrl.allHits">
-				<td> {{ hit.id }} </td>
-				<td ng-repeat="attribute in hit.attributes"> {{ attribute.str }} </td>
-			</tr>
-		</table>	
+		<div ng-controller="HitsTableController as hitsCtrl">
+			<table class="table">
+				<tr>
+					<th></th>
+					<th>Source</th>
+					<th>Destination</th>
+					<th>Service</th>
+				</tr>
+				<tr ng-repeat="hit in hitsCtrl.allHits">
+					<td> {{ hit.id }} </td>
+					<td ng-repeat="attribute in hit.attributes"> {{ attribute.str }} </td>
+				</tr>
+			</table>
+			<div class="row text-center">
+				<!-- <i class="arrow-left" ng-click="hitsCtrl.prevPage()"></i>
+				<input type="text" value="{{ hitsCtrl.page }}" readonly=""></input>
+				<i class="arrow-right" ng-click="hitsCtrl.nextPage()"></i> -->
+				<nav>
+					<ul class="pagination">
+						<li ng-class="{disabled: hitsCtrl.page == 1}">
+							<a href="" aria-label="Previous" ng-click="hitsCtrl.prevPage()">
+								<span aria-hidden="true">&laquo;</span>
+							</a>
+						</li>
+						<li 
+							ng-repeat="pageNum in hitsCtrl.nearPages()" 
+							ng-class="{active: pageNum == hitsCtrl.page}" 
+							ng-click="hitsCtrl.setPage(pageNum)">
+								
+								<a href="">{{ pageNum }}</a>
+						</li>
+						<li ng-class="{disabled: hitsCtrl.page == hitsCtrl.numOfPages}">
+							<a href="" aria-label="Next" ng-click="hitsCtrl.nextPage()">
+								<span aria-hidden="true">&raquo;</span>
+							</a>
+						</li>
+					</ul>
+				</nav>
+			</div>
+		</div>
+
 	</div>
 	
 

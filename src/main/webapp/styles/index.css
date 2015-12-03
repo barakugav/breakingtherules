@@ -1,9 +1,36 @@
-.big-table {
-	width: 100%;
-}
+/* General
+******************************************/
+/* Arrows */
+.arrow-top, .arrow-bottom, .arrow-left, .arrow-right {
+  display: inline-block;
+  width: 0;
+  height: 0px;
+  transition: border 1s; }
 
-.big-table td {
-	border: 1px solid black;
-	margin: 0px;
-	padding: 3px;
-}
+/* applies only to @for arrow classes */
+.arrow-top {
+  border: 7px solid transparent;
+  border-bottom: 7px solid black; }
+
+.arrow-bottom {
+  border: 7px solid transparent;
+  border-top: 7px solid black; }
+
+.arrow-left {
+  border: 7px solid transparent;
+  border-right: 7px solid black; }
+
+.arrow-right {
+  border: 7px solid transparent;
+  border-left: 7px solid black; }
+
+/* Hits table
+*************************************************/
+.table {
+  margin-top: 2.5rem;
+  margin-bottom: 2.5rem; }
+
+nav > .pagination {
+  border: 1px solid gray; }
+
+/*# sourceMappingURL=index.css.map */
