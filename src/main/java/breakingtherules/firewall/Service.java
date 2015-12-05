@@ -235,12 +235,39 @@ public class Service extends Attribute {
 
     @Override
     public String toString() {
-	if (m_portRangeStart == MIN_PORT && m_portRangeEnd == MAX_PORT)
-	    return "Any " + (m_protocol.equals(ANY_PROTOCOL) ? "Any " : m_protocol);
-	if (m_portRangeStart == m_portRangeEnd)
-	    return m_portRangeStart + ((m_protocol.equals(ANY_PROTOCOL)) ? "Any " : m_protocol);
-	return (m_portRangeStart == MIN_PORT ? "Any " : ("" + m_portRangeStart))
-		+ (m_portRangeEnd == MAX_PORT ? "Any " : ("" + m_portRangeEnd))
-		+ ((m_protocol.equals(ANY_PROTOCOL)) ? "Any " : m_protocol);
+	
+	if (m_protocol.equals(ANY_PROTOCOL) && m_portRangeStart == MIN_PORT && m_portRangeEnd == MAX_PORT) {
+	    // All ports, all protocols
+	    return "Any";
+	}
+	
+	String first, last;
+		
+	if (m_portRangeStart == MIN_PORT && m_portRangeEnd == MAX_PORT) {
+	    // All ports, one protocol
+	    first = "Any";
+	    last = m_protocol;
+	}
+	else if (m_protocol.equals(ANY_PROTOCOL)){
+	    // Some ports, any protocol
+	    if (m_portRangeStart == m_portRangeEnd) {
+		first = "Port";
+		last = Integer.toString(m_portRangeStart);;
+	    }
+	    else {
+		first = "Ports";
+		last = m_portRangeStart + "-" + m_portRangeEnd;
+	    }		
+	}
+	else {
+	    // Some ports, one protocol
+	    first = m_protocol;
+	    if (m_portRangeStart == m_portRangeEnd)
+		last = Integer.toString(m_portRangeStart);
+	    else
+		last = m_portRangeStart + "-" + m_portRangeEnd;
+	}
+	
+	return first + " " + last;
     }
 }

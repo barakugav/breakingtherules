@@ -24,7 +24,7 @@ public class IPv4 extends IP {
      * Constructor based on String IP
      * 
      * @param ip
-     *            String IP
+     *            String IP, i.e. 127.0.0.0/8 or 127.168.0.1
      */
     public IPv4(String ip) throws IllegalArgumentException {
 	super(ip, STRING_SEPARATOR);

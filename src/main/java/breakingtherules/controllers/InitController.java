@@ -30,7 +30,6 @@ public class InitController {
      */
     @RequestMapping(value = "/job", method = RequestMethod.PUT)
     public boolean init(@RequestParam(value = "job_id") int job_id) {
-	System.out.println("Job id " + job_id);
 	m_job.setJob(job_id);
 	return true;
     }

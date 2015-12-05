@@ -94,7 +94,7 @@ public class ServiceTest {
     }
 
     @Test
-    public void contructorTestPortRangeUpperRangeLowerThenLowerRange() {
+    public void contructorTestPortRangeUpperRangeLowerThanLowerRange() {
 	try {
 	    String protocol = "TCP";
 	    int range[] = getRandomRange();
@@ -457,6 +457,42 @@ public class ServiceTest {
 
 	Destination des = new Destination("IPv4 1.1.1.1");
 	assertFalse(service.contains(des));
+    }
+
+    @Test
+    public void toString_SinglePortSingleProtocol() {
+	Service s = new Service("80 TCP");
+	assertEquals("TCP 80", s.toString());
+    }
+
+    @Test
+    public void toString_SinglePortAnyProtocol() {
+	Service s = new Service("80 Any");
+	assertEquals("Port 80", s.toString());
+    }
+
+    @Test
+    public void toString_AnyPortSingleProtocol() {
+	Service s = new Service("Any TCP");
+	assertEquals("Any TCP", s.toString());
+    }
+
+    @Test
+    public void toString_AnyPortAnyProtocol() {
+	Service s = new Service("Any Any");
+	assertEquals("Any", s.toString());
+    }
+
+    @Test
+    public void toString_PortRangeSingleProtocol() {
+	Service s = new Service("80 90 TCP");
+	assertEquals("TCP 80-90", s.toString());
+    }
+
+    @Test
+    public void toString_PortRangeAnyProtocol() {
+	Service s = new Service("80 90 Any");
+	assertEquals("Ports 80-90", s.toString());
     }
 
     /*--------------------Help Methods--------------------*/

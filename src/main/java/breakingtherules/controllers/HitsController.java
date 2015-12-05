@@ -1,7 +1,6 @@
 package breakingtherules.controllers;
 
 import java.io.IOException;
-import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -9,7 +8,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import breakingtherules.dao.HitsDao;
-import breakingtherules.firewall.Hit;
+import breakingtherules.dto.HitsDto;
 import breakingtherules.session.Job;
 import breakingtherules.session.NoCurrentJobException;
 
@@ -36,9 +35,9 @@ public class HitsController {
      * @throws IOException
      */
     @RequestMapping(value = "/hits", method = RequestMethod.GET)
-    public List<Hit> hits() throws NoCurrentJobException, IOException {
+    public HitsDto hits(int startIndex, int endIndex) throws NoCurrentJobException, IOException {
 	try {
-	    List<Hit> hits = m_hitsDao.getHits(m_job, 0, 10);
+	    HitsDto hits = m_hitsDao.getHits(m_job, startIndex, endIndex);
 	    return hits;
 
 	} catch (NoCurrentJobException e) {

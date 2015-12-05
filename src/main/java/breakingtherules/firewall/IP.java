@@ -58,28 +58,28 @@ public abstract class IP {
      */
     protected IP(String ip, String expectedSeparator) throws IllegalArgumentException {
 	List<Integer> address = new ArrayList<Integer>();
-	int separetorIndex = ip.indexOf(expectedSeparator);
+	int separatorIndex = ip.indexOf(expectedSeparator);
 
 	try {
 	    // Read address blocks
-	    while (separetorIndex >= 0) {
-		String stNum = ip.substring(0, separetorIndex);
+	    while (separatorIndex >= 0) {
+		String stNum = ip.substring(0, separatorIndex);
 		int intNum = Integer.parseInt(stNum);
 		address.add(intNum);
-		ip = ip.substring(separetorIndex + 1);
-		separetorIndex = ip.indexOf(expectedSeparator);
+		ip = ip.substring(separatorIndex + 1);
+		separatorIndex = ip.indexOf(expectedSeparator);
 	    }
 
 	    // Read suffix of IP - last block
-	    separetorIndex = ip.indexOf('/');
-	    if (separetorIndex < 0) {
+	    separatorIndex = ip.indexOf('/');
+	    if (separatorIndex < 0) {
 		// No const prefix specification
 		address.add(Integer.parseInt(ip));
 		m_prefixLength = getMaxLength();
 	    } else {
 		// Has const prefix specification
-		String stNum = ip.substring(0, separetorIndex);
-		ip = ip.substring(separetorIndex + 1);
+		String stNum = ip.substring(0, separatorIndex);
+		ip = ip.substring(separatorIndex + 1);
 
 		int intNum = Integer.parseInt(stNum);
 		address.add(intNum);
@@ -257,12 +257,12 @@ public abstract class IP {
 
 	// IPv4 format
 	if (ip.substring(0, 5).equals("IPv4 ")) {
-	    return new IPv4(ip);
+	    return new IPv4(ip.substring(5));
 	}
 
 	// IPv6 format
 	if (ip.substring(0, 5).equals("IPv6 ")) {
-	    return new IPv6(ip);
+	    return new IPv6(ip.substring(5));
 	}
 
 	throw new IllegalArgumentException("Unknown format");

@@ -1,9 +1,8 @@
 package breakingtherules.dao;
 
 import java.io.IOException;
-import java.util.List;
 
-import breakingtherules.firewall.Hit;
+import breakingtherules.dto.HitsDto;
 import breakingtherules.session.Job;
 import breakingtherules.session.NoCurrentJobException;
 
@@ -13,20 +12,37 @@ import breakingtherules.session.NoCurrentJobException;
 public interface HitsDao {
 
     /**
-     * Get list of his by filter of a job
+     * Gathers all the hits that match the job's filter. Then cuts the ones
+     * between startIndex and endIndex, and sends as a DTO.
      * 
      * @param job
-     *            the current job
+     *            The job to take hits from
      * @param startIndex
-     *            start index of the hits list
+     *            The 0-index to start from, including this index.
      * @param endIndex
-     *            end index of the hits list
-     * @return list of the hits from DAO in range [startIndex, endIndex]
+     *            The 0-index to end at, excluding this index.
+     * @return HitsDto object
+     * 
      * @throws IOException
      *             if failed to read from hits repository
      * @throws NoCurrentJobException
      *             if there is no current job
      */
-    public List<Hit> getHits(Job job, int startIndex, int endIndex) throws IOException, NoCurrentJobException;
+    public HitsDto getHits(Job currentJob, int startIndex, int endIndex) throws IOException, NoCurrentJobException;
+
+    
+    /**
+     * Gathers all the hits that match the job's filter. 
+     * 
+     * @param job
+     *            The job to take hits from
+     * @return HitsDto object
+     * 
+     * @throws IOException
+     *             if failed to read from hits repository
+     * @throws NoCurrentJobException
+     *             if there is no current job
+     */
+    public HitsDto getHits(Job currentJob) throws IOException, NoCurrentJobException;
 
 }

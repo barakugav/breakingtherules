@@ -6,5 +6,5 @@
 	<hit id="5" source="IPv4 15.5.4.58" destination="IPv4 201.0.0.1" service="246 TCP"></hit>
 	<hit id="6" source="IPv4 29.11.4.23" destination="IPv4 8.0.0.4" service="4888 TCP"></hit>
 
-	<rule id="1" source="IPv4 0.0.0.0/0" destination="IPv4 0.0.0.0/0" service="TCP"></rule>
+	<rule id="1" source="IPv4 0.0.0.0/0" destination="IPv4 0.0.0.0/0" service="Any TCP"></rule>
 </Repository>

@@ -96,7 +96,7 @@ public class Job {
      * @throws IOException
      */
     public List<Hit> getRelevantHits() throws NoCurrentJobException, IOException {
-	List<Hit> hits = m_hitsDao.getHits(this, 0, 10);
+	List<Hit> hits = m_hitsDao.getHits(this).hits;
 	return hits;
     }
 
@@ -110,7 +110,6 @@ public class Job {
     public String getRepositoryLocation() throws NoCurrentJobException {
 	if (m_jobId == NO_CURRENT_JOB)
 	    throw new NoCurrentJobException();
-	System.out.println("repository/" + m_jobId + "/repository.xml");
 	return "repository/" + m_jobId + "/repository.xml";
     }
 

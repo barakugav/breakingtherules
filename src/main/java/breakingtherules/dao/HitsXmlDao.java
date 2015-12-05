@@ -17,6 +17,7 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
+import breakingtherules.dto.HitsDto;
 import breakingtherules.firewall.Attribute;
 import breakingtherules.firewall.Destination;
 import breakingtherules.firewall.Filter;
@@ -32,7 +33,34 @@ import breakingtherules.session.NoCurrentJobException;
 @Component
 public class HitsXmlDao implements HitsDao {
 
-    public List<Hit> getHits(Job job, int startIndex, int endIndex) throws IOException, NoCurrentJobException {
+    /**
+     * See documentation in HitsDao
+     */
+    public HitsDto getHits(Job job, int startIndex, int endIndex) throws IOException, NoCurrentJobException {
+	
+	// Extract all hits that match the filter
+	List<Hit> matchedHits = this.getHits(job).hits;	
+
+	int total = matchedHits.size();
+
+	HitsDto requestedHits;
+	try {
+	    requestedHits = new HitsDto(matchedHits.subList(startIndex, endIndex), startIndex, endIndex, total);
+	}
+	catch(IndexOutOfBoundsException e) {
+	    if (startIndex > total) return new HitsDto(new ArrayList<Hit>(), 0, 0, total);
+	    else {
+		requestedHits = new HitsDto(matchedHits.subList(startIndex, total), startIndex, total, total);
+	    }
+	}
+
+	return requestedHits;
+    }
+    
+    /**
+     * See documentation in HitsDao
+     */
+    public HitsDto getHits(Job job) throws IOException, NoCurrentJobException {
 	// Load from file
 	String repoPath = job.getRepositoryLocation();
 	Document repositoryDoc = loadRepository(repoPath);
@@ -40,9 +68,9 @@ public class HitsXmlDao implements HitsDao {
 	// Get all hits from repository
 	NodeList hitsList = repositoryDoc.getElementsByTagName("hit");
 
-	// Extract only hits that match the filter
+	// Extract all hits that match the filter
 	List<Hit> matchedHits = new ArrayList<Hit>();
-	for (int i = 0; i < hitsList.getLength() && matchedHits.size() < endIndex; i++) {
+	for (int i = 0; i < hitsList.getLength(); i++) {
 	    Node hitNode = hitsList.item(i);
 	    if (hitNode.getNodeType() == Element.ELEMENT_NODE) {
 		Element hitElm = (Element) hitNode;
@@ -54,8 +82,7 @@ public class HitsXmlDao implements HitsDao {
 		    matchedHits.add(hit);
 	    }
 	}
-
-	return matchedHits.subList(startIndex, Math.min(endIndex, matchedHits.size()));
+	return new HitsDto(matchedHits, 0, matchedHits.size(), matchedHits.size());
     }
 
     /**

@@ -22,17 +22,19 @@ var GUI_STRINGS = {
 		hitsCtrl.numOfPages = 10;
 		hitsCtrl.allHits = [];
 
-		hitsCtrl.NAV_SIZE = 5; // always an odd number
+		hitsCtrl.NAV_SIZE = 5; 		// how many elements in nav. always an odd number
+		hitsCtrl.PAGE_SIZE = 10;	// how many hits in every page
 
 		SetJob.then(function() {
-			hitsCtrl.getPage();
+			hitsCtrl.requestPage();
 		});
 
-		hitsCtrl.getPage = function() {
-			$http.get('/hits?page=' + hitsCtrl.page).success(function (data) {
-				$log.log('Get request success');
-				$log.log(data);
-				hitsCtrl.allHits = data;
+		hitsCtrl.requestPage = function() {
+			var startIndex = (hitsCtrl.page - 1) * hitsCtrl.PAGE_SIZE,
+				endIndex = startIndex + hitsCtrl.PAGE_SIZE;
+			$http.get('/hits?startIndex=' + startIndex + '&endIndex=' + endIndex).success(function (data) {
+				hitsCtrl.numOfPages = Math.floor(data.total / hitsCtrl.PAGE_SIZE);
+				hitsCtrl.allHits = data.hits;
 			});
 		};
 
@@ -56,14 +58,14 @@ var GUI_STRINGS = {
 		hitsCtrl.nextPage = function () {
 			hitsCtrl.setPage(hitsCtrl.page + 1);
 		};
-		hitsCtrl.prevPage  = function () {
+		hitsCtrl.prevPage = function () {
 			hitsCtrl.setPage(hitsCtrl.page - 1);
 		};
 
-		hitsCtrl.setPage  = function (newPage) {
+		hitsCtrl.setPage = function (newPage) {
 			if (newPage <= hitsCtrl.numOfPages && newPage >= 1)  {
 				hitsCtrl.page = newPage;
-				hitsCtrl.getPage();
+				hitsCtrl.requestPage();
 			}
 		};
 
@@ -102,35 +104,3 @@ function range(a ,b) {
 }
 
 
-
-/******************* UNIMPORTANT ******************/
-
-function getHitsMock(callback) {
-	callback( [{
-			id: 0,
-			sourceIp: '127.0.0.1',
-			destIp: '127.0.0.1',
-			service: 'TCP 80'
-		}, {
-			id: 1,
-			sourceIp: '127.0.0.1',
-			destIp: '127.0.0.1',
-			service: 'TCP 80'
-		}, {
-			id: 2,
-			sourceIp: '127.0.0.1',
-			destIp: '127.0.0.1',
-			service: 'TCP 80'
-		}, {
-			id: 3,
-			sourceIp: '127.0.0.1',
-			destIp: '127.0.0.1',
-			service: 'TCP 80'
-		}, {
-			id: 4,
-			sourceIp: '127.0.0.1',
-			destIp: '127.0.0.1',
-			service: 'TCP 80'
-		}
-	] );
-}
