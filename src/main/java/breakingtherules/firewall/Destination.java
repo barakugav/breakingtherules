@@ -16,8 +16,11 @@ public class Destination extends Attribute {
      * @param ip
      *            IP of the destination
      */
-    public Destination(IP ip) {
+    public Destination(IP ip) throws IllegalArgumentException {
 	super(AttType.Destination);
+
+	if (ip == null)
+	    throw new IllegalArgumentException("Tried to create source with null ip arg");
 	m_ip = ip;
     }
 
@@ -48,7 +51,7 @@ public class Destination extends Attribute {
 	    return false;
 
 	Destination o = (Destination) other;
-	return m_ip.contain(o.m_ip);
+	return m_ip.contains(o.m_ip);
     }
 
     @Override

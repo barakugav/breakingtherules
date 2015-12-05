@@ -27,7 +27,7 @@ public class Service extends Attribute {
     /**
      * Service of protocol 'Any protocol'
      */
-    public static final String ANY_PROTOCOL = null;
+    public static final String ANY_PROTOCOL = "__AnyProtocol__";
 
     /**
      * The minimum legal port number
@@ -40,16 +40,6 @@ public class Service extends Attribute {
     public static final int MAX_PORT = (1 << 16) - 1;
 
     /**
-     * Port number 'Any start range port'
-     */
-    public static final int ANY_PORT_START_RANGE = Integer.MIN_VALUE;
-
-    /**
-     * Port number 'Any end range port'
-     */
-    public static final int ANY_PORT_END_RANGE = Integer.MAX_VALUE;
-
-    /**
      * Constructor
      * 
      * @param type
@@ -57,7 +47,7 @@ public class Service extends Attribute {
      * @param port
      *            port number of the service
      */
-    public Service(String protocol, int port) {
+    public Service(String protocol, int port) throws IllegalArgumentException {
 	super(AttType.Service);
 	m_protocol = protocol;
 	if (port < MIN_PORT || port > MAX_PORT)
@@ -80,14 +70,14 @@ public class Service extends Attribute {
 	super(AttType.Service);
 	m_protocol = protocol;
 
-	if (portRangeStart != ANY_PORT_START_RANGE)
-	    if (portRangeStart < MIN_PORT || portRangeStart > MAX_PORT)
-		throw new IllegalArgumentException("Port not in range: " + portRangeStart + ". should be in range ["
-			+ MIN_PORT + ", " + MAX_PORT + "]");
-	if (portRangeEnd != ANY_PORT_END_RANGE)
-	    if (portRangeEnd < MIN_PORT || portRangeEnd > MAX_PORT)
-		throw new IllegalArgumentException("Port not in range: " + portRangeEnd + ". should be in range ["
-			+ MIN_PORT + ", " + MAX_PORT + "]");
+	if (portRangeStart < MIN_PORT || portRangeStart > MAX_PORT)
+	    throw new IllegalArgumentException("Port not in range: " + portRangeStart + ". should be in range ["
+		    + MIN_PORT + ", " + MAX_PORT + "]");
+	if (portRangeEnd < MIN_PORT || portRangeEnd > MAX_PORT)
+	    throw new IllegalArgumentException(
+		    "Port not in range: " + portRangeEnd + ". should be in range [" + MIN_PORT + ", " + MAX_PORT + "]");
+	if (portRangeStart > portRangeEnd)
+	    throw new IllegalArgumentException("portRangeStart > portRangeEnd");
 
 	m_portRangeStart = portRangeStart;
 	m_portRangeEnd = portRangeEnd;
@@ -103,19 +93,21 @@ public class Service extends Attribute {
 	super(AttType.Service);
 
 	int separatorIndex;
-
 	switch (StringUtils.countOccurrencesOf(service, " ")) {
 	case 0:
-	    break;
+	    throw new IllegalArgumentException("Unknown format, missing port or protocol");
 	case 1:
 	    // only one port number
 	    separatorIndex = service.indexOf(' ');
 	    String portStr = service.substring(0, separatorIndex);
 	    if (portStr.equals("Any")) {
-		m_portRangeStart = ANY_PORT_START_RANGE;
-		m_portRangeEnd = ANY_PORT_END_RANGE;
+		m_portRangeStart = MIN_PORT;
+		m_portRangeEnd = MAX_PORT;
 	    } else {
-		m_portRangeStart = m_portRangeEnd = Integer.parseInt(portStr);
+		int port = Integer.parseInt(portStr);
+		if (port < MIN_PORT || port > MAX_PORT)
+		    throw new IllegalArgumentException("Port should be in range [" + MIN_PORT + ", " + MAX_PORT + "]");
+		m_portRangeStart = m_portRangeEnd = port;
 	    }
 	    service = service.substring(separatorIndex + 1);
 	    break;
@@ -124,24 +116,36 @@ public class Service extends Attribute {
 	    separatorIndex = service.indexOf(' ');
 	    String portRangeStartStr = service.substring(0, separatorIndex);
 	    if (portRangeStartStr.equals("Any")) {
-		m_portRangeStart = ANY_PORT_START_RANGE;
+		m_portRangeStart = MIN_PORT;
 	    } else {
-		m_portRangeStart = Integer.parseInt(portRangeStartStr);
+		int port = Integer.parseInt(portRangeStartStr);
+		if (port < MIN_PORT || port > MAX_PORT)
+		    throw new IllegalArgumentException("Port should be in range [" + MIN_PORT + ", " + MAX_PORT + "]");
+		m_portRangeStart = port;
 	    }
 	    service = service.substring(separatorIndex + 1);
 	    // end port
 	    separatorIndex = service.indexOf(' ');
 	    String portRangeEndStr = service.substring(0, separatorIndex);
 	    if (portRangeEndStr.equals("Any")) {
-		m_portRangeEnd = ANY_PORT_END_RANGE;
+		m_portRangeEnd = MAX_PORT;
 	    } else {
-		m_portRangeEnd = Integer.parseInt(portRangeEndStr);
+		int port = Integer.parseInt(portRangeEndStr);
+		if (port < MIN_PORT || port > MAX_PORT)
+		    throw new IllegalArgumentException("Port should be in range [" + MIN_PORT + ", " + MAX_PORT + "]");
+		m_portRangeEnd = port;
 	    }
 	    service = service.substring(separatorIndex + 1);
 	    break;
 	default:
 	    throw new IllegalArgumentException("Unknow format: too many words");
 	}
+
+	if (m_portRangeStart > m_portRangeEnd)
+	    throw new IllegalArgumentException("portRangeStart > portRangeEnd");
+
+	if (service.equals(""))
+	    throw new IllegalArgumentException("No protocol");
 
 	m_protocol = service.equals("Any") ? ANY_PROTOCOL : service;
     }
@@ -170,7 +174,7 @@ public class Service extends Attribute {
      * @return start of the port range of the service
      */
     public int getPortRangeEnd() {
-	return m_portRangeStart;
+	return m_portRangeEnd;
     }
 
     @Override
@@ -180,9 +184,9 @@ public class Service extends Attribute {
 	}
 
 	Service o = (Service) other;
-	if (m_protocol == ANY_PROTOCOL)
+	if (m_protocol.equals(ANY_PROTOCOL))
 	    return containsPort(o);
-	if (o.m_protocol == ANY_PROTOCOL)
+	if (o.m_protocol.equals(ANY_PROTOCOL))
 	    return false;
 	if (!m_protocol.equals(o.m_protocol)) {
 	    return false;
@@ -231,12 +235,12 @@ public class Service extends Attribute {
 
     @Override
     public String toString() {
-	if (m_portRangeStart == ANY_PORT_START_RANGE && m_portRangeEnd == ANY_PORT_END_RANGE)
-	    return "Any " + (m_protocol == ANY_PROTOCOL ? "Any " : m_protocol);
+	if (m_portRangeStart == MIN_PORT && m_portRangeEnd == MAX_PORT)
+	    return "Any " + (m_protocol.equals(ANY_PROTOCOL) ? "Any " : m_protocol);
 	if (m_portRangeStart == m_portRangeEnd)
-	    return m_portRangeStart + (m_protocol == ANY_PROTOCOL ? "Any " : m_protocol);
-	return (m_portRangeStart == ANY_PORT_START_RANGE ? "Any " : ("" + m_portRangeStart))
-		+ (m_portRangeEnd == ANY_PORT_START_RANGE ? "Any " : ("" + m_portRangeEnd))
-		+ (m_protocol == ANY_PROTOCOL ? "Any " : m_protocol);
+	    return m_portRangeStart + ((m_protocol.equals(ANY_PROTOCOL)) ? "Any " : m_protocol);
+	return (m_portRangeStart == MIN_PORT ? "Any " : ("" + m_portRangeStart))
+		+ (m_portRangeEnd == MAX_PORT ? "Any " : ("" + m_portRangeEnd))
+		+ ((m_protocol.equals(ANY_PROTOCOL)) ? "Any " : m_protocol);
     }
 }

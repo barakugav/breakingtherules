@@ -21,9 +21,9 @@ public interface HitsDao {
      *            start index of the hits list
      * @param endIndex
      *            end index of the hits list
-     * @return list of hits in range [startIndex, endIndex]
+     * @return list of the hits from DAO in range [startIndex, endIndex]
      * @throws IOException
-     *             if failed to load repository
+     *             if failed to read from hits repository
      * @throws NoCurrentJobException
      *             if there is no current job
      */

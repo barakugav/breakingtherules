@@ -18,8 +18,11 @@ public class Source extends Attribute {
      * @param ip
      *            IP of the source
      */
-    public Source(IP ip) {
+    public Source(IP ip) throws IllegalArgumentException {
 	super(AttType.Source);
+
+	if (ip == null)
+	    throw new IllegalArgumentException("Tried to create source with null ip arg");
 	m_ip = ip;
     }
 
@@ -50,7 +53,7 @@ public class Source extends Attribute {
 	    return false;
 
 	Source o = (Source) other;
-	return m_ip.contain(o.m_ip);
+	return m_ip.contains(o.m_ip);
     }
 
     @Override

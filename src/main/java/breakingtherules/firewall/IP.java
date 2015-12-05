@@ -57,8 +57,6 @@ public abstract class IP {
      *            String separator between two blocks in the String IP
      */
     protected IP(String ip, String expectedSeparator) throws IllegalArgumentException {
-	ip = checkFormat(ip);
-
 	List<Integer> address = new ArrayList<Integer>();
 	int separetorIndex = ip.indexOf(expectedSeparator);
 
@@ -176,7 +174,7 @@ public abstract class IP {
      *            other IP to compare to
      * @return true if this IP contain in his sub-network the other IP
      */
-    public boolean contain(IP other) {
+    public boolean contains(IP other) {
 	if (other == null)
 	    return false;
 	if (this instanceof IPv4 && !(other instanceof IPv4))
@@ -271,32 +269,19 @@ public abstract class IP {
     }
 
     /**
-     * Check if a string IP is in the right format, throw exception if isn't.
-     * Return the String read to convert
-     * 
-     * @param ip
-     *            String IP to check his format
-     * @return String without prefix format
-     * 
-     * @throws IllegalArgumentException
-     *             if format isn't OK
-     */
-    protected abstract String checkFormat(String ip) throws IllegalArgumentException;
-
-    /**
      * Get the number of blocks in this IP
      * 
      * @return number of blocks in the IP
      */
     @JsonIgnore
-    protected abstract int getNumberOfBlocks();
+    public abstract int getNumberOfBlocks();
 
     /**
      * Get the size of each block in this IP
      * 
      * @return size of block in the IP
      */
-    protected abstract int getBlockSize();
+    public abstract int getBlockSize();
 
     /**
      * Get the string separator used when converting IP to string
@@ -304,7 +289,7 @@ public abstract class IP {
      * @return string separator of this IP
      */
     @JsonIgnore
-    protected abstract String getStringSeparator();
+    public abstract String getStringSeparator();
 
     /**
      * Get the max length of this IP's address
@@ -312,7 +297,7 @@ public abstract class IP {
      * @return max length of the IP's address
      */
     @JsonIgnore
-    protected int getMaxLength() {
+    public int getMaxLength() {
 	return getBlockSize() * getNumberOfBlocks();
     }
 
@@ -356,7 +341,7 @@ public abstract class IP {
      */
     @JsonIgnore
     private int getMaxBlockValue() {
-	return 1 << getBlockSize();
+	return (1 << getBlockSize()) - 1;
     }
 
 }

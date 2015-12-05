@@ -90,34 +90,18 @@ public class IPv6 extends IP {
     }
 
     @Override
-    protected int getNumberOfBlocks() {
+    public int getNumberOfBlocks() {
 	return NUMBER_OF_BLOCKS;
     }
 
     @Override
-    protected int getBlockSize() {
+    public int getBlockSize() {
 	return BLOCK_SIZE;
     }
 
     @Override
-    protected String getStringSeparator() {
+    public String getStringSeparator() {
 	return STRING_SEPARATOR;
-    }
-
-    @Override
-    protected String checkFormat(String ip) throws IllegalArgumentException {
-	if (ip == null) {
-	    throw new IllegalArgumentException("Null arg");
-	}
-
-	if (ip.length() < 5) {
-	    throw new IllegalArgumentException("Unknown format");
-	}
-
-	if (!ip.substring(0, 5).equals("IPv6 "))
-	    throw new IllegalArgumentException("Unknown format: " + ip.substring(0, 5) + " (expected: IPv6)");
-
-	return ip.substring(5);
     }
 
 }
