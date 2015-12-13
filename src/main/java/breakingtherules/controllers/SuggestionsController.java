@@ -1,29 +1,25 @@
 package breakingtherules.controllers;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import breakingtherules.dao.HitsDao;
-import breakingtherules.services.algorithms.Suggestion;
-import breakingtherules.services.algorithms.SuggestionsAlgorithm;
+import breakingtherules.session.Job;
+import breakingtherules.session.JobSuggestions;
+import breakingtherules.session.NoCurrentJobException;
 
 @RestController
 public class SuggestionsController {
 
     @Autowired
-    private SuggestionsAlgorithm m_algorithm;
-
-    @Autowired
-    private HitsDao m_hitsDao;
+    private Job job;
 
     @RequestMapping(value = "/suggestions", method = RequestMethod.GET)
-    public List<Suggestion> getSuggestions() {
-	return new ArrayList<Suggestion>();
+    public JobSuggestions getSuggestions(@RequestParam(value = "amount", defaultValue = "10") int amount)
+	    throws NoCurrentJobException {
+	return job.getSuggestions();
     }
 
 }

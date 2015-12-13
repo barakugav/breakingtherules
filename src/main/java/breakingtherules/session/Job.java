@@ -1,6 +1,7 @@
 package breakingtherules.session;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,9 +10,13 @@ import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.stereotype.Component;
 
 import breakingtherules.dao.HitsDao;
+import breakingtherules.dao.RulesDao;
+import breakingtherules.firewall.Attribute;
+import breakingtherules.firewall.Attribute.AttType;
 import breakingtherules.firewall.Filter;
 import breakingtherules.firewall.Hit;
 import breakingtherules.firewall.Rule;
+import breakingtherules.services.algorithms.SuggestionsAlgorithm;
 
 @Component
 @Scope(value = "session", proxyMode = ScopedProxyMode.TARGET_CLASS)
@@ -20,7 +25,13 @@ public class Job {
     public static final int NO_CURRENT_JOB = -1;
 
     @Autowired
-    private HitsDao m_hitsDao;
+    private HitsDao hitsDao;
+
+    @Autowired
+    private RulesDao rulesDao;
+
+    @Autowired
+    private SuggestionsAlgorithm algorithm;
 
     /**
      * Index of the job
@@ -54,7 +65,13 @@ public class Job {
      */
     private List<Rule> m_rules;
 
-    /***************************/
+    /**
+     * A list of all the attributes that this job holds for each hit/rule. To be
+     * used ONLY by getAllAttributeTypes()
+     */
+    private List<AttType> m_allAttributeTypes;
+
+    /************************************************/
 
     /**
      * Restore all relevant parameters about the job to be worked on.
@@ -62,11 +79,19 @@ public class Job {
      * @param id
      *            The id of the job that needs to be worked on.
      */
-    public void setJob(int id) {
+    public void setJob(int id) throws IOException {
 	m_jobId = id;
-	m_suggestions = new JobSuggestions();
-	m_filter = new Filter();
-	m_suggestions.update();
+
+	try {
+	    m_rules = rulesDao.getRules(this);
+	} catch (NoCurrentJobException e) {
+	    // Shouldn't happen because jobId is set
+	    System.err.println("Something's wrong. NoCurrentJob in setJob.");
+	}
+	
+	m_suggestions = new JobSuggestions(this); // Must be after setting m_rules
+	m_filter = new Filter(); // Change to: previously used filter
+	m_suggestions.update(); // Must be after setting ID, filter, rules
     }
 
     /**
@@ -96,7 +121,7 @@ public class Job {
      * @throws IOException
      */
     public List<Hit> getRelevantHits() throws NoCurrentJobException, IOException {
-	List<Hit> hits = m_hitsDao.getHits(this).hits;
+	List<Hit> hits = hitsDao.getHits(this).hits;
 	return hits;
     }
 
@@ -120,5 +145,33 @@ public class Job {
 
     public Filter getFilter() {
 	return m_filter;
+    }
+
+    public SuggestionsAlgorithm getAlgorithm() {
+	return algorithm;
+    }
+
+    /**
+     * Uses one of the job's rules to decipher the different attributes that
+     * this job has for each hit/rule. Is calculated once and kept in
+     * allAttributeTypes
+     * 
+     * @return E.x. ["source", "destination", "service"]
+     */
+    public List<AttType> getAllAttributeTypes() {
+
+	if (m_allAttributeTypes == null) {
+	    List<AttType> types = new ArrayList<AttType>();
+
+	    Rule r = m_rules.get(0);
+	    for (Attribute att : r.getAttributes()) {
+		types.add(att.getAttType());
+	    }
+
+	    m_allAttributeTypes = types;
+	}
+	
+	return m_allAttributeTypes;
+
     }
 }

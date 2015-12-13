@@ -33,4 +33,14 @@
 nav > .pagination {
   border: 1px solid gray; }
 
+/* Suggestions table
+*************************************************/
+#table-sug li {
+  display: block;
+  list-style: none;
+  color: blue;
+  cursor: pointer; }
+  #table-sug li:hover {
+    text-decoration: underline; }
+
 /*# sourceMappingURL=index.css.map */

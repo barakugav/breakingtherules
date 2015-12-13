@@ -11,7 +11,7 @@
 	<script src="./scripts/index.js"></script>
 	<link rel="stylesheet" href="./styles/index.css"></link>
 </head>
-<body>
+<body ng-controller="GlobalController as globalCtrl">
 	<div class="container">
 		<h1>BreakingTheRules</h1>
 		<h2>All Rules</h2>
@@ -19,9 +19,7 @@
 		<table ng-controller="RulesController as rulesCtrl" class="table">
 			<tr>
 				<th></th>
-				<th>Source</th>
-				<th>Destination</th>
-				<th>Service</th>
+				<th ng-repeat="att in globalCtrl.attributes">{{ att | capitalize }}</th>
 			</tr>
 			<tr ng-repeat="rule in rulesCtrl.rules">
 				<td> {{ rule.id }} </td>
@@ -33,9 +31,7 @@
 			<table class="table">
 				<tr>
 					<th></th>
-					<th>Source</th>
-					<th>Destination</th>
-					<th>Service</th>
+					<th ng-repeat="att in globalCtrl.attributes">{{ att | capitalize }}</th>
 				</tr>
 				<tr ng-repeat="hit in hitsCtrl.allHits">
 					<td> {{ hit.id }} </td>
@@ -43,9 +39,6 @@
 				</tr>
 			</table>
 			<div class="row text-center">
-				<!-- <i class="arrow-left" ng-click="hitsCtrl.prevPage()"></i>
-				<input type="text" value="{{ hitsCtrl.page }}" readonly=""></input>
-				<i class="arrow-right" ng-click="hitsCtrl.nextPage()"></i> -->
 				<nav>
 					<ul class="pagination">
 						<li ng-class="{disabled: hitsCtrl.page == 1}">
@@ -67,8 +60,29 @@
 						</li>
 					</ul>
 				</nav>
-			</div>
-		</div>
+			</div> <!--nav row-->
+		</div> <!--HitsController-->
+
+		<h2>Suggestions</h2>
+		<table ng-controller="SuggestionController as sugCtrl" class="table" id="table-sug">
+			<thead>
+				<tr>
+					<th ng-repeat="attSuggestion in sugCtrl.allSuggestions">
+						{{ attSuggestion.type }}
+					</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr>
+					<td ng-repeat="attSuggestions in sugCtrl.allSuggestions">
+						<ul>
+							<li ng-repeat="sug in attSuggestions.suggestions">{{ sug.attribute.str }}</li>
+						</ul>
+					</td>
+				</tr>	
+			</tbody>
+		</table>
+
 
 	</div>
 	

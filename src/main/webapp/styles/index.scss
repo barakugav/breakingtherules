@@ -46,3 +46,19 @@ $m-table: 2.5rem;
 nav > .pagination {
   border: 1px solid gray;
 }
+
+
+
+/* Suggestions table
+*************************************************/
+
+#table-sug li {
+  display: block;
+  list-style: none;
+  color: blue;
+  cursor: pointer;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}

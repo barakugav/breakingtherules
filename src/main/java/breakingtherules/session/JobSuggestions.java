@@ -3,20 +3,30 @@ package breakingtherules.session;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+import breakingtherules.firewall.Attribute.AttType;
 
 public class JobSuggestions {
 
     /**
      * A suggestion object for each attribute.
      */
+    @JsonProperty("suggestions")
     private List<AttributeSuggestions> m_attributeSuggestions;
 
-    @Autowired
+    @JsonIgnore
     private Job m_job;
+    
 
-    public JobSuggestions() {
+    public JobSuggestions(Job job) {
+	m_job = job;
+	System.out.println(m_job.getAllAttributeTypes());
 	m_attributeSuggestions = new ArrayList<AttributeSuggestions>();
+	for (AttType att : m_job.getAllAttributeTypes()) {
+	    m_attributeSuggestions.add(new AttributeSuggestions(m_job, att));
+	}
     }
 
     /**

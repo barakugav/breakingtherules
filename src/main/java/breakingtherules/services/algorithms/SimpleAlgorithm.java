@@ -19,6 +19,8 @@ import breakingtherules.session.NoCurrentJobException;
  */
 @Component
 public class SimpleAlgorithm implements SuggestionsAlgorithm {
+    
+    static int NUM_OF_SUGGESTIONS = 10;
 
     public List<Suggestion> getSuggestions(Job job, AttType attType) {
 
@@ -59,7 +61,9 @@ public class SimpleAlgorithm implements SuggestionsAlgorithm {
 
 	// Put suggestions in array for sorting
 	Collections.sort(allSuggestionsList);
-
+	
+	if (allSuggestionsList.size() > NUM_OF_SUGGESTIONS)
+	    return allSuggestionsList.subList(0, NUM_OF_SUGGESTIONS - 1);
 	return allSuggestionsList;
 
 	// Partial list code :

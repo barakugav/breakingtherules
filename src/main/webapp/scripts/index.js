@@ -1,7 +1,22 @@
-var GUI_STRINGS = {
+"use strict";
+
+/****************** Settings ************************/
+
+
+var settings = {
+
+	guiStrings: {
 		JOB_PROMPT: 'To begin, enter the job id:'
+	},
+	
+	attributes: [
+		"source", "destination", "service"
+	]	
+
 };
 
+
+/**************** Main Angular ********************/
 
 (function() {
 	
@@ -9,13 +24,17 @@ var GUI_STRINGS = {
 
 	// Set job before ng-app begins
 	app.factory('SetJob', ['$http', function ($http) {
-		var job_id = parseInt(window.prompt(GUI_STRINGS.JOB_PROMPT, 1));
+		var job_id = parseInt(window.prompt(settings.guiStrings.JOB_PROMPT, 1));
 		return $http.put('/job?job_id=' + job_id);
 	}]);
 
+	app.controller('GlobalController', function() {
+		this.attributes = settings.attributes;
+	});
+
 
 	app.controller('HitsTableController', ['$http', '$log', 'SetJob', function ($http, $log, SetJob) {
-		
+
 		var hitsCtrl = this;
 
 		hitsCtrl.page = 1;
@@ -33,7 +52,7 @@ var GUI_STRINGS = {
 			var startIndex = (hitsCtrl.page - 1) * hitsCtrl.PAGE_SIZE,
 				endIndex = startIndex + hitsCtrl.PAGE_SIZE;
 			$http.get('/hits?startIndex=' + startIndex + '&endIndex=' + endIndex).success(function (data) {
-				hitsCtrl.numOfPages = Math.floor(data.total / hitsCtrl.PAGE_SIZE);
+				hitsCtrl.numOfPages = Math.ceil(data.total / hitsCtrl.PAGE_SIZE);
 				hitsCtrl.allHits = data.hits;
 			});
 		};
@@ -41,7 +60,7 @@ var GUI_STRINGS = {
 		hitsCtrl.nearPages = function () {
 			var numOfPages = hitsCtrl.numOfPages,
 				page = hitsCtrl.page,
-			 	NAV_SIZE = hitsCtrl.NAV_SIZE;
+				NAV_SIZE = hitsCtrl.NAV_SIZE;
 
 			// Edges
 			if (numOfPages <= NAV_SIZE)
@@ -80,13 +99,31 @@ var GUI_STRINGS = {
 
 		SetJob.then(function() {
 			$http.get('/rules').success(function (data) {
-				$log.log('Get request success');
-				$log.log(data);
 				rulesCtrl.rules = data;
 			});
 		});
 		
 	}]);
+
+	app.controller('SuggestionController', ['$http', '$log', 'SetJob', function ($http, $log, SetJob) {
+
+		var sugCtrl = this;
+
+		SetJob.then(function() {
+			$http.get('/suggestions').success(function (data) {
+				sugCtrl.allSuggestions = data.suggestions;
+			});
+		});
+
+	}]);
+
+	// Taken from http://codepen.io/WinterJoey/pen/sfFaK
+	app.filter('capitalize', function() {
+		return function(input, all) {
+			var reg = (all) ? /([^\W_]+[^\s-]*) */g : /([^\W_]+[^\s-]*)/;
+			return (!!input) ? input.replace(reg, function(txt){return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();}) : '';
+		}
+	});
 
 })();
 

@@ -1,5 +1,7 @@
 package breakingtherules.controllers;
 
+import java.io.IOException;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -29,7 +31,7 @@ public class InitController {
      * @return Success
      */
     @RequestMapping(value = "/job", method = RequestMethod.PUT)
-    public boolean init(@RequestParam(value = "job_id") int job_id) {
+    public boolean init(@RequestParam(value = "job_id") int job_id) throws IOException {
 	m_job.setJob(job_id);
 	return true;
     }
