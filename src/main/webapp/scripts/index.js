@@ -2,7 +2,6 @@
 
 /****************** Settings ************************/
 
-
 var settings = {
 
 	guiStrings: {
@@ -14,7 +13,6 @@ var settings = {
 	]	
 
 };
-
 
 /**************** Main Angular ********************/
 
@@ -32,19 +30,73 @@ var settings = {
 		this.attributes = settings.attributes;
 	});
 
+	app.controller('RulesController', ['$http', '$log', 'SetJob', function ($http, $log, SetJob) {
+		var rulesCtrl = this;
+		rulesCtrl.rules = [];
 
-	app.controller('HitsTableController', ['$http', '$log', 'SetJob', function ($http, $log, SetJob) {
+		SetJob.then(function () {
+			$http.get('/rules').success(function (data) {
+				$log.log('Get rules request success');
+				$log.log(data);
+				rulesCtrl.rules = data;
+			});
+		});
+		
+	}]);
 
+	app.controller('FilterController', ['$http', '$rootScope', '$log', 'SetJob', function($http, $rootScope, $log, SetJob) {
+		var filterCtrl = this;
+		filterCtrl.currentFilter = {};
+
+		SetJob.then(function () {
+			filterCtrl.getFilter();
+		});
+
+		filterCtrl.getFilter = function () {
+			$http.get('/filter').success(function (data) {
+				$log.log('Get filter request success');
+				$log.log(data);
+				filterCtrl.currentFilter = data;
+
+				var attributes = filterCtrl.currentFilter.attributes;
+				for (var attributeIndex in attributes) {
+					var attribute = attributes[attributeIndex];
+					attribute.field = attribute.str;
+				}
+				$rootScope.$emit('FilterUpdate', []);
+			});
+		};
+
+		filterCtrl.setFilter = function () {
+			var setFilterArgs = "";
+			var attributes = filterCtrl.currentFilter.attributes;
+			var firstArg = true;
+			for (var attributeIndex in attributes) {
+				var attribute = attributes[attributeIndex];
+				if (firstArg) {
+					setFilterArgs += '?';
+					firstArg = false;
+				} else {
+					setFilterArgs += '&';
+				}
+				setFilterArgs += attribute.type.toLowerCase() + '=' + attribute.field;
+			}
+
+			$http.put('/filter' + setFilterArgs).success(function () {
+				$log.log('Set filter request success');
+				$log.log(setFilterArgs);
+				filterCtrl.getFilter();
+			});
+		};
+
+	}]);
+
+	app.controller('HitsTableController', ['$http', '$rootScope', '$log', 'SetJob', function ($http, $rootScope, $log, SetJob) {
 		var hitsCtrl = this;
-
-		hitsCtrl.page = 1;
-		hitsCtrl.numOfPages = 10;
-		hitsCtrl.allHits = [];
-
 		hitsCtrl.NAV_SIZE = 5; 		// how many elements in nav. always an odd number
 		hitsCtrl.PAGE_SIZE = 10;	// how many hits in every page
 
-		SetJob.then(function() {
+		SetJob.then(function () {
 			hitsCtrl.requestPage();
 		});
 
@@ -72,7 +124,7 @@ var settings = {
 
 			// Normal case
 			return range(page - 2, page + 3);
-		}
+		};
 
 		hitsCtrl.nextPage = function () {
 			hitsCtrl.setPage(hitsCtrl.page + 1);
@@ -88,25 +140,28 @@ var settings = {
 			}
 		};
 
-
-	}]);
-
-
-	app.controller('RulesController', ['$http', '$log', 'SetJob', function ($http, $log, SetJob) {
-		
-		var rulesCtrl = this;
-		rulesCtrl.rules = [];
-
-		SetJob.then(function() {
-			$http.get('/rules').success(function (data) {
-				rulesCtrl.rules = data;
+		hitsCtrl.getPage = function () {
+			$http.get('/hits?page=' + hitsCtrl.page).success(function (data) {
+				$log.log('Get hits request success');
+				$log.log(data);
+				hitsCtrl.allHits = data;
 			});
+		};
+
+		hitsCtrl.refresh = function () {
+			hitsCtrl.page = 1;
+			hitsCtrl.numOfPages = 10;
+			hitsCtrl.allHits = [];
+			hitsCtrl.getPage();
+		};
+
+		$rootScope.$on('FilterUpdate', function () {
+			hitsCtrl.refresh();
 		});
-		
+
 	}]);
 
 	app.controller('SuggestionController', ['$http', '$log', 'SetJob', function ($http, $log, SetJob) {
-
 		var sugCtrl = this;
 
 		SetJob.then(function() {

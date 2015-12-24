@@ -1,6 +1,6 @@
 package breakingtherules.firewall;
 
-import java.util.Vector;
+import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -13,12 +13,12 @@ public class Rule {
      * Filter of the rule
      */
     private Filter m_filter;
-    
+
     /**
      * Id of the rule
      */
-    @JsonProperty("id")    
-    private int m_id;
+    @JsonProperty("id")
+    private final int m_id;
 
     /**
      * Constructor
@@ -26,7 +26,8 @@ public class Rule {
      * @param filter
      *            filter of the rule
      */
-    public Rule(Filter filter) {
+    public Rule(int id, Filter filter) {
+	m_id = id;
 	m_filter = filter;
     }
 
@@ -37,7 +38,7 @@ public class Rule {
      * @param attributes
      *            attributes that represent the rule
      */
-    public Rule(int id, Vector<Attribute> attributes) {
+    public Rule(int id, List<Attribute> attributes) {
 	m_id = id;
 	m_filter = new Filter(attributes);
     }
@@ -45,9 +46,9 @@ public class Rule {
     /**
      * Get the attributes of this rule
      * 
-     * @return vector of this rule's attributes
+     * @return list of this rule's attributes
      */
-    public Vector<Attribute> getAttributes() {
+    public List<Attribute> getAttributes() {
 	return m_filter.getAttributes();
     }
 

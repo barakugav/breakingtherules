@@ -452,10 +452,10 @@ public class ServiceTest {
 	int[] range = getRandomRange();
 	Service service = new Service(protocol, range[0], range[1]);
 
-	Source source = new Source("IPv4 1.1.1.1");
+	Source source = new Source("1.1.1.1");
 	assertFalse(service.contains(source));
 
-	Destination des = new Destination("IPv4 1.1.1.1");
+	Destination des = new Destination("1.1.1.1");
 	assertFalse(service.contains(des));
     }
 

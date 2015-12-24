@@ -48,7 +48,7 @@ public class DestinationTest {
     @Test
     public void constructorStringTest() {
 	try {
-	    String ip = "IPv4 2.12.45.7/21";
+	    String ip = "2.12.45.7/21";
 	    new Destination(ip);
 
 	} catch (IllegalArgumentException e) {

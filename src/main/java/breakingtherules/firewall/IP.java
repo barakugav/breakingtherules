@@ -13,12 +13,12 @@ public abstract class IP {
     /**
      * IP address
      */
-    protected int[] m_address;
+    private final int[] m_address;
 
     /**
      * Length of the constant prefix
      */
-    protected int m_prefixLength;
+    private final int m_prefixLength;
 
     /**
      * Constructor
@@ -28,7 +28,7 @@ public abstract class IP {
      * @param prefixLength
      *            length of the constant prefix
      */
-    public IP(int[] address, int prefixLength) throws IllegalArgumentException {
+    protected IP(int[] address, int prefixLength) throws IllegalArgumentException {
 	if (address == null)
 	    throw new IllegalArgumentException("Null arg");
 	if (address.length != getNumberOfBlocks())
@@ -91,6 +91,8 @@ public abstract class IP {
 			throw new IllegalArgumentException("Negative prefix length");
 		    if (m_prefixLength > getMaxLength())
 			throw new IllegalArgumentException("Prefix length over max length");
+		} else {
+		    m_prefixLength = 32;
 		}
 	    }
 	} catch (NumberFormatException e) {
@@ -175,23 +177,32 @@ public abstract class IP {
      * @return true if this IP contain in his sub-network the other IP
      */
     public boolean contains(IP other) {
-	if (other == null)
+	if (other == null) {
 	    return false;
-	if (this instanceof IPv4 && !(other instanceof IPv4))
+	} else if (this instanceof AnyIP) {
+	    return true;
+	} else if (other instanceof AnyIP) {
 	    return false;
-	if (this instanceof IPv6 && !(other instanceof IPv6))
+	} else if (this instanceof IPv4 && !(other instanceof IPv4)) {
 	    return false;
+	} else if (this instanceof IPv6 && !(other instanceof IPv6)) {
+	    return false;
+	}
 
-	if (!(m_prefixLength <= other.m_prefixLength))
+	if (!(m_prefixLength <= other.m_prefixLength)) {
 	    return false;
+	}
 
 	int blockNum = 0;
-	for (blockNum = 0; blockNum < m_prefixLength / getBlockSize(); blockNum++)
-	    if (m_address[blockNum] != other.m_address[blockNum])
+	for (blockNum = 0; blockNum < m_prefixLength / getBlockSize(); blockNum++) {
+	    if (m_address[blockNum] != other.m_address[blockNum]) {
 		return false;
+	    }
+	}
 
-	if (blockNum == getNumberOfBlocks())
+	if (blockNum == getNumberOfBlocks()) {
 	    return true;
+	}
 
 	int bitsLeft = getBlockSize() - (m_prefixLength % getBlockSize());
 	return (m_address[blockNum] ^ other.m_address[blockNum]) < (1 << bitsLeft);
@@ -251,18 +262,19 @@ public abstract class IP {
 	    throw new IllegalArgumentException("Null arg");
 	}
 
-	if (ip.length() < 5) {
-	    throw new IllegalArgumentException("Unknown format");
+	if (ip.equals("Any")) {
+	    return AnyIP.createNew();
 	}
 
 	// IPv4 format
-	if (ip.substring(0, 5).equals("IPv4 ")) {
-	    return new IPv4(ip.substring(5));
-	}
-
-	// IPv6 format
-	if (ip.substring(0, 5).equals("IPv6 ")) {
-	    return new IPv6(ip.substring(5));
+	boolean isIPv4 = ip.indexOf(IPv4.STRING_SEPARATOR) != -1;
+	boolean isIPv6 = ip.indexOf(IPv6.STRING_SEPARATOR) != -1;
+	if (isIPv4 && isIPv6) {
+	    throw new IllegalArgumentException("Unknown format");
+	} else if (isIPv4) {
+	    return new IPv4(ip);
+	} else if (isIPv6) {
+	    return new IPv6(ip);
 	}
 
 	throw new IllegalArgumentException("Unknown format");
@@ -274,14 +286,14 @@ public abstract class IP {
      * @return number of blocks in the IP
      */
     @JsonIgnore
-    public abstract int getNumberOfBlocks();
+    protected abstract int getNumberOfBlocks();
 
     /**
      * Get the size of each block in this IP
      * 
      * @return size of block in the IP
      */
-    public abstract int getBlockSize();
+    protected abstract int getBlockSize();
 
     /**
      * Get the string separator used when converting IP to string
@@ -289,7 +301,7 @@ public abstract class IP {
      * @return string separator of this IP
      */
     @JsonIgnore
-    public abstract String getStringSeparator();
+    protected abstract String getStringSeparator();
 
     /**
      * Get the max length of this IP's address
@@ -307,7 +319,7 @@ public abstract class IP {
      * @return addresses of this IP's children
      */
     @JsonIgnore
-    protected int[][] getChildrenAdress() {
+    protected int[][] getChildrenAdresses() {
 	if (!hasChildren()) {
 	    return null;
 	}
@@ -326,7 +338,7 @@ public abstract class IP {
     /**
      * Set all bits after const prefix to zeros
      */
-    protected void resetSuffix() {
+    private void resetSuffix() {
 	for (int bit = getMaxLength() - 1; bit >= m_prefixLength; bit--) {
 	    int andHelper = ~(1 << (getBlockSize() - (bit % getBlockSize())) - 1);
 	    int blockNum = bit * getNumberOfBlocks() / getMaxLength();
@@ -342,6 +354,53 @@ public abstract class IP {
     @JsonIgnore
     private int getMaxBlockValue() {
 	return (1 << getBlockSize()) - 1;
+    }
+
+    public static class AnyIP extends IP {
+
+	private AnyIP(int[] address, int prefixLength) throws IllegalArgumentException {
+	    super(address, prefixLength);
+	}
+
+	@Override
+	public boolean hasParent() {
+	    return false;
+	}
+
+	@Override
+	public IP getParent() {
+	    return null;
+	}
+
+	@Override
+	public boolean hasChildren() {
+	    return false;
+	}
+
+	@Override
+	public IP[] getChildren() {
+	    return null;
+	}
+
+	@Override
+	public int getNumberOfBlocks() {
+	    return 0;
+	}
+
+	@Override
+	public int getBlockSize() {
+	    return 0;
+	}
+
+	@Override
+	public String getStringSeparator() {
+	    return null;
+	}
+
+	public static AnyIP createNew() {
+	    return new AnyIP(new int[0], 0);
+	}
+
     }
 
 }

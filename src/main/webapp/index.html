@@ -16,6 +16,7 @@
 		<h1>BreakingTheRules</h1>
 		<h2>All Rules</h2>
 		<p>The rules are ordered bottom-up: the bottom rule is the base rule, and the new rules are placed on top of it, until the base rule will be no longer needed.</p>
+
 		<table ng-controller="RulesController as rulesCtrl" class="table">
 			<tr>
 				<th></th>
@@ -26,6 +27,25 @@
 				<td ng-repeat="attribute in rule.attributes"> {{ attribute.str }} </td>
 			</tr>
 		</table>
+
+		<h2>Filter</h2>
+		<div ng-controller="FilterController as filterCtrl">
+			<table class="table">
+				<tr>
+					<th></th>
+					<th>Source</th>
+					<th>Destination</th>
+					<th>Service</th>
+				</tr>
+				<tr>
+					<td> <button ng-click="filterCtrl.setFilter()">Set</button> </td>
+					<td ng-repeat="attribute in filterCtrl.currentFilter.attributes">
+						<input type="text" ng-model="attribute.field">
+					</td>
+				</tr>
+			</table>
+		</div>
+
 		<h2>All Hits</h2>
 		<div ng-controller="HitsTableController as hitsCtrl">
 			<table class="table">
@@ -85,7 +105,5 @@
 
 
 	</div>
-	
-
 </body>
 </html>

@@ -3,12 +3,12 @@ package breakingtherules.firewall;
 /**
  * Destination attribute
  */
-public class Destination extends Attribute {
+public class Destination implements Attribute {
 
     /**
      * IP of the destination
      */
-    private IP m_ip;
+    private final IP m_ip;
 
     /**
      * Constructor
@@ -17,8 +17,6 @@ public class Destination extends Attribute {
      *            IP of the destination
      */
     public Destination(IP ip) throws IllegalArgumentException {
-	super(AttType.Destination);
-
 	if (ip == null)
 	    throw new IllegalArgumentException("Tried to create source with null ip arg");
 	m_ip = ip;
@@ -58,4 +56,18 @@ public class Destination extends Attribute {
     public String toString() {
 	return m_ip.toString();
     }
+
+    @Override
+    public String getType() {
+	return "Destination";
+    }
+
+    public static Destination createAnySourceIPv4() {
+	return new Destination(IPv4.createAnyIPv4());
+    }
+
+    public static Destination createAnySourceIPv6() {
+	return new Destination(IPv6.createAnyIPv6());
+    }
+
 }

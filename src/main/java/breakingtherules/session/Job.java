@@ -12,7 +12,6 @@ import org.springframework.stereotype.Component;
 import breakingtherules.dao.HitsDao;
 import breakingtherules.dao.RulesDao;
 import breakingtherules.firewall.Attribute;
-import breakingtherules.firewall.Attribute.AttType;
 import breakingtherules.firewall.Filter;
 import breakingtherules.firewall.Hit;
 import breakingtherules.firewall.Rule;
@@ -69,7 +68,7 @@ public class Job {
      * A list of all the attributes that this job holds for each hit/rule. To be
      * used ONLY by getAllAttributeTypes()
      */
-    private List<AttType> m_allAttributeTypes;
+    private List<String> m_allAttributeTypes;
 
     /************************************************/
 
@@ -88,8 +87,9 @@ public class Job {
 	    // Shouldn't happen because jobId is set
 	    System.err.println("Something's wrong. NoCurrentJob in setJob.");
 	}
-	
-	m_suggestions = new JobSuggestions(this); // Must be after setting m_rules
+
+	m_suggestions = new JobSuggestions(this); // Must be after setting
+						  // m_rules
 	m_filter = new Filter(); // Change to: previously used filter
 	m_suggestions.update(); // Must be after setting ID, filter, rules
     }
@@ -138,8 +138,8 @@ public class Job {
 	return "repository/" + m_jobId + "/repository.xml";
     }
 
-    public void setFilter(Filter f) {
-	m_filter = f;
+    public void setFilter(Filter filter) {
+	m_filter = filter;
 	m_suggestions.update();
     }
 
@@ -158,19 +158,19 @@ public class Job {
      * 
      * @return E.x. ["source", "destination", "service"]
      */
-    public List<AttType> getAllAttributeTypes() {
+    public List<String> getAllAttributeTypes() {
 
 	if (m_allAttributeTypes == null) {
-	    List<AttType> types = new ArrayList<AttType>();
+	    List<String> types = new ArrayList<String>();
 
 	    Rule r = m_rules.get(0);
 	    for (Attribute att : r.getAttributes()) {
-		types.add(att.getAttType());
+		types.add(att.getType());
 	    }
 
 	    m_allAttributeTypes = types;
 	}
-	
+
 	return m_allAttributeTypes;
 
     }

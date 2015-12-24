@@ -1,9 +1,11 @@
 package breakingtherules.firewall;
 
-import java.util.Vector;
+import java.util.ArrayList;
+import java.util.List;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import breakingtherules.dao.HitsDao;
-import breakingtherules.firewall.Attribute.AttType;
 
 /**
  * Filter of hits
@@ -13,17 +15,31 @@ import breakingtherules.firewall.Attribute.AttType;
  */
 public class Filter {
 
-    private Vector<Attribute> m_attributes;
+    /**
+     * 
+     */
+    private List<Attribute> m_attributes;
+
+    /**
+     * 
+     */
+    private static final Attribute[] ANY_FILTER = new Attribute[] {
+	    Source.createAnySourceIPv4(),
+	    Destination.createAnySourceIPv4(),
+	    Service.createAnyService()
+    };
 
     /*--------------------Methods--------------------*/
 
     /**
      * Constructor of empty filter
      * 
-     * Creates an empty filter
+     * Creates an 'Any' filter
      */
     public Filter() {
-	m_attributes = new Vector<Attribute>();
+	m_attributes = new ArrayList<Attribute>();
+	for (Attribute attribute : ANY_FILTER)
+	    m_attributes.add(attribute);
     }
 
     /**
@@ -32,18 +48,18 @@ public class Filter {
      * Creates filter based on given attributes
      * 
      * @param attributes
-     *            vector of wanted attributes
+     *            list of wanted attributes
      */
-    public Filter(Vector<Attribute> attributes) {
+    public Filter(List<Attribute> attributes) {
 	m_attributes = attributes;
     }
 
     /**
      * Get the attributes of this filter
      * 
-     * @return vector of this filter's attributes
+     * @return list of this filter's attributes
      */
-    public Vector<Attribute> getAttributes() {
+    public List<Attribute> getAttributes() {
 	return m_attributes;
     }
 
@@ -54,9 +70,10 @@ public class Filter {
      *            wanted attribute type
      * @return the filter wanted attribute
      */
-    public Attribute getAttribute(AttType type) {
+    @JsonIgnore
+    public Attribute getAttribute(String type) {
 	for (Attribute attribute : m_attributes)
-	    if (attribute.getAttType() == type)
+	    if (attribute.getType().equals(type))
 		return attribute;
 	return null;
     }
@@ -70,7 +87,7 @@ public class Filter {
      */
     public boolean isMatch(Hit hit) {
 	for (Attribute filterAttribute : m_attributes) {
-	    AttType attributeType = filterAttribute.getAttType();
+	    String attributeType = filterAttribute.getType();
 	    Attribute hitAttribute = hit.getAttribute(attributeType);
 
 	    if (!filterAttribute.contains(hitAttribute))

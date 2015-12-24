@@ -78,8 +78,9 @@ public class HitsXmlDao implements HitsDao {
 		Hit hit = createHit(hitElm);
 
 		Filter filter = job.getFilter();
-		if (filter.isMatch(hit))
+		if (filter.isMatch(hit)) {
 		    matchedHits.add(hit);
+		}
 	    }
 	}
 	return new HitsDto(matchedHits, 0, matchedHits.size(), matchedHits.size());

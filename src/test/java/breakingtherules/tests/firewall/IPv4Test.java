@@ -246,7 +246,8 @@ public class IPv4Test {
     @Test
     public void getChildrenTest() {
 	IPv4 ip = new IPv4(getRandomAddress(), rand.nextInt(11) + 22);
-	assertTrue(childrenTestRecurtion(ip));
+	assertEquals(ip.hasChildren(), ip.getChildren()[0] != null);
+	assertEquals(ip.hasChildren(), ip.getChildren()[1] != null);
     }
 
     @Test
@@ -442,19 +443,6 @@ public class IPv4Test {
 	    address[i] = rand.nextInt(1 << 16);
 	int prefixLength = rand.nextInt(128);
 	return new IPv6(address, prefixLength);
-    }
-
-    private boolean childrenTestRecurtion(IPv4 ip) {
-	if (ip == null)
-	    return false;
-	if (!ip.hasChildren())
-	    return true;
-
-	IPv4[] children = ip.getChildren();
-	IPv4 childZero = children[0];
-	IPv4 childOne = children[1];
-
-	return childrenTestRecurtion(childZero) && childrenTestRecurtion(childOne);
     }
 
 }

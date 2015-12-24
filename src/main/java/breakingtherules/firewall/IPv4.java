@@ -18,7 +18,7 @@ public class IPv4 extends IP {
     /**
      * String separator used when converting this IP to string
      */
-    private static final String STRING_SEPARATOR = ".";
+    protected static final String STRING_SEPARATOR = ".";
 
     /**
      * Constructor based on String IP
@@ -58,7 +58,7 @@ public class IPv4 extends IP {
 	    return null;
 	}
 
-	IPv4 newIP = new IPv4(m_address.clone(), m_prefixLength - 1);
+	IPv4 newIP = new IPv4(getAddress().clone(), getConstPrefixLength() - 1);
 	return newIP;
     }
 
@@ -68,11 +68,11 @@ public class IPv4 extends IP {
 	    return null;
 	}
 
-	int[][] childrenAddresses = getChildrenAdress();
+	int[][] childrenAddresses = getChildrenAdresses();
 
 	IPv4[] children = new IPv4[2];
-	children[0] = new IPv4(childrenAddresses[0], m_prefixLength + 1);
-	children[1] = new IPv4(childrenAddresses[1], m_prefixLength + 1);
+	children[0] = new IPv4(childrenAddresses[0], getConstPrefixLength() + 1);
+	children[1] = new IPv4(childrenAddresses[1], getConstPrefixLength() + 1);
 
 	return children;
     }
@@ -87,18 +87,22 @@ public class IPv4 extends IP {
 	return super.equals((IP) o);
     }
 
+    public static IPv4 createAnyIPv4() {
+	return new IPv4(new int[] { 0, 0, 0, 0 }, 0);
+    }
+
     @Override
-    public int getNumberOfBlocks() {
+    protected int getNumberOfBlocks() {
 	return NUMBER_OF_BLOCKS;
     }
 
     @Override
-    public int getBlockSize() {
+    protected int getBlockSize() {
 	return BLOCK_SIZE;
     }
 
     @Override
-    public String getStringSeparator() {
+    protected String getStringSeparator() {
 	return STRING_SEPARATOR;
     }
 

@@ -106,7 +106,7 @@ public class IPv6Test {
     }
 
     @Test
-    public void constructorFromStringTest3Blocks() {
+    public void constructorFromStringTest7Blocks() {
 	try {
 	    String ipStr = "255:0:46:4784:48:74:89";
 	    new IPv6(ipStr);
@@ -118,7 +118,7 @@ public class IPv6Test {
     }
 
     @Test
-    public void constructorFromStringTest5Blocks() {
+    public void constructorFromStringTest9Blocks() {
 	try {
 	    String ipStr = "255:0:2:46:47863:32146:879:11112:30";
 	    new IPv6(ipStr);
@@ -245,7 +245,8 @@ public class IPv6Test {
     @Test
     public void getChildrenTest() {
 	IPv6 ip = new IPv6(getRandomAddress(), rand.nextInt(28) + 101);
-	assertTrue(childrenTestRecurtion(ip));
+	assertEquals(ip.hasChildren(), ip.getChildren()[0] != null);
+	assertEquals(ip.hasChildren(), ip.getChildren()[1] != null);
     }
 
     @Test
@@ -417,19 +418,6 @@ public class IPv6Test {
 
     private static int getRandomPrefixLength() {
 	return rand.nextInt(129);
-    }
-
-    private boolean childrenTestRecurtion(IPv6 ip) {
-	if (ip == null)
-	    return false;
-	if (!ip.hasChildren())
-	    return true;
-
-	IPv6[] children = ip.getChildren();
-	IPv6 childZero = children[0];
-	IPv6 childOne = children[1];
-
-	return childrenTestRecurtion(childZero) && childrenTestRecurtion(childOne);
     }
 
 }

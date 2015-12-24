@@ -5,12 +5,12 @@ package breakingtherules.firewall;
  * 
  * Have IP
  */
-public class Source extends Attribute {
+public class Source implements Attribute {
 
     /**
      * IP of the source
      */
-    private IP m_ip;
+    private final IP m_ip;
 
     /**
      * Constructor
@@ -19,8 +19,6 @@ public class Source extends Attribute {
      *            IP of the source
      */
     public Source(IP ip) throws IllegalArgumentException {
-	super(AttType.Source);
-
 	if (ip == null)
 	    throw new IllegalArgumentException("Tried to create source with null ip arg");
 	m_ip = ip;
@@ -60,4 +58,18 @@ public class Source extends Attribute {
     public String toString() {
 	return m_ip.toString();
     }
+
+    @Override
+    public String getType() {
+	return "Source";
+    }
+
+    public static Source createAnySourceIPv4() {
+	return new Source(IPv4.createAnyIPv4());
+    }
+
+    public static Source createAnySourceIPv6() {
+	return new Source(IPv6.createAnyIPv6());
+    }
+
 }

@@ -5,12 +5,11 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
-import breakingtherules.firewall.Attribute.AttType;
-import breakingtherules.services.algorithms.Suggestion;
-import breakingtherules.services.algorithms.SuggestionsAlgorithm;
 import breakingtherules.firewall.Filter;
 import breakingtherules.firewall.Hit;
 import breakingtherules.firewall.Rule;
+import breakingtherules.services.algorithms.Suggestion;
+import breakingtherules.services.algorithms.SuggestionsAlgorithm;
 import breakingtherules.session.Job;
 
 public class ServerImp implements ServerAPI {
@@ -67,7 +66,7 @@ public class ServerImp implements ServerAPI {
 	return false;
     }
 
-    public List<Suggestion> getSuggestions(AttType attType, int startIndex, int endIndex) {
+    public List<Suggestion> getSuggestions(String attType, int startIndex, int endIndex) {
 	return algorithm.getSuggestions(job, attType);
     }
 

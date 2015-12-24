@@ -7,22 +7,22 @@ import org.springframework.util.StringUtils;
  * 
  * Has a protocol member and port number
  */
-public class Service extends Attribute {
+public class Service implements Attribute {
 
     /**
      * Type of the service (HTTP, HTTPS, etc)
      */
-    private String m_protocol;
+    private final String m_protocol;
 
     /**
      * Start of the ports range
      */
-    private int m_portRangeStart;
+    private final int m_portRangeStart;
 
     /**
      * End of the ports range
      */
-    private int m_portRangeEnd;
+    private final int m_portRangeEnd;
 
     /**
      * Service of protocol 'Any protocol'
@@ -48,7 +48,6 @@ public class Service extends Attribute {
      *            port number of the service
      */
     public Service(String protocol, int port) throws IllegalArgumentException {
-	super(AttType.Service);
 	m_protocol = protocol;
 	if (port < MIN_PORT || port > MAX_PORT)
 	    throw new IllegalArgumentException(
@@ -67,7 +66,6 @@ public class Service extends Attribute {
      *            end of the port range of the service
      */
     public Service(String protocol, int portRangeStart, int portRangeEnd) throws IllegalArgumentException {
-	super(AttType.Service);
 	m_protocol = protocol;
 
 	if (portRangeStart < MIN_PORT || portRangeStart > MAX_PORT)
@@ -90,7 +88,16 @@ public class Service extends Attribute {
      *            String service in format ('port' 'service type')
      */
     public Service(String service) throws IllegalArgumentException {
-	super(AttType.Service);
+	if (service == null) {
+	    throw new IllegalArgumentException("Null args");
+	}
+	
+	if (service.equals("Any")) {
+	    m_protocol = ANY_PROTOCOL;
+	    m_portRangeStart = MIN_PORT;
+	    m_portRangeEnd = MAX_PORT;
+	    return;
+	}
 
 	int separatorIndex;
 	switch (StringUtils.countOccurrencesOf(service, " ")) {
@@ -235,39 +242,41 @@ public class Service extends Attribute {
 
     @Override
     public String toString() {
-	
+
 	if (m_protocol.equals(ANY_PROTOCOL) && m_portRangeStart == MIN_PORT && m_portRangeEnd == MAX_PORT) {
 	    // All ports, all protocols
 	    return "Any";
 	}
-	
-	String first, last;
-		
+
 	if (m_portRangeStart == MIN_PORT && m_portRangeEnd == MAX_PORT) {
 	    // All ports, one protocol
-	    first = "Any";
-	    last = m_protocol;
+	    return "Any " + m_protocol;
 	}
-	else if (m_protocol.equals(ANY_PROTOCOL)){
+
+	if (m_protocol.equals(ANY_PROTOCOL)) {
 	    // Some ports, any protocol
 	    if (m_portRangeStart == m_portRangeEnd) {
-		first = "Port";
-		last = Integer.toString(m_portRangeStart);;
+		return "Port " + Integer.toString(m_portRangeStart);
+	    } else {
+		return "Ports " + m_portRangeStart + "-" + m_portRangeEnd;
 	    }
-	    else {
-		first = "Ports";
-		last = m_portRangeStart + "-" + m_portRangeEnd;
-	    }		
 	}
-	else {
-	    // Some ports, one protocol
-	    first = m_protocol;
-	    if (m_portRangeStart == m_portRangeEnd)
-		last = Integer.toString(m_portRangeStart);
-	    else
-		last = m_portRangeStart + "-" + m_portRangeEnd;
+
+	// Some ports, one protocol
+	if (m_portRangeStart == m_portRangeEnd) {
+	    return m_protocol + " " + Integer.toString(m_portRangeStart);
+	} else {
+	    return m_protocol + " " + m_portRangeStart + "-" + m_portRangeEnd;
 	}
-	
-	return first + " " + last;
     }
+
+    @Override
+    public String getType() {
+	return "Service";
+    }
+
+    public static Service createAnyService() {
+	return new Service(ANY_PROTOCOL, MIN_PORT, MAX_PORT);
+    }
+
 }

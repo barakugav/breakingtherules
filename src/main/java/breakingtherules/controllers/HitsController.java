@@ -31,8 +31,9 @@ public class HitsController {
      * Answers the GET hits query
      * 
      * @return List of all the appropriate hits
-     * @throws NoCurrentJobException
      * @throws IOException
+     *             if failed
+     * @throws NoCurrentJobException
      */
     @RequestMapping(value = "/hits", method = RequestMethod.GET)
     public HitsDto hits(int startIndex, int endIndex) throws NoCurrentJobException, IOException {

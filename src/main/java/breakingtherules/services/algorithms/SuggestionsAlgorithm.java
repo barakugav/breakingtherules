@@ -2,7 +2,6 @@ package breakingtherules.services.algorithms;
 
 import java.util.List;
 
-import breakingtherules.firewall.Attribute.AttType;
 import breakingtherules.session.Job;
 
 /**
@@ -17,6 +16,6 @@ public interface SuggestionsAlgorithm {
      * 		The job that is needs suggesting. Used to extract the relevant hits.
      * @return list of suggestion for rules
      */
-    public List<Suggestion> getSuggestions(Job job, AttType attType);
+    public List<Suggestion> getSuggestions(Job job, String attType);
 
 }

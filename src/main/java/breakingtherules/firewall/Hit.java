@@ -1,8 +1,6 @@
 package breakingtherules.firewall;
 
-import java.util.Vector;
-
-import breakingtherules.firewall.Attribute.AttType;
+import java.util.List;
 
 /**
  * Hit with attributes
@@ -12,12 +10,12 @@ public class Hit {
     /**
      * Id of the hit
      */
-    private int m_id;
+    private final int m_id;
 
     /**
-     * Vector of this hit's attributes
+     * List of this hit's attributes
      */
-    private Vector<Attribute> m_attributes;
+    private final List<Attribute> m_attributes;
 
     /**
      * Constructor
@@ -25,9 +23,16 @@ public class Hit {
      * @param id
      *            id of this hit
      * @param attributes
-     *            vector of this hit's attributes
+     *            list of this hit's attributes
+     * @throws IllegalArgumentException
+     *             if id isn't positive or attributes is null
      */
-    public Hit(int id, Vector<Attribute> attributes) {
+    public Hit(int id, List<Attribute> attributes) throws IllegalArgumentException {
+	if (id < 0)
+	    throw new IllegalArgumentException("Id shouldbe positive number");
+	if (attributes == null)
+	    throw new IllegalArgumentException("Tried to create hit with null attributes");
+
 	m_id = id;
 	m_attributes = attributes;
     }
@@ -44,9 +49,9 @@ public class Hit {
     /**
      * Get the attributes of the hit
      * 
-     * @return vector of the hit's attributes
+     * @return list of the hit's attributes
      */
-    public Vector<Attribute> getAttributes() {
+    public List<Attribute> getAttributes() {
 	return m_attributes;
     }
 
@@ -57,9 +62,9 @@ public class Hit {
      *            wanted attribute type
      * @return the hit's wanted attribute
      */
-    public Attribute getAttribute(AttType type) {
+    public Attribute getAttribute(String type) {
 	for (Attribute attribute : m_attributes)
-	    if (attribute.getAttType() == type)
+	    if (attribute.getType().equals(type))
 		return attribute;
 	return null;
     }

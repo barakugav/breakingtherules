@@ -9,7 +9,6 @@ import java.util.List;
 import org.springframework.stereotype.Component;
 
 import breakingtherules.firewall.Attribute;
-import breakingtherules.firewall.Attribute.AttType;
 import breakingtherules.firewall.Hit;
 import breakingtherules.session.Job;
 import breakingtherules.session.NoCurrentJobException;
@@ -22,7 +21,7 @@ public class SimpleAlgorithm implements SuggestionsAlgorithm {
     
     static int NUM_OF_SUGGESTIONS = 10;
 
-    public List<Suggestion> getSuggestions(Job job, AttType attType) {
+    public List<Suggestion> getSuggestions(Job job, String attType) {
 
 	// The answer list
 	List<Suggestion> allSuggestionsList = new ArrayList<Suggestion>();
