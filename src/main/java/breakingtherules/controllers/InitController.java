@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import breakingtherules.session.Job;
+import breakingtherules.session.NoCurrentJobException;
 
 @RestController
 public class InitController {
@@ -28,10 +29,12 @@ public class InitController {
      * 
      * @param job_id
      *            The id of the new job to handle
-     * @return Success
+     * @return true if succeeded, else - false
+     * @throws NoCurrentJobException
+     *             if job wan't set yet
      */
     @RequestMapping(value = "/job", method = RequestMethod.PUT)
-    public boolean init(@RequestParam(value = "job_id") int job_id) throws IOException {
+    public boolean init(@RequestParam(value = "job_id") int job_id) throws IOException, NoCurrentJobException {
 	m_job.setJob(job_id);
 	return true;
     }

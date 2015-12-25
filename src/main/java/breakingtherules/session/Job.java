@@ -11,7 +11,8 @@ import org.springframework.stereotype.Component;
 
 import breakingtherules.dao.HitsDao;
 import breakingtherules.dao.RulesDao;
-import breakingtherules.dto.HitsDto;
+import breakingtherules.dto.ListDto;
+import breakingtherules.dto.SuggestionsDto;
 import breakingtherules.firewall.Attribute;
 import breakingtherules.firewall.Filter;
 import breakingtherules.firewall.Hit;
@@ -22,35 +23,34 @@ import breakingtherules.services.algorithms.SuggestionsAlgorithm;
 @Scope(value = "session", proxyMode = ScopedProxyMode.TARGET_CLASS)
 public class Job {
 
-    public static final int NO_CURRENT_JOB = -1;
-
-    @Autowired
-    private HitsDao hitsDao;
-
-    @Autowired
-    private RulesDao rulesDao;
-
-    @Autowired
-    private SuggestionsAlgorithm algorithm;
-
     /**
-     * Index of the job
-     * 
-     * Every job has a unique index. In the start of the session, there is no
-     * active job, so the job_id is NO_CURRENT_JOB.
+     * DAO of the job's hits
      */
-    private int m_jobId = NO_CURRENT_JOB;
+    @Autowired
+    private HitsDao m_hitsDao;
 
     /**
-     * Suggestions for the job
-     * 
-     * All the suggestions offered by the algorithm, and their statistics. To be
-     * passed to the user.
+     * DAO of the job's rules
      */
-    private List<AttributeSuggestions> m_suggestions;
+    @Autowired
+    private RulesDao m_rulesDao;
 
     /**
-     * The current hit filter.
+     * Algorithm for suggesting rules suggestions
+     */
+    @Autowired
+    private SuggestionsAlgorithm m_algorithm;
+
+    /**
+     * Id of the job
+     * 
+     * Every job has a unique id. In the start of the session, there is no
+     * active job, so the id is set to NO_CURRENT_JOB in the constructor.
+     */
+    private int m_id;
+
+    /**
+     * The current hit filter
      * 
      * This is the filter that the user inputs, and receives only the hits that
      * match this filter.
@@ -60,7 +60,7 @@ public class Job {
     /**
      * All the rules of the current job
      * 
-     * First - original base rule. Not modified Others - created with the user,
+     * First - original base rule. Not modified others - created with the user,
      * constantly modified.
      */
     private List<Rule> m_rules;
@@ -71,124 +71,144 @@ public class Job {
      */
     private List<String> m_allAttributeTypes;
 
+    /**
+     * Id constant that represent that the id wasn't set yet
+     */
+    private static final int NO_CURRENT_JOB = -1;
+
     /************************************************/
 
     /**
-     * Restore all relevant parameters about the job to be worked on.
+     * Constructor
+     * 
+     * set id to {@link Job#NO_CURRENT_JOB}
+     */
+    public Job() {
+	m_id = NO_CURRENT_JOB;
+    }
+
+    /**
+     * Restore all relevant parameters about the job to be worked on
      * 
      * @param id
      *            The id of the job that needs to be worked on.
+     * @throws IOException
+     *             if DAO failed to load data
      */
     public void setJob(int id) throws IOException {
-	m_jobId = id;
+	m_id = id;
 
-	try {
-	    m_rules = rulesDao.getRules(this);
-	} catch (NoCurrentJobException e) {
-	    // Shouldn't happen because jobId is set
-	    System.err.println("Something's wrong. NoCurrentJob in setJob.");
-	}
-
-	// Must be after setting m_rules
-	m_suggestions = new ArrayList<AttributeSuggestions>();
-	for (String att : this.getAllAttributeTypes()) {
-	    m_suggestions.add(new AttributeSuggestions(att));
-	}
-
-	m_filter = new Filter(); // Change to: previously used filter
-
-	// Update suggestions. Must be after setting ID, filter, rules
-	try {
-	    this.updateSuggestions();
-
-	} catch (NoCurrentJobException e) {
-	    // Shouldn't happen because jobId is set
-	    System.err.println("Something's wrong. NoCurrentJob in setJob.");
-	}
+	m_rules = m_rulesDao.getRules(id).getData();
+	m_filter = Filter.getAnyFilter(); // TODO Change to: previously used
+					  // filter
     }
-    
+
     /**
      * Get the job's Id
      */
     public int getId() {
-	return m_jobId;
+	return m_id;
     }
 
     /**
-     * Return all the suggestions computed by the algorithm.
+     * Get the current filter of this job
      * 
-     * @return Current job's suggestions.
+     * @return current filter of this job
      * @throws NoCurrentJobException
      */
-    public List<AttributeSuggestions> getSuggestions() throws NoCurrentJobException {
-	if (m_jobId == NO_CURRENT_JOB)
-	    throw new NoCurrentJobException();
-	return m_suggestions;
+    public Filter getFilter() throws NoCurrentJobException {
+	if (m_id == NO_CURRENT_JOB) {
+	    throw new NoCurrentJobException("Job wasn't set yet");
+	}
+	return m_filter;
     }
 
     /**
+     * Get a list of all the rules that are active in this job
      * 
      * @return All the rules for the current job
      */
     public List<Rule> getRules() throws NoCurrentJobException {
-	if (m_jobId == NO_CURRENT_JOB)
-	    throw new NoCurrentJobException();
+	if (m_id == NO_CURRENT_JOB) {
+	    throw new NoCurrentJobException("Job wasn't set yet");
+	}
 	return m_rules;
     }
 
     /**
-     * Uses the filter to filter out relevant hits.
-     * 
-     * @return All the hits caught by the filter.
-     * @throws IOException
-     */
-    public HitsDto getRelevantHits() throws NoCurrentJobException, IOException {
-	HitsDto hits = hitsDao.getHits(this.m_jobId, this.m_filter);
-	return hits;
-    }
-
-    /**
-     * Uses the filter to filter out relevant hits, and only some of them.
+     * Get hits of the job in range [startIndex, endIndex] that match the filter
+     * and rules
      * 
      * @param startIndex
+     *            the start index of the hits list, including this index
      * @param endIndex
-     * @return All the hits caught by the filter.
+     *            the end index of the hits list, including this index
+     * @return DTO object that hold list of requested hits
      * @throws IOException
+     *             if DAO failed to load data
+     * @throws NoCurrentJobException
+     *             if the job hasn't got set yet
      */
-    public HitsDto getRelevantHits(int startIndex, int endIndex) throws NoCurrentJobException, IOException {
-	HitsDto hits = hitsDao.getHits(this.m_jobId, this.m_filter, startIndex, endIndex);
-	return hits;
+    public ListDto<Hit> getHits(int startIndex, int endIndex) throws IOException, NoCurrentJobException {
+	if (m_id == NO_CURRENT_JOB) {
+	    throw new NoCurrentJobException("Job wasn't set yet");
+	}
+	return m_hitsDao.getHits(m_id, m_rules, m_filter, startIndex, endIndex);
     }
 
     /**
-     * Every job has its own repository location (until there will be a proper
-     * database)
+     * Get all hits that match the filter and the rules
      * 
-     * @return path to repository
+     * @return DTO object that hold list of all hits
+     * @throws IOException
+     *             if DAO failed to load data
+     * @throws NoCurrentJobException
+     *             if the job hasn't got set yet
+     */
+    public ListDto<Hit> getHitsAll() throws IOException, NoCurrentJobException {
+	if (m_id == NO_CURRENT_JOB) {
+	    throw new NoCurrentJobException("Job wasn't set yet");
+	}
+	return m_hitsDao.getHits(m_id, m_rules, m_filter);
+    }
+
+    /**
+     * Get all the suggestions computed by the algorithm.
+     * 
+     * @return Current job's suggestions.
+     * @throws IOException
+     *             if DAO failed to load the job's hits
+     * @throws NoCurrentJobException
+     *             if the job hasn't got set yet
+     * 
+     */
+    public List<SuggestionsDto> getSuggestions() throws IOException, NoCurrentJobException {
+	if (m_id == NO_CURRENT_JOB) {
+	    throw new NoCurrentJobException("Job wasn't set yet");
+	}
+
+	List<SuggestionsDto> suggestionsDtos = new ArrayList<SuggestionsDto>();
+	List<String> allAttributesType = getAllAttributeTypes();
+	List<Hit> hits = getHitsAll().getData();
+	for (String attType : allAttributesType) {
+	    SuggestionsDto attSuggestions = m_algorithm.getSuggestions(hits, attType);
+	    suggestionsDtos.add(attSuggestions);
+	}
+	return suggestionsDtos;
+    }
+
+    /**
+     * Set the filter of this job to a new filter
+     * 
+     * @param filter
+     *            new filter of this job
      * @throws NoCurrentJobException
      */
-    public String getRepositoryLocation() throws NoCurrentJobException {
-	if (m_jobId == NO_CURRENT_JOB)
-	    throw new NoCurrentJobException();
-	return "repository/" + m_jobId + "/repository.xml";
-    }
-
     public void setFilter(Filter filter) throws NoCurrentJobException {
-	m_filter = filter;
-	try {
-	    this.updateSuggestions();
-	} catch (IOException e) {
-	    // Shouldn't happen. The job already exists.
-	    System.err.println("IOException inside setFilter, after repository was used in job constructor.");
+	if (m_id == NO_CURRENT_JOB) {
+	    throw new NoCurrentJobException("Job wasn't set yet");
 	}
-    }
-
-    public Filter getFilter() {
-	return m_filter;
-    }
-
-    public SuggestionsAlgorithm getAlgorithm() {
-	return algorithm;
+	m_filter = filter;
     }
 
     /**
@@ -197,29 +217,20 @@ public class Job {
      * allAttributeTypes
      * 
      * @return E.x. ["source", "destination", "service"]
+     * @throws NoCurrentJobException
      */
-    public List<String> getAllAttributeTypes() {
-
+    private List<String> getAllAttributeTypes() throws NoCurrentJobException {
+	if (m_id == NO_CURRENT_JOB) {
+	    throw new NoCurrentJobException("Job wasn't set yet");
+	}
 	if (m_allAttributeTypes == null) {
-	    List<String> types = new ArrayList<String>();
-
-	    Rule r = m_rules.get(0);
-	    for (Attribute att : r.getAttributes()) {
-		types.add(att.getType());
+	    m_allAttributeTypes = new ArrayList<String>();
+	    Rule demoRule = m_rules.get(0);
+	    for (Attribute att : demoRule.getAttributes()) {
+		m_allAttributeTypes.add(att.getType());
 	    }
-
-	    m_allAttributeTypes = types;
 	}
-
 	return m_allAttributeTypes;
-
     }
 
-    public void updateSuggestions() throws IOException, NoCurrentJobException {
-	List<Hit> hits = this.getRelevantHits().hits;
-
-	for (AttributeSuggestions attributeSuggestion : m_suggestions) {
-	    attributeSuggestion.update(this.algorithm, hits);
-	}
-    }
 }

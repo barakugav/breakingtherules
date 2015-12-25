@@ -2,8 +2,6 @@ package breakingtherules.firewall;
 
 import java.util.List;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-
 /**
  * Rule that apply on hits by {@link Filter}
  */
@@ -17,7 +15,6 @@ public class Rule {
     /**
      * Id of the rule
      */
-    @JsonProperty("id")
     private final int m_id;
 
     /**
@@ -41,6 +38,15 @@ public class Rule {
     public Rule(int id, List<Attribute> attributes) {
 	m_id = id;
 	m_filter = new Filter(attributes);
+    }
+
+    /**
+     * Get the id of this rule
+     * 
+     * @return id of this rule
+     */
+    public int getId() {
+	return m_id;
     }
 
     /**

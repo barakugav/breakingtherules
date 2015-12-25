@@ -36,6 +36,7 @@ var settings = {
 
 		SetJob.then(function () {
 			$http.get('/rules').success(function (data) {
+				debugger;
 				rulesCtrl.rules = data;
 			});
 		});
@@ -99,7 +100,7 @@ var settings = {
 			$http.get('/hits?startIndex=' + startIndex + '&endIndex=' + endIndex).success(function (data) {
 				hitsCtrl.numOfPages = Math.ceil(data.total / hitsCtrl.PAGE_SIZE);
 				hitsCtrl.numOfHits = data.total;
-				hitsCtrl.allHits = data.hits;
+				hitsCtrl.allHits = data.data;
 			});
 		};
 

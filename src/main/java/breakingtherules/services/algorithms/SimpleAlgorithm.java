@@ -7,19 +7,24 @@ import java.util.List;
 
 import org.springframework.stereotype.Component;
 
+import breakingtherules.dto.SuggestionsDto;
 import breakingtherules.firewall.Attribute;
 import breakingtherules.firewall.Hit;
 
 /**
- * Simple algorithm the implements {@link Algorithm} methods
+ * Simple algorithm the implements {@link SuggestionsAlgorithm}
+ * 
+ * Simply count the number of hits for each suggestion
  */
 @Component
 public class SimpleAlgorithm implements SuggestionsAlgorithm {
-    
-    static int NUM_OF_SUGGESTIONS = 10;
 
-    public List<Suggestion> getSuggestions(List<Hit> hits, String attType) {
+    /**
+     * Number of suggestions that returned in each suggestions request
+     */
+    private static final int NUMBER_OF_SUGGESTIONS = 10;
 
+    public SuggestionsDto getSuggestions(List<Hit> hits, String attType) {
 	// The answer list
 	List<Suggestion> allSuggestionsList = new ArrayList<Suggestion>();
 
@@ -44,33 +49,16 @@ public class SimpleAlgorithm implements SuggestionsAlgorithm {
 	}
 
 	// Calculate scores
-	for (Suggestion suggestion : allSuggestionsList)
+	for (Suggestion suggestion : allSuggestionsList) {
 	    suggestion.setScore(suggestion.getSize() / (double)hits.size());
+	}
 
-	// Put suggestions in array for sorting
+	// Sort by score
 	Collections.sort(allSuggestionsList);
 	Collections.reverse(allSuggestionsList);
-	
-	if (allSuggestionsList.size() > NUM_OF_SUGGESTIONS)
-	    return allSuggestionsList.subList(0, NUM_OF_SUGGESTIONS - 1);
-	return allSuggestionsList;
 
-	// Partial list code :
-
-	// If request is over suggestion cup
-	// if (allSuggestionsList.size() < startIndex) {
-	// return new ArrayList<Suggestion>();
-	// }
-
-	// Extract wanted interval from general suggestion list
-	// ArrayList<Suggestion> suggestions = new ArrayList<Suggestion>();
-	// for (int i = startIndex; i < allSuggestionsList.size() && i <
-	// endIndex; i++) {
-	// Suggestion suggestion = allSuggestionsList.get(i);
-	// suggestions.add(suggestion);
-	// }
-
-	// return suggestions;
+	int endIndex = (int) Math.min(NUMBER_OF_SUGGESTIONS, allSuggestionsList.size());
+	return new SuggestionsDto(allSuggestionsList.subList(0, endIndex), attType);
     }
 
 }

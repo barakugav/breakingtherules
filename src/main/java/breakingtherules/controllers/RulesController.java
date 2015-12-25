@@ -15,7 +15,6 @@ import breakingtherules.session.NoCurrentJobException;
 @RestController
 public class RulesController {
 
-
     /**
      * Has the current job that is being worked on
      */
@@ -24,13 +23,6 @@ public class RulesController {
 
     @RequestMapping(value = "/rules", method = RequestMethod.GET)
     public List<Rule> rules() throws NoCurrentJobException, IOException {
-
-	try {
-	    return m_job.getRules();
-	} catch (NoCurrentJobException e) {
-	    System.err.println("Tried recieving hits without initializing job.");
-	    throw e;
-	}
-
+	return m_job.getRules();
     }
 }

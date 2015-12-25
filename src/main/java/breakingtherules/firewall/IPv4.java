@@ -79,10 +79,13 @@ public class IPv4 extends IP {
 
     @Override
     public boolean equals(Object o) {
-	if (o == null)
+	if (this == o) {
+	    return true;
+	} else if (o == null) {
 	    return false;
-	if (!(o instanceof IPv4))
+	} else if (!(o instanceof IPv4)) {
 	    return false;
+	}
 
 	return super.equals((IP) o);
     }

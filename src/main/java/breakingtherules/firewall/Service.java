@@ -49,9 +49,10 @@ public class Service implements Attribute {
      */
     public Service(String protocol, int port) throws IllegalArgumentException {
 	m_protocol = protocol;
-	if (port < MIN_PORT || port > MAX_PORT)
+	if (port < MIN_PORT || port > MAX_PORT) {
 	    throw new IllegalArgumentException(
 		    "Port not in range: " + port + ". should be in range [" + MIN_PORT + ", " + MAX_PORT + "]");
+	}
 	m_portRangeStart = m_portRangeEnd = port;
     }
 
@@ -68,15 +69,15 @@ public class Service implements Attribute {
     public Service(String protocol, int portRangeStart, int portRangeEnd) throws IllegalArgumentException {
 	m_protocol = protocol;
 
-	if (portRangeStart < MIN_PORT || portRangeStart > MAX_PORT)
+	if (portRangeStart < MIN_PORT || portRangeStart > MAX_PORT) {
 	    throw new IllegalArgumentException("Port not in range: " + portRangeStart + ". should be in range ["
 		    + MIN_PORT + ", " + MAX_PORT + "]");
-	if (portRangeEnd < MIN_PORT || portRangeEnd > MAX_PORT)
+	} else if (portRangeEnd < MIN_PORT || portRangeEnd > MAX_PORT) {
 	    throw new IllegalArgumentException(
 		    "Port not in range: " + portRangeEnd + ". should be in range [" + MIN_PORT + ", " + MAX_PORT + "]");
-	if (portRangeStart > portRangeEnd)
+	} else if (portRangeStart > portRangeEnd) {
 	    throw new IllegalArgumentException("portRangeStart > portRangeEnd");
-
+	}
 	m_portRangeStart = portRangeStart;
 	m_portRangeEnd = portRangeEnd;
     }
@@ -170,11 +171,11 @@ public class Service implements Attribute {
 
 	}
 
-	if (m_portRangeStart > m_portRangeEnd)
+	if (m_portRangeStart > m_portRangeEnd) {
 	    throw new IllegalArgumentException("portRangeStart > portRangeEnd");
-
-	if (service.equals(""))
+	} else if (service.equals("")) {
 	    throw new IllegalArgumentException("No protocol");
+	}
 
 	if (service.equals("Any") || service.equals("Port") || service.equals("Ports"))
 	    m_protocol = ANY_PROTOCOL;
@@ -217,11 +218,11 @@ public class Service implements Attribute {
 	}
 
 	Service o = (Service) other;
-	if (m_protocol.equals(ANY_PROTOCOL))
+	if (m_protocol.equals(ANY_PROTOCOL)) {
 	    return containsPort(o);
-	if (o.m_protocol.equals(ANY_PROTOCOL))
+	} else if (o.m_protocol.equals(ANY_PROTOCOL)) {
 	    return false;
-	if (!m_protocol.equals(o.m_protocol)) {
+	} else if (!m_protocol.equals(o.m_protocol)) {
 	    return false;
 	}
 
@@ -237,10 +238,11 @@ public class Service implements Attribute {
      *         range comparing
      */
     private boolean containsPort(Service other) {
-	if (m_portRangeStart > other.m_portRangeStart)
+	if (m_portRangeStart > other.m_portRangeStart) {
 	    return false;
-	if (m_portRangeEnd < other.m_portRangeEnd)
+	} else if (m_portRangeEnd < other.m_portRangeEnd) {
 	    return false;
+	}
 	return true;
     }
 
@@ -251,18 +253,22 @@ public class Service implements Attribute {
 
     @Override
     public boolean equals(Object o) {
-	if (o == null)
+	if (o == this) {
+	    return true;
+	} else if (o == null) {
 	    return false;
-	if (!(o instanceof Service))
+	} else if (!(o instanceof Service)) {
 	    return false;
+	}
 
 	Service other = (Service) o;
-	if (m_portRangeStart != other.m_portRangeStart)
+	if (m_portRangeStart != other.m_portRangeStart) {
 	    return false;
-	if (m_portRangeEnd != other.m_portRangeEnd)
+	} else if (m_portRangeEnd != other.m_portRangeEnd) {
 	    return false;
-	if (!m_protocol.equals(other.m_protocol))
+	} else if (!m_protocol.equals(other.m_protocol)) {
 	    return false;
+	}
 	return true;
     }
 

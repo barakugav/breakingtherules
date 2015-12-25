@@ -1,5 +1,7 @@
 package breakingtherules.firewall;
 
+import breakingtherules.firewall.IP.AnyIP;
+
 /**
  * Source attribute
  * 
@@ -19,8 +21,9 @@ public class Source implements Attribute {
      *            IP of the source
      */
     public Source(IP ip) throws IllegalArgumentException {
-	if (ip == null)
+	if (ip == null) {
 	    throw new IllegalArgumentException("Tried to create source with null ip arg");
+	}
 	m_ip = ip;
     }
 
@@ -45,10 +48,13 @@ public class Source implements Attribute {
 
     @Override
     public boolean contains(Attribute other) {
-	if (other == null)
+	if (this == other) {
+	    return true;
+	} else if (other == null) {
 	    return false;
-	if (!(other instanceof Source))
+	} else if (!(other instanceof Source)) {
 	    return false;
+	}
 
 	Source o = (Source) other;
 	return m_ip.contains(o.m_ip);
@@ -59,28 +65,30 @@ public class Source implements Attribute {
 	return m_ip.toString();
     }
 
-    @Override
     public boolean equals(Object o) {
-	if (!(o instanceof Source))
+	if (o == this) {
+	    return true;
+	} else if (o == null) {
 	    return false;
-	return this.m_ip.equals(((Source)o).m_ip);
+	} else if (!(o instanceof Source)) {
+	    return false;
+	}
+
+	Source other = (Source) o;
+	return this.m_ip.equals(other.m_ip);
     }
+
     @Override
     public int hashCode() {
 	return m_ip.hashCode();
     }
-    
     @Override
     public String getType() {
 	return "Source";
     }
 
-    public static Source createAnySourceIPv4() {
-	return new Source(IPv4.createAnyIPv4());
-    }
-
-    public static Source createAnySourceIPv6() {
-	return new Source(IPv6.createAnyIPv6());
+    public static Source createAnySource() {
+	return new Source(AnyIP.createNew());
     }
 
 }

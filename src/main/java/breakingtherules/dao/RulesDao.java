@@ -1,24 +1,39 @@
 package breakingtherules.dao;
 
 import java.io.IOException;
-import java.util.List;
 
+import breakingtherules.dto.ListDto;
 import breakingtherules.firewall.Rule;
-import breakingtherules.session.Job;
-import breakingtherules.session.NoCurrentJobException;
 
 /**
- * Component that supply data from repository
+ * Component that supply rules from repository
  */
 public interface RulesDao {
 
     /**
-     * Get rules from repository by filter in current job
+     * Get all rules from repository
      * 
-     * @param currentJob
-     *            the current job
-     * @return list of rules that match the filter
+     * @param jobId
+     *            id of the rules' job
+     * @return all rules
+     * @throws IOException
+     *             if failed to read from memory
      */
-    public List<Rule> getRules(Job currentJob) throws IOException, NoCurrentJobException;
+    public ListDto<Rule> getRules(int jobId) throws IOException;
+
+    /**
+     * Get rules from repository in range [startIndex, endIndex]
+     * 
+     * @param jobId
+     *            id of the rules' job
+     * @param startIndex
+     *            the end index of the rules list, including this index
+     * @param endIndex
+     *            the end index of the rules list, including this index
+     * @return rules in range [startIndex, endIndex]
+     * @throws IOException
+     *             if failed to read from memory
+     */
+    public ListDto<Rule> getRules(int jobId, int startIndex, int endIndex) throws IOException;
 
 }

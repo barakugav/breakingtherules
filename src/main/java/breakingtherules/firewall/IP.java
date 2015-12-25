@@ -29,22 +29,23 @@ public abstract class IP {
      *            length of the constant prefix
      */
     protected IP(int[] address, int prefixLength) throws IllegalArgumentException {
-	if (address == null)
+	if (address == null) {
 	    throw new IllegalArgumentException("Null arg");
-	if (address.length != getNumberOfBlocks())
+	} else if (address.length != getNumberOfBlocks()) {
 	    throw new IllegalArgumentException(
 		    "Number of IP blocks doesn't match: " + address.length + " (Expected " + getNumberOfBlocks());
-	if (prefixLength < 0 || prefixLength > getMaxLength())
+	} else if (prefixLength < 0 || prefixLength > getMaxLength()) {
 	    throw new IllegalArgumentException("Const prefix length out of range: " + prefixLength);
-
-	for (int blockValue : address)
-	    if (blockValue < 0 || blockValue > getMaxBlockValue())
+	}
+	for (int blockValue : address) {
+	    if (blockValue < 0 || blockValue > getMaxBlockValue()) {
 		throw new IllegalArgumentException("IP address block isn't in range: " + blockValue
 			+ ". Should be in range [0, " + getMaxBlockValue() + "]");
+	    }
+	}
 
 	m_address = address;
 	m_prefixLength = prefixLength;
-
 	resetSuffix();
     }
 
@@ -59,7 +60,6 @@ public abstract class IP {
     protected IP(String ip, String expectedSeparator) throws IllegalArgumentException {
 	List<Integer> address = new ArrayList<Integer>();
 	int separatorIndex = ip.indexOf(expectedSeparator);
-
 	try {
 	    // Read address blocks
 	    while (separatorIndex >= 0) {
@@ -87,10 +87,11 @@ public abstract class IP {
 		// Read const prefix length
 		if (ip.length() > 0) {
 		    m_prefixLength = Integer.parseInt(ip);
-		    if (m_prefixLength < 0)
+		    if (m_prefixLength < 0) {
 			throw new IllegalArgumentException("Negative prefix length");
-		    if (m_prefixLength > getMaxLength())
+		    } else if (m_prefixLength > getMaxLength()) {
 			throw new IllegalArgumentException("Prefix length over max length");
+		    }
 		} else {
 		    m_prefixLength = 32;
 		}
@@ -99,18 +100,21 @@ public abstract class IP {
 	    throw new IllegalArgumentException("Integer parse failed: " + e.getMessage());
 	}
 
-	if (address.size() != getNumberOfBlocks())
+	if (address.size() != getNumberOfBlocks()) {
 	    throw new IllegalArgumentException(
 		    "Number of blocks is " + address.size() + " instead of " + getNumberOfBlocks());
-	for (int blockValue : address)
-	    if (blockValue < 0 || blockValue > getMaxBlockValue())
-		throw new IllegalArgumentException("IP address block isn't in range: " + blockValue
-			+ ". Should be in range [0, " + getMaxBlockValue() + "]");
+	} else
+	    for (int blockValue : address) {
+		if (blockValue < 0 || blockValue > getMaxBlockValue())
+		    throw new IllegalArgumentException("IP address block isn't in range: " + blockValue
+			    + ". Should be in range [0, " + getMaxBlockValue() + "]");
+	    }
 
 	// Copy blocks values to m_address
 	m_address = new int[getNumberOfBlocks()];
-	for (int i = 0; i < address.size(); i++)
+	for (int i = 0; i < address.size(); i++) {
 	    m_address[i] = address.get(i);
+	}
 
 	resetSuffix();
     }
@@ -177,7 +181,9 @@ public abstract class IP {
      * @return true if this IP contain in his sub-network the other IP
      */
     public boolean contains(IP other) {
-	if (other == null) {
+	if (this == other) {
+	    return true;
+	} else if (other == null) {
 	    return false;
 	} else if (this instanceof AnyIP) {
 	    return true;
@@ -210,14 +216,15 @@ public abstract class IP {
 
     @Override
     public String toString() {
-	if (m_prefixLength == 0)
+	if (m_prefixLength == 0) {
 	    return "Any";
+	}
 	String st = Integer.toString(m_address[0]);
-	for (int i = 1; i < m_address.length; i++)
+	for (int i = 1; i < m_address.length; i++) {
 	    st += getStringSeparator() + m_address[i];
+	}
 	if (m_prefixLength != getMaxLength()) {
-	    st += "/";
-	    st += m_prefixLength;
+	    st += "/" + m_prefixLength;
 	}
 	return st;
     }
@@ -225,26 +232,33 @@ public abstract class IP {
     @Override
     public int hashCode() {
 	int sum = 0;
-	for (int i = 0; i < m_address.length; i++)
+	for (int i = 0; i < m_address.length; i++) {
 	    sum += m_address[i] << (i * Integer.BYTES / getNumberOfBlocks());
+	}
 	return sum;
     }
 
     @Override
     public boolean equals(Object o) {
-	if (o == null)
+	if (o == this) {
+	    return true;
+	} else if (o == null) {
 	    return false;
-	if (!(o instanceof IP))
+	} else if (!(o instanceof IP)) {
 	    return false;
+	}
 
 	IP other = (IP) o;
-	if (this.m_prefixLength != other.m_prefixLength)
+	if (this.m_prefixLength != other.m_prefixLength) {
 	    return false;
-	if (this.m_address.length != other.m_address.length)
+	} else if (this.m_address.length != other.m_address.length) {
 	    return false;
-	for (int i = 0; i < m_address.length; i++)
-	    if (this.m_address[i] != other.m_address[i])
+	}
+	for (int i = 0; i < m_address.length; i++) {
+	    if (this.m_address[i] != other.m_address[i]) {
 		return false;
+	    }
+	}
 	return true;
     }
 

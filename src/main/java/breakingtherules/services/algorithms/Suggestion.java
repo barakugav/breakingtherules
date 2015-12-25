@@ -1,13 +1,12 @@
 package breakingtherules.services.algorithms;
 
 import breakingtherules.firewall.Attribute;
-import java.lang.Double;
 
 /**
  * Suggestion of a part of rule - specific attribute
  * 
- * Hold the number of hits that match the attribute.
- * Is comparable, but comparison is inconsistent with equals.
+ * Hold the number of hits that match the attribute. Is comparable, but
+ * comparison is inconsistent with equals.
  */
 public class Suggestion implements Comparable<Suggestion> {
 
@@ -20,7 +19,6 @@ public class Suggestion implements Comparable<Suggestion> {
      * Size of this suggestion - the number of hits that match it
      */
     private int m_size;
-    
 
     /**
      * Score of this suggestion
@@ -54,7 +52,7 @@ public class Suggestion implements Comparable<Suggestion> {
     public int getSize() {
 	return m_size;
     }
-    
+
     /**
      * Get the score of this suggestion
      */
@@ -70,23 +68,24 @@ public class Suggestion implements Comparable<Suggestion> {
     }
 
     /**
+     * Compare two Suggestions objects.
+     * 
+     * Is inconsistent with x.equals(y)
+     */
+    public int compareTo(Suggestion other) {
+	Double thisScore = new Double(this.m_score);
+	Double otherScore = new Double(other.m_score);
+	return thisScore.compareTo(otherScore);
+    }
+
+    /**
      * Set the score of this suggestion
      * 
      * @param score
      *            score of this suggestion
      */
     protected void setScore(double score) {
-	this.m_score = score;
-    }
-
-    
-    /**
-     * Compare two Suggestions objects.
-     * 
-     * Is inconsistent with x.equals(y)
-     */
-    public int compareTo(Suggestion other) {
-	return  (new Double(this.m_score)).compareTo(other.m_score);
+	m_score = score;
     }
 
 }

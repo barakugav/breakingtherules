@@ -1,131 +1,188 @@
 package breakingtherules.dao;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Hashtable;
 import java.util.List;
 import java.util.Vector;
-
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
 
 import org.springframework.stereotype.Component;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-import org.xml.sax.SAXException;
 
-import breakingtherules.dto.HitsDto;
+import breakingtherules.dto.ListDto;
 import breakingtherules.firewall.Attribute;
 import breakingtherules.firewall.Destination;
 import breakingtherules.firewall.Filter;
 import breakingtherules.firewall.Hit;
+import breakingtherules.firewall.Rule;
 import breakingtherules.firewall.Service;
 import breakingtherules.firewall.Source;
-import breakingtherules.session.NoCurrentJobException;
 
 /**
  * Implementation of {@link HitsDao} by XML repository
+ * 
+ * Able to read hits from repository files, save the hits for each repository
+ * for next hits request
  */
 @Component
 public class HitsXmlDao implements HitsDao {
 
-    static final String REPOS_ROOT = "repository/";
-
-    private static String createPathFromId(int id) {
-	return REPOS_ROOT + id + "/repository.xml";
-    }
+    private static final String REPOS_ROOT = "repository/";
 
     /**
-     * @see HitsDao.getHits
+     * All loaded repositories' hits
      */
-    public HitsDto getHits(int jobId, Filter filter, int startIndex, int endIndex)
-	    throws IOException, NoCurrentJobException {
-
-	return this.getHitsFromFile(createPathFromId(jobId), filter, startIndex, endIndex);
-    }
+    private Hashtable<String, List<Hit>> m_loadedHits;
 
     /**
-     * @see HitsDao.getHits
-     */
-    public HitsDto getHits(int jobId, Filter filter) throws IOException, NoCurrentJobException {
-	// Load from file
-	return this.getHitsFromFile(createPathFromId(jobId), filter);
-    }
-
-    /**
-     * Out of all the hits that match the filter, returns between the two
-     * indices.
+     * Constructor
      * 
-     * @param path
-     *            Path to the XML file
+     * Initialize loaded hits to empty
+     */
+    public HitsXmlDao() {
+	m_loadedHits = new Hashtable<String, List<Hit>>();
+    }
+
+    /**
+     * @see HitsDao#getHits(int, List, Filter)
+     */
+    @Override
+    public ListDto<Hit> getHits(int jobId, List<Rule> rules, Filter filter) throws IOException {
+	String path = createPathFromId(jobId);
+	return getHitsByPath(path, rules, filter);
+    }
+
+    /**
+     * @see HitsDao#getHits(int, List, Filter, int, int)
+     */
+    @Override
+    public ListDto<Hit> getHits(int jobId, List<Rule> rules, Filter filter, int startIndex, int endIndex)
+	    throws IOException {
+	String path = createPathFromId(jobId);
+	return getHitsByPath(path, rules, filter, startIndex, endIndex);
+    }
+
+    /**
+     * Get hits from repository that match all rules and filter by repository
+     * string path
+     * 
+     * @param repoPath
+     *            string path to repository
+     * @param rules
+     *            list of the current rules, act like additional filter
      * @param filter
-     *            Filter of the job
-     * 
-     * @return All the relevant hits
+     *            filter of the hits
+     * @return all hits that match all rules and filter
      * @throws IOException
-     * @throws NoCurrentJobException
+     *             if failed to read from memory
      */
-    public HitsDto getHitsFromFile(String path, Filter filter) throws IOException, NoCurrentJobException {
+    public ListDto<Hit> getHitsByPath(String repoPath, List<Rule> rules, Filter filter) throws IOException {
+	List<Hit> allHits = loadHits(repoPath);
+	List<Hit> matchedHits = new ArrayList<Hit>();
+	
+	for (Hit hit : allHits) {
+	    if (isMatch(rules, filter, hit)) {
+		matchedHits.add(hit);
+	    }
+	}
+	return new ListDto<Hit>(matchedHits, 0, matchedHits.size(), matchedHits.size());
+    }
+
+    /**
+     * Get all hits from repository that match all rules and filter by
+     * repository string path
+     * 
+     * @param repoPath
+     *            string path to repository
+     * @param startIndex
+     *            the start index of the hits list, including this index
+     * @param endIndex
+     *            the end index of the hits list, including this index
+     * @param rules
+     *            list of the current rules, act like additional filter
+     * @param filter
+     *            filter of the hits
+     * @return all hits that match all rules and filter in range [startIndex,
+     *         endIndex]
+     * @throws IOException
+     *             if failed to read from memory
+     */
+    public ListDto<Hit> getHitsByPath(String repoPath, List<Rule> rules, Filter filter, int startIndex, int endIndex)
+	    throws IOException {
+	if (startIndex < 0) {
+	    throw new IllegalArgumentException("Start index < 0");
+	} else if (startIndex > endIndex) {
+	    throw new IllegalArgumentException("Start index > end index");
+	}
+	// Don't need to check that arguments aren't null, if they do, usual
+	// null exception will be thrown later
+
+	// Extract all hits that match the filter
+	List<Hit> allHits = getHitsByPath(repoPath, rules, filter).getData();
+
+	int total = allHits.size();
+	if (startIndex >= total) {
+	    throw new IndexOutOfBoundsException("Start index bigger that total count");
+	}
+	endIndex = (int) Math.min(endIndex, total);
+	List<Hit> subHitsList = allHits.subList(startIndex, endIndex);
+	return new ListDto<Hit>(subHitsList, startIndex, endIndex, total);
+    }
+
+    /**
+     * Load all the hits from repository
+     * 
+     * @param repoPath
+     *            string path to repository file
+     * @return list of loaded hits from repository
+     * @throws IOException
+     *             if failed to read from file
+     */
+    private List<Hit> loadHits(String repoPath) throws IOException {
+	// Check if this repository is already loaded
+	List<Hit> hits = m_loadedHits.get(repoPath);
+	if (hits != null) {
+	    return hits;
+	}
+
 	// Load from file
-	Document repositoryDoc = loadRepository(path);
+	Document repositoryDoc = UtilityXmlDao.readFile(repoPath);
 
 	// Get all hits from repository
 	NodeList hitsList = repositoryDoc.getElementsByTagName("hit");
 
 	// Extract all hits that match the filter
-	List<Hit> matchedHits = new ArrayList<Hit>();
+	hits = new ArrayList<Hit>();
 	for (int i = 0; i < hitsList.getLength(); i++) {
 	    Node hitNode = hitsList.item(i);
 	    if (hitNode.getNodeType() == Element.ELEMENT_NODE) {
-		Element hitElm = (Element) hitNode;
+		try {
+		    Element hitElm = (Element) hitNode;
+		    Hit hit = createHit(hitElm);
+		    hits.add(hit);
 
-		Hit hit = createHit(hitElm);
-
-		if (filter.isMatch(hit)) {
-		    matchedHits.add(hit);
+		} catch (ParseException e) {
+		    e.printStackTrace();
+		    continue;
 		}
 	    }
 	}
-	return new HitsDto(matchedHits, 0, matchedHits.size(), matchedHits.size());
+	m_loadedHits.put(repoPath, hits);
+	return hits;
     }
 
     /**
-     * Out of all the hits that match the filter, returns between the two
-     * indices. Uses getHitsFromFile(path, filter)
+     * Create a string path from a job id
      * 
-     * @param path
-     *            Path to the XML file
-     * @param filter
-     *            Filter of the job
-     * @param startIndex
-     * @param endIndex
-     * @return HitsDto of all the relevant hits
-     * @throws IOException
-     * @throws NoCurrentJobException
+     * @param id
+     *            id of the job
+     * @return string path to the job's repository
      */
-    private HitsDto getHitsFromFile(String path, Filter filter, int startIndex, int endIndex)
-	    throws IOException, NoCurrentJobException {
-
-	// Extract all hits that match the filter
-	List<Hit> matchedHits = this.getHitsFromFile(path, filter).hits;
-
-	int total = matchedHits.size();
-
-	HitsDto requestedHits;
-	try {
-	    requestedHits = new HitsDto(matchedHits.subList(startIndex, endIndex), startIndex, endIndex, total);
-	} catch (IndexOutOfBoundsException e) {
-	    if (startIndex > total)
-		return new HitsDto(new ArrayList<Hit>(), 0, 0, total);
-	    else {
-		requestedHits = new HitsDto(matchedHits.subList(startIndex, total), startIndex, total, total);
-	    }
-	}
-
-	return requestedHits;
+    private static String createPathFromId(int id) {
+	return REPOS_ROOT + id + "/repository.xml";
     }
 
     /**
@@ -134,13 +191,25 @@ public class HitsXmlDao implements HitsDao {
      * @param hitElm
      *            XML element with hit attributes
      * @return hit object with the element attributes
+     * @throws ParseException
+     *             if failed to parse element to hit
      */
-    private Hit createHit(Element hitElm) {
+    private static Hit createHit(Element hitElm) throws ParseException {
 	// Read attributes from element
 	String id = hitElm.getAttribute("id");
 	String source = hitElm.getAttribute("source");
 	String destination = hitElm.getAttribute("destination");
 	String service = hitElm.getAttribute("service");
+
+	if (id == null || id.equals("")) {
+	    throw new ParseException("Id does not exist");
+	} else if (source == null || source.equals("")) {
+	    throw new ParseException("Source does not exist");
+	} else if (destination == null || destination.equals("")) {
+	    throw new ParseException("Destination does not exist");
+	} else if (service == null || service.equals("")) {
+	    throw new ParseException("Service does not exist");
+	}
 
 	// Convert strings to attributes
 	int intID = Integer.parseInt(id);
@@ -158,29 +227,26 @@ public class HitsXmlDao implements HitsDao {
     }
 
     /**
-     * Load document from a file
+     * Check if a hit is match to a list of rules and a filter
      * 
-     * @param path
-     *            String path to repository file
-     * @return repository document loaded from file
-     * @throws IOException
-     *             if read from file failed
+     * @param rules
+     *            list of rules to check on the hit
+     * @param filter
+     *            filter to check on the hit
+     * @param hit
+     *            the hit that being checked
+     * @return true if hit match all rules and filter, else - false
      */
-    private static Document loadRepository(String path) throws IOException {
-	Document repositoryDoc;
-
-	try {
-	    File repoFile = new File(path);
-
-	    DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-	    DocumentBuilder builder = factory.newDocumentBuilder();
-	    repositoryDoc = builder.parse(repoFile);
-	    return repositoryDoc;
-
-	} catch (IOException | ParserConfigurationException | SAXException e) {
-	    e.printStackTrace();
-	    throw new IOException(e.getMessage());
+    private static boolean isMatch(List<Rule> rules, Filter filter, Hit hit) {
+	if (!filter.isMatch(hit)) {
+	    return false;
 	}
+	for (Rule rule : rules) {
+	    if (!rule.isMatch(hit)) {
+		return false;
+	    }
+	}
+	return true;
     }
 
 }

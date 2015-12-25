@@ -2,6 +2,7 @@ package breakingtherules.services.algorithms;
 
 import java.util.List;
 
+import breakingtherules.dto.SuggestionsDto;
 import breakingtherules.firewall.Hit;
 
 /**
@@ -13,9 +14,11 @@ public interface SuggestionsAlgorithm {
      * Get suggestion of a attribute type for filters and rules
      * 
      * @param hits
-     * 		All the hits under current filter of the job
-     * @return list of suggestion for rules
+     *            list of hits the algorithm should operate on
+     * @param attType
+     *            requested suggestion type
+     * @return suggestions DTO of attType
      */
-    public List<Suggestion> getSuggestions(List<Hit> hits, String attType);
+    public SuggestionsDto getSuggestions(List<Hit> hits, String attType);
 
 }

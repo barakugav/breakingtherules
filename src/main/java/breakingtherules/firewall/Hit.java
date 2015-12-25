@@ -28,11 +28,11 @@ public class Hit {
      *             if id isn't positive or attributes is null
      */
     public Hit(int id, List<Attribute> attributes) throws IllegalArgumentException {
-	if (id < 0)
+	if (id < 0) {
 	    throw new IllegalArgumentException("Id shouldbe positive number");
-	if (attributes == null)
+	} else if (attributes == null) {
 	    throw new IllegalArgumentException("Tried to create hit with null attributes");
-
+	}
 	m_id = id;
 	m_attributes = attributes;
     }
@@ -63,9 +63,11 @@ public class Hit {
      * @return the hit's wanted attribute
      */
     public Attribute getAttribute(String type) {
-	for (Attribute attribute : m_attributes)
-	    if (attribute.getType().equals(type))
+	for (Attribute attribute : m_attributes) {
+	    if (attribute.getType().equals(type)) {
 		return attribute;
+	    }
+	}
 	return null;
     }
 

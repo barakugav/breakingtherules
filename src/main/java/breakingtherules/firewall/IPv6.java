@@ -79,9 +79,11 @@ public class IPv6 extends IP {
 
     @Override
     public boolean equals(Object o) {
-	if (o == null)
+	if (this == o) {
+	    return true;
+	} else if (o == null) {
 	    return false;
-	if (!(o instanceof IPv6))
+	} else if (!(o instanceof IPv6))
 	    return false;
 
 	return super.equals((IP) o);

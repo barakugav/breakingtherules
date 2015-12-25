@@ -7,7 +7,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
-import breakingtherules.dto.HitsDto;
+import breakingtherules.dto.ListDto;
+import breakingtherules.firewall.Hit;
 import breakingtherules.session.Job;
 import breakingtherules.session.NoCurrentJobException;
 
@@ -29,10 +30,9 @@ public class HitsController {
      * @throws NoCurrentJobException
      */
     @RequestMapping(value = "/hits", method = RequestMethod.GET)
-    public HitsDto hits(int startIndex, int endIndex) throws NoCurrentJobException, IOException {
+    public ListDto<Hit> hits(int startIndex, int endIndex) throws NoCurrentJobException, IOException {
 	try {
-	    HitsDto hits = m_job.getRelevantHits(startIndex, endIndex);
-	    return hits;
+	    return m_job.getHits(startIndex, endIndex);
 
 	} catch (NoCurrentJobException e) {
 	    System.err.println("Tried recieving hits without initializing job.");

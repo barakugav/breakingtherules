@@ -8,7 +8,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import breakingtherules.dao.HitsDao;
 
 /**
- * Filter of hits
+ * Filter of hits, base on given attributes
  * 
  * @see Hit
  * @see HitsDao
@@ -16,31 +16,11 @@ import breakingtherules.dao.HitsDao;
 public class Filter {
 
     /**
-     * 
+     * List of the attributes this filter use to filter hits
      */
-    private List<Attribute> m_attributes;
-
-    /**
-     * 
-     */
-    private static final Attribute[] ANY_FILTER = new Attribute[] {
-	    Source.createAnySourceIPv4(),
-	    Destination.createAnySourceIPv4(),
-	    Service.createAnyService()
-    };
+    private final List<Attribute> m_attributes;
 
     /*--------------------Methods--------------------*/
-
-    /**
-     * Constructor of empty filter
-     * 
-     * Creates an 'Any' filter
-     */
-    public Filter() {
-	m_attributes = new ArrayList<Attribute>();
-	for (Attribute attribute : ANY_FILTER)
-	    m_attributes.add(attribute);
-    }
 
     /**
      * Constructor
@@ -72,9 +52,11 @@ public class Filter {
      */
     @JsonIgnore
     public Attribute getAttribute(String type) {
-	for (Attribute attribute : m_attributes)
-	    if (attribute.getType().equals(type))
+	for (Attribute attribute : m_attributes) {
+	    if (attribute.getType().equals(type)) {
 		return attribute;
+	    }
+	}
 	return null;
     }
 
@@ -90,10 +72,24 @@ public class Filter {
 	    String attributeType = filterAttribute.getType();
 	    Attribute hitAttribute = hit.getAttribute(attributeType);
 
-	    if (!filterAttribute.contains(hitAttribute))
+	    if (!filterAttribute.contains(hitAttribute)) {
 		return false;
+	    }
 	}
 	return true;
+    }
+
+    /**
+     * Get a filter that allow any hit ('Any' filter)
+     * 
+     * @return 'Any' filter
+     */
+    public static Filter getAnyFilter() {
+	List<Attribute> attributes = new ArrayList<Attribute>();
+	attributes.add(Source.createAnySource());
+	attributes.add(Destination.createAnyDestination());
+	attributes.add(Service.createAnyService());
+	return new Filter(attributes);
     }
 
 }

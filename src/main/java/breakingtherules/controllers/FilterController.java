@@ -1,5 +1,6 @@
 package breakingtherules.controllers;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -26,7 +27,7 @@ public class FilterController {
     @RequestMapping(value = "/filter", method = RequestMethod.PUT, params = { "source", "destination", "service" })
     public void setFilter(@RequestParam(value = "source") String source,
 	    @RequestParam(value = "destination") String destination, @RequestParam(value = "service") String service)
-		    throws IllegalArgumentException, NoCurrentJobException {
+		    throws IllegalArgumentException, IOException, NoCurrentJobException {
 	List<Attribute> filterAtts = new ArrayList<Attribute>();
 	filterAtts.add(new Source(source));
 	filterAtts.add(new Destination(destination));
@@ -36,9 +37,8 @@ public class FilterController {
     }
 
     @RequestMapping(value = "/filter", method = RequestMethod.GET)
-    public Filter getFilter() {
-	Filter filter = m_job.getFilter();
-	return filter;
+    public Filter getFilter() throws NoCurrentJobException {
+	return m_job.getFilter();
     }
 
 }
