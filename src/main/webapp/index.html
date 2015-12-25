@@ -14,7 +14,7 @@
 <body ng-controller="GlobalController as globalCtrl">
 	<div class="container">
 		<h1>BreakingTheRules</h1>
-		<h2>All Rules</h2>
+		<h2>Rules</h2>
 		<p>The rules are ordered bottom-up: the bottom rule is the base rule, and the new rules are placed on top of it, until the base rule will be no longer needed.</p>
 
 		<table ng-controller="RulesController as rulesCtrl" class="table">
@@ -38,16 +38,17 @@
 					<th>Service</th>
 				</tr>
 				<tr>
-					<td> <button ng-click="filterCtrl.setFilter()">Set</button> </td>
+					<td> <button class="btn" ng-click="filterCtrl.setFilter()">Set</button> </td>
 					<td ng-repeat="attribute in filterCtrl.currentFilter.attributes">
-						<input type="text" ng-model="attribute.field">
+						<input type="text" class="form-control" ng-model="attribute.field">
 					</td>
 				</tr>
 			</table>
 		</div>
+		
 
-		<h2>All Hits</h2>
 		<div ng-controller="HitsTableController as hitsCtrl">
+		<h2>Hits ({{ hitsCtrl.numOfHits }})</h2>
 			<table class="table">
 				<tr>
 					<th></th>

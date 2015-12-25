@@ -82,31 +82,53 @@ public class Service implements Attribute {
     }
 
     /**
-     * Constructor of String service
+     * Constructor of String service (parse)
      * 
      * @param service
      *            String service in format ('port' 'service type')
      */
     public Service(String service) throws IllegalArgumentException {
+
 	if (service == null) {
 	    throw new IllegalArgumentException("Null args");
 	}
-	
-	if (service.equals("Any")) {
+
+	// If Any Service
+	if (service.equals("Any") || service.equals("Any Any")) {
 	    m_protocol = ANY_PROTOCOL;
 	    m_portRangeStart = MIN_PORT;
 	    m_portRangeEnd = MAX_PORT;
 	    return;
 	}
 
-	int separatorIndex;
-	switch (StringUtils.countOccurrencesOf(service, " ")) {
+	// If Any port, specific protocol
+	if (service.length() > "Any".length() && service.substring(0, "Any".length()).equals("Any")) {
+	    this.m_portRangeStart = MIN_PORT;
+	    this.m_portRangeEnd = MAX_PORT;
+	    String protString = service.substring("Any ".length());
+	    if (protString.matches("[a-zA-Z]+")) {
+		this.m_protocol = protString;
+		return;
+	    }
+	    throw new IllegalArgumentException("Bad protocol name in 'any port' option.");
+	}
+
+	// Service is in the format "[Protocol] [Port(s)]"
+
+	// Find separators
+	int numOfSeparators = 0;
+	numOfSeparators += StringUtils.countOccurrencesOf(service, " ");
+	numOfSeparators += StringUtils.countOccurrencesOf(service, "-");
+	int separatorIndex = service.indexOf(' ');
+	int portSeparatorIndex = service.indexOf('-');
+
+	switch (numOfSeparators) {
+
 	case 0:
 	    throw new IllegalArgumentException("Unknown format, missing port or protocol");
 	case 1:
 	    // only one port number
-	    separatorIndex = service.indexOf(' ');
-	    String portStr = service.substring(0, separatorIndex);
+	    String portStr = service.substring(separatorIndex + 1);
 	    if (portStr.equals("Any")) {
 		m_portRangeStart = MIN_PORT;
 		m_portRangeEnd = MAX_PORT;
@@ -116,12 +138,11 @@ public class Service implements Attribute {
 		    throw new IllegalArgumentException("Port should be in range [" + MIN_PORT + ", " + MAX_PORT + "]");
 		m_portRangeStart = m_portRangeEnd = port;
 	    }
-	    service = service.substring(separatorIndex + 1);
+	    service = service.substring(0, separatorIndex);
 	    break;
 	case 2:
 	    // start port
-	    separatorIndex = service.indexOf(' ');
-	    String portRangeStartStr = service.substring(0, separatorIndex);
+	    String portRangeStartStr = service.substring(separatorIndex + 1, portSeparatorIndex);
 	    if (portRangeStartStr.equals("Any")) {
 		m_portRangeStart = MIN_PORT;
 	    } else {
@@ -130,10 +151,9 @@ public class Service implements Attribute {
 		    throw new IllegalArgumentException("Port should be in range [" + MIN_PORT + ", " + MAX_PORT + "]");
 		m_portRangeStart = port;
 	    }
-	    service = service.substring(separatorIndex + 1);
+
 	    // end port
-	    separatorIndex = service.indexOf(' ');
-	    String portRangeEndStr = service.substring(0, separatorIndex);
+	    String portRangeEndStr = service.substring(portSeparatorIndex + 1);
 	    if (portRangeEndStr.equals("Any")) {
 		m_portRangeEnd = MAX_PORT;
 	    } else {
@@ -142,10 +162,12 @@ public class Service implements Attribute {
 		    throw new IllegalArgumentException("Port should be in range [" + MIN_PORT + ", " + MAX_PORT + "]");
 		m_portRangeEnd = port;
 	    }
-	    service = service.substring(separatorIndex + 1);
+
+	    service = service.substring(0, separatorIndex);
 	    break;
 	default:
 	    throw new IllegalArgumentException("Unknow format: too many words");
+
 	}
 
 	if (m_portRangeStart > m_portRangeEnd)
@@ -154,7 +176,11 @@ public class Service implements Attribute {
 	if (service.equals(""))
 	    throw new IllegalArgumentException("No protocol");
 
-	m_protocol = service.equals("Any") ? ANY_PROTOCOL : service;
+	if (service.equals("Any") || service.equals("Port") || service.equals("Ports"))
+	    m_protocol = ANY_PROTOCOL;
+	else
+	    m_protocol = service;
+
     }
 
     /**

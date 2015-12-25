@@ -146,7 +146,7 @@ public class ServiceTest {
     @Test
     public void contructorTestFromStringOnePort() {
 	try {
-	    new Service("80 TCP");
+	    new Service("TCP 80");
 
 	} catch (IllegalArgumentException e) {
 	    fail("Failed to create service from String: " + e.getMessage());
@@ -156,7 +156,7 @@ public class ServiceTest {
     @Test
     public void contructorTestFromStringOnePortAnyProtocol() {
 	try {
-	    new Service("80 Any");
+	    new Service("Port 80");
 
 	} catch (IllegalArgumentException e) {
 	    fail("Failed to create service from String and any protocol: " + e.getMessage());
@@ -177,7 +177,7 @@ public class ServiceTest {
     @Test
     public void contructorTestFromStringOnePortNoProtocolAndSpace() {
 	try {
-	    new Service("80 ");
+	    new Service(" 80");
 	    fail("Allowed creation of service from String without protocol and space");
 
 	} catch (IllegalArgumentException e) {
@@ -188,7 +188,7 @@ public class ServiceTest {
     @Test
     public void contructorTestFromStringOnePortNegative() {
 	try {
-	    new Service("-1 TCP");
+	    new Service("TCP -1");
 	    fail("Allowed creation of service from String with negative port");
 
 	} catch (IllegalArgumentException e) {
@@ -199,7 +199,7 @@ public class ServiceTest {
     @Test
     public void contructorTestFromStringOnePortOver2pow16() {
 	try {
-	    new Service("65536 TCP");
+	    new Service("TCP 65536");
 	    fail("Allowed creation of service from String with port over 1 << 16");
 
 	} catch (IllegalArgumentException e) {
@@ -210,7 +210,7 @@ public class ServiceTest {
     @Test
     public void contructorTestFromStringPortRange() {
 	try {
-	    new Service("80 100 TCP");
+	    new Service("TCP 80-100");
 
 	} catch (IllegalArgumentException e) {
 	    fail("Failed to create service from String and port range: " + e.getMessage());
@@ -220,7 +220,7 @@ public class ServiceTest {
     @Test
     public void contructorTestFromStringPortRangeAnyProtocol() {
 	try {
-	    new Service("80 100 Any");
+	    new Service("Ports 80-100");
 
 	} catch (IllegalArgumentException e) {
 	    fail("Failed to create service from String and port range: " + e.getMessage());
@@ -230,7 +230,7 @@ public class ServiceTest {
     @Test
     public void contructorTestFromStringPortRangeNoProtocolWithSpace() {
 	try {
-	    new Service("80 100 ");
+	    new Service(" 80-100");
 	    fail("Allowed creation of service from string with port range with no protocol with space");
 
 	} catch (IllegalArgumentException e) {
@@ -241,7 +241,7 @@ public class ServiceTest {
     @Test
     public void contructorTestFromStringPortRangeUpperRangeUnderLowerRange() {
 	try {
-	    new Service("100 80 TCP");
+	    new Service("TCP 100-80");
 	    fail("Allowed creation of service from string with port range upperRange < lowerRange");
 
 	} catch (IllegalArgumentException e) {
@@ -252,7 +252,7 @@ public class ServiceTest {
     @Test
     public void contructorTestFromStringPortRangeNegative() {
 	try {
-	    new Service("-1 100 TCP");
+	    new Service("TCP -1-100");
 	    fail("Allowed creation of service from string negative port");
 
 	} catch (IllegalArgumentException e) {
@@ -263,7 +263,7 @@ public class ServiceTest {
     @Test
     public void contructorTestFromStringPortRangePortOver2pow16() {
 	try {
-	    new Service("80 65536 TCP");
+	    new Service("TCP 80-65536");
 	    fail("Allowed creation of service from string with port over 1 << 16");
 
 	} catch (IllegalArgumentException e) {
@@ -274,7 +274,7 @@ public class ServiceTest {
     @Test
     public void contructorTestFromStringPortRangeNaN() {
 	try {
-	    new Service("sdw 100 TCP");
+	    new Service("TCP sdw-100");
 	    fail("Allowed creation of service from string with characters instead of numebr");
 
 	} catch (IllegalArgumentException e) {
@@ -296,12 +296,24 @@ public class ServiceTest {
 
     @Test
     public void contructorTestFromStringAnyPortAnyProtocol() {
+	Service s1 = null,
+		s2 = null;
+
 	try {
-	    new Service("Any Any");
+	    s1 = new Service("Any");
 
 	} catch (IllegalArgumentException e) {
 	    fail("Failed to create service from string with any port and any protocol: " + e.getMessage());
 	}
+
+	try {
+	    s2 = new Service("Any Any");
+
+	} catch (IllegalArgumentException e) {
+	    fail("Failed to create service from string with any port and any protocol: " + e.getMessage());
+	}
+
+	assertEquals("Should be same object", s1, s2);
     }
 
     @Test
@@ -350,13 +362,13 @@ public class ServiceTest {
 
     @Test
     public void getPortRangeStartOnePortFromString() {
-	Service service = new Service("50 TCP");
+	Service service = new Service("TCP 50");
 	assertEquals(50, service.getPortRangeStart());
     }
 
     @Test
     public void getPortRangeStartPortRangeFromString() {
-	Service service = new Service("50 70 TCP");
+	Service service = new Service("TCP 50-70");
 	assertEquals(50, service.getPortRangeStart());
     }
 
@@ -378,13 +390,13 @@ public class ServiceTest {
 
     @Test
     public void getPortRangeEndOnePortFromString() {
-	Service service = new Service("70 TCP");
+	Service service = new Service("TCP 70");
 	assertEquals(70, service.getPortRangeEnd());
     }
 
     @Test
     public void getPortRangeEndPortRangeFromString() {
-	Service service = new Service("50 70 TCP");
+	Service service = new Service("TCP 50-70");
 	assertEquals(70, service.getPortRangeEnd());
     }
 
@@ -461,13 +473,13 @@ public class ServiceTest {
 
     @Test
     public void toString_SinglePortSingleProtocol() {
-	Service s = new Service("80 TCP");
+	Service s = new Service("TCP 80");
 	assertEquals("TCP 80", s.toString());
     }
 
     @Test
     public void toString_SinglePortAnyProtocol() {
-	Service s = new Service("80 Any");
+	Service s = new Service("Port 80");
 	assertEquals("Port 80", s.toString());
     }
 
@@ -485,13 +497,13 @@ public class ServiceTest {
 
     @Test
     public void toString_PortRangeSingleProtocol() {
-	Service s = new Service("80 90 TCP");
+	Service s = new Service("TCP 80-90");
 	assertEquals("TCP 80-90", s.toString());
     }
 
     @Test
     public void toString_PortRangeAnyProtocol() {
-	Service s = new Service("80 90 Any");
+	Service s = new Service("Ports 80-90");
 	assertEquals("Ports 80-90", s.toString());
     }
 

@@ -97,7 +97,7 @@ var settings = {
 		hitsCtrl.PAGE_SIZE = 10;	// how many hits in every page
 
 		SetJob.then(function () {
-			hitsCtrl.requestPage();
+			hitsCtrl.refresh();
 		});
 
 		hitsCtrl.requestPage = function() {
@@ -105,6 +105,7 @@ var settings = {
 				endIndex = startIndex + hitsCtrl.PAGE_SIZE;
 			$http.get('/hits?startIndex=' + startIndex + '&endIndex=' + endIndex).success(function (data) {
 				hitsCtrl.numOfPages = Math.ceil(data.total / hitsCtrl.PAGE_SIZE);
+				hitsCtrl.numOfHits = data.total;
 				hitsCtrl.allHits = data.hits;
 			});
 		};
@@ -140,19 +141,19 @@ var settings = {
 			}
 		};
 
-		hitsCtrl.getPage = function () {
-			$http.get('/hits?page=' + hitsCtrl.page).success(function (data) {
-				$log.log('Get hits request success');
-				$log.log(data);
-				hitsCtrl.allHits = data;
-			});
-		};
+		// hitsCtrl.getPage = function () {
+		// 	$http.get('/hits?page=' + hitsCtrl.page).success(function (data) {
+		// 		$log.log('Get hits request success');
+		// 		$log.log(data);
+		// 		hitsCtrl.allHits = data;
+		// 	});
+		// };
 
 		hitsCtrl.refresh = function () {
 			hitsCtrl.page = 1;
 			hitsCtrl.numOfPages = 10;
 			hitsCtrl.allHits = [];
-			hitsCtrl.getPage();
+			hitsCtrl.requestPage();
 		};
 
 		$rootScope.$on('FilterUpdate', function () {

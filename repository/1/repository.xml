@@ -1,10 +1,10 @@
 <Repository>
-	<hit id="1" source="165.5.4.23" destination="127.0.0.1" service="80 TCP"></hit>
-	<hit id="2" source="65.5.4.44" destination="127.55.0.1" service="80 TCP"></hit>
-	<hit id="3" source="165.5.4.23" destination="127.0.66.0" service="40 TCP"></hit>
-	<hit id="4" source="14.5.98.23" destination="124.0.0.1" service="443 TCP"></hit>
-	<hit id="5" source="15.5.4.58" destination="201.0.0.1" service="246 TCP"></hit>
-	<hit id="6" source="29.11.4.23" destination="8.0.0.4" service="4888 TCP"></hit>
+	<hit id="1" source="165.5.4.23" destination="127.0.0.1" service="TCP 80"></hit>
+	<hit id="2" source="65.5.4.44" destination="127.55.0.1" service="TCP 80"></hit>
+	<hit id="3" source="165.5.4.23" destination="127.0.66.0" service="TCP 40"></hit>
+	<hit id="4" source="14.5.98.23" destination="124.0.0.1" service="TCP 443"></hit>
+	<hit id="5" source="15.5.4.58" destination="201.0.0.1" service="TCP 246"></hit>
+	<hit id="6" source="29.11.4.23" destination="8.0.0.4" service="TCP 4888"></hit>
 
 	<rule id="1" source="Any" destination="Any" service="Any TCP"></rule>
 </Repository>
