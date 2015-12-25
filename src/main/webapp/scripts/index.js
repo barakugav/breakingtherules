@@ -36,8 +36,6 @@ var settings = {
 
 		SetJob.then(function () {
 			$http.get('/rules').success(function (data) {
-				$log.log('Get rules request success');
-				$log.log(data);
 				rulesCtrl.rules = data;
 			});
 		});
@@ -54,8 +52,6 @@ var settings = {
 
 		filterCtrl.getFilter = function () {
 			$http.get('/filter').success(function (data) {
-				$log.log('Get filter request success');
-				$log.log(data);
 				filterCtrl.currentFilter = data;
 
 				var attributes = filterCtrl.currentFilter.attributes;
@@ -83,8 +79,6 @@ var settings = {
 			}
 
 			$http.put('/filter' + setFilterArgs).success(function () {
-				$log.log('Set filter request success');
-				$log.log(setFilterArgs);
 				filterCtrl.getFilter();
 			});
 		};
@@ -141,14 +135,6 @@ var settings = {
 			}
 		};
 
-		// hitsCtrl.getPage = function () {
-		// 	$http.get('/hits?page=' + hitsCtrl.page).success(function (data) {
-		// 		$log.log('Get hits request success');
-		// 		$log.log(data);
-		// 		hitsCtrl.allHits = data;
-		// 	});
-		// };
-
 		hitsCtrl.refresh = function () {
 			hitsCtrl.page = 1;
 			hitsCtrl.numOfPages = 10;
@@ -167,7 +153,8 @@ var settings = {
 
 		SetJob.then(function() {
 			$http.get('/suggestions').success(function (data) {
-				sugCtrl.allSuggestions = data.suggestions;
+				sugCtrl.allSuggestions = data;
+				$log.log(data);
 			});
 		});
 

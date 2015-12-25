@@ -119,6 +119,22 @@ public class SourceTest {
     }
 
     @Test
+    public void shouldEqualIdenticalOne() {
+	Source s1, s2;
+	s1 = new Source("2.12.45.7/21");
+	s2 = new Source("2.12.45.7/21");
+	assertEquals(s1, s2);
+    }
+    
+    @Test
+    public void shouldNotEqualDifferentOne() {
+	Source s1, s2;
+	s1 = new Source("2.12.45.7/21");
+	s2 = new Source("2.13.45.7/21");
+	assertFalse(s1.equals(s2));
+    }
+    
+    @Test
     public void toStringTest() {
 	IP ip = getRandomIP();
 	Source des = new Source(ip);

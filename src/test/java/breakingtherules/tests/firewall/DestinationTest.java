@@ -126,6 +126,22 @@ public class DestinationTest {
 	assertTrue(ip.toString().equals(des.toString()));
     }
 
+    @Test
+    public void shouldEqualIdenticalOne() {
+	Destination s1, s2;
+	s1 = new Destination("2.12.45.7/21");
+	s2 = new Destination("2.12.45.7/21");
+	assertEquals(s1, s2);
+    }
+    
+    @Test
+    public void shouldNotEqualDifferentOne() {
+	Destination s1, s2;
+	s1 = new Destination("2.12.45.7/21");
+	s2 = new Destination("2.13.45.7/21");
+	assertFalse(s1.equals(s2));
+    }
+    
     /*--------------------Help Methods--------------------*/
 
     private IP getRandomIP() {

@@ -97,7 +97,7 @@
 				<tr>
 					<td ng-repeat="attSuggestions in sugCtrl.allSuggestions">
 						<ul>
-							<li ng-repeat="sug in attSuggestions.suggestions">{{ sug.attribute.str }}</li>
+							<li ng-repeat="sug in attSuggestions.suggestions">{{ sug.attribute.str }} ({{ sug.size }})</li>
 						</ul>
 					</td>
 				</tr>	

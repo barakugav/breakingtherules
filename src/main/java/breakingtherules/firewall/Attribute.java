@@ -22,6 +22,12 @@ public interface Attribute {
      * @return type of the attribute
      */
     public String getType();
+    
+    @Override 
+    public boolean equals(Object o);
+    
+    @Override
+    public int hashCode();
 
     @JsonProperty("str")
     public String toString();

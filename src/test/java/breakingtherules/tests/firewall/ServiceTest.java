@@ -507,6 +507,21 @@ public class ServiceTest {
 	assertEquals("Ports 80-90", s.toString());
     }
 
+    @Test
+    public void shouldEqualIdenticalOne() {
+	Service s1, s2;
+	s1 = new Service("TCP 80-205");
+	s2 = new Service("TCP 80-205");
+	assertEquals(s1, s2);
+    }
+    @Test
+    public void shouldNotEqualDifferentOne() {
+	Service s1, s2;
+	s1 = new Service("Any TCP");
+	s2 = new Service("Any UDP");
+	assertFalse(s1.equals(s2));
+    }
+    
     /*--------------------Help Methods--------------------*/
 
     private int getRandomPort() {

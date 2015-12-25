@@ -46,7 +46,7 @@ public class Job {
      * All the suggestions offered by the algorithm, and their statistics. To be
      * passed to the user.
      */
-    private JobSuggestions m_suggestions;
+    private List<AttributeSuggestions> m_suggestions;
 
     /**
      * The current hit filter.
@@ -88,10 +88,14 @@ public class Job {
 	    System.err.println("Something's wrong. NoCurrentJob in setJob.");
 	}
 
-	m_suggestions = new JobSuggestions(this); // Must be after setting
-						  // m_rules
+	// Must be after setting m_rules
+	m_suggestions = new ArrayList<AttributeSuggestions>();
+	for (String att : this.getAllAttributeTypes()) {
+	    m_suggestions.add(new AttributeSuggestions(this, att));
+	}
+	
 	m_filter = new Filter(); // Change to: previously used filter
-	m_suggestions.update(); // Must be after setting ID, filter, rules
+	this.updateSuggestions(); // Must be after setting ID, filter, rules
     }
 
     /**
@@ -100,7 +104,7 @@ public class Job {
      * @return Current job's suggestions.
      * @throws NoCurrentJobException
      */
-    public JobSuggestions getSuggestions() throws NoCurrentJobException {
+    public List<AttributeSuggestions> getSuggestions() throws NoCurrentJobException {
 	if (m_jobId == NO_CURRENT_JOB)
 	    throw new NoCurrentJobException();
 	return m_suggestions;
@@ -140,7 +144,7 @@ public class Job {
 
     public void setFilter(Filter filter) {
 	m_filter = filter;
-	m_suggestions.update();
+	this.updateSuggestions();
     }
 
     public Filter getFilter() {
@@ -173,5 +177,11 @@ public class Job {
 
 	return m_allAttributeTypes;
 
+    }
+    
+    public void updateSuggestions() {
+	for (AttributeSuggestions attributeSuggestion : m_suggestions) {
+	    attributeSuggestion.update();
+	}
     }
 }

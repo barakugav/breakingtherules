@@ -60,6 +60,17 @@ public class Source implements Attribute {
     }
 
     @Override
+    public boolean equals(Object o) {
+	if (!(o instanceof Source))
+	    return false;
+	return this.m_ip.equals(((Source)o).m_ip);
+    }
+    @Override
+    public int hashCode() {
+	return m_ip.hashCode();
+    }
+    
+    @Override
     public String getType() {
 	return "Source";
     }

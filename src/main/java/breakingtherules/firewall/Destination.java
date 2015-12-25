@@ -56,6 +56,17 @@ public class Destination implements Attribute {
     public String toString() {
 	return m_ip.toString();
     }
+    
+    @Override
+    public boolean equals(Object o) {
+	if (!(o instanceof Destination))
+	    return false;
+	return this.m_ip.equals(((Destination)o).m_ip);
+    }
+    @Override
+    public int hashCode() {
+	return m_ip.hashCode();
+    }
 
     @Override
     public String getType() {
