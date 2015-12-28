@@ -40,7 +40,7 @@
 				<tr>
 					<td> <button class="btn" ng-click="filterCtrl.setFilter()">Set</button> </td>
 					<td ng-repeat="attribute in filterCtrl.currentFilter.attributes">
-						<input type="text" class="form-control" ng-model="attribute.field">
+						<input type="text" class="form-control" ng-model="attribute.field" placeholder="Any">
 					</td>
 				</tr>
 			</table>
@@ -97,7 +97,7 @@
 				<tr>
 					<td ng-repeat="attSuggestions in sugCtrl.allSuggestions">
 						<ul>
-							<li ng-repeat="sug in attSuggestions.suggestions">{{ sug.attribute.str }} ({{ sug.size }})</li>
+							<li ng-repeat="sug in attSuggestions.suggestions">{{ sug.attribute.str }} <span>({{ sug.score * 100| number :1 }}%)</span></li>
 						</ul>
 					</td>
 				</tr>	

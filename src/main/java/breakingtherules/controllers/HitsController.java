@@ -7,19 +7,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
-import breakingtherules.dao.HitsDao;
 import breakingtherules.dto.HitsDto;
 import breakingtherules.session.Job;
 import breakingtherules.session.NoCurrentJobException;
 
 @RestController
 public class HitsController {
-
-    /**
-     * Used to get the hits that match the filter
-     */
-    @Autowired
-    private HitsDao m_hitsDao;
 
     /**
      * Has the current job that is being worked on
@@ -38,7 +31,7 @@ public class HitsController {
     @RequestMapping(value = "/hits", method = RequestMethod.GET)
     public HitsDto hits(int startIndex, int endIndex) throws NoCurrentJobException, IOException {
 	try {
-	    HitsDto hits = m_hitsDao.getHits(m_job, startIndex, endIndex);
+	    HitsDto hits = m_job.getRelevantHits(startIndex, endIndex);
 	    return hits;
 
 	} catch (NoCurrentJobException e) {

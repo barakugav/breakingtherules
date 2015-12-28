@@ -42,5 +42,7 @@ nav > .pagination {
   cursor: pointer; }
   #table-sug li:hover {
     text-decoration: underline; }
+  #table-sug li span {
+    color: black; }
 
 /*# sourceMappingURL=index.css.map */

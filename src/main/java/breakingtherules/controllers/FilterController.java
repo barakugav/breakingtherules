@@ -15,6 +15,7 @@ import breakingtherules.firewall.Filter;
 import breakingtherules.firewall.Service;
 import breakingtherules.firewall.Source;
 import breakingtherules.session.Job;
+import breakingtherules.session.NoCurrentJobException;
 
 @RestController
 public class FilterController {
@@ -25,7 +26,7 @@ public class FilterController {
     @RequestMapping(value = "/filter", method = RequestMethod.PUT, params = { "source", "destination", "service" })
     public void setFilter(@RequestParam(value = "source") String source,
 	    @RequestParam(value = "destination") String destination, @RequestParam(value = "service") String service)
-		    throws IllegalArgumentException {
+		    throws IllegalArgumentException, NoCurrentJobException {
 	List<Attribute> filterAtts = new ArrayList<Attribute>();
 	filterAtts.add(new Source(source));
 	filterAtts.add(new Destination(destination));

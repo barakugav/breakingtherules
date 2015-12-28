@@ -24,7 +24,6 @@ import breakingtherules.firewall.Filter;
 import breakingtherules.firewall.Hit;
 import breakingtherules.firewall.Service;
 import breakingtherules.firewall.Source;
-import breakingtherules.session.Job;
 import breakingtherules.session.NoCurrentJobException;
 
 /**
@@ -33,37 +32,45 @@ import breakingtherules.session.NoCurrentJobException;
 @Component
 public class HitsXmlDao implements HitsDao {
 
-    /**
-     * See documentation in HitsDao
-     */
-    public HitsDto getHits(Job job, int startIndex, int endIndex) throws IOException, NoCurrentJobException {
-	
-	// Extract all hits that match the filter
-	List<Hit> matchedHits = this.getHits(job).hits;	
+    static final String REPOS_ROOT = "repository/";
 
-	int total = matchedHits.size();
-
-	HitsDto requestedHits;
-	try {
-	    requestedHits = new HitsDto(matchedHits.subList(startIndex, endIndex), startIndex, endIndex, total);
-	}
-	catch(IndexOutOfBoundsException e) {
-	    if (startIndex > total) return new HitsDto(new ArrayList<Hit>(), 0, 0, total);
-	    else {
-		requestedHits = new HitsDto(matchedHits.subList(startIndex, total), startIndex, total, total);
-	    }
-	}
-
-	return requestedHits;
+    private static String createPathFromId(int id) {
+	return REPOS_ROOT + id + "/repository.xml";
     }
-    
+
     /**
-     * See documentation in HitsDao
+     * @see HitsDao.getHits
      */
-    public HitsDto getHits(Job job) throws IOException, NoCurrentJobException {
+    public HitsDto getHits(int jobId, Filter filter, int startIndex, int endIndex)
+	    throws IOException, NoCurrentJobException {
+
+	return this.getHitsFromFile(createPathFromId(jobId), filter, startIndex, endIndex);
+    }
+
+    /**
+     * @see HitsDao.getHits
+     */
+    public HitsDto getHits(int jobId, Filter filter) throws IOException, NoCurrentJobException {
 	// Load from file
-	String repoPath = job.getRepositoryLocation();
-	Document repositoryDoc = loadRepository(repoPath);
+	return this.getHitsFromFile(createPathFromId(jobId), filter);
+    }
+
+    /**
+     * Out of all the hits that match the filter, returns between the two
+     * indices.
+     * 
+     * @param path
+     *            Path to the XML file
+     * @param filter
+     *            Filter of the job
+     * 
+     * @return All the relevant hits
+     * @throws IOException
+     * @throws NoCurrentJobException
+     */
+    public HitsDto getHitsFromFile(String path, Filter filter) throws IOException, NoCurrentJobException {
+	// Load from file
+	Document repositoryDoc = loadRepository(path);
 
 	// Get all hits from repository
 	NodeList hitsList = repositoryDoc.getElementsByTagName("hit");
@@ -77,13 +84,48 @@ public class HitsXmlDao implements HitsDao {
 
 		Hit hit = createHit(hitElm);
 
-		Filter filter = job.getFilter();
 		if (filter.isMatch(hit)) {
 		    matchedHits.add(hit);
 		}
 	    }
 	}
 	return new HitsDto(matchedHits, 0, matchedHits.size(), matchedHits.size());
+    }
+
+    /**
+     * Out of all the hits that match the filter, returns between the two
+     * indices. Uses getHitsFromFile(path, filter)
+     * 
+     * @param path
+     *            Path to the XML file
+     * @param filter
+     *            Filter of the job
+     * @param startIndex
+     * @param endIndex
+     * @return HitsDto of all the relevant hits
+     * @throws IOException
+     * @throws NoCurrentJobException
+     */
+    private HitsDto getHitsFromFile(String path, Filter filter, int startIndex, int endIndex)
+	    throws IOException, NoCurrentJobException {
+
+	// Extract all hits that match the filter
+	List<Hit> matchedHits = this.getHitsFromFile(path, filter).hits;
+
+	int total = matchedHits.size();
+
+	HitsDto requestedHits;
+	try {
+	    requestedHits = new HitsDto(matchedHits.subList(startIndex, endIndex), startIndex, endIndex, total);
+	} catch (IndexOutOfBoundsException e) {
+	    if (startIndex > total)
+		return new HitsDto(new ArrayList<Hit>(), 0, 0, total);
+	    else {
+		requestedHits = new HitsDto(matchedHits.subList(startIndex, total), startIndex, total, total);
+	    }
+	}
+
+	return requestedHits;
     }
 
     /**

@@ -3,7 +3,7 @@ package breakingtherules.dao;
 import java.io.IOException;
 
 import breakingtherules.dto.HitsDto;
-import breakingtherules.session.Job;
+import breakingtherules.firewall.Filter;
 import breakingtherules.session.NoCurrentJobException;
 
 /**
@@ -28,7 +28,7 @@ public interface HitsDao {
      * @throws NoCurrentJobException
      *             if there is no current job
      */
-    public HitsDto getHits(Job currentJob, int startIndex, int endIndex) throws IOException, NoCurrentJobException;
+    public HitsDto getHits(int jobId, Filter filter, int startIndex, int endIndex) throws IOException, NoCurrentJobException;
 
     
     /**
@@ -43,6 +43,6 @@ public interface HitsDao {
      * @throws NoCurrentJobException
      *             if there is no current job
      */
-    public HitsDto getHits(Job currentJob) throws IOException, NoCurrentJobException;
+    public HitsDto getHits(int jobId, Filter filter) throws IOException, NoCurrentJobException;
 
 }

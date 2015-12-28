@@ -20,6 +20,7 @@ public class Suggestion implements Comparable<Suggestion> {
      * Size of this suggestion - the number of hits that match it
      */
     private int m_size;
+    
 
     /**
      * Score of this suggestion
@@ -52,6 +53,13 @@ public class Suggestion implements Comparable<Suggestion> {
      */
     public int getSize() {
 	return m_size;
+    }
+    
+    /**
+     * Get the score of this suggestion
+     */
+    public double getScore() {
+	return m_score;
     }
 
     /**

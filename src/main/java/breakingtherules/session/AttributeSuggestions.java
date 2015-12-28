@@ -5,7 +5,9 @@ import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import breakingtherules.firewall.Hit;
 import breakingtherules.services.algorithms.Suggestion;
+import breakingtherules.services.algorithms.SuggestionsAlgorithm;
 
 
 public class AttributeSuggestions {
@@ -16,10 +18,7 @@ public class AttributeSuggestions {
     @JsonProperty("suggestions")
     private List<Suggestion> m_suggestions;
 
-    private Job job;
-
-    public AttributeSuggestions(Job job, String type) {
-	this.job = job;
+    public AttributeSuggestions(String type) {
 	m_type = type;
 	m_suggestions = new ArrayList<Suggestion>();
     }
@@ -27,8 +26,8 @@ public class AttributeSuggestions {
     /**
      * Uses class Algorithm to update
      */
-    public void update() {
-	m_suggestions = job.getAlgorithm().getSuggestions(job, m_type);
+    public void update(SuggestionsAlgorithm alg, List<Hit> hits) {
+	m_suggestions = alg.getSuggestions(hits, m_type);
     }
 
 }

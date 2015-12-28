@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component;
 
 import breakingtherules.dao.HitsDao;
 import breakingtherules.dao.RulesDao;
+import breakingtherules.dto.HitsDto;
 import breakingtherules.firewall.Attribute;
 import breakingtherules.firewall.Filter;
 import breakingtherules.firewall.Hit;
@@ -91,11 +92,26 @@ public class Job {
 	// Must be after setting m_rules
 	m_suggestions = new ArrayList<AttributeSuggestions>();
 	for (String att : this.getAllAttributeTypes()) {
-	    m_suggestions.add(new AttributeSuggestions(this, att));
+	    m_suggestions.add(new AttributeSuggestions(att));
 	}
-	
+
 	m_filter = new Filter(); // Change to: previously used filter
-	this.updateSuggestions(); // Must be after setting ID, filter, rules
+
+	// Update suggestions. Must be after setting ID, filter, rules
+	try {
+	    this.updateSuggestions();
+
+	} catch (NoCurrentJobException e) {
+	    // Shouldn't happen because jobId is set
+	    System.err.println("Something's wrong. NoCurrentJob in setJob.");
+	}
+    }
+    
+    /**
+     * Get the job's Id
+     */
+    public int getId() {
+	return m_jobId;
     }
 
     /**
@@ -114,7 +130,9 @@ public class Job {
      * 
      * @return All the rules for the current job
      */
-    public List<Rule> getRules() {
+    public List<Rule> getRules() throws NoCurrentJobException {
+	if (m_jobId == NO_CURRENT_JOB)
+	    throw new NoCurrentJobException();
 	return m_rules;
     }
 
@@ -124,8 +142,21 @@ public class Job {
      * @return All the hits caught by the filter.
      * @throws IOException
      */
-    public List<Hit> getRelevantHits() throws NoCurrentJobException, IOException {
-	List<Hit> hits = hitsDao.getHits(this).hits;
+    public HitsDto getRelevantHits() throws NoCurrentJobException, IOException {
+	HitsDto hits = hitsDao.getHits(this.m_jobId, this.m_filter);
+	return hits;
+    }
+
+    /**
+     * Uses the filter to filter out relevant hits, and only some of them.
+     * 
+     * @param startIndex
+     * @param endIndex
+     * @return All the hits caught by the filter.
+     * @throws IOException
+     */
+    public HitsDto getRelevantHits(int startIndex, int endIndex) throws NoCurrentJobException, IOException {
+	HitsDto hits = hitsDao.getHits(this.m_jobId, this.m_filter, startIndex, endIndex);
 	return hits;
     }
 
@@ -142,9 +173,14 @@ public class Job {
 	return "repository/" + m_jobId + "/repository.xml";
     }
 
-    public void setFilter(Filter filter) {
+    public void setFilter(Filter filter) throws NoCurrentJobException {
 	m_filter = filter;
-	this.updateSuggestions();
+	try {
+	    this.updateSuggestions();
+	} catch (IOException e) {
+	    // Shouldn't happen. The job already exists.
+	    System.err.println("IOException inside setFilter, after repository was used in job constructor.");
+	}
     }
 
     public Filter getFilter() {
@@ -178,10 +214,12 @@ public class Job {
 	return m_allAttributeTypes;
 
     }
-    
-    public void updateSuggestions() {
+
+    public void updateSuggestions() throws IOException, NoCurrentJobException {
+	List<Hit> hits = this.getRelevantHits().hits;
+
 	for (AttributeSuggestions attributeSuggestion : m_suggestions) {
-	    attributeSuggestion.update();
+	    attributeSuggestion.update(this.algorithm, hits);
 	}
     }
 }

@@ -75,7 +75,10 @@ var settings = {
 				} else {
 					setFilterArgs += '&';
 				}
-				setFilterArgs += attribute.type.toLowerCase() + '=' + attribute.field;
+				setFilterArgs +=
+					attribute.type.toLowerCase() + 
+					'=' + 
+					(attribute.field ? attribute.field : "Any");
 			}
 
 			$http.put('/filter' + setFilterArgs).success(function () {
@@ -85,14 +88,10 @@ var settings = {
 
 	}]);
 
-	app.controller('HitsTableController', ['$http', '$rootScope', '$log', 'SetJob', function ($http, $rootScope, $log, SetJob) {
+	app.controller('HitsTableController', ['$http', '$rootScope', '$log', function ($http, $rootScope, $log) {
 		var hitsCtrl = this;
 		hitsCtrl.NAV_SIZE = 5; 		// how many elements in nav. always an odd number
 		hitsCtrl.PAGE_SIZE = 10;	// how many hits in every page
-
-		SetJob.then(function () {
-			hitsCtrl.refresh();
-		});
 
 		hitsCtrl.requestPage = function() {
 			var startIndex = (hitsCtrl.page - 1) * hitsCtrl.PAGE_SIZE,
@@ -148,14 +147,22 @@ var settings = {
 
 	}]);
 
-	app.controller('SuggestionController', ['$http', '$log', 'SetJob', function ($http, $log, SetJob) {
+	app.controller('SuggestionController', ['$http', '$log', '$rootScope', 'SetJob', function ($http, $log, $rootScope, SetJob) {
 		var sugCtrl = this;
 
 		SetJob.then(function() {
+			sugCtrl.refresh();
+		});
+
+		sugCtrl.refresh = function() {
 			$http.get('/suggestions').success(function (data) {
 				sugCtrl.allSuggestions = data;
 				$log.log(data);
 			});
+		};
+
+		$rootScope.$on('FilterUpdate', function () {
+			sugCtrl.refresh();
 		});
 
 	}]);

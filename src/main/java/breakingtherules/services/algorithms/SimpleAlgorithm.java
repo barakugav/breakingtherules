@@ -1,6 +1,5 @@
 package breakingtherules.services.algorithms;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -10,8 +9,6 @@ import org.springframework.stereotype.Component;
 
 import breakingtherules.firewall.Attribute;
 import breakingtherules.firewall.Hit;
-import breakingtherules.session.Job;
-import breakingtherules.session.NoCurrentJobException;
 
 /**
  * Simple algorithm the implements {@link Algorithm} methods
@@ -21,21 +18,13 @@ public class SimpleAlgorithm implements SuggestionsAlgorithm {
     
     static int NUM_OF_SUGGESTIONS = 10;
 
-    public List<Suggestion> getSuggestions(Job job, String attType) {
+    public List<Suggestion> getSuggestions(List<Hit> hits, String attType) {
 
 	// The answer list
 	List<Suggestion> allSuggestionsList = new ArrayList<Suggestion>();
 
 	// Every possible single attribute becomes a suggestion.
 	HashMap<Attribute, Suggestion> allSuggestionsMap = new HashMap<Attribute, Suggestion>();
-
-	// hits = hits under filter
-	List<Hit> hits;
-	try {
-	    hits = job.getRelevantHits();
-	} catch (NoCurrentJobException | IOException e) {
-	    return new ArrayList<Suggestion>();
-	}
 
 	// Create a suggestion for every attribute, count the number of hits
 	// that apply to it
@@ -56,7 +45,7 @@ public class SimpleAlgorithm implements SuggestionsAlgorithm {
 
 	// Calculate scores
 	for (Suggestion suggestion : allSuggestionsList)
-	    suggestion.setScore(suggestion.getSize());
+	    suggestion.setScore(suggestion.getSize() / (double)hits.size());
 
 	// Put suggestions in array for sorting
 	Collections.sort(allSuggestionsList);
