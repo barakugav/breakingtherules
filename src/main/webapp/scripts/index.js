@@ -30,28 +30,27 @@ var settings = {
 		this.attributes = settings.attributes;
 	});
 
-	app.controller('RulesController', ['$http', '$log', 'SetJob', function ($http, $log, SetJob) {
+	app.controller('RulesController', ['$http', 'SetJob', function ($http, SetJob) {
 		var rulesCtrl = this;
 		rulesCtrl.rules = [];
 
 		SetJob.then(function () {
 			$http.get('/rules').success(function (data) {
-				debugger;
 				rulesCtrl.rules = data;
 			});
 		});
 		
 	}]);
 
-	app.controller('FilterController', ['$http', '$rootScope', '$log', 'SetJob', function($http, $rootScope, $log, SetJob) {
+	app.controller('FilterController', ['$http', '$rootScope', 'SetJob', function($http, $rootScope, SetJob) {
 		var filterCtrl = this;
 		filterCtrl.currentFilter = {};
 
 		SetJob.then(function () {
-			filterCtrl.getFilter();
+			filterCtrl.updateFilter();
 		});
 
-		filterCtrl.getFilter = function () {
+		filterCtrl.updateFilter = function () {
 			$http.get('/filter').success(function (data) {
 				filterCtrl.currentFilter = data;
 
@@ -83,13 +82,13 @@ var settings = {
 			}
 
 			$http.put('/filter' + setFilterArgs).success(function () {
-				filterCtrl.getFilter();
+				filterCtrl.updateFilter();
 			});
 		};
 
 	}]);
 
-	app.controller('HitsTableController', ['$http', '$rootScope', '$log', function ($http, $rootScope, $log) {
+	app.controller('HitsTableController', ['$scope', '$http', '$rootScope', function ($scope, $http, $rootScope) {
 		var hitsCtrl = this;
 		hitsCtrl.NAV_SIZE = 5; 		// how many elements in nav. always an odd number
 		hitsCtrl.PAGE_SIZE = 10;	// how many hits in every page
@@ -104,30 +103,6 @@ var settings = {
 			});
 		};
 
-		hitsCtrl.nearPages = function () {
-			var numOfPages = hitsCtrl.numOfPages,
-				page = hitsCtrl.page,
-				NAV_SIZE = hitsCtrl.NAV_SIZE;
-
-			// Edges
-			if (numOfPages <= NAV_SIZE)
-				return range(1, numOfPages + 1);
-			if (page <= NAV_SIZE / 2)
-				return range(1, NAV_SIZE + 1);
-			if (page >= numOfPages - NAV_SIZE / 2)
-				return range(numOfPages - NAV_SIZE + 1, numOfPages + 1);
-
-			// Normal case
-			return range(page - 2, page + 3);
-		};
-
-		hitsCtrl.nextPage = function () {
-			hitsCtrl.setPage(hitsCtrl.page + 1);
-		};
-		hitsCtrl.prevPage = function () {
-			hitsCtrl.setPage(hitsCtrl.page - 1);
-		};
-
 		hitsCtrl.setPage = function (newPage) {
 			if (newPage <= hitsCtrl.numOfPages && newPage >= 1)  {
 				hitsCtrl.page = newPage;
@@ -135,6 +110,7 @@ var settings = {
 			}
 		};
 
+		// On initiation and on filter change
 		hitsCtrl.refresh = function () {
 			hitsCtrl.page = 1;
 			hitsCtrl.numOfPages = 10;
@@ -146,9 +122,13 @@ var settings = {
 			hitsCtrl.refresh();
 		});
 
+		$scope.$on('pageChange', function (event, pageNum) {
+			hitsCtrl.setPage(pageNum);
+		});
+
 	}]);
 
-	app.controller('SuggestionController', ['$http', '$log', '$rootScope', 'SetJob', function ($http, $log, $rootScope, SetJob) {
+	app.controller('SuggestionController', ['$http', '$rootScope', 'SetJob', function ($http, $rootScope, SetJob) {
 		var sugCtrl = this;
 
 		SetJob.then(function() {
@@ -158,7 +138,6 @@ var settings = {
 		sugCtrl.refresh = function() {
 			$http.get('/suggestions').success(function (data) {
 				sugCtrl.allSuggestions = data;
-				$log.log(data);
 			});
 		};
 
@@ -167,6 +146,58 @@ var settings = {
 		});
 
 	}]);
+
+	app.directive('pageTurner', function () {
+		return {
+			restrict: 'E',
+			templateUrl: './components/page-turner.html',
+			scope: {
+				navSize: '=',
+				currentPage: '=',
+				numOfPages: '='
+			},
+			link: function (scope, element, attr) {
+				scope.nearPages = function () {
+					var numOfPages = scope.numOfPages,
+						page = scope.currentPage,
+						NAV_SIZE = scope.navSize;
+					// Edges
+					if (numOfPages <= NAV_SIZE)
+						return range(1, numOfPages + 1);
+					if (page <= NAV_SIZE / 2)
+						return range(1, NAV_SIZE + 1);
+					if (page >= numOfPages - NAV_SIZE / 2)
+						return range(numOfPages - NAV_SIZE + 1, numOfPages + 1);
+
+					// Normal case
+					return range(page - 2, page + 3);
+				};
+			}
+		};
+	});
+
+	app.directive('onEnterKey', function() {
+	    return  {
+	    	restrict: 'A',
+	    	link: function (scope, element, attrs) {
+
+		        element.bind("keydown keypress", function(event) {
+		            var keyCode = event.which || event.keyCode;
+
+		            // If enter key is pressed
+		            if (keyCode === 13) {
+		                scope.$apply(function() {
+		                        // Evaluate the expression
+		                    scope.$eval(attrs.onEnterKey);
+		                });
+
+		                event.preventDefault();
+		            }
+		        });
+		    }
+		};
+	});
+
 
 	// Taken from http://codepen.io/WinterJoey/pen/sfFaK
 	app.filter('capitalize', function() {

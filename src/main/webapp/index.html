@@ -13,10 +13,13 @@
 </head>
 <body ng-controller="GlobalController as globalCtrl">
 	<div class="container">
-		<h1>BreakingTheRules</h1>
-		<h2>Rules</h2>
-		<p>The rules are ordered bottom-up: the bottom rule is the base rule, and the new rules are placed on top of it, until the base rule will be no longer needed.</p>
 
+		<h1>BreakingTheRules</h1>
+
+
+		<!-- The rules made so far -->
+		<h2>Rules</h2> 
+		<p>The rules are ordered bottom-up: the bottom rule is the base rule, and the new rules are placed on top of it, until the base rule will be no longer needed.</p>
 		<table ng-controller="RulesController as rulesCtrl" class="table">
 			<tr>
 				<th></th>
@@ -28,72 +31,44 @@
 			</tr>
 		</table>
 
-		<h2>Filter</h2>
-		<div ng-controller="FilterController as filterCtrl">
-			<table class="table">
-				<tr>
-					<th></th>
-					<th>Source</th>
-					<th>Destination</th>
-					<th>Service</th>
-				</tr>
-				<tr>
-					<td> <button class="btn" ng-click="filterCtrl.setFilter()">Set</button> </td>
-					<td ng-repeat="attribute in filterCtrl.currentFilter.attributes">
-						<input type="text" class="form-control" ng-model="attribute.field" placeholder="Any">
-					</td>
-				</tr>
-			</table>
-		</div>
-		
-
+		<!-- The hits under the current filter -->
 		<div ng-controller="HitsTableController as hitsCtrl">
 		<h2>Hits ({{ hitsCtrl.numOfHits }})</h2>
-			<table class="table">
+			<table class="table HitsTable">
 				<tr>
 					<th></th>
 					<th ng-repeat="att in globalCtrl.attributes">{{ att | capitalize }}</th>
+				</tr>
+				<tr ng-controller="FilterController as filterCtrl">
+					<td> <button class="btn" ng-click="filterCtrl.setFilter()">Filter</button> </td>
+					<td ng-repeat="attribute in filterCtrl.currentFilter.attributes">
+						<input type="text" 
+							class="form-control" 
+							ng-model="attribute.field" 
+							placeholder="Any" 
+							on-enter-key="filterCtrl.setFilter()" />
+					</td>
 				</tr>
 				<tr ng-repeat="hit in hitsCtrl.allHits">
 					<td> {{ hit.id }} </td>
 					<td ng-repeat="attribute in hit.attributes"> {{ attribute.str }} </td>
 				</tr>
 			</table>
-			<div class="row text-center">
-				<nav>
-					<ul class="pagination">
-						<li ng-class="{disabled: hitsCtrl.page == 1}">
-							<a href="" aria-label="Previous" ng-click="hitsCtrl.prevPage()">
-								<span aria-hidden="true">&laquo;</span>
-							</a>
-						</li>
-						<li 
-							ng-repeat="pageNum in hitsCtrl.nearPages()" 
-							ng-class="{active: pageNum == hitsCtrl.page}" 
-							ng-click="hitsCtrl.setPage(pageNum)">
-								
-								<a href="">{{ pageNum }}</a>
-						</li>
-						<li ng-class="{disabled: hitsCtrl.page == hitsCtrl.numOfPages}">
-							<a href="" aria-label="Next" ng-click="hitsCtrl.nextPage()">
-								<span aria-hidden="true">&raquo;</span>
-							</a>
-						</li>
-					</ul>
-				</nav>
-			</div> <!--nav row-->
-		</div> <!--HitsController-->
+			<page-turner 
+				nav-size="hitsCtrl.NAV_SIZE" 
+				current-page="hitsCtrl.page"
+				num-of-pages="hitsCtrl.numOfPages"></page-turner>
+		</div>
 
+
+		<!-- Suggestions for future rules -->
 		<h2>Suggestions</h2>
-		<table ng-controller="SuggestionController as sugCtrl" class="table" id="table-sug">
-			<thead>
+		<table ng-controller="SuggestionController as sugCtrl" class="table SuggestionTable">
 				<tr>
 					<th ng-repeat="attSuggestion in sugCtrl.allSuggestions">
 						{{ attSuggestion.type }}
 					</th>
 				</tr>
-			</thead>
-			<tbody>
 				<tr>
 					<td ng-repeat="attSuggestions in sugCtrl.allSuggestions">
 						<ul>
@@ -103,7 +78,6 @@
 				</tr>	
 			</tbody>
 		</table>
-
 
 	</div>
 </body>

@@ -1,0 +1,23 @@
+<div class="row text-center PageTurner">
+	<nav>
+		<ul class="pagination">
+			<li ng-class="{disabled: currentPage == 1}">
+				<a href="" aria-label="Previous" ng-click="$emit('pageChange', currentPage - 1)">
+					<span aria-hidden="true">&laquo;</span>
+				</a>
+			</li>
+			<li 
+				ng-repeat="pageNum in nearPages()" 
+				ng-class="{active: pageNum == currentPage}" 
+				ng-click="$emit('pageChange', pageNum)">
+					
+					<a href="">{{ pageNum }}</a>
+			</li>
+			<li ng-class="{disabled: currentPage == numOfPages}">
+				<a href="" aria-label="Next" ng-click="$emit('pageChange', currentPage + 1)">
+					<span aria-hidden="true">&raquo;</span>
+				</a>
+			</li>
+		</ul>
+	</nav>
+</div>

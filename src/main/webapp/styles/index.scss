@@ -1,31 +1,34 @@
 /* General
 ******************************************/
 
-$c-back-gray: #e0e0e0;
+// Defaults
+
+h2 {
+  margin-top: 4rem;
+  margin-bottom: .5rem;
+}
+
+// Shared components
+
 
 /* Arrows */
-
 $directions: top, bottom, left, right;
-
 @function opposite($direction) {
   @if ($direction == left) { @return right; }
   @if ($direction == right) { @return left; }
   @if ($direction == top) { @return bottom; }
   @if ($direction == bottom) { @return top; }
 }
-
-%arrow {
+%Arrow {
   display: inline-block;
   width: 0; height: 0px;
   transition: border 1s;
 }
-
-$c-arrow: black; /* applies only to @for arrow classes */
+$c-arrow: black;
 $w-arrow: 7px;
-
 @each $direction in $directions {
-  .arrow-#{$direction} {
-     @extend %arrow;
+  .Arrow-#{$direction} {
+     @extend %Arrow;
      border: $w-arrow solid transparent;
      border-#{opposite($direction)}: $w-arrow solid $c-arrow;  
    }
@@ -36,15 +39,22 @@ $w-arrow: 7px;
 /* Hits table
 *************************************************/
 
-$m-table: 2.5rem;
-
-.table {
-  margin-top: $m-table;
-  margin-bottom: $m-table;
+.HitsTable {
+  
+  input {
+    width: 80%;
+    
+  }
+  td {
+    padding-top: .2rem !important;
+    padding-bottom: .2rem !important;
+  }
+  
 }
 
-nav > .pagination {
+.PageTurner ul {
   border: 1px solid gray;
+  margin: 0 auto;
 }
 
 
@@ -52,7 +62,7 @@ nav > .pagination {
 /* Suggestions table
 *************************************************/
 
-#table-sug li {
+.SuggestionTable li {
   display: block;
   list-style: none;
   color: blue;
