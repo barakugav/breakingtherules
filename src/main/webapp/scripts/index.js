@@ -78,7 +78,6 @@ var settings = {
 				var attributes = filterCtrl.filter.attributes;
 				filterCtrl.hasFilter = false;
 
-				// Server sends attr.str, we put it in attr.field. Also check if the filter is non-empty
 				attributes.forEach(function (attr) {
 					if (attr.str && attr.str != 'Any') {
 						filterCtrl.hasFilter = true;
@@ -95,7 +94,6 @@ var settings = {
 			var setFilterArgs = '';
 			var attributes = filterCtrl.filter.attributes;
 			
-
 			BtrData.putNewFilter(attributes).success(function () {
 				filterCtrl.updateFilter();
 			});
@@ -105,6 +103,24 @@ var settings = {
 			filterCtrl.filter.attributes.forEach(function (att) {
 				att.field = 'Any';
 			})
+			filterCtrl.setFilter();
+		});
+
+		$scope.$on('suggestionChosen', function (event, sug) {
+			var matchFound = false;
+			filterCtrl.filter.attributes.forEach(function (filterAttr) {
+				if (filterAttr.type === sug.attribute.type) {
+					matchFound = true;
+					filterAttr.field = sug.attribute.str;
+					filterCtrl.setFilter();
+				}
+			});
+			if (!matchFound) {
+				throw new Error('A suggestion was chosen, but no filter attribute matched the suggestion attribute type.');
+			}
+		});
+
+		$scope.$on('inputCleared', function () {
 			filterCtrl.setFilter();
 		});
 
@@ -154,14 +170,18 @@ var settings = {
 	app.controller('SuggestionController', ['BtrData', '$rootScope', 'SetJob', function (BtrData, $rootScope, SetJob) {
 		var sugCtrl = this;
 
-		SetJob.then(function() {
+		SetJob.then(function () {
 			sugCtrl.refresh();
 		});
 
-		sugCtrl.refresh = function() {
+		sugCtrl.refresh = function () {
 			BtrData.getSuggestions().success(function (data) {
 				sugCtrl.allSuggestions = data;
 			});
+		};
+
+		sugCtrl.addToFilter = function (suggestion) {
+			$rootScope.$broadcast('suggestionChosen', suggestion);
 		};
 
 		$rootScope.$on('filterUpdate', function () {
@@ -198,6 +218,28 @@ var settings = {
 			}
 		};
 	});
+
+
+	app.directive('clearableInput', ['$window', '$rootScope', function ($window, $rootScope) {
+		return {
+			restrict: 'AE',
+			link: function (scope, element, attr) {
+				var button = $window.document.createElement('i');
+				button.classList.add('glyphicon');
+				button.classList.add('glyphicon-remove');
+				var input = element.find('input');
+				if (!input || input.length == 0)
+					throw new Error('clearableInput does should have an input element inside');
+				input = angular.element(input);
+				button.addEventListener('click', function () {
+					input.val('');
+					input.triggerHandler('input');
+					scope.$emit('inputCleared', input);
+				});
+				element[0].appendChild(button);
+			}
+		};
+	}]);
 
 	app.directive('onEnterKey', function() {
 	    return  {

@@ -36,13 +36,22 @@ h2 {
 
 /* Hits table
 *************************************************/
-.HitsTable input {
+.HitsTable .ClearableInput {
   width: 80%; }
 .HitsTable td {
   padding-top: .2rem !important;
   padding-bottom: .2rem !important; }
 .HitsTable .TableButton {
   margin-bottom: .2rem; }
+
+.ClearableInput {
+  position: relative; }
+  .ClearableInput i {
+    opacity: 0.5;
+    color: black;
+    position: absolute;
+    right: 1rem;
+    top: 1rem; }
 
 .PageTurner ul {
   border: 1px solid gray;

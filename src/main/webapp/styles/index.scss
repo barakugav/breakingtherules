@@ -52,10 +52,10 @@ $w-arrow: 7px;
 
 .HitsTable {
 	
-	input {
-		width: 80%;
-		
+	.ClearableInput {
+		width: 80%;	
 	}
+
 	td {
 		padding-top: .2rem !important;
 		padding-bottom: .2rem !important;
@@ -64,6 +64,18 @@ $w-arrow: 7px;
 		margin-bottom: .2rem;
 	}
 
+}
+
+.ClearableInput {
+	position: relative;
+
+	 i {
+		opacity: 0.5;
+		color: black;
+		position: absolute;
+		right: 1rem;
+		top: 1rem;
+	}
 }
 
 .PageTurner ul {

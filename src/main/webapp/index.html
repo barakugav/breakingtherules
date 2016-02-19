@@ -54,11 +54,13 @@
 							class="btn btn-success TableButton" ng-click="$emit('ruleCreateRequest', filterCtrl.filter)">Create Rule</button>
 					</td>
 					<td ng-repeat="attribute in filterCtrl.filter.attributes">
-						<input type="text" 
-							class="form-control" 
-							ng-model="attribute.field" 
-							placeholder="Any" 
-							on-enter-key="filterCtrl.setFilter()" />
+						<div clearable-input="true" class="ClearableInput">
+							<input type="text" 
+								class="form-control" 
+								ng-model="attribute.field" 
+								placeholder="Any" 
+								on-enter-key="filterCtrl.setFilter()" />
+						</div>
 					</td>
 				</tr>
 				<tr ng-repeat="hit in hitsCtrl.allHits">
@@ -84,7 +86,10 @@
 				<tr>
 					<td ng-repeat="attSuggestions in sugCtrl.allSuggestions">
 						<ul>
-							<li ng-repeat="sug in attSuggestions.suggestions">{{ sug.attribute.str }} <span>({{ sug.score * 100| number :1 }}%)</span></li>
+							<li ng-repeat="sug in attSuggestions.suggestions"
+								ng-click="sugCtrl.addToFilter(sug)">
+								{{ sug.attribute.str }} <span>({{ sug.score * 100| number :1 }}%)</span>
+							</li>
 						</ul>
 					</td>
 				</tr>	
