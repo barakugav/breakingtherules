@@ -18,7 +18,7 @@ var settings = {
 
 (function() {
 	
-	var app = angular.module('BreakingTheRules', []);
+	var app = angular.module('BreakingTheRules', ['btrData']);
 
 	// Set job before ng-app begins
 	app.factory('SetJob', ['$http', function ($http) {
@@ -26,69 +26,91 @@ var settings = {
 		return $http.put('/job?job_id=' + job_id);
 	}]);
 
-	app.controller('GlobalController', function() {
+	app.controller('GlobalController', ['$scope', 'BtrData', function($scope, BtrData) {
 		this.attributes = settings.attributes;
-	});
 
-	app.controller('RulesController', ['$http', 'SetJob', function ($http, SetJob) {
+		$scope.$on('ruleCreateRequest', function () {
+			BtrData.postRule().then(function () {
+				$scope.$broadcast('rulesChanged');
+			});
+		});
+	}]);
+
+	app.controller('RulesController', ['$rootScope', '$scope', 'BtrData', 'SetJob', function ($rootScope, $scope, BtrData, SetJob) {
 		var rulesCtrl = this;
 		rulesCtrl.rules = [];
 
-		SetJob.then(function () {
-			$http.get('/rules').success(function (data) {
+		rulesCtrl.updateRules = function () {
+			BtrData.getRules().success(function (data) {
 				rulesCtrl.rules = data;
 			});
+		};
+
+		rulesCtrl.delete = function (id) {
+			BtrData.deleteRuleById(id).then(function () {
+				rulesCtrl.updateRules();
+				$rootScope.$broadcast('rulesChanged');
+			});
+		};
+
+		$scope.$on('rulesChanged', function () {
+			rulesCtrl.updateRules();
 		});
-		
+
+		SetJob.then(function () {
+			rulesCtrl.updateRules();
+		});	
 	}]);
 
-	app.controller('FilterController', ['$http', '$rootScope', 'SetJob', function($http, $rootScope, SetJob) {
+	app.controller('FilterController', ['$scope', 'BtrData', '$rootScope', 'SetJob', function($scope, BtrData, $rootScope, SetJob) {
 		var filterCtrl = this;
-		filterCtrl.currentFilter = {};
+		filterCtrl.filter = {};
+		filterCtrl.hasFilter = false;
 
 		SetJob.then(function () {
 			filterCtrl.updateFilter();
 		});
 
 		filterCtrl.updateFilter = function () {
-			$http.get('/filter').success(function (data) {
-				filterCtrl.currentFilter = data;
+			BtrData.getFilter().success(function (data) {
+				filterCtrl.filter = data;
 
-				var attributes = filterCtrl.currentFilter.attributes;
-				for (var attributeIndex in attributes) {
-					var attribute = attributes[attributeIndex];
-					attribute.field = attribute.str;
-				}
-				$rootScope.$emit('FilterUpdate', []);
+				var attributes = filterCtrl.filter.attributes;
+				filterCtrl.hasFilter = false;
+
+				// Server sends attr.str, we put it in attr.field. Also check if the filter is non-empty
+				attributes.forEach(function (attr) {
+					if (attr.str && attr.str != 'Any') {
+						filterCtrl.hasFilter = true;
+						attr.field = attr.str;
+					}
+					else
+						attr.field = '';
+				});
+				$rootScope.$emit('filterUpdate', filterCtrl.hasFilter);
 			});
 		};
 
 		filterCtrl.setFilter = function () {
-			var setFilterArgs = "";
-			var attributes = filterCtrl.currentFilter.attributes;
-			var firstArg = true;
-			for (var attributeIndex in attributes) {
-				var attribute = attributes[attributeIndex];
-				if (firstArg) {
-					setFilterArgs += '?';
-					firstArg = false;
-				} else {
-					setFilterArgs += '&';
-				}
-				setFilterArgs +=
-					attribute.type.toLowerCase() + 
-					'=' + 
-					(attribute.field ? attribute.field : "Any");
-			}
+			var setFilterArgs = '';
+			var attributes = filterCtrl.filter.attributes;
+			
 
-			$http.put('/filter' + setFilterArgs).success(function () {
+			BtrData.putNewFilter(attributes).success(function () {
 				filterCtrl.updateFilter();
 			});
 		};
 
+		$scope.$on('rulesChanged', function () {
+			filterCtrl.filter.attributes.forEach(function (att) {
+				att.field = 'Any';
+			})
+			filterCtrl.setFilter();
+		});
+
 	}]);
 
-	app.controller('HitsTableController', ['$scope', '$http', '$rootScope', function ($scope, $http, $rootScope) {
+	app.controller('HitsTableController', ['$scope', 'BtrData', '$rootScope', function ($scope, BtrData, $rootScope) {
 		var hitsCtrl = this;
 		hitsCtrl.NAV_SIZE = 5; 		// how many elements in nav. always an odd number
 		hitsCtrl.PAGE_SIZE = 10;	// how many hits in every page
@@ -96,7 +118,7 @@ var settings = {
 		hitsCtrl.requestPage = function() {
 			var startIndex = (hitsCtrl.page - 1) * hitsCtrl.PAGE_SIZE,
 				endIndex = startIndex + hitsCtrl.PAGE_SIZE;
-			$http.get('/hits?startIndex=' + startIndex + '&endIndex=' + endIndex).success(function (data) {
+			BtrData.getHits(startIndex, endIndex).success(function (data) {
 				hitsCtrl.numOfPages = Math.ceil(data.total / hitsCtrl.PAGE_SIZE);
 				hitsCtrl.numOfHits = data.total;
 				hitsCtrl.allHits = data.data;
@@ -118,8 +140,9 @@ var settings = {
 			hitsCtrl.requestPage();
 		};
 
-		$rootScope.$on('FilterUpdate', function () {
+		$rootScope.$on('filterUpdate', function (event, isntEmpty) {
 			hitsCtrl.refresh();
+			hitsCtrl.hasFilter = isntEmpty;
 		});
 
 		$scope.$on('pageChange', function (event, pageNum) {
@@ -128,7 +151,7 @@ var settings = {
 
 	}]);
 
-	app.controller('SuggestionController', ['$http', '$rootScope', 'SetJob', function ($http, $rootScope, SetJob) {
+	app.controller('SuggestionController', ['BtrData', '$rootScope', 'SetJob', function (BtrData, $rootScope, SetJob) {
 		var sugCtrl = this;
 
 		SetJob.then(function() {
@@ -136,12 +159,12 @@ var settings = {
 		});
 
 		sugCtrl.refresh = function() {
-			$http.get('/suggestions').success(function (data) {
+			BtrData.getSuggestions().success(function (data) {
 				sugCtrl.allSuggestions = data;
 			});
 		};
 
-		$rootScope.$on('FilterUpdate', function () {
+		$rootScope.$on('filterUpdate', function () {
 			sugCtrl.refresh();
 		});
 
@@ -187,7 +210,7 @@ var settings = {
 		            // If enter key is pressed
 		            if (keyCode === 13) {
 		                scope.$apply(function() {
-		                        // Evaluate the expression
+	                        // Evaluate the expression
 		                    scope.$eval(attrs.onEnterKey);
 		                });
 

@@ -4,8 +4,19 @@
 // Defaults
 
 h2 {
-  margin-top: 4rem;
-  margin-bottom: .5rem;
+	margin-top: 4rem;
+	margin-bottom: .5rem;
+}
+
+.btn {
+	padding-top: .2rem;
+	padding-bottom: .2rem;
+}
+
+// Utilities
+
+.u-italics {
+	font-style: italic;
 }
 
 // Shared components
@@ -14,24 +25,24 @@ h2 {
 /* Arrows */
 $directions: top, bottom, left, right;
 @function opposite($direction) {
-  @if ($direction == left) { @return right; }
-  @if ($direction == right) { @return left; }
-  @if ($direction == top) { @return bottom; }
-  @if ($direction == bottom) { @return top; }
+	@if ($direction == left) { @return right; }
+	@if ($direction == right) { @return left; }
+	@if ($direction == top) { @return bottom; }
+	@if ($direction == bottom) { @return top; }
 }
 %Arrow {
-  display: inline-block;
-  width: 0; height: 0px;
-  transition: border 1s;
+	display: inline-block;
+	width: 0; height: 0px;
+	transition: border 1s;
 }
 $c-arrow: black;
 $w-arrow: 7px;
 @each $direction in $directions {
-  .Arrow-#{$direction} {
-     @extend %Arrow;
-     border: $w-arrow solid transparent;
-     border-#{opposite($direction)}: $w-arrow solid $c-arrow;  
-   }
+	.Arrow-#{$direction} {
+		@extend %Arrow;
+		border: $w-arrow solid transparent;
+		border-#{opposite($direction)}: $w-arrow solid $c-arrow;  
+	}
 }
 
 
@@ -40,21 +51,24 @@ $w-arrow: 7px;
 *************************************************/
 
 .HitsTable {
-  
-  input {
-    width: 80%;
-    
-  }
-  td {
-    padding-top: .2rem !important;
-    padding-bottom: .2rem !important;
-  }
-  
+	
+	input {
+		width: 80%;
+		
+	}
+	td {
+		padding-top: .2rem !important;
+		padding-bottom: .2rem !important;
+	}
+	.TableButton {
+		margin-bottom: .2rem;
+	}
+
 }
 
 .PageTurner ul {
-  border: 1px solid gray;
-  margin: 0 auto;
+	border: 1px solid gray;
+	margin: 0 auto;
 }
 
 
@@ -63,16 +77,16 @@ $w-arrow: 7px;
 *************************************************/
 
 .SuggestionTable li {
-  display: block;
-  list-style: none;
-  color: blue;
-  cursor: pointer;
+	display: block;
+	list-style: none;
+	color: blue;
+	cursor: pointer;
 
-  &:hover {
-    text-decoration: underline;
-  }
+	&:hover {
+		text-decoration: underline;
+	}
 
-  span {
-    color: black;
-  }
+	span {
+		color: black;
+	}
 }

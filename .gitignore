@@ -1,4 +1,4 @@
 target/
 repository/0/
-*/.sass-cache/*
+.sass-cache
 

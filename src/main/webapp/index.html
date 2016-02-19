@@ -5,10 +5,6 @@
 	<title>BreakingTheRules</title>
 	
 	<link rel="stylesheet" href="./styles/ext/bootstrap.min.css"></link>
-	<script src="./scripts/ext/jquery.min.js"></script>
-	<script src="./scripts/ext/angular.min.js"></script>
-	<script src="./scripts/ext/bootstrap.min.js"></script>
-	<script src="./scripts/index.js"></script>
 	<link rel="stylesheet" href="./styles/index.css"></link>
 </head>
 <body ng-controller="GlobalController as globalCtrl">
@@ -24,24 +20,40 @@
 			<tr>
 				<th></th>
 				<th ng-repeat="att in globalCtrl.attributes">{{ att | capitalize }}</th>
+				<th></th>
 			</tr>
-			<tr ng-repeat="rule in rulesCtrl.rules">
+			<tr ng-repeat="rule in rulesCtrl.rules | orderBy:'-id' ">
 				<td> {{ rule.id }} </td>
 				<td ng-repeat="attribute in rule.attributes"> {{ attribute.str }} </td>
+				<td>
+					<buttton class="btn btn-danger" 
+						ng-click="rulesCtrl.delete(rule.id)"
+						ng-hide="rule.id === 1">
+						Delete Rule
+					</buttton>
+				</td>
 			</tr>
 		</table>
 
 		<!-- The hits under the current filter -->
 		<div ng-controller="HitsTableController as hitsCtrl">
-		<h2>Hits ({{ hitsCtrl.numOfHits }})</h2>
+			<h2>
+				Remaining Hits 
+				<span class="u-italics" ng-show="hitsCtrl.hasFilter">- filtered</span>
+				({{ hitsCtrl.numOfHits }}) 
+			</h2>
 			<table class="table HitsTable">
 				<tr>
 					<th></th>
 					<th ng-repeat="att in globalCtrl.attributes">{{ att | capitalize }}</th>
 				</tr>
 				<tr ng-controller="FilterController as filterCtrl">
-					<td> <button class="btn" ng-click="filterCtrl.setFilter()">Filter</button> </td>
-					<td ng-repeat="attribute in filterCtrl.currentFilter.attributes">
+					<td> 
+						<button class="btn TableButton" ng-click="filterCtrl.setFilter()">Re-Filter</button> <br />
+						<button 
+							class="btn btn-success TableButton" ng-click="$emit('ruleCreateRequest', filterCtrl.filter)">Create Rule</button>
+					</td>
+					<td ng-repeat="attribute in filterCtrl.filter.attributes">
 						<input type="text" 
 							class="form-control" 
 							ng-model="attribute.field" 
@@ -80,5 +92,13 @@
 		</table>
 
 	</div>
+
+
+	<script src="./scripts/ext/jquery.min.js"></script>
+	<script src="./scripts/ext/angular.min.js"></script>
+	<script src="./scripts/ext/bootstrap.min.js"></script>
+
+	<script src="./scripts/btrData.js"></script>
+	<script src="./scripts/index.js"></script>
 </body>
 </html>

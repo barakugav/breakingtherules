@@ -6,6 +6,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import breakingtherules.firewall.Rule;
@@ -21,8 +22,18 @@ public class RulesController {
     @Autowired
     private Job m_job;
 
-    @RequestMapping(value = "/rules", method = RequestMethod.GET)
+    @RequestMapping(value = "/rule", method = RequestMethod.GET)
     public List<Rule> rules() throws NoCurrentJobException, IOException {
 	return m_job.getRules();
+    }
+
+    @RequestMapping(value = "/rule", method = RequestMethod.POST)
+    public void createRule() throws IllegalArgumentException, IOException, NoCurrentJobException {
+	m_job.addCurrentFilterToRules();
+    }
+    
+    @RequestMapping(value = "/rule", method = RequestMethod.DELETE)
+    public void deleteRule(@RequestParam("id") int ruleId) throws IllegalArgumentException, IOException, NoCurrentJobException {
+	m_job.deleteRule(ruleId);
     }
 }

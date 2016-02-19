@@ -124,8 +124,10 @@ public class HitsXmlDao implements HitsDao {
 	List<Hit> allHits = getHitsByPath(repoPath, rules, filter).getData();
 
 	int total = allHits.size();
+	if (total == 0) // return this empty list
+	    return new ListDto<Hit>(allHits, startIndex, endIndex, total);;
 	if (startIndex >= total) {
-	    throw new IndexOutOfBoundsException("Start index bigger that total count");
+	    throw new IndexOutOfBoundsException("Start index " + startIndex + " bigger that total count");
 	}
 	endIndex = (int) Math.min(endIndex, total);
 	List<Hit> subHitsList = allHits.subList(startIndex, endIndex);
@@ -242,7 +244,7 @@ public class HitsXmlDao implements HitsDao {
 	    return false;
 	}
 	for (Rule rule : rules) {
-	    if (!rule.isMatch(hit)) {
+	    if (rule.getId() > 1 && rule.isMatch(hit)) {
 		return false;
 	    }
 	}

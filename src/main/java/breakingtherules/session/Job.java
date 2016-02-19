@@ -60,8 +60,8 @@ public class Job {
     /**
      * All the rules of the current job
      * 
-     * First - original base rule. Not modified others - created with the user,
-     * constantly modified.
+     * The first is the original base rule and is not modified. The others are
+     * created with the user, constantly modified.
      */
     private List<Rule> m_rules;
 
@@ -133,6 +133,15 @@ public class Job {
 	    throw new NoCurrentJobException("Job wasn't set yet");
 	}
 	return m_rules;
+    }
+    
+    /**
+     * Delete a rule from the job, by its id
+     */
+    public void deleteRule(int ruleId) {
+	// TODO update DAO
+	if (m_rules.get(0).getId() == ruleId) return;
+	m_rules.removeIf(r -> r.getId() == ruleId);
     }
 
     /**
@@ -233,4 +242,16 @@ public class Job {
 	return m_allAttributeTypes;
     }
 
+    /**
+     * Takes the current filter and adds it as a new rule
+     * @throws NoCurrentJobException
+     */
+    public void addCurrentFilterToRules() throws NoCurrentJobException {
+	if (m_id == NO_CURRENT_JOB)
+	    throw new NoCurrentJobException();
+	int lastIndex = m_rules.get(m_rules.size() - 1).getId();
+	Rule newRule = new Rule(lastIndex + 1, m_filter);
+	m_rules.add(newRule);
+	// TODO update DAO
+    }
 }
