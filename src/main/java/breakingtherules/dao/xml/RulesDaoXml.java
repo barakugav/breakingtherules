@@ -1,4 +1,4 @@
-package breakingtherules.dao;
+package breakingtherules.dao.xml;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -12,6 +12,7 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
+import breakingtherules.dao.RulesDao;
 import breakingtherules.dto.ListDto;
 import breakingtherules.firewall.Attribute;
 import breakingtherules.firewall.Destination;
@@ -23,7 +24,7 @@ import breakingtherules.firewall.Source;
  * Implementation of {@link RulesDao} by XML repository
  */
 @Component
-public class RulesXmlDao implements RulesDao {
+public class RulesDaoXml implements RulesDao {
 
     private static final String REPOS_ROOT = "repository/";
 
@@ -37,12 +38,14 @@ public class RulesXmlDao implements RulesDao {
      * 
      * Initialize loaded rules to empty
      */
-    public RulesXmlDao() {
+    public RulesDaoXml() {
 	m_loadedRules = new Hashtable<String, List<Rule>>();
     }
 
-    /**
-     * @see RulesDao#getRules(int)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see breakingtherules.dao.RulesDao#getRules(int)
      */
     @Override
     public ListDto<Rule> getRules(int jobId) throws IOException {
@@ -50,8 +53,10 @@ public class RulesXmlDao implements RulesDao {
 	return getRulesByPath(path);
     }
 
-    /**
-     * @see RulesDao#getRules(int, int, int)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see breakingtherules.dao.RulesDao#getRules(int, int, int)
      */
     @Override
     public ListDto<Rule> getRules(int jobId, int startIndex, int endIndex) throws IOException {
@@ -122,7 +127,7 @@ public class RulesXmlDao implements RulesDao {
 	List<Rule> rules = m_loadedRules.get(repoPath);
 	if (rules == null) {
 	    // Load from file
-	    Document repositoryDoc = UtilityXmlDao.readFile(repoPath);
+	    Document repositoryDoc = UtilityDaoXml.readFile(repoPath);
 
 	    // Get all rules from repository
 	    NodeList rulesList = repositoryDoc.getElementsByTagName("rule");

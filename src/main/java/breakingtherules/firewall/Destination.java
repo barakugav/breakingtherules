@@ -1,16 +1,19 @@
 package breakingtherules.firewall;
 
-import breakingtherules.firewall.IP.AnyIP;
-
 /**
  * Destination attribute
  */
-public class Destination implements Attribute {
+public class Destination extends IPAttribute {
 
     /**
-     * IP of the destination
+     * Destination attribute that represent 'Any' destination (contains all
+     * others)
      */
-    private final IP m_ip;
+    private static final Destination ANY_DESTINATION;
+
+    static {
+	ANY_DESTINATION = new Destination(IP.getAnyIP());
+    }
 
     /**
      * Constructor
@@ -19,10 +22,7 @@ public class Destination implements Attribute {
      *            IP of the destination
      */
     public Destination(IP ip) throws IllegalArgumentException {
-	if (ip == null) {
-	    throw new IllegalArgumentException("Tried to create source with null ip arg");
-	}
-	m_ip = ip;
+	super(ip);
     }
 
     /**
@@ -35,57 +35,51 @@ public class Destination implements Attribute {
 	this(IP.fromString(ip));
     }
 
-    /**
-     * Gets the IP of the destination
+    /*
+     * (non-Javadoc)
      * 
-     * @return IP of the destination
+     * @see breakingtherules.firewall.Attribute#getType()
      */
-    public IP getIP() {
-	return m_ip;
-    }
-
     @Override
     public String getType() {
-	return "Destination";
+	return DESTINATION_TYPE;
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see breakingtherules.firewall.Attribute#getTypeId()
+     */
+    public int getTypeId() {
+	return DESTINATION_TYPE_ID;
+    }
+
+    /**
+     * Use the <code>IPAttribute.contains</code> and a check that the other
+     * attribute is a destination attribute
+     */
     @Override
     public boolean contains(Attribute other) {
-	if (other == null) {
-	    return false;
-	} else if (!(other instanceof Destination)) {
-	    return false;
-	}
-
-	Destination o = (Destination) other;
-	return m_ip.contains(o.m_ip);
+	return other instanceof Destination && super.contains(other);
     }
 
+    /**
+     * Use the <code>IPAttribute.equals</code> and a check that the other
+     * attribute is a destination attribute
+     */
+    @Override
     public boolean equals(Object o) {
-	if (o == this) {
-	    return true;
-	} else if (o == null) {
-	    return false;
-	} else if (!(o instanceof Destination)) {
-	    return false;
-	}
-
-	Destination other = (Destination) o;
-	return this.m_ip.equals(other.m_ip);
+	return o instanceof Destination && super.equals(o);
     }
 
-    @Override
-    public int hashCode() {
-	return m_ip.hashCode();
-    }
-
-    @Override
-    public String toString() {
-	return m_ip.toString();
-    }
-
-    public static Destination createAnyDestination() {
-	return new Destination(AnyIP.createNew());
+    /**
+     * Get a destination that represent 'Any' destination instance (contains all
+     * others)
+     * 
+     * @return 'Any' destination
+     */
+    public static Destination getAnyDestination() {
+	return ANY_DESTINATION;
     }
 
 }

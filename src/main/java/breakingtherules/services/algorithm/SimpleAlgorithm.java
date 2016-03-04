@@ -1,13 +1,10 @@
-package breakingtherules.services.algorithms;
+package breakingtherules.services.algorithm;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 
-import org.springframework.stereotype.Component;
-
-import breakingtherules.dto.SuggestionsDto;
 import breakingtherules.firewall.Attribute;
 import breakingtherules.firewall.Hit;
 
@@ -16,7 +13,6 @@ import breakingtherules.firewall.Hit;
  * 
  * Simply count the number of hits for each suggestion
  */
-@Component
 public class SimpleAlgorithm implements SuggestionsAlgorithm {
 
     /**
@@ -24,7 +20,7 @@ public class SimpleAlgorithm implements SuggestionsAlgorithm {
      */
     private static final int NUMBER_OF_SUGGESTIONS = 10;
 
-    public SuggestionsDto getSuggestions(List<Hit> hits, String attType) {
+    public List<Suggestion> getSuggestions(List<Hit> hits, String attType) {
 	// The answer list
 	List<Suggestion> allSuggestionsList = new ArrayList<Suggestion>();
 
@@ -50,7 +46,7 @@ public class SimpleAlgorithm implements SuggestionsAlgorithm {
 
 	// Calculate scores
 	for (Suggestion suggestion : allSuggestionsList) {
-	    suggestion.setScore(suggestion.getSize() / (double)hits.size());
+	    suggestion.setScore(suggestion.getSize() / (double) hits.size());
 	}
 
 	// Sort by score
@@ -58,7 +54,7 @@ public class SimpleAlgorithm implements SuggestionsAlgorithm {
 	Collections.reverse(allSuggestionsList);
 
 	int endIndex = (int) Math.min(NUMBER_OF_SUGGESTIONS, allSuggestionsList.size());
-	return new SuggestionsDto(allSuggestionsList.subList(0, endIndex), attType);
+	return allSuggestionsList.subList(0, endIndex);
     }
 
 }

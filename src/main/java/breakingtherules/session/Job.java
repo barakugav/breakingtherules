@@ -17,7 +17,8 @@ import breakingtherules.firewall.Attribute;
 import breakingtherules.firewall.Filter;
 import breakingtherules.firewall.Hit;
 import breakingtherules.firewall.Rule;
-import breakingtherules.services.algorithms.SuggestionsAlgorithm;
+import breakingtherules.services.algorithm.Suggestion;
+import breakingtherules.services.algorithm.SuggestionsAlgorithm;
 
 @Component
 @Scope(value = "session", proxyMode = ScopedProxyMode.TARGET_CLASS)
@@ -97,7 +98,6 @@ public class Job {
      */
     public void setJob(int id) throws IOException {
 	m_id = id;
-
 	m_rules = m_rulesDao.getRules(id).getData();
 	m_filter = Filter.getAnyFilter(); // TODO Change to: previously used
 					  // filter
@@ -114,12 +114,9 @@ public class Job {
      * Get the current filter of this job
      * 
      * @return current filter of this job
-     * @throws NoCurrentJobException
      */
-    public Filter getFilter() throws NoCurrentJobException {
-	if (m_id == NO_CURRENT_JOB) {
-	    throw new NoCurrentJobException("Job wasn't set yet");
-	}
+    public Filter getFilter() {
+	checkJobState();
 	return m_filter;
     }
 
@@ -128,19 +125,18 @@ public class Job {
      * 
      * @return All the rules for the current job
      */
-    public List<Rule> getRules() throws NoCurrentJobException {
-	if (m_id == NO_CURRENT_JOB) {
-	    throw new NoCurrentJobException("Job wasn't set yet");
-	}
+    public List<Rule> getRules() {
+	checkJobState();
 	return m_rules;
     }
-    
+
     /**
      * Delete a rule from the job, by its id
      */
     public void deleteRule(int ruleId) {
 	// TODO update DAO
-	if (m_rules.get(0).getId() == ruleId) return;
+	if (m_rules.get(0).getId() == ruleId)
+	    return;
 	m_rules.removeIf(r -> r.getId() == ruleId);
     }
 
@@ -155,13 +151,9 @@ public class Job {
      * @return DTO object that hold list of requested hits
      * @throws IOException
      *             if DAO failed to load data
-     * @throws NoCurrentJobException
-     *             if the job hasn't got set yet
      */
-    public ListDto<Hit> getHits(int startIndex, int endIndex) throws IOException, NoCurrentJobException {
-	if (m_id == NO_CURRENT_JOB) {
-	    throw new NoCurrentJobException("Job wasn't set yet");
-	}
+    public ListDto<Hit> getHits(int startIndex, int endIndex) throws IOException {
+	checkJobState();
 	return m_hitsDao.getHits(m_id, m_rules, m_filter, startIndex, endIndex);
     }
 
@@ -171,13 +163,9 @@ public class Job {
      * @return DTO object that hold list of all hits
      * @throws IOException
      *             if DAO failed to load data
-     * @throws NoCurrentJobException
-     *             if the job hasn't got set yet
      */
-    public ListDto<Hit> getHitsAll() throws IOException, NoCurrentJobException {
-	if (m_id == NO_CURRENT_JOB) {
-	    throw new NoCurrentJobException("Job wasn't set yet");
-	}
+    public ListDto<Hit> getHitsAll() throws IOException {
+	checkJobState();
 	return m_hitsDao.getHits(m_id, m_rules, m_filter);
     }
 
@@ -187,20 +175,16 @@ public class Job {
      * @return Current job's suggestions.
      * @throws IOException
      *             if DAO failed to load the job's hits
-     * @throws NoCurrentJobException
-     *             if the job hasn't got set yet
-     * 
      */
-    public List<SuggestionsDto> getSuggestions() throws IOException, NoCurrentJobException {
-	if (m_id == NO_CURRENT_JOB) {
-	    throw new NoCurrentJobException("Job wasn't set yet");
-	}
+    public List<SuggestionsDto> getSuggestions() throws IOException {
+	checkJobState();
 
 	List<SuggestionsDto> suggestionsDtos = new ArrayList<SuggestionsDto>();
 	List<String> allAttributesType = getAllAttributeTypes();
 	List<Hit> hits = getHitsAll().getData();
 	for (String attType : allAttributesType) {
-	    SuggestionsDto attSuggestions = m_algorithm.getSuggestions(hits, attType);
+	    List<Suggestion> suggestions = m_algorithm.getSuggestions(hits, attType);
+	    SuggestionsDto attSuggestions = new SuggestionsDto(suggestions, attType);
 	    suggestionsDtos.add(attSuggestions);
 	}
 	return suggestionsDtos;
@@ -211,12 +195,9 @@ public class Job {
      * 
      * @param filter
      *            new filter of this job
-     * @throws NoCurrentJobException
      */
-    public void setFilter(Filter filter) throws NoCurrentJobException {
-	if (m_id == NO_CURRENT_JOB) {
-	    throw new NoCurrentJobException("Job wasn't set yet");
-	}
+    public void setFilter(Filter filter) {
+	checkJobState();
 	m_filter = filter;
     }
 
@@ -226,12 +207,9 @@ public class Job {
      * allAttributeTypes
      * 
      * @return E.x. ["source", "destination", "service"]
-     * @throws NoCurrentJobException
      */
-    private List<String> getAllAttributeTypes() throws NoCurrentJobException {
-	if (m_id == NO_CURRENT_JOB) {
-	    throw new NoCurrentJobException("Job wasn't set yet");
-	}
+    private List<String> getAllAttributeTypes() {
+	checkJobState();
 	if (m_allAttributeTypes == null) {
 	    m_allAttributeTypes = new ArrayList<String>();
 	    Rule demoRule = m_rules.get(0);
@@ -244,14 +222,20 @@ public class Job {
 
     /**
      * Takes the current filter and adds it as a new rule
-     * @throws NoCurrentJobException
      */
-    public void addCurrentFilterToRules() throws NoCurrentJobException {
-	if (m_id == NO_CURRENT_JOB)
-	    throw new NoCurrentJobException();
+    public void addCurrentFilterToRules() {
+	checkJobState();
+
 	int lastIndex = m_rules.get(m_rules.size() - 1).getId();
 	Rule newRule = new Rule(lastIndex + 1, m_filter);
 	m_rules.add(newRule);
 	// TODO update DAO
     }
+
+    private void checkJobState() {
+	if (m_id == NO_CURRENT_JOB) {
+	    throw new NoCurrentJobException("Job wasn't set yet");
+	}
+    }
+
 }

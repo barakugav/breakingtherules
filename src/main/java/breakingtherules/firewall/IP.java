@@ -2,23 +2,24 @@ package breakingtherules.firewall;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 /**
  * IP address, can be {@link IPv4} or {@link IPv6}
  */
-public abstract class IP {
+public abstract class IP implements Comparable<IP> {
 
     /**
      * IP address
      */
-    private final int[] m_address;
+    protected final int[] m_address;
 
     /**
      * Length of the constant prefix
      */
-    private final int m_prefixLength;
+    protected final int m_prefixLength;
 
     /**
      * Constructor
@@ -28,7 +29,7 @@ public abstract class IP {
      * @param prefixLength
      *            length of the constant prefix
      */
-    protected IP(int[] address, int prefixLength) throws IllegalArgumentException {
+    protected IP(int[] address, int prefixLength) {
 	if (address == null) {
 	    throw new IllegalArgumentException("Null arg");
 	} else if (address.length != getNumberOfBlocks()) {
@@ -57,7 +58,7 @@ public abstract class IP {
      * @param expectedSeparator
      *            String separator between two blocks in the String IP
      */
-    protected IP(String ip, String expectedSeparator) throws IllegalArgumentException {
+    protected IP(String ip, String expectedSeparator) {
 	List<Integer> address = new ArrayList<Integer>();
 	int separatorIndex = ip.indexOf(expectedSeparator);
 	try {
@@ -129,12 +130,21 @@ public abstract class IP {
     }
 
     /**
-     * Get the length of the const prefix of the IP
+     * Get the length of the constant prefix of the IP
      * 
-     * @return length of the const prefix of the IP
+     * @return length of the constant prefix of the IP
      */
     public int getConstPrefixLength() {
 	return m_prefixLength;
+    }
+
+    /**
+     * Get the size of the sub network of this IP
+     * 
+     * @return this IP's network size
+     */
+    public long getSubnetSize() {
+	return 1L << (getMaxLength() - m_prefixLength);
     }
 
     /**
@@ -211,9 +221,14 @@ public abstract class IP {
 	}
 
 	int bitsLeft = getBlockSize() - (m_prefixLength % getBlockSize());
-	return (m_address[blockNum] ^ other.m_address[blockNum]) < (1 << bitsLeft);
+	return (m_address[blockNum] ^ other.m_address[blockNum]) < (1L << bitsLeft);
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see java.lang.Object#toString()
+     */
     @Override
     public String toString() {
 	if (m_prefixLength == 0) {
@@ -229,15 +244,25 @@ public abstract class IP {
 	return st;
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see java.lang.Object#hashCode()
+     */
     @Override
     public int hashCode() {
-	int sum = 0;
+	int hash = 1;
 	for (int i = 0; i < m_address.length; i++) {
-	    sum += m_address[i] << (i * Integer.BYTES / getNumberOfBlocks());
+	    hash = hash * 31 + m_address[i];
 	}
-	return sum;
+	return hash;
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see java.lang.Object#equals(java.lang.Object)
+     */
     @Override
     public boolean equals(Object o) {
 	if (o == this) {
@@ -249,13 +274,13 @@ public abstract class IP {
 	}
 
 	IP other = (IP) o;
-	if (this.m_prefixLength != other.m_prefixLength) {
+	if (m_prefixLength != other.m_prefixLength) {
 	    return false;
-	} else if (this.m_address.length != other.m_address.length) {
+	} else if (m_address.length != other.m_address.length) {
 	    return false;
 	}
 	for (int i = 0; i < m_address.length; i++) {
-	    if (this.m_address[i] != other.m_address[i]) {
+	    if (m_address[i] != other.m_address[i]) {
 		return false;
 	    }
 	}
@@ -277,7 +302,7 @@ public abstract class IP {
 	}
 
 	if (ip.equals("Any")) {
-	    return AnyIP.createNew();
+	    return getAnyIP();
 	}
 
 	// IPv4 format
@@ -292,6 +317,106 @@ public abstract class IP {
 	}
 
 	throw new IllegalArgumentException("Unknown format");
+    }
+
+    /**
+     * Get the max length of this IP's address
+     * 
+     * @return max length of the IP's address
+     */
+    @JsonIgnore
+    public int getMaxLength() {
+	return getBlockSize() * getNumberOfBlocks();
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see java.lang.Comparable#compareTo(java.lang.Object)
+     */
+    @Override
+    public int compareTo(IP other) {
+	if (other == null) {
+	    return -1;
+	}
+
+	// Assume AnyIP < IPv4 < IPv6
+	int thisIpType = this instanceof AnyIP ? 0 : this instanceof IPv4 ? 1 : 2;
+	int otherIpType = other instanceof AnyIP ? 0 : other instanceof IPv4 ? 1 : 2;
+	if (thisIpType != otherIpType) {
+	    return thisIpType - otherIpType;
+	}
+	for (int i = 0; i < m_address.length; i++) {
+	    int diff = m_address[i] - other.m_address[i];
+	    if (diff != 0) {
+		return diff;
+	    }
+	}
+
+	return 0;
+    }
+
+    /**
+     * Checks if two IPs are brothers (have the same parent)
+     * 
+     * @param a
+     *            first IP
+     * @param b
+     *            second IP
+     * @return true if a and b are brothers, else -false
+     */
+    public static boolean isBrothers(IP a, IP b) {
+	return Objects.equals(a.getParent(), b.getParent());
+    }
+
+    /**
+     * Get the common parent of two IPs objects (direct parent) or null if not
+     * brothers
+     * 
+     * @param a
+     *            first IP
+     * @param b
+     *            second IP
+     * @return the parent if a and b are brothers, else null
+     */
+    public static IP getCommonParent(IP a, IP b) {
+	IP parent = a.getParent();
+	if (parent.equals(b.getParent())) {
+	    return parent;
+	} else {
+	    return null;
+	}
+    }
+
+    /**
+     * Get IP that represents 'Any' IP (contains) all others
+     * 
+     * @return instance of 'Any' IP
+     */
+    public static IP getAnyIP() {
+	return AnyIP.instance;
+    }
+
+    /**
+     * Get the addresses of this IP's children - more specific IPs
+     * 
+     * @return addresses of this IP's children
+     */
+    @JsonIgnore
+    protected int[][] getChildrenAdresses() {
+	if (!hasChildren()) {
+	    return null;
+	}
+
+	// Set helper variable
+	int[][] childrenAddresses = new int[][] { m_address.clone(), m_address.clone() };
+	int helper = 1 << (getBlockSize() - m_prefixLength % getBlockSize()) - 1;
+	int blockNum = m_prefixLength * getNumberOfBlocks() / getMaxLength();
+
+	childrenAddresses[0][blockNum] &= ~helper;
+	childrenAddresses[1][blockNum] |= helper;
+
+	return childrenAddresses;
     }
 
     /**
@@ -318,38 +443,6 @@ public abstract class IP {
     protected abstract String getStringSeparator();
 
     /**
-     * Get the max length of this IP's address
-     * 
-     * @return max length of the IP's address
-     */
-    @JsonIgnore
-    public int getMaxLength() {
-	return getBlockSize() * getNumberOfBlocks();
-    }
-
-    /**
-     * Get the addresses of this IP's children - more specific IPs
-     * 
-     * @return addresses of this IP's children
-     */
-    @JsonIgnore
-    protected int[][] getChildrenAdresses() {
-	if (!hasChildren()) {
-	    return null;
-	}
-
-	// Set helper variable
-	int[][] childrenAddresses = new int[][] { m_address.clone(), m_address.clone() };
-	int helper = 1 << (getBlockSize() - m_prefixLength % getBlockSize()) - 1;
-	int blockNum = m_prefixLength * getNumberOfBlocks() / getMaxLength();
-
-	childrenAddresses[0][blockNum] &= ~helper;
-	childrenAddresses[1][blockNum] |= helper;
-
-	return childrenAddresses;
-    }
-
-    /**
      * Set all bits after const prefix to zeros
      */
     private void resetSuffix() {
@@ -366,13 +459,19 @@ public abstract class IP {
      * @return max value of a block
      */
     @JsonIgnore
-    private int getMaxBlockValue() {
-	return (1 << getBlockSize()) - 1;
+    private long getMaxBlockValue() {
+	return (1L << getBlockSize()) - 1;
     }
 
-    public static class AnyIP extends IP {
+    /**
+     * The AnyIP class represents 'Any' IP (contains all others). This class is
+     * singleton
+     */
+    private static class AnyIP extends IP {
 
-	private AnyIP(int[] address, int prefixLength) throws IllegalArgumentException {
+	private static final AnyIP instance = new AnyIP(new int[0], 0);
+
+	private AnyIP(int[] address, int prefixLength) {
 	    super(address, prefixLength);
 	}
 
@@ -409,10 +508,6 @@ public abstract class IP {
 	@Override
 	public String getStringSeparator() {
 	    return null;
-	}
-
-	public static AnyIP createNew() {
-	    return new AnyIP(new int[0], 0);
 	}
 
     }

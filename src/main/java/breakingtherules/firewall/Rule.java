@@ -10,7 +10,7 @@ public class Rule {
     /**
      * Filter of the rule
      */
-    private Filter m_filter;
+    private final Filter m_filter;
 
     /**
      * Id of the rule
@@ -67,6 +67,40 @@ public class Rule {
      */
     public boolean isMatch(Hit hit) {
 	return m_filter.isMatch(hit);
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see java.lang.Object#equals(java.lang.Object)
+     */
+    @Override
+    public boolean equals(Object o) {
+	if (o == null) {
+	    return false;
+	} else if (o == this) {
+	    return true;
+	} else if (!(o instanceof Rule)) {
+	    return false;
+	}
+
+	Rule other = (Rule) o;
+	if (m_id != other.m_id) {
+	    return false;
+	} else if (!m_filter.equals(other.m_filter)) {
+	    return false;
+	}
+	return true;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see java.lang.Object#hashCode()
+     */
+    @Override
+    public int hashCode() {
+	return m_id;
     }
 
 }

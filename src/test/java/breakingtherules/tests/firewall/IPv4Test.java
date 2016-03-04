@@ -18,220 +18,142 @@ public class IPv4Test {
 
     private static final Random rand = new Random();
 
-    /*--------------------Test Methods--------------------*/
-
     @Test
     public void constructorTestBasic() {
-	try {
-	    int[] address = getRandomAddress();
-	    new IPv4(address);
-
-	} catch (IllegalArgumentException e) {
-	    fail("Excetion should not created: " + e.getMessage());
-	}
+	int[] address = FirewallTestsUtility.getRandomAddressIPv4();
+	new IPv4(address);
     }
 
-    @Test
+    @Test(expected = IllegalArgumentException.class)
     public void constructorTestBasicWillNullAdressTest() {
-
-	try {
-	    int[] address = null;
-	    new IPv4(address);
-	    fail("Allowed IPv4 creation will null address arg");
-
-	} catch (IllegalArgumentException e) {
-	    // Success
-	}
+	int[] address = null;
+	new IPv4(address);
+	fail("Allowed IPv4 creation will null address arg");
     }
 
     @Test
     public void constructorTestWithPrefixLength() {
-	try {
-	    int[] address = getRandomAddress();
-	    int prefixLength = getRandomPrefixLength();
-	    new IPv4(address, prefixLength);
-
-	} catch (IllegalArgumentException e) {
-	    fail("Excetion should not created: " + e.getMessage());
-	}
+	int[] address = FirewallTestsUtility.getRandomAddressIPv4();
+	int prefixLength = FirewallTestsUtility.getRandomPrefixLengthIPv4();
+	new IPv4(address, prefixLength);
     }
 
-    @Test
+    @Test(expected = IllegalArgumentException.class)
     public void constructorTestWithPrefixLengthNullAdress() {
-	try {
-	    int[] address = null;
-	    int prefixLength = getRandomPrefixLength();
-	    new IPv4(address, prefixLength);
-	    fail("Allowed IPv4 creation will null address arg");
-
-	} catch (IllegalArgumentException e) {
-	    // Success
-	}
+	int[] address = null;
+	int prefixLength = FirewallTestsUtility.getRandomPrefixLengthIPv4();
+	new IPv4(address, prefixLength);
+	fail("Allowed IPv4 creation will null address arg");
     }
 
-    @Test
+    @Test(expected = IllegalArgumentException.class)
     public void constructorTestWithNegativePrefixLength() {
-	try {
-	    int[] address = getRandomAddress();
-	    int prefixLength = -1;
-	    new IPv4(address, prefixLength);
-	    fail("Allowed IPv4 creation will illegal prefix length arg");
-
-	} catch (IllegalArgumentException e) {
-	    // Success
-	}
+	int[] address = FirewallTestsUtility.getRandomAddressIPv4();
+	int prefixLength = -1;
+	new IPv4(address, prefixLength);
+	fail("Allowed IPv4 creation will illegal prefix length arg");
     }
 
-    @Test
+    @Test(expected = IllegalArgumentException.class)
     public void constructorTestWithPrefixLengthOverMaxLength() {
-	try {
-	    int[] address = getRandomAddress();
-	    int prefixLength = 33;
-	    new IPv4(address, prefixLength);
-	    fail("Allowed IPv4 creation will illegal prefix length arg");
-
-	} catch (IllegalArgumentException e) {
-	    // Success
-	}
+	int[] address = FirewallTestsUtility.getRandomAddressIPv4();
+	int prefixLength = 33;
+	new IPv4(address, prefixLength);
+	fail("Allowed IPv4 creation will illegal prefix length arg");
     }
 
     @Test
     public void constructorFromStringTest() {
-	try {
-	    String ipStr = "215.255.0.46";
-	    new IPv4(ipStr);
-
-	} catch (IllegalArgumentException e) {
-	    fail("Excetion should not created: " + e.getMessage());
-	}
+	String ipStr = "215.255.0.46";
+	new IPv4(ipStr);
     }
 
-    @Test
+    @Test(expected = IllegalArgumentException.class)
     public void constructorFromStringTest3Blocks() {
-	try {
-	    String ipStr = "255.0.46";
-	    new IPv4(ipStr);
-	    fail("Allowed IPv4 creation will illegal format (3 blocks)");
-
-	} catch (IllegalArgumentException e) {
-	    // success
-	}
+	String ipStr = "255.0.46";
+	new IPv4(ipStr);
+	fail("Allowed IPv4 creation will illegal format (3 blocks)");
     }
 
-    @Test
+    @Test(expected = IllegalArgumentException.class)
     public void constructorFromStringTest5Blocks() {
-	try {
-	    String ipStr = "255.0.2.2.46";
-	    new IPv4(ipStr);
-	    fail("Allowed IPv4 creation will illegal format (5 blocks)");
-
-	} catch (IllegalArgumentException e) {
-	    // success
-	}
+	String ipStr = "255.0.2.2.46";
+	new IPv4(ipStr);
+	fail("Allowed IPv4 creation will illegal format (5 blocks)");
     }
 
-    @Test
+    @Test(expected = IllegalArgumentException.class)
     public void constructorFromStringTestBlockOver255() {
-	try {
-	    String ipStr = "255.300.4.46";
-	    new IPv4(ipStr);
-	    fail("Allowed IPv4 creation will illegal format (block over 255)");
-
-	} catch (IllegalArgumentException e) {
-	    // success
-	}
+	String ipStr = "255.300.4.46";
+	new IPv4(ipStr);
+	fail("Allowed IPv4 creation will illegal format (block over 255)");
     }
 
-    @Test
+    @Test(expected = IllegalArgumentException.class)
     public void constructorFromStringTestBlockUnder0() {
-	try {
-	    String ipStr = "255.-55.4.46";
-	    new IPv4(ipStr);
-	    fail("Allowed IPv4 creation will illegal format (block under 0)");
-
-	} catch (IllegalArgumentException e) {
-	    // success
-	}
+	String ipStr = "255.-55.4.46";
+	new IPv4(ipStr);
+	fail("Allowed IPv4 creation will illegal format (block under 0)");
     }
 
-    @Test
+    @Test(expected = IllegalArgumentException.class)
     public void constructorFromStringTestDoubleDot() {
-	try {
-	    String ipStr = "255..2.4.46";
-	    new IPv4(ipStr);
-	    fail("Allowed IPv4 creation will illegal format (two dots)");
-
-	} catch (IllegalArgumentException e) {
-	    // success
-	}
+	String ipStr = "255..2.4.46";
+	new IPv4(ipStr);
+	fail("Allowed IPv4 creation will illegal format (two dots)");
     }
 
-    @Test
+    @Test(expected = IllegalArgumentException.class)
     public void constructorFromStringTestNegativePrefixLength() {
-	try {
-	    String ipStr = "255.2.4.46/-1";
-	    new IPv4(ipStr);
-	    fail("Allowed IPv4 creation will illegal format (prefix length < 0). ");
-
-	} catch (IllegalArgumentException e) {
-	    // success
-	}
+	String ipStr = "255.2.4.46/-1";
+	new IPv4(ipStr);
+	fail("Allowed IPv4 creation will illegal format (prefix length < 0). ");
     }
 
-    @Test
+    @Test(expected = IllegalArgumentException.class)
     public void constructorFromStringTestPrefixLengthOver32() {
-	try {
-	    String ipStr = "255.2.4.46/33";
-	    new IPv4(ipStr);
-	    fail("Allowed IPv4 creation will illegal format (prefix length > 32)");
-
-	} catch (IllegalArgumentException e) {
-	    // success
-	}
+	String ipStr = "255.2.4.46/33";
+	new IPv4(ipStr);
+	fail("Allowed IPv4 creation will illegal format (prefix length > 32)");
     }
 
-    @Test
+    @Test(expected = IllegalArgumentException.class)
     public void constructorFromStringTestExtraNumbers() {
-	try {
-	    String ipStr = "255.2.4.46/1 5";
-	    new IPv4(ipStr);
-	    fail("Allowed IPv4 creation will illegal format (extra numbers)");
-
-	} catch (IllegalArgumentException e) {
-	    // success
-	}
+	String ipStr = "255.2.4.46/1 5";
+	new IPv4(ipStr);
+	fail("Allowed IPv4 creation will illegal format (extra numbers)");
     }
 
     @Test
     public void getAddressTestWithBasicConstructor() {
-	int[] address = getRandomAddress();
+	int[] address = FirewallTestsUtility.getRandomAddressIPv4();
 	IPv4 ip = new IPv4(address);
 	assertEquals(address, ip.getAddress());
     }
 
     @Test
     public void getAddressTestConstructorWithPrefixLength() {
-	int[] address = getRandomAddress();
-	IPv4 ip = new IPv4(address, getRandomPrefixLength());
+	int[] address = FirewallTestsUtility.getRandomAddressIPv4();
+	IPv4 ip = new IPv4(address, FirewallTestsUtility.getRandomPrefixLengthIPv4());
 	assertEquals(address, ip.getAddress());
     }
 
     @Test
     public void getPrefixLengthTestBasicConstructor() {
-	IPv4 ip = new IPv4(getRandomAddress());
+	IPv4 ip = new IPv4(FirewallTestsUtility.getRandomAddressIPv4());
 	assertEquals(32, ip.getConstPrefixLength());
     }
 
     @Test
     public void getPrefixLengthTestConstructorWithPrefixLength() {
-	int prefixLength = getRandomPrefixLength();
-	IPv4 ip = new IPv4(getRandomAddress(), prefixLength);
+	int prefixLength = FirewallTestsUtility.getRandomPrefixLengthIPv4();
+	IPv4 ip = new IPv4(FirewallTestsUtility.getRandomAddressIPv4(), prefixLength);
 	assertEquals(prefixLength, ip.getConstPrefixLength());
     }
 
     @Test
     public void getParentTest() {
-	IPv4 ip = new IPv4(getRandomAddress());
+	IPv4 ip = new IPv4(FirewallTestsUtility.getRandomAddressIPv4());
 
 	for (int expectedLength = 32; expectedLength > 0; expectedLength--) {
 	    assertTrue(ip.hasParent());
@@ -245,14 +167,14 @@ public class IPv4Test {
 
     @Test
     public void getChildrenTest() {
-	IPv4 ip = new IPv4(getRandomAddress(), rand.nextInt(11) + 22);
+	IPv4 ip = new IPv4(FirewallTestsUtility.getRandomAddressIPv4(), rand.nextInt(11) + 22);
 	assertEquals(ip.hasChildren(), ip.getChildren()[0] != null);
 	assertEquals(ip.hasChildren(), ip.getChildren()[1] != null);
     }
 
     @Test
     public void equalsTestItselfBasicConstructor() {
-	int[] address = getRandomAddress();
+	int[] address = FirewallTestsUtility.getRandomAddressIPv4();
 	IPv4 ip1 = new IPv4(address);
 	IPv4 ip2 = new IPv4(address);
 	assertTrue(ip1.equals(ip2));
@@ -261,7 +183,7 @@ public class IPv4Test {
 
     @Test
     public void equalsTestItselfOneIpWithConstructorWithPrefixLength() {
-	int[] address = getRandomAddress();
+	int[] address = FirewallTestsUtility.getRandomAddressIPv4();
 	IPv4 ip1 = new IPv4(address);
 	IPv4 ip2 = new IPv4(address, 32);
 	assertTrue(ip1.equals(ip2));
@@ -270,8 +192,8 @@ public class IPv4Test {
 
     @Test
     public void equalsTestItselfTwoIpwithConstructorWithPrefixLength() {
-	int[] address = getRandomAddress();
-	int prefix = getRandomPrefixLength();
+	int[] address = FirewallTestsUtility.getRandomAddressIPv4();
+	int prefix = FirewallTestsUtility.getRandomPrefixLengthIPv4();
 	IPv4 ip1 = new IPv4(address, prefix);
 	IPv4 ip2 = new IPv4(address, prefix);
 	assertTrue(ip1.equals(ip2));
@@ -280,11 +202,11 @@ public class IPv4Test {
 
     @Test
     public void equalsTestNotEqualsItselfTwoDifferentPrefixLength() {
-	int[] address = getRandomAddress();
-	int prefix1 = getRandomPrefixLength();
+	int[] address = FirewallTestsUtility.getRandomAddressIPv4();
+	int prefix1 = FirewallTestsUtility.getRandomPrefixLengthIPv4();
 	int prefix2;
 	do {
-	    prefix2 = getRandomPrefixLength();
+	    prefix2 = FirewallTestsUtility.getRandomPrefixLengthIPv4();
 	} while (prefix1 == prefix2);
 
 	IPv4 ip1 = new IPv4(address, prefix1);
@@ -303,8 +225,8 @@ public class IPv4Test {
 
     @Test
     public void containsTestNotContainsNull() {
-	int[] address = getRandomAddress();
-	int prefixLength = getRandomPrefixLength();
+	int[] address = FirewallTestsUtility.getRandomAddressIPv4();
+	int prefixLength = FirewallTestsUtility.getRandomPrefixLengthIPv4();
 	IPv4 ip1 = new IPv4(address, prefixLength);
 	IPv4 ip2 = null;
 	assertFalse(ip1.contains(ip2));
@@ -321,7 +243,7 @@ public class IPv4Test {
     @Test
     public void containsTestZeroPrefixLengthContainsAll() {
 	IPv4 ip1 = new IPv4(new int[] { 0, 0, 0, 0 }, 0);
-	IPv4 ip2 = new IPv4(getRandomAddress());
+	IPv4 ip2 = new IPv4(FirewallTestsUtility.getRandomAddressIPv4());
 	assertTrue(ip1.contains(ip2));
 	assertFalse(ip2.contains(ip1));
     }
@@ -406,7 +328,7 @@ public class IPv4Test {
     @Test
     public void containsTestFullIpNotContainsOthers() {
 	IPv4 ip1 = new IPv4(new int[] { 0, 160, 40, 0 });
-	IPv4 ip2 = new IPv4(getRandomAddress());
+	IPv4 ip2 = new IPv4(FirewallTestsUtility.getRandomAddressIPv4());
 	if (ip1.equals(ip2)) {
 	    System.out.print(
 		    "*********************************\nThere is no f***ing way!\n*********************************\n");
@@ -419,30 +341,9 @@ public class IPv4Test {
 
     @Test
     public void containsTestNotContainsIPv6() {
-	IPv4 ip4 = new IPv4(getRandomAddress(), getRandomPrefixLength());
-	IPv6 ip6 = getRandomIPv6();
+	IPv4 ip4 = new IPv4(FirewallTestsUtility.getRandomAddressIPv4(), FirewallTestsUtility.getRandomPrefixLengthIPv4());
+	IPv6 ip6 = FirewallTestsUtility.getRandomIPv6();
 	assertFalse(ip4.contains(ip6));
-    }
-
-    /*--------------------Help Methods--------------------*/
-
-    private static int[] getRandomAddress() {
-	int[] address = new int[4];
-	for (int i = 0; i < address.length; i++)
-	    address[i] = rand.nextInt(256);
-	return address;
-    }
-
-    private static int getRandomPrefixLength() {
-	return rand.nextInt(33);
-    }
-
-    private static IPv6 getRandomIPv6() {
-	int[] address = new int[8];
-	for (int i = 0; i < address.length; i++)
-	    address[i] = rand.nextInt(1 << 16);
-	int prefixLength = rand.nextInt(128);
-	return new IPv6(address, prefixLength);
     }
 
 }

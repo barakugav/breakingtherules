@@ -1,4 +1,4 @@
-package breakingtherules.services.algorithms;
+package breakingtherules.services.algorithm;
 
 import breakingtherules.firewall.Attribute;
 

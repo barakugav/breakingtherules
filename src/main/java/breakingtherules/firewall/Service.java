@@ -25,6 +25,11 @@ public class Service implements Attribute {
     private final int m_portRangeEnd;
 
     /**
+     * Service that represents 'Any' service (contains all others)
+     */
+    private static final Service ANY_SERVICE;
+
+    /**
      * Service of protocol 'Any protocol'
      */
     public static final String ANY_PROTOCOL = "__AnyProtocol__";
@@ -38,6 +43,10 @@ public class Service implements Attribute {
      * The maximum legal port number
      */
     public static final int MAX_PORT = (1 << 16) - 1;
+
+    static {
+	ANY_SERVICE = new Service(ANY_PROTOCOL, MIN_PORT, MAX_PORT);
+    }
 
     /**
      * Constructor
@@ -211,6 +220,13 @@ public class Service implements Attribute {
 	return m_portRangeEnd;
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * breakingtherules.firewall.Attribute#contains(breakingtherules.firewall.
+     * Attribute)
+     */
     @Override
     public boolean contains(Attribute other) {
 	if (!(other instanceof Service)) {
@@ -246,11 +262,21 @@ public class Service implements Attribute {
 	return true;
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see java.lang.Object#hashCode()
+     */
     @Override
     public int hashCode() {
 	return m_protocol.hashCode() + m_portRangeStart * (1 << 16) + m_portRangeEnd;
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see java.lang.Object#equals(java.lang.Object)
+     */
     @Override
     public boolean equals(Object o) {
 	if (o == this) {
@@ -272,6 +298,11 @@ public class Service implements Attribute {
 	return true;
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see java.lang.Object#toString()
+     */
     @Override
     public String toString() {
 
@@ -302,13 +333,32 @@ public class Service implements Attribute {
 	}
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see breakingtherules.firewall.Attribute#getType()
+     */
     @Override
     public String getType() {
-	return "Service";
+	return SERVICE_TYPE;
     }
 
-    public static Service createAnyService() {
-	return new Service(ANY_PROTOCOL, MIN_PORT, MAX_PORT);
+    /*
+     * (non-Javadoc)
+     * 
+     * @see breakingtherules.firewall.Attribute#getTypeId()
+     */
+    public int getTypeId() {
+	return SERVICE_TYPE_ID;
+    }
+
+    /**
+     * Get service that represents 'Any' service (contains all others)
+     * 
+     * @return 'Any' service
+     */
+    public static Service getAnyService() {
+	return ANY_SERVICE;
     }
 
 }

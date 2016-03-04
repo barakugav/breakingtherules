@@ -5,17 +5,12 @@ import java.util.List;
 /**
  * Hit with attributes
  */
-public class Hit {
+public class Hit extends AttributesContainer {
 
     /**
      * Id of the hit
      */
     private final int m_id;
-
-    /**
-     * List of this hit's attributes
-     */
-    private final List<Attribute> m_attributes;
 
     /**
      * Constructor
@@ -28,13 +23,11 @@ public class Hit {
      *             if id isn't positive or attributes is null
      */
     public Hit(int id, List<Attribute> attributes) throws IllegalArgumentException {
+	super(attributes);
 	if (id < 0) {
-	    throw new IllegalArgumentException("Id shouldbe positive number");
-	} else if (attributes == null) {
-	    throw new IllegalArgumentException("Tried to create hit with null attributes");
+	    throw new IllegalArgumentException("Id should be positive number");
 	}
 	m_id = id;
-	m_attributes = attributes;
     }
 
     /**
@@ -46,29 +39,25 @@ public class Hit {
 	return m_id;
     }
 
-    /**
-     * Get the attributes of the hit
+    /*
+     * (non-Javadoc)
      * 
-     * @return list of the hit's attributes
+     * @see
+     * breakingtherules.firewall.AttributesContainer#equals(java.lang.Object)
      */
-    public List<Attribute> getAttributes() {
-	return m_attributes;
+    @Override
+    public boolean equals(Object o) {
+	return super.equals(o) && o instanceof Hit && m_id == ((Hit) o).m_id;
     }
 
-    /**
-     * Get specific attribute of this hit
+    /*
+     * (non-Javadoc)
      * 
-     * @param type
-     *            wanted attribute type
-     * @return the hit's wanted attribute
+     * @see breakingtherules.firewall.AttributesContainer#hashCode()
      */
-    public Attribute getAttribute(String type) {
-	for (Attribute attribute : m_attributes) {
-	    if (attribute.getType().equals(type)) {
-		return attribute;
-	    }
-	}
-	return null;
+    @Override
+    public int hashCode() {
+	return super.hashCode() + m_id << 16;
     }
 
 }

@@ -14,8 +14,8 @@ import org.junit.Test;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
-import breakingtherules.dao.HitsXmlDao;
-import breakingtherules.dao.UtilityXmlDao;
+import breakingtherules.dao.xml.HitsDaoXml;
+import breakingtherules.dao.xml.UtilityDaoXml;
 import breakingtherules.firewall.Filter;
 import breakingtherules.firewall.Rule;
 
@@ -36,7 +36,7 @@ public class HitsXmlDaoTest {
 	}
 
 	try {
-	    HitsXmlDao dao = new HitsXmlDao();
+	    HitsDaoXml dao = new HitsDaoXml();
 	    dao.getHitsByPath(doc.getPath(), new ArrayList<Rule>(), Filter.getAnyFilter());
 
 	} catch (IOException e) {
@@ -77,7 +77,7 @@ public class HitsXmlDaoTest {
 	public void addElement(Element elm) {
 	    try {
 		m_repoElm.appendChild(elm);
-		UtilityXmlDao.writeFile(m_path, m_doc);
+		UtilityDaoXml.writeFile(m_path, m_doc);
 
 	    } catch (IOException e) {
 		e.printStackTrace();
@@ -97,7 +97,7 @@ public class HitsXmlDaoTest {
 		Document doc = builder.newDocument();
 		m_repoElm = doc.createElement("Repository");
 		doc.appendChild(m_repoElm);
-		UtilityXmlDao.writeFile(path, doc);
+		UtilityDaoXml.writeFile(path, doc);
 		return doc;
 
 	    } catch (IOException | ParserConfigurationException e) {

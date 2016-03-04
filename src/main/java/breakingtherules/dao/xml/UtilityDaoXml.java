@@ -1,4 +1,4 @@
-package breakingtherules.dao;
+package breakingtherules.dao.xml;
 
 import java.io.File;
 import java.io.IOException;
@@ -20,10 +20,10 @@ import org.xml.sax.SAXException;
  * The UtilityXmlDao class is used XML DAOs, and include only static method -
  * all helper method
  * 
- * @see HitsXmlDao
- * @see RulesXmlDao
+ * @see HitsDaoXml
+ * @see RulesDaoXml
  */
-public class UtilityXmlDao {
+public class UtilityDaoXml {
 
     /**
      * Read document from a file

@@ -1,4 +1,4 @@
-package breakingtherules.dao;
+package breakingtherules.dao.xml;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -12,6 +12,8 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
+import breakingtherules.dao.HitsDao;
+import breakingtherules.dao.ParseException;
 import breakingtherules.dto.ListDto;
 import breakingtherules.firewall.Attribute;
 import breakingtherules.firewall.Destination;
@@ -28,7 +30,7 @@ import breakingtherules.firewall.Source;
  * for next hits request
  */
 @Component
-public class HitsXmlDao implements HitsDao {
+public class HitsDaoXml implements HitsDao {
 
     private static final String REPOS_ROOT = "repository/";
 
@@ -42,12 +44,15 @@ public class HitsXmlDao implements HitsDao {
      * 
      * Initialize loaded hits to empty
      */
-    public HitsXmlDao() {
+    public HitsDaoXml() {
 	m_loadedHits = new Hashtable<String, List<Hit>>();
     }
 
-    /**
-     * @see HitsDao#getHits(int, List, Filter)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see breakingtherules.dao.HitsDao#getHits(int, java.util.List,
+     * breakingtherules.firewall.Filter)
      */
     @Override
     public ListDto<Hit> getHits(int jobId, List<Rule> rules, Filter filter) throws IOException {
@@ -55,8 +60,11 @@ public class HitsXmlDao implements HitsDao {
 	return getHitsByPath(path, rules, filter);
     }
 
-    /**
-     * @see HitsDao#getHits(int, List, Filter, int, int)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see breakingtherules.dao.HitsDao#getHits(int, java.util.List,
+     * breakingtherules.firewall.Filter, int, int)
      */
     @Override
     public ListDto<Hit> getHits(int jobId, List<Rule> rules, Filter filter, int startIndex, int endIndex)
@@ -82,7 +90,7 @@ public class HitsXmlDao implements HitsDao {
     public ListDto<Hit> getHitsByPath(String repoPath, List<Rule> rules, Filter filter) throws IOException {
 	List<Hit> allHits = loadHits(repoPath);
 	List<Hit> matchedHits = new ArrayList<Hit>();
-	
+
 	for (Hit hit : allHits) {
 	    if (isMatch(rules, filter, hit)) {
 		matchedHits.add(hit);
@@ -125,7 +133,8 @@ public class HitsXmlDao implements HitsDao {
 
 	int total = allHits.size();
 	if (total == 0) // return this empty list
-	    return new ListDto<Hit>(allHits, startIndex, endIndex, total);;
+	    return new ListDto<Hit>(allHits, startIndex, endIndex, total);
+	;
 	if (startIndex >= total) {
 	    throw new IndexOutOfBoundsException("Start index " + startIndex + " bigger that total count");
 	}
@@ -151,7 +160,7 @@ public class HitsXmlDao implements HitsDao {
 	}
 
 	// Load from file
-	Document repositoryDoc = UtilityXmlDao.readFile(repoPath);
+	Document repositoryDoc = UtilityDaoXml.readFile(repoPath);
 
 	// Get all hits from repository
 	NodeList hitsList = repositoryDoc.getElementsByTagName("hit");

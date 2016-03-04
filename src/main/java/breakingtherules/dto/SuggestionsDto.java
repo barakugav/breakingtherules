@@ -2,7 +2,7 @@ package breakingtherules.dto;
 
 import java.util.List;
 
-import breakingtherules.services.algorithms.Suggestion;
+import breakingtherules.services.algorithm.Suggestion;
 
 /**
  * The SuggestionsDto class is a DTO that hold a list of suggestions of a
@@ -13,12 +13,12 @@ public class SuggestionsDto {
     /**
      * List of suggestions
      */
-    private List<Suggestion> m_suggestions;
+    private final List<Suggestion> m_suggestions;
 
     /**
      * The type of the suggestions in the list
      */
-    private String m_type;
+    private final String m_type;
 
     /**
      * Constructor

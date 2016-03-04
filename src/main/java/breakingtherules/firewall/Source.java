@@ -1,18 +1,18 @@
 package breakingtherules.firewall;
 
-import breakingtherules.firewall.IP.AnyIP;
-
 /**
- * Source attribute
- * 
- * Have IP
+ * Source attribute, represent a source IP of a hit
  */
-public class Source implements Attribute {
+public class Source extends IPAttribute {
 
     /**
-     * IP of the source
+     * Source attribute that represent 'Any' source (contains all others)
      */
-    private final IP m_ip;
+    private static final Source ANY_SOURCE;
+
+    static {
+	ANY_SOURCE = new Source(IP.getAnyIP());
+    }
 
     /**
      * Constructor
@@ -21,10 +21,7 @@ public class Source implements Attribute {
      *            IP of the source
      */
     public Source(IP ip) throws IllegalArgumentException {
-	if (ip == null) {
-	    throw new IllegalArgumentException("Tried to create source with null ip arg");
-	}
-	m_ip = ip;
+	super(ip);
     }
 
     /**
@@ -38,57 +35,49 @@ public class Source implements Attribute {
     }
 
     /**
-     * Get the IP of the source
-     * 
-     * @return IP of the source
+     * Use the <code>IPAttribute.contains</code> and a check that the other
+     * attribute is a source attribute
      */
-    public IP getIP() {
-	return m_ip;
-    }
-
     @Override
     public boolean contains(Attribute other) {
-	if (this == other) {
-	    return true;
-	} else if (other == null) {
-	    return false;
-	} else if (!(other instanceof Source)) {
-	    return false;
-	}
-
-	Source o = (Source) other;
-	return m_ip.contains(o.m_ip);
+	return other instanceof Source && super.contains(other);
     }
 
+    /**
+     * Use the <code>IPAttribute.equals</code> and a check that the other
+     * attribute is a source attribute
+     */
     @Override
-    public String toString() {
-	return m_ip.toString();
-    }
-
     public boolean equals(Object o) {
-	if (o == this) {
-	    return true;
-	} else if (o == null) {
-	    return false;
-	} else if (!(o instanceof Source)) {
-	    return false;
-	}
-
-	Source other = (Source) o;
-	return this.m_ip.equals(other.m_ip);
+	return o instanceof Source && super.equals(o);
     }
 
-    @Override
-    public int hashCode() {
-	return m_ip.hashCode();
-    }
+    /*
+     * (non-Javadoc)
+     * 
+     * @see breakingtherules.firewall.Attribute#getType()
+     */
     @Override
     public String getType() {
-	return "Source";
+	return SOURCE_TYPE;
     }
 
-    public static Source createAnySource() {
-	return new Source(AnyIP.createNew());
+    /*
+     * (non-Javadoc)
+     * 
+     * @see breakingtherules.firewall.Attribute#getTypeId()
+     */
+    public int getTypeId() {
+	return SOURCE_TYPE_ID;
+    }
+
+    /**
+     * Get a source that represent 'Any' source instance (contains all others)
+     * 
+     * @return 'Any' source
+     */
+    public static Source getAnySource() {
+	return ANY_SOURCE;
     }
 
 }

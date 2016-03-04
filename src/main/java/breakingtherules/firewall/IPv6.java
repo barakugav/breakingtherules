@@ -6,6 +6,15 @@ package breakingtherules.firewall;
 public class IPv6 extends IP {
 
     /**
+     * IPv6 that represents 'Any' IPv6 (contains all others)
+     */
+    private static final IPv6 ANY_IPv6;
+
+    static {
+	ANY_IPv6 = new IPv6(new int[] { 0, 0, 0, 0, 0, 0, 0, 0 }, 0);
+    }
+
+    /**
      * Size of this IP block
      */
     protected static final int BLOCK_SIZE = 16;
@@ -26,7 +35,7 @@ public class IPv6 extends IP {
      * @param ip
      *            String IP
      */
-    public IPv6(String ip) throws IllegalArgumentException {
+    public IPv6(String ip) {
 	super(ip, STRING_SEPARATOR);
     }
 
@@ -36,7 +45,7 @@ public class IPv6 extends IP {
      * @param address
      *            address of the IP
      */
-    public IPv6(int[] address) throws IllegalArgumentException {
+    public IPv6(int[] address) {
 	this(address, BLOCK_SIZE * NUMBER_OF_BLOCKS);
     }
 
@@ -48,20 +57,30 @@ public class IPv6 extends IP {
      * @param prefixLength
      *            length of the constant prefix
      */
-    public IPv6(int[] address, int prefixLength) throws IllegalArgumentException {
+    public IPv6(int[] address, int prefixLength) {
 	super(address, prefixLength);
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see breakingtherules.firewall.IP#getParent()
+     */
     @Override
     public IPv6 getParent() {
 	if (!hasParent()) {
 	    return null;
 	}
 
-	IPv6 newIP = new IPv6(getAddress().clone(), getConstPrefixLength() - 1);
+	IPv6 newIP = new IPv6(m_address.clone(), m_prefixLength - 1);
 	return newIP;
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see breakingtherules.firewall.IP#getChildren()
+     */
     @Override
     public IPv6[] getChildren() {
 	if (!hasChildren()) {
@@ -71,38 +90,56 @@ public class IPv6 extends IP {
 	int[][] childrenAddresses = getChildrenAdresses();
 
 	IPv6[] children = new IPv6[2];
-	children[0] = new IPv6(childrenAddresses[0], getConstPrefixLength() + 1);
-	children[1] = new IPv6(childrenAddresses[1], getConstPrefixLength() + 1);
+	children[0] = new IPv6(childrenAddresses[0], m_prefixLength + 1);
+	children[1] = new IPv6(childrenAddresses[1], m_prefixLength + 1);
 
 	return children;
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see breakingtherules.firewall.IP#equals(java.lang.Object)
+     */
     @Override
     public boolean equals(Object o) {
-	if (this == o) {
-	    return true;
-	} else if (o == null) {
-	    return false;
-	} else if (!(o instanceof IPv6))
-	    return false;
-
-	return super.equals((IP) o);
+	return super.equals(o) && o instanceof IPv6;
     }
 
-    public static IPv6 createAnyIPv6() {
-	return new IPv6(new int[] { 0, 0, 0, 0, 0, 0, 0, 0 }, 0);
+    /**
+     * Get IPv6 that represents 'Any' IPv6 (contains all others)
+     * 
+     * @return 'Any' IPv6
+     */
+    public static IPv6 getAnyIPv6() {
+	return ANY_IPv6;
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see breakingtherules.firewall.IP#getNumberOfBlocks()
+     */
     @Override
     protected int getNumberOfBlocks() {
 	return NUMBER_OF_BLOCKS;
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see breakingtherules.firewall.IP#getBlockSize()
+     */
     @Override
     protected int getBlockSize() {
 	return BLOCK_SIZE;
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see breakingtherules.firewall.IP#getStringSeparator()
+     */
     @Override
     protected String getStringSeparator() {
 	return STRING_SEPARATOR;

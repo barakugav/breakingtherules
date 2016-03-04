@@ -1,8 +1,7 @@
-package breakingtherules.services.algorithms;
+package breakingtherules.services.algorithm;
 
 import java.util.List;
 
-import breakingtherules.dto.SuggestionsDto;
 import breakingtherules.firewall.Hit;
 
 /**
@@ -17,8 +16,8 @@ public interface SuggestionsAlgorithm {
      *            list of hits the algorithm should operate on
      * @param attType
      *            requested suggestion type
-     * @return suggestions DTO of attType
+     * @return suggestions list
      */
-    public SuggestionsDto getSuggestions(List<Hit> hits, String attType);
+    public List<Suggestion> getSuggestions(List<Hit> hits, String attType);
 
 }
