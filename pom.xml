@@ -52,9 +52,22 @@
 			<artifactId>junit</artifactId>
 		</dependency>
 		<dependency>
-        	<groupId>org.springframework</groupId>
-        	<artifactId>spring-aspects</artifactId>
-        	<version>3.2.0.RELEASE</version>
-    	</dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-aspects</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.postgresql</groupId>
+			<artifactId>postgresql</artifactId>
+			<version>9.3-1100-jdbc41</version>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-jdbc</artifactId>
+			</dependency>
+		<dependency>
+			<groupId>org.elasticsearch</groupId>
+			<artifactId>elasticsearch</artifactId>
+			<version>2.2.0</version>
+		</dependency>
 	</dependencies>
 </project>

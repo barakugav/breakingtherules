@@ -5,8 +5,6 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 
-import org.springframework.stereotype.Component;
-
 import breakingtherules.firewall.Attribute;
 import breakingtherules.firewall.Destination;
 import breakingtherules.firewall.Hit;
@@ -14,7 +12,6 @@ import breakingtherules.firewall.IP;
 import breakingtherules.firewall.IPAttribute;
 import breakingtherules.utilities.Utility;
 
-@Component
 public class InformationAlgorithm implements SuggestionsAlgorithm {
 
     private static final int INIT_COMPRESS_SIZE = 1;

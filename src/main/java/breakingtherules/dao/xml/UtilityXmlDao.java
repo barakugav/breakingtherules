@@ -20,10 +20,10 @@ import org.xml.sax.SAXException;
  * The UtilityXmlDao class is used XML DAOs, and include only static method -
  * all helper method
  * 
- * @see HitsDaoXml
- * @see RulesDaoXml
+ * @see HitsXmlDao
+ * @see RulesXmlDao
  */
-public class UtilityDaoXml {
+public class UtilityXmlDao {
 
     /**
      * Read document from a file

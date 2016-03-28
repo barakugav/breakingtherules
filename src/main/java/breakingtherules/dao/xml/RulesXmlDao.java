@@ -24,7 +24,7 @@ import breakingtherules.firewall.Source;
  * Implementation of {@link RulesDao} by XML repository
  */
 @Component
-public class RulesDaoXml implements RulesDao {
+public class RulesXmlDao implements RulesDao {
 
     private static final String REPOS_ROOT = "repository/";
 
@@ -38,14 +38,12 @@ public class RulesDaoXml implements RulesDao {
      * 
      * Initialize loaded rules to empty
      */
-    public RulesDaoXml() {
+    public RulesXmlDao() {
 	m_loadedRules = new Hashtable<String, List<Rule>>();
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see breakingtherules.dao.RulesDao#getRules(int)
+    /**
+     * @see RulesDao#getRules(int)
      */
     @Override
     public ListDto<Rule> getRules(int jobId) throws IOException {
@@ -53,10 +51,8 @@ public class RulesDaoXml implements RulesDao {
 	return getRulesByPath(path);
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see breakingtherules.dao.RulesDao#getRules(int, int, int)
+    /**
+     * @see RulesDao#getRules(int, int, int)
      */
     @Override
     public ListDto<Rule> getRules(int jobId, int startIndex, int endIndex) throws IOException {
@@ -127,7 +123,7 @@ public class RulesDaoXml implements RulesDao {
 	List<Rule> rules = m_loadedRules.get(repoPath);
 	if (rules == null) {
 	    // Load from file
-	    Document repositoryDoc = UtilityDaoXml.readFile(repoPath);
+	    Document repositoryDoc = UtilityXmlDao.readFile(repoPath);
 
 	    // Get all rules from repository
 	    NodeList rulesList = repositoryDoc.getElementsByTagName("rule");

@@ -8,8 +8,8 @@ import org.junit.Test;
 
 import breakingtherules.dao.HitsDao;
 import breakingtherules.dao.RulesDao;
-import breakingtherules.dao.xml.HitsDaoXml;
-import breakingtherules.dao.xml.RulesDaoXml;
+import breakingtherules.dao.xml.HitsXmlDao;
+import breakingtherules.dao.xml.RulesXmlDao;
 import breakingtherules.dto.ListDto;
 import breakingtherules.firewall.Attribute;
 import breakingtherules.firewall.Filter;
@@ -28,8 +28,8 @@ public class Algorithm {
     @Test
     public void getSuggestionTest() {
 	try {
-	    RulesDao rulesDao = new RulesDaoXml();
-	    HitsDao hitsDao = new HitsDaoXml();
+	    RulesDao rulesDao = new RulesXmlDao();
+	    HitsDao hitsDao = new HitsXmlDao();
 	    Filter filter = Filter.getAnyFilter();
 	    ListDto<Rule> rulesDto = rulesDao.getRules(JOB_ID);
 	    List<Rule> rules = rulesDto.getData();

@@ -6,7 +6,8 @@ import java.util.Hashtable;
 import java.util.List;
 import java.util.Vector;
 
-import org.springframework.stereotype.Component;
+import javax.management.modelmbean.XMLParseException;
+
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -29,8 +30,7 @@ import breakingtherules.firewall.Source;
  * Able to read hits from repository files, save the hits for each repository
  * for next hits request
  */
-@Component
-public class HitsDaoXml implements HitsDao {
+public class HitsXmlDao implements HitsDao {
 
     private static final String REPOS_ROOT = "repository/";
 
@@ -44,15 +44,12 @@ public class HitsDaoXml implements HitsDao {
      * 
      * Initialize loaded hits to empty
      */
-    public HitsDaoXml() {
+    public HitsXmlDao() {
 	m_loadedHits = new Hashtable<String, List<Hit>>();
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see breakingtherules.dao.HitsDao#getHits(int, java.util.List,
-     * breakingtherules.firewall.Filter)
+    /**
+     * @see HitsDao#getHits(int, List, Filter)
      */
     @Override
     public ListDto<Hit> getHits(int jobId, List<Rule> rules, Filter filter) throws IOException {
@@ -60,11 +57,8 @@ public class HitsDaoXml implements HitsDao {
 	return getHitsByPath(path, rules, filter);
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see breakingtherules.dao.HitsDao#getHits(int, java.util.List,
-     * breakingtherules.firewall.Filter, int, int)
+    /**
+     * @see HitsDao#getHits(int, List, Filter, int, int)
      */
     @Override
     public ListDto<Hit> getHits(int jobId, List<Rule> rules, Filter filter, int startIndex, int endIndex)
@@ -160,7 +154,7 @@ public class HitsDaoXml implements HitsDao {
 	}
 
 	// Load from file
-	Document repositoryDoc = UtilityDaoXml.readFile(repoPath);
+	Document repositoryDoc = UtilityXmlDao.readFile(repoPath);
 
 	// Get all hits from repository
 	NodeList hitsList = repositoryDoc.getElementsByTagName("hit");
@@ -202,10 +196,10 @@ public class HitsDaoXml implements HitsDao {
      * @param hitElm
      *            XML element with hit attributes
      * @return hit object with the element attributes
-     * @throws ParseException
+     * @throws XMLParseException
      *             if failed to parse element to hit
      */
-    private static Hit createHit(Element hitElm) throws ParseException {
+    private static Hit createHit(Element hitElm) {
 	// Read attributes from element
 	String id = hitElm.getAttribute("id");
 	String source = hitElm.getAttribute("source");
