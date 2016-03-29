@@ -46,8 +46,8 @@ public interface Attribute {
     public static final int TYPES_COUNT = 3;
     public static final int NULL_TYPE_ID = -1;
 
-    public static final int DESTINATION_TYPE_ID = 0;
-    public static final int SOURCE_TYPE_ID = 1;
+    public static final int SOURCE_TYPE_ID = 0;
+    public static final int DESTINATION_TYPE_ID = 1;
     public static final int SERVICE_TYPE_ID = 2;
 
     public static final String DESTINATION_TYPE = "Destination";
@@ -84,14 +84,39 @@ public interface Attribute {
      */
     public static int typeStrToTypeId(String typeStr) {
 	switch (typeStr) {
-	case DESTINATION_TYPE:
-	    return DESTINATION_TYPE_ID;
 	case SOURCE_TYPE:
 	    return SOURCE_TYPE_ID;
+	case DESTINATION_TYPE:
+	    return DESTINATION_TYPE_ID;
 	case SERVICE_TYPE:
 	    return SERVICE_TYPE_ID;
 	default:
 	    return -1;
+	}
+    }
+
+    /**
+     * Factory method to create an attribute, of the given type, using a String
+     * constructor
+     * 
+     * @param typeId
+     *            The type of the attribute, for example
+     *            Attribute.DESTINATION_TYPE
+     * @param value
+     *            The String representing the attribute, for example "127.0.0.1"
+     * @return An attribute, of the wanted class, with the given value. If the
+     *         class is unknown, returns null.
+     */
+    public static Attribute createFromString(int typeId, String value) {
+	switch (typeId) {
+	case SOURCE_TYPE_ID:
+	    return new Source(value);
+	case DESTINATION_TYPE_ID:
+	    return new Destination(value);
+	case SERVICE_TYPE_ID:
+	    return new Service(value);
+	default:
+	    return null;
 	}
     }
 

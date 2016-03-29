@@ -206,7 +206,7 @@ public class Job {
      * this job has for each hit/rule. Is calculated once and kept in
      * allAttributeTypes
      * 
-     * @return E.x. ["source", "destination", "service"]
+     * @return E.x. ["Source", "Destination", "Service"]
      */
     private List<String> getAllAttributeTypes() {
 	checkJobState();

@@ -9,7 +9,7 @@ var settings = {
 	},
 	
 	attributes: [
-		"source", "destination", "service"
+		"Source", "Destination", "Service"
 	]	
 
 };
@@ -176,7 +176,13 @@ var settings = {
 
 		sugCtrl.refresh = function () {
 			BtrData.getSuggestions().success(function (data) {
-				sugCtrl.allSuggestions = data;
+				console.dir(data);
+				sugCtrl.allSuggestions = settings.attributes.map(function (attrName) {
+					for (var i = 0; i < data.length; i++) {
+						if (data[i].type == attrName)
+							return data[i];
+					}
+				});
 			});
 		};
 

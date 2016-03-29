@@ -21,7 +21,7 @@ import breakingtherules.services.algorithm.SuggestionsAlgorithm;
 
 public class Algorithm {
 
-    private static final int JOB_ID = 0;
+    private static final int JOB_ID = 1;
     private static final String ATTRIBUTE = Attribute.DESTINATION_TYPE;
     private static final boolean PRINT_RESULTS = false;
 

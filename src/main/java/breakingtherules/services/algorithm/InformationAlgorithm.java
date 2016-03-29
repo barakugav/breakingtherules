@@ -136,9 +136,7 @@ public class InformationAlgorithm implements SuggestionsAlgorithm {
 
 	// Run until there are only one element in the list (all nodes are sub
 	// children of the node)
-	System.out.println("start");
 	while ((length = currentLayer.size() - 1) > 0) {
-	    System.out.println(currentLayer);
 	    nextLayer = new ArrayList<IPNode>((int) ((length + 1) * NEXT_LAYER_FACTOR));
 
 	    // Run over all elements, for each element construct his parent
@@ -224,8 +222,6 @@ public class InformationAlgorithm implements SuggestionsAlgorithm {
 	    // current layer is finished, move to next layer
 	    currentLayer = nextLayer;
 	}
-	System.out.println(currentLayer);
-	System.out.println("end");
 
 	// list size is 1, the only element is the parent node of all others
 	IPNode root = currentLayer.get(0);
@@ -241,7 +237,6 @@ public class InformationAlgorithm implements SuggestionsAlgorithm {
 	    IPNode ipNode = new IPNode();
 	    ipNode.compressSize = INIT_COMPRESS_SIZE;
 	    ipNode.ip = ((IPAttribute) hit.getAttribute(attTypeId)).getIp();
-	    System.out.println(ipNode.ip.toString());
 	    ipNode.subnets = new IP[] { ipNode.ip };
 	    ipNode.size = 1;
 	    allNodes.add(ipNode);
@@ -291,6 +286,7 @@ public class InformationAlgorithm implements SuggestionsAlgorithm {
 
 	public boolean equals(Object o) {
 	    if (o == this) {
+		// TODO why false?
 		return false;
 	    } else if (o == null) {
 		return false;
