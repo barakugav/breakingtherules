@@ -53,11 +53,14 @@ public class HitsElasticDao implements HitsDao {
     public static final String FIELD_ATTR_VALUE = "value";
 
     private Node m_elasticNode;
+
     private Client m_elasticClient;
 
-    // Cache for the number of hits, for a specific job, with certain Rules and
-    // Filter. This prevents reading ALL of the job's hits to determine the
-    // number of relevant hits. Useful for getHits with startIndex and endIndex
+    /**
+     * Cache for the number of hits, for a specific job, with certain Rules and
+     * Filter. This prevents reading ALL of the job's hits to determine the
+     * number of relevant hits. Useful for getHits with startIndex and endIndex
+     */
     private HashMap<Triplet<Integer, List<Rule>, Filter>, Integer> m_totalHitsCache;
 
     public HitsElasticDao() {
@@ -261,15 +264,18 @@ public class HitsElasticDao implements HitsDao {
 		Hit firewallHit = toFirewallHit(srchHit);
 		if (isMatch(rules, filter, firewallHit)) {
 		    // Found a hit that passes the rules and the filter
-		    if (all || (i >= startIndex && i < endIndex))
+		    if (all || (i >= startIndex && i < endIndex)) {
 			relevantHits.add(toFirewallHit(srchHit));
+		    }
 		    i++;
-		    if (i == endIndex && !all)
+		    if (i == endIndex && !all) {
 			break;
+		    }
 		}
 	    }
-	    if (i == endIndex && !all)
+	    if (i == endIndex && !all) {
 		break;
+	    }
 
 	    // Get next batch
 	    scrollResp = m_elasticClient.prepareSearchScroll(scrollResp.getScrollId())

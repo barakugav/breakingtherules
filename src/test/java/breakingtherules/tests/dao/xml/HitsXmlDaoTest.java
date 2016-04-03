@@ -1,4 +1,4 @@
-package breakingtherules.tests.dao;
+package breakingtherules.tests.dao.xml;
 
 import static org.junit.Assert.fail;
 
@@ -22,7 +22,8 @@ import breakingtherules.firewall.Rule;
 public class HitsXmlDaoTest {
 
     @Test
-    public void getHitsByPath() {
+    public void getHitsByPathTest() {
+	System.out.println("# HitsXmlDaoTest getHitsByPathTest");
 	RepositoryDocument doc = new RepositoryDocument();
 
 	int numberOfHits = 10;

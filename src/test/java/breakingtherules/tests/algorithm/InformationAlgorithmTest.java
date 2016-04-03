@@ -19,7 +19,7 @@ import breakingtherules.services.algorithm.InformationAlgorithm;
 import breakingtherules.services.algorithm.Suggestion;
 import breakingtherules.services.algorithm.SuggestionsAlgorithm;
 
-public class Algorithm {
+public class InformationAlgorithmTest {
 
     private static final int JOB_ID = 1;
     private static final String ATTRIBUTE = Attribute.DESTINATION_TYPE;
@@ -27,6 +27,7 @@ public class Algorithm {
 
     @Test
     public void getSuggestionTest() {
+	System.out.println("# InformationAlgorithmTest getSuggestionTest");
 	try {
 	    RulesDao rulesDao = new RulesXmlDao();
 	    HitsDao hitsDao = new HitsXmlDao();

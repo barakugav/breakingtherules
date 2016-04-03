@@ -2,6 +2,7 @@ package breakingtherules.tests.firewall;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -16,12 +17,14 @@ public class SourceTest {
 
     @Test
     public void constructorTest() {
+	System.out.println("# SourceTest constructorTest");
 	IP ip = FirewallTestsUtility.getRandomIP();
 	new Source(ip);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void constructorTestNullIP() {
+	System.out.println("# SourceTest constructorTestNullIP");
 	IP ip = null;
 	new Source(ip);
 	fail("Allowed Source creation will null address arg");
@@ -29,12 +32,14 @@ public class SourceTest {
 
     @Test
     public void constructorStringTest() {
+	System.out.println("# SourceTest constructorStringTest");
 	String ip = "2.12.45.7/21";
 	new Source(ip);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void constructorStringTestNullIP() {
+	System.out.println("# SourceTest constructorStringTestNullIP");
 	String ip = null;
 	new Source(ip);
 	fail("Allowed Source creation will null address arg");
@@ -42,6 +47,7 @@ public class SourceTest {
 
     @Test
     public void getIPTest() {
+	System.out.println("# SourceTest getIPTest");
 	IP ip = FirewallTestsUtility.getRandomIP();
 	Source source = new Source(ip);
 	assertEquals(ip, source.getIp());
@@ -49,6 +55,7 @@ public class SourceTest {
 
     @Test
     public void containsTestContainsItsef() {
+	System.out.println("# SourceTest containsTestContainsItsef");
 	IP ip = FirewallTestsUtility.getRandomIP();
 	Source source1 = new Source(ip);
 	Source source2 = new Source(ip);
@@ -58,6 +65,7 @@ public class SourceTest {
 
     @Test
     public void containsTestNotContainsNull() {
+	System.out.println("# SourceTest containsTestNotContainsNull");
 	IP ip = FirewallTestsUtility.getRandomIP();
 	Source source1 = new Source(ip);
 	Source source2 = null;
@@ -66,6 +74,7 @@ public class SourceTest {
 
     @Test
     public void containsTestNotContainsOtherAttributes() {
+	System.out.println("# SourceTest containsTestNotContainsOtherAttributes");
 	IP ip = FirewallTestsUtility.getRandomIP();
 	Source source = new Source(ip);
 
@@ -78,6 +87,7 @@ public class SourceTest {
 
     @Test
     public void containsTestOtherDestination() {
+	System.out.println("# SourceTest containsTestOtherDestination");
 	IP ip1 = FirewallTestsUtility.getRandomIP();
 	IP ip2 = FirewallTestsUtility.getRandomIP();
 	Source source1 = new Source(ip1);
@@ -86,7 +96,8 @@ public class SourceTest {
     }
 
     @Test
-    public void shouldEqualIdenticalOne() {
+    public void equalsTestTrue() {
+	System.out.println("# SourceTest equalsTestTrue");
 	Source s1, s2;
 	s1 = new Source("2.12.45.7/21");
 	s2 = new Source("2.12.45.7/21");
@@ -94,15 +105,17 @@ public class SourceTest {
     }
 
     @Test
-    public void shouldNotEqualDifferentOne() {
+    public void equalsTestFalse() {
+	System.out.println("# SourceTest equalsTestFalse");
 	Source s1, s2;
 	s1 = new Source("2.12.45.7/21");
 	s2 = new Source("2.13.45.7/21");
-	assertFalse(s1.equals(s2));
+	assertNotEquals(s1, s2);
     }
 
     @Test
     public void toStringTest() {
+	System.out.println("# SourceTest toStringTest");
 	IP ip = FirewallTestsUtility.getRandomIP();
 	Source des = new Source(ip);
 	assertTrue(ip.toString().equals(des.toString()));

@@ -98,6 +98,14 @@ public abstract class AttributesContainer {
 	return h;
     }
 
+    public String toString() {
+	String str = "";
+	for (Attribute att : m_attributes) {
+	    str += att + ", ";
+	}
+	return str;
+    }
+
     /**
      * Convert attributes list to array of attributes
      * 

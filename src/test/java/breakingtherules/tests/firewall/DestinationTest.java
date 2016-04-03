@@ -2,6 +2,7 @@ package breakingtherules.tests.firewall;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -16,12 +17,14 @@ public class DestinationTest {
 
     @Test
     public void constructorTest() {
+	System.out.println("# DestinationTest constructorTest");
 	IP ip = FirewallTestsUtility.getRandomIP();
 	new Destination(ip);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void constructorTestNullIP() {
+	System.out.println("# DestinationTest constructorTestNullIP");
 	IP ip = null;
 	new Destination(ip);
 	fail("Allowed Destination creation will null address arg");
@@ -29,12 +32,14 @@ public class DestinationTest {
 
     @Test
     public void constructorStringTest() {
+	System.out.println("# DestinationTest constructorStringTest");
 	String ip = "2.12.45.7/21";
 	new Destination(ip);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void constructorStringTestNullIP() {
+	System.out.println("# DestinationTest constructorStringTestNullIP");
 	String ip = null;
 	new Destination(ip);
 	fail("Allowed Destination creation will null address arg");
@@ -42,6 +47,7 @@ public class DestinationTest {
 
     @Test
     public void getIPTest() {
+	System.out.println("# DestinationTest getIPTest");
 	IP ip = FirewallTestsUtility.getRandomIP();
 	Destination des = new Destination(ip);
 	assertEquals(ip, des.getIp());
@@ -49,6 +55,7 @@ public class DestinationTest {
 
     @Test
     public void containsTestContainsItsef() {
+	System.out.println("# DestinationTest containsTestContainsItsef");
 	IP ip = FirewallTestsUtility.getRandomIP();
 	Destination des1 = new Destination(ip);
 	Destination des2 = new Destination(ip);
@@ -59,6 +66,7 @@ public class DestinationTest {
 
     @Test
     public void containsTestNotContainsNull() {
+	System.out.println("# DestinationTest containsTestNotContainsNull");
 	IP ip = FirewallTestsUtility.getRandomIP();
 	Destination des1 = new Destination(ip);
 	Destination des2 = null;
@@ -67,6 +75,7 @@ public class DestinationTest {
 
     @Test
     public void containsTestNotContainsOtherAttributes() {
+	System.out.println("# DestinationTest containsTestNotContainsOtherAttributes");
 	IP ip = FirewallTestsUtility.getRandomIP();
 	Destination des = new Destination(ip);
 
@@ -79,6 +88,7 @@ public class DestinationTest {
 
     @Test
     public void containsTestOtherDestination() {
+	System.out.println("# DestinationTest containsTestOtherDestination");
 	IP ip1 = FirewallTestsUtility.getRandomIP();
 	IP ip2 = FirewallTestsUtility.getRandomIP();
 	Destination des1 = new Destination(ip1);
@@ -88,13 +98,15 @@ public class DestinationTest {
 
     @Test
     public void toStringTest() {
+	System.out.println("# DestinationTest toStringTest");
 	IP ip = FirewallTestsUtility.getRandomIP();
 	Destination des = new Destination(ip);
 	assertTrue(ip.toString().equals(des.toString()));
     }
 
     @Test
-    public void shouldEqualIdenticalOne() {
+    public void equalsTestTrue() {
+	System.out.println("# DestinationTest equalsTestTrue");
 	Destination s1, s2;
 	s1 = new Destination("2.12.45.7/21");
 	s2 = new Destination("2.12.45.7/21");
@@ -102,11 +114,12 @@ public class DestinationTest {
     }
 
     @Test
-    public void shouldNotEqualDifferentOne() {
+    public void equalsTestFalse() {
+	System.out.println("# DestinationTest equalsTestFalse");
 	Destination s1, s2;
 	s1 = new Destination("2.12.45.7/21");
 	s2 = new Destination("2.13.45.7/21");
-	assertFalse(s1.equals(s2));
+	assertNotEquals(s1, s2);
     }
 
 }

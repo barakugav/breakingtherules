@@ -149,6 +149,64 @@ public class UtilityTest {
     }
 
     @Test
+    public void breakToWords() {
+	String text = "Hello \t\tbig\t world";
+	List<String> expected = new ArrayList<String>();
+	expected.add("Hello");
+	expected.add("big");
+	expected.add("world");
+	assertEquals(expected, Utility.breakToWords(text));
+    }
+
+    @Test
+    public void breakToWordsOnlyTabs() {
+	String text = "Hello\t\tbig\tworld,\t\tsup?";
+	List<String> expected = new ArrayList<String>();
+	expected.add("Hello");
+	expected.add("big");
+	expected.add("world,");
+	expected.add("sup?");
+	assertEquals(expected, Utility.breakToWords(text));
+
+    }
+
+    @Test
+    public void breakToWordsOnlySpaces() {
+	String text = "Hello  big world,  sup?";
+	List<String> expected = new ArrayList<String>();
+	expected.add("Hello");
+	expected.add("big");
+	expected.add("world,");
+	expected.add("sup?");
+	assertEquals(expected, Utility.breakToWords(text));
+    }
+
+    @Test
+    public void breakToWordsSpaceInStart() {
+	String text = "  Hello \t\tbig\t world";
+	List<String> expected = new ArrayList<String>();
+	expected.add("Hello");
+	expected.add("big");
+	expected.add("world");
+	assertEquals(expected, Utility.breakToWords(text));
+    }
+
+    @Test
+    public void breakToWordsSpaceInEnd() {
+	String text = "Hello \t\tbig\t world ";
+	List<String> expected = new ArrayList<String>();
+	expected.add("Hello");
+	expected.add("big");
+	expected.add("world");
+	assertEquals(expected, Utility.breakToWords(text));
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void breakToWordsNullText() {
+	Utility.breakToWords(null);
+    }
+
+    @Test
     public void log2Test() {
 	double num = rand.nextDouble() * 100 + 2; // Random in range [2, 102]
 	double allowedDelta = 0.00001; // Delta is allowed because double

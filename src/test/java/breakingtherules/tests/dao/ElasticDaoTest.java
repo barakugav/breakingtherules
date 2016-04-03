@@ -1,6 +1,8 @@
 package breakingtherules.tests.dao;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -32,23 +34,30 @@ public class ElasticDaoTest {
 
     @BeforeClass
     public static void initDaoAndJob() throws Exception {
-	hitsDao = new HitsElasticDao();
-	if (hitsDao.doesJobExist(JOB_NUMBER)) {
-	    throw new Exception("Job number exists. Choose different job number.");
+	try {
+	    hitsDao = new HitsElasticDao();
+	    if (hitsDao.doesJobExist(JOB_NUMBER)) {
+		throw new Exception("Job number exists. Choose different job number.");
+	    }
+	    jobInitialized = true;
+	} catch (Exception e) {
+	    e.printStackTrace();
+	    throw e;
 	}
-	jobInitialized = true;
     }
 
     @AfterClass
     public static void deleteFakeJobAndCleanDao() {
-	if (jobInitialized)
+	if (jobInitialized) {
 	    hitsDao.deleteJob(JOB_NUMBER);
+	}
 	hitsDao.cleanup();
     }
 
     private void checkJob() {
-	if (!jobInitialized)
-	    fail();
+	if (!jobInitialized) {
+	    fail("Job wasn't initialized");
+	}
     }
 
     private Hit createHit() {

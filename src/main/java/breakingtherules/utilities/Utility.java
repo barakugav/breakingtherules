@@ -2,6 +2,7 @@ package breakingtherules.utilities;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 
@@ -10,6 +11,10 @@ import java.util.Objects;
  * static
  */
 public class Utility {
+
+    private static final char SPACE = ' ';
+
+    private static final char TAB = '\t';
 
     /**
      * Get a sub list of a list by offset and size
@@ -91,6 +96,88 @@ public class Utility {
     }
 
     /**
+     * Break string text to words (treat tabs as spaces, ignore multiple spaces
+     * and tabs in a row)
+     * 
+     * @param text
+     *            the text to break
+     * @return list of all words in the text with spaces or tabs between them
+     * @throws IllegalArgumentException
+     *             if line is null
+     */
+    public static List<String> breakToWords(String text) {
+	if (text == null) {
+	    throw new IllegalArgumentException("line can't be null");
+	}
+	List<String> words = new ArrayList<String>();
+	int spaceIndex = nextSpaceOrTab(text);
+
+	// First word
+	if (spaceIndex >= 1) {
+	    words.add(text.substring(0, spaceIndex));
+	}
+
+	// Middle words
+	while (spaceIndex >= 0) {
+	    int nextSpaceIndex = nextSpaceOrTab(text.substring(spaceIndex + 1));
+
+	    if (nextSpaceIndex > 0) {
+		String word = text.substring(spaceIndex + 1, spaceIndex + nextSpaceIndex + 1);
+		words.add(word);
+	    }
+
+	    text = text.substring(spaceIndex + 1);
+	    spaceIndex = nextSpaceOrTab(text);
+	}
+
+	// End word
+	if (!text.isEmpty()) {
+	    words.add(text);
+	}
+
+	return words;
+    }
+
+    /**
+     * Add a word to a text. Will add 'space' if last character is not space or
+     * tab
+     * 
+     * @param text
+     *            current text
+     * @param word
+     *            next word in the text
+     * @return new text with the word at the end of it
+     */
+    public static String addWord(String text, String word) {
+	return addWord(text, word, false);
+    }
+
+    /**
+     * Add a word to a text. Will add 'space' or 'tab' (by user choice) if last
+     * character is not space or tab
+     * 
+     * @param text
+     *            current text
+     * @param word
+     *            next word in the text
+     * @param tab
+     *            if true, a tab will be inserted if needed, else space will be
+     *            used
+     * @return new text with the word at the end of it
+     */
+    public static String addWord(String text, String word, boolean tab) {
+	if (text == null || word == null) {
+	    throw new IllegalArgumentException("Arguments can't be null");
+	}
+	if (text.isEmpty()) {
+	    return word;
+	}
+	char lastChar = text.charAt(text.length() - 1);
+	char spacer = tab ? TAB : SPACE;
+	return text + ((lastChar != SPACE && lastChar != TAB) ? spacer : "") + word;
+    }
+
+    /**
      * Log 2 of a number
      * 
      * @param num
@@ -99,6 +186,50 @@ public class Utility {
      */
     public static double log2(double num) {
 	return StrictMath.log(num) / StrictMath.log(2);
+    }
+
+    public static <T> Iterator<Pair<T, T>> getDoubleIterator(final List<T> list) {
+	return new Iterator<Pair<T, T>>() {
+
+	    Iterator<T> iteratorToNextElement;
+
+	    Iterator<T> iteratorToCurrentElement;
+
+	    {
+		iteratorToCurrentElement = list.iterator();
+		iteratorToNextElement = list.iterator();
+		if (iteratorToNextElement.hasNext()) {
+		    iteratorToNextElement.next();
+		}
+	    }
+
+	    @Override
+	    public boolean hasNext() {
+		return iteratorToNextElement.hasNext();
+	    }
+
+	    @Override
+	    public Pair<T, T> next() {
+		T first = iteratorToCurrentElement.next();
+		T second = iteratorToNextElement.next();
+		return new Pair<T, T>(first, second);
+	    }
+	};
+    }
+
+    /**
+     * Get the index of the next space or tab
+     * 
+     * @param text
+     *            the text
+     * @return index of the first space or tab in the text, -1 if non found
+     */
+    private static int nextSpaceOrTab(String text) {
+	int space = text.indexOf(SPACE);
+	int tab = text.indexOf(TAB);
+
+	int min = Math.min(space, tab);
+	return min != -1 ? min : Math.max(space, tab);
     }
 
 }

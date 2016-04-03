@@ -6,15 +6,12 @@ import java.util.Hashtable;
 import java.util.List;
 import java.util.Vector;
 
-import javax.management.modelmbean.XMLParseException;
-
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 import breakingtherules.dao.HitsDao;
-import breakingtherules.dao.ParseException;
 import breakingtherules.dto.ListDto;
 import breakingtherules.firewall.Attribute;
 import breakingtherules.firewall.Destination;
@@ -32,8 +29,6 @@ import breakingtherules.firewall.Source;
  */
 public class HitsXmlDao implements HitsDao {
 
-    private static final String REPOS_ROOT = "repository/";
-
     /**
      * All loaded repositories' hits
      */
@@ -48,22 +43,28 @@ public class HitsXmlDao implements HitsDao {
 	m_loadedHits = new Hashtable<String, List<Hit>>();
     }
 
-    /**
-     * @see HitsDao#getHits(int, List, Filter)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see breakingtherules.dao.HitsDao#getHits(int, java.util.List,
+     * breakingtherules.firewall.Filter)
      */
     @Override
     public ListDto<Hit> getHits(int jobId, List<Rule> rules, Filter filter) throws IOException {
-	String path = createPathFromId(jobId);
+	String path = XmlDaoConfig.getHitsFile(jobId);
 	return getHitsByPath(path, rules, filter);
     }
 
-    /**
-     * @see HitsDao#getHits(int, List, Filter, int, int)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see breakingtherules.dao.HitsDao#getHits(int, java.util.List,
+     * breakingtherules.firewall.Filter, int, int)
      */
     @Override
     public ListDto<Hit> getHits(int jobId, List<Rule> rules, Filter filter, int startIndex, int endIndex)
 	    throws IOException {
-	String path = createPathFromId(jobId);
+	String path = XmlDaoConfig.getHitsFile(jobId);
 	return getHitsByPath(path, rules, filter, startIndex, endIndex);
     }
 
@@ -137,6 +138,10 @@ public class HitsXmlDao implements HitsDao {
 	return new ListDto<Hit>(subHitsList, startIndex, endIndex, total);
     }
 
+    public static void writeHits(List<Hit> hits, String repoPath) {
+
+    }
+
     /**
      * Load all the hits from repository
      * 
@@ -169,7 +174,7 @@ public class HitsXmlDao implements HitsDao {
 		    Hit hit = createHit(hitElm);
 		    hits.add(hit);
 
-		} catch (ParseException e) {
+		} catch (XMLParseException e) {
 		    e.printStackTrace();
 		    continue;
 		}
@@ -177,17 +182,6 @@ public class HitsXmlDao implements HitsDao {
 	}
 	m_loadedHits.put(repoPath, hits);
 	return hits;
-    }
-
-    /**
-     * Create a string path from a job id
-     * 
-     * @param id
-     *            id of the job
-     * @return string path to the job's repository
-     */
-    private static String createPathFromId(int id) {
-	return REPOS_ROOT + id + "/repository.xml";
     }
 
     /**
@@ -207,13 +201,13 @@ public class HitsXmlDao implements HitsDao {
 	String service = hitElm.getAttribute("service");
 
 	if (id == null || id.equals("")) {
-	    throw new ParseException("Id does not exist");
+	    throw new XMLParseException("Id does not exist");
 	} else if (source == null || source.equals("")) {
-	    throw new ParseException("Source does not exist");
+	    throw new XMLParseException("Source does not exist");
 	} else if (destination == null || destination.equals("")) {
-	    throw new ParseException("Destination does not exist");
+	    throw new XMLParseException("Destination does not exist");
 	} else if (service == null || service.equals("")) {
-	    throw new ParseException("Service does not exist");
+	    throw new XMLParseException("Service does not exist");
 	}
 
 	// Convert strings to attributes

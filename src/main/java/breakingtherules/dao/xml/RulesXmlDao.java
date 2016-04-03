@@ -26,8 +26,6 @@ import breakingtherules.firewall.Source;
 @Component
 public class RulesXmlDao implements RulesDao {
 
-    private static final String REPOS_ROOT = "repository/";
-
     /**
      * All loaded repositories' rules
      */
@@ -47,7 +45,7 @@ public class RulesXmlDao implements RulesDao {
      */
     @Override
     public ListDto<Rule> getRules(int jobId) throws IOException {
-	String path = createPathFromId(jobId);
+	String path = XmlDaoConfig.getRulesFile(jobId);
 	return getRulesByPath(path);
     }
 
@@ -56,7 +54,7 @@ public class RulesXmlDao implements RulesDao {
      */
     @Override
     public ListDto<Rule> getRules(int jobId, int startIndex, int endIndex) throws IOException {
-	String path = createPathFromId(jobId);
+	String path = XmlDaoConfig.getRulesFile(jobId);
 	return getRulesByPath(path, startIndex, endIndex);
     }
 
@@ -142,17 +140,6 @@ public class RulesXmlDao implements RulesDao {
 	}
 
 	return rules;
-    }
-
-    /**
-     * Create a string path from a job id
-     * 
-     * @param id
-     *            id of the job
-     * @return string path to the job's repository
-     */
-    private static String createPathFromId(int id) {
-	return REPOS_ROOT + id + "/repository.xml";
     }
 
     /**

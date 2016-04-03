@@ -306,17 +306,17 @@ public abstract class IP implements Comparable<IP> {
 	}
 
 	// IPv4 format
-	boolean isIPv4 = ip.indexOf(IPv4.STRING_SEPARATOR) != -1;
-	boolean isIPv6 = ip.indexOf(IPv6.STRING_SEPARATOR) != -1;
+	boolean isIPv4 = ip.indexOf(IPv4.STRING_SEPARATOR) >= 0;
+	boolean isIPv6 = ip.indexOf(IPv6.STRING_SEPARATOR) >= 0;
 	if (isIPv4 && isIPv6) {
 	    throw new IllegalArgumentException("Unknown format");
 	} else if (isIPv4) {
 	    return new IPv4(ip);
 	} else if (isIPv6) {
 	    return new IPv6(ip);
+	} else {
+	    throw new IllegalArgumentException("Unknown format");
 	}
-
-	throw new IllegalArgumentException("Unknown format");
     }
 
     /**
@@ -327,6 +327,15 @@ public abstract class IP implements Comparable<IP> {
     @JsonIgnore
     public int getMaxLength() {
 	return getBlockSize() * getNumberOfBlocks();
+    }
+
+    public int getBit(int bitNumber) {
+	if (bitNumber < 0 || bitNumber > getMaxLength()) {
+	    throw new IllegalArgumentException("Bit number should be in range [0, " + getMaxLength() + "]");
+	}
+	int blockNum = bitNumber == 0 ? 0 : bitNumber / getBlockSize();
+	int bitNumInBlock = bitNumber - blockNum * getBlockSize();
+	return (m_address[blockNum] & (1 << bitNumInBlock)) != 0 ? 1 : 0;
     }
 
     /*

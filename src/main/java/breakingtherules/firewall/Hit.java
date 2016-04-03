@@ -60,4 +60,8 @@ public class Hit extends AttributesContainer {
 	return super.hashCode() + m_id << 16;
     }
 
+    public String toString() {
+	return "ID = " + m_id + ", " + super.toString();
+    }
+
 }
