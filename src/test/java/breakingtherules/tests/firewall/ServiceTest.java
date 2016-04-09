@@ -24,7 +24,7 @@ public class ServiceTest {
     @Test
     public void constructorTestOnePortAnyProtocol() {
 	System.out.println("# ServiceTest constructorTestOnePortAnyProtocol");
-	String protocol = Service.ANY_PROTOCOL;
+	int protocol = Service.ANY_PROTOCOL;
 	int port = FirewallTestsUtility.getRandomPort();
 	new Service(protocol, port);
     }
@@ -56,7 +56,7 @@ public class ServiceTest {
     @Test
     public void contructorTestPortRangeAnyProtocol() {
 	System.out.println("# ServiceTest contructorTestPortRangeAnyProtocol");
-	String protocol = Service.ANY_PROTOCOL;
+	int protocol = Service.ANY_PROTOCOL;
 	int range[] = FirewallTestsUtility.getRandomPortRange();
 	new Service(protocol, range[0], range[1]);
     }
@@ -202,16 +202,16 @@ public class ServiceTest {
     @Test
     public void getProtocolTestAnyProtocol() {
 	System.out.println("# ServiceTest getProtocolTestAnyProtocol");
-	String protocol = Service.ANY_PROTOCOL;
+	int protocol = Service.ANY_PROTOCOL;
 	Service service;
 
 	int port = FirewallTestsUtility.getRandomPort();
 	service = new Service(protocol, port);
-	assertTrue(protocol.equals(service.getProtocol()));
+	assertTrue(protocol == service.getProtocolCode());
 
 	int[] range = FirewallTestsUtility.getRandomPortRange();
 	service = new Service(protocol, range[0], range[1]);
-	assertEquals(protocol, service.getProtocol());
+	assertEquals(protocol, service.getProtocolCode());
     }
 
     @Test
@@ -312,7 +312,7 @@ public class ServiceTest {
     @Test
     public void containsTestPortRangeContainsPortRangeAnyProtocol() {
 	System.out.println("# ServiceTest containsTestPortRangeContainsPortRangeAnyProtocol");
-	String protocol1 = Service.ANY_PROTOCOL;
+	int protocol1 = Service.ANY_PROTOCOL;
 	String protocol2 = "UDP";
 	Service service1 = new Service(protocol1, 1, 18);
 	Service service2 = new Service(protocol2, 5, 10);

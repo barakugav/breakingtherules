@@ -89,7 +89,7 @@ public class TextPrinter {
     /*
      * (non-Javadoc)
      * 
-     * @see java.lang.PrintStream#print()
+     * @see java.lang.PrintStream#println()
      */
     public void println() {
 	m_builder.appendln();

@@ -39,14 +39,6 @@ public class CSVParser {
      */
     public static final List<Integer> DEFAULT_COLUMNS_TYPES;
 
-    /**
-     * Service protocol codes and names
-     */
-    private static final int UDP_CODE = 0;
-    private static final int TCP_CODE = 1;
-    private static final String UDP = "UDP";
-    private static final String TCP = "TCP";
-
     static {
 	DEFAULT_COLUMNS_TYPES = Arrays.asList(new Integer[] { SOURCE, DESCRIPTION, SERVICE_PORT, SERVICE_PROTOCOL });
     }
@@ -319,15 +311,8 @@ public class CSVParser {
 	    throw new CSVParseException("Unable to parse protocol code to integer: ", e);
 	}
 
-	String protocolStr;
-	switch (protocolInt) {
-	case UDP_CODE:
-	    protocolStr = UDP;
-	    break;
-	case TCP_CODE:
-	    protocolStr = TCP;
-	    break;
-	default:
+	String protocolStr = Service.getProtocolName(protocolInt);
+	if (protocolStr == null) {
 	    throw new CSVParseException("Unknown protocol number " + protocolInt);
 	}
 
@@ -374,14 +359,7 @@ public class CSVParser {
      * @return CSV service protocol string
      */
     private static String toCSVServiceProtocol(Service service) {
-	switch (service.getProtocol()) {
-	case UDP:
-	    return "" + UDP_CODE;
-	case TCP:
-	    return "" + TCP_CODE;
-	default:
-	    throw new CSVParseException("Unknown protocol (" + service.getProtocol() + ")");
-	}
+	return "" + service.getProtocolCode();
     }
 
     /**

@@ -137,14 +137,18 @@ public class CSVScrambler implements Runnable {
 	    List<Hit> hits = CSVParser.fromCSV(m_columnsTypes, m_input);
 
 	    // Scramble by source
-	    Node sourceTree = buildTree(hits, Attribute.SOURCE_TYPE_ID);
-	    scrambleTree(sourceTree);
-	    hits = rebuildHits(sourceTree, Attribute.SOURCE_TYPE_ID);
+	    if (m_columnsTypes.contains(CSVParser.SOURCE)) {
+		Node sourceTree = buildTree(hits, Attribute.SOURCE_TYPE_ID);
+		scrambleTree(sourceTree);
+		hits = rebuildHits(sourceTree, Attribute.SOURCE_TYPE_ID);
+	    }
 
 	    // Scramble by destination
-	    Node destinationTree = buildTree(hits, Attribute.DESTINATION_TYPE_ID);
-	    scrambleTree(destinationTree);
-	    hits = rebuildHits(destinationTree, Attribute.DESTINATION_TYPE_ID);
+	    if (m_columnsTypes.contains(CSVParser.DESCRIPTION)) {
+		Node destinationTree = buildTree(hits, Attribute.DESTINATION_TYPE_ID);
+		scrambleTree(destinationTree);
+		hits = rebuildHits(destinationTree, Attribute.DESTINATION_TYPE_ID);
+	    }
 
 	    Collections.shuffle(hits); // Because why not
 
@@ -260,16 +264,16 @@ public class CSVScrambler implements Runnable {
 		    // Parse flags and prepare to run
 		    if (success) {
 			scrambler = parseFlags(flags);
-			printer.println("Start scramblering...");
-		    }
-
-		    if (!success) {
-			printer.println("Use " + HELP_FLAG + " for help");
 		    }
 		}
 
+		if (!success) {
+		    printer.println("Use " + HELP_FLAG + " for help");
+		}
 		if (success && scrambler != null) {
+		    printer.println("Start scramblering...");
 		    scrambler.run();
+		    printer.println("Finished scramblering!");
 		}
 
 	    } catch (Exception e) {
@@ -565,15 +569,11 @@ public class CSVScrambler implements Runnable {
 		nextLayer.add(parent);
 	    }
 
-	    // Last node
-	    Node last = currentLayer.get(currentLayer.size() - 1);
-	    if (currentLayer.size() >= 2) {
-		Node beforeLast = currentLayer.get(currentLayer.size() - 2);
-		if (!IP.isBrothers(beforeLast.ip, last.ip)) {
-		    Node parent = buildNode(last, beforeLast);
-		    nextLayer.add(parent);
-		}
-	    } else {
+	    // Last node - if is the single one in the layer, or if it's not
+	    // brother of the one before him: and him alone
+	    int layerSize = currentLayer.size();
+	    Node last = currentLayer.get(layerSize - 1);
+	    if (layerSize == 1 || !IP.isBrothers(last.ip, currentLayer.get(layerSize - 2).ip)) {
 		Node parent = buildNode(last, null);
 		nextLayer.add(parent);
 	    }

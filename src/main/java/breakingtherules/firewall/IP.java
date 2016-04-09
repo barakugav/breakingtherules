@@ -34,8 +34,7 @@ public abstract class IP implements Comparable<IP>, CloneablePublic {
 	if (ip == null) {
 	    throw new IllegalArgumentException("Ip can't be null");
 	} else if (ip.length != getMaxLength()) {
-	    throw new IllegalArgumentException(
-		    "Unexpected ip length: " + Utility.format(getMaxLength(), ip.length));
+	    throw new IllegalArgumentException("Unexpected ip length: " + Utility.format(getMaxLength(), ip.length));
 	}
 
 	m_address = new int[getNumberOfBlocks()];
@@ -404,11 +403,16 @@ public abstract class IP implements Comparable<IP>, CloneablePublic {
 	if (bitNumber < 0 || bitNumber > getMaxLength()) {
 	    throw new IllegalArgumentException("Bit number should be in range [0, " + getMaxLength() + "]");
 	}
-	int blockNum = bitNumber == 0 ? 0 : (bitNumber-1) / getBlockSize();
+	int blockNum = bitNumber == 0 ? 0 : (bitNumber - 1) / getBlockSize();
 	int bitNumInBlock = bitNumber - blockNum * getBlockSize();
 	return (m_address[blockNum] & (1 << bitNumInBlock)) != 0;
     }
 
+    /**
+     * Get the last bit value
+     * 
+     * @return true if the last value is 1, else false
+     */
     @JsonIgnore
     public boolean getLastBit() {
 	// TODO what if this is the Any IP ?? This method is not defined...
@@ -579,6 +583,10 @@ public abstract class IP implements Comparable<IP>, CloneablePublic {
 	@Override
 	public IP[] getChildren() {
 	    return null;
+	}
+
+	public boolean getLastBit() {
+	    return false;
 	}
 
 	@Override
