@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import breakingtherules.dao.HitsDao;
+import breakingtherules.utilities.CloneablePublic;
+import breakingtherules.utilities.Utility;
 
 /**
  * Filter of hits, base on given attributes
@@ -11,7 +13,7 @@ import breakingtherules.dao.HitsDao;
  * @see Hit
  * @see HitsDao
  */
-public class Filter extends AttributesContainer {
+public class Filter extends AttributesContainer implements CloneablePublic {
 
     /**
      * Constructor
@@ -65,6 +67,18 @@ public class Filter extends AttributesContainer {
     @Override
     public int hashCode() {
 	return super.hashCode();
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see breakingtherules.firewall.AttributesContainer#clone()
+     */
+    @Override
+    public Filter clone() {
+	List<Attribute> attributes = getAttributes();
+	List<Attribute> attributesClone = Utility.cloneList(attributes);
+	return new Filter(attributesClone);
     }
 
     /**

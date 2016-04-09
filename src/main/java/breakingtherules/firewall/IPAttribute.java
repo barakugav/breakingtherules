@@ -1,14 +1,16 @@
 package breakingtherules.firewall;
 
+import breakingtherules.utilities.CloneablePublic;
+
 /**
  * The IPAttribute class represents an attribute with an IP
  */
-public abstract class IPAttribute implements Attribute, Comparable<IPAttribute> {
+public abstract class IPAttribute implements Attribute, Comparable<IPAttribute>, CloneablePublic {
 
     /**
      * IP of this attribute
      */
-    private final IP m_ip;
+    private IP m_ip;
 
     /**
      * Constructor
@@ -93,6 +95,14 @@ public abstract class IPAttribute implements Attribute, Comparable<IPAttribute> 
 	return m_ip.compareTo(o.m_ip);
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see java.lang.Object#clone()
+     */
+    @Override
+    public abstract IPAttribute clone();
+
     /**
      * Get the IP of this attribute
      * 
@@ -100,6 +110,16 @@ public abstract class IPAttribute implements Attribute, Comparable<IPAttribute> 
      */
     public IP getIp() {
 	return m_ip;
+    }
+
+    /**
+     * Set the IP of the attribute to a new one
+     * 
+     * @param ip
+     *            new IP
+     */
+    public void setIp(IP ip) {
+	m_ip = ip;
     }
 
 }

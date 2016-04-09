@@ -1,9 +1,11 @@
 package breakingtherules.firewall;
 
+import breakingtherules.utilities.CloneablePublic;
+
 /**
  * IP on protocol IPv4
  */
-public class IPv4 extends IP {
+public class IPv4 extends IP implements CloneablePublic {
 
     /**
      * IPv4 that represents 'Any' IPv4 (contains all others)
@@ -36,7 +38,17 @@ public class IPv4 extends IP {
      *            String IP, i.e. 127.0.0.0/8 or 127.168.0.1
      */
     public IPv4(String ip) {
-	super(ip, STRING_SEPARATOR);
+	super(ip);
+    }
+
+    /**
+     * Constructor based on boolean array that represent the bits in IP
+     * 
+     * @param ip
+     *            the IP's bits
+     */
+    public IPv4(boolean[] ip) {
+	super(ip);
     }
 
     /**
@@ -104,6 +116,18 @@ public class IPv4 extends IP {
     @Override
     public boolean equals(Object o) {
 	return super.equals(o) && o instanceof IPv4;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see breakingtherules.firewall.IP#clone()
+     */
+    @Override
+    public IPv4 clone() {
+	int[] address = m_address.clone();
+	int prefix = m_prefixLength;
+	return new IPv4(address, prefix);
     }
 
     /**

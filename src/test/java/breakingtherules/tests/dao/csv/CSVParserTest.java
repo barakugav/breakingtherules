@@ -13,7 +13,7 @@ import breakingtherules.firewall.Hit;
 public class CSVParserTest {
 
     private static final int JOB_ID = 0;
-    private static final List<Integer> COLOMNS_TYPES = CSVParser.DEFAULT_COLOMNS_TYPES;
+    private static final List<Integer> COLOMNS_TYPES = CSVParser.DEFAULT_COLUMNS_TYPES;
     private static final boolean PRINT = true;
 
     @Test

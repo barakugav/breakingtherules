@@ -6,7 +6,6 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 import java.util.Random;
 
@@ -31,7 +30,6 @@ public class IPv4Test {
 	System.out.println("# IPv4Test constructorTestBasicWillNullAdressTest");
 	int[] address = null;
 	new IPv4(address);
-	fail("Allowed IPv4 creation will null address arg");
     }
 
     @Test
@@ -48,7 +46,6 @@ public class IPv4Test {
 	int[] address = null;
 	int prefixLength = FirewallTestsUtility.getRandomPrefixLengthIPv4();
 	new IPv4(address, prefixLength);
-	fail("Allowed IPv4 creation will null address arg");
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -57,7 +54,6 @@ public class IPv4Test {
 	int[] address = FirewallTestsUtility.getRandomAddressIPv4();
 	int prefixLength = -1;
 	new IPv4(address, prefixLength);
-	fail("Allowed IPv4 creation will illegal prefix length arg");
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -66,7 +62,6 @@ public class IPv4Test {
 	int[] address = FirewallTestsUtility.getRandomAddressIPv4();
 	int prefixLength = 33;
 	new IPv4(address, prefixLength);
-	fail("Allowed IPv4 creation will illegal prefix length arg");
     }
 
     @Test
@@ -81,7 +76,6 @@ public class IPv4Test {
 	System.out.println("# IPv4Test constructorFromStringTest3Blocks");
 	String ipStr = "255.0.46";
 	new IPv4(ipStr);
-	fail("Allowed IPv4 creation will illegal format (3 blocks)");
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -89,7 +83,6 @@ public class IPv4Test {
 	System.out.println("# IPv4Test constructorFromStringTest5Blocks");
 	String ipStr = "255.0.2.2.46";
 	new IPv4(ipStr);
-	fail("Allowed IPv4 creation will illegal format (5 blocks)");
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -97,7 +90,6 @@ public class IPv4Test {
 	System.out.println("# IPv4Test constructorFromStringTestBlockOver255");
 	String ipStr = "255.300.4.46";
 	new IPv4(ipStr);
-	fail("Allowed IPv4 creation will illegal format (block over 255)");
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -105,7 +97,6 @@ public class IPv4Test {
 	System.out.println("# IPv4Test constructorFromStringTestBlockUnder0");
 	String ipStr = "255.-55.4.46";
 	new IPv4(ipStr);
-	fail("Allowed IPv4 creation will illegal format (block under 0)");
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -113,7 +104,6 @@ public class IPv4Test {
 	System.out.println("# IPv4Test constructorFromStringTestDoubleDot");
 	String ipStr = "255..2.4.46";
 	new IPv4(ipStr);
-	fail("Allowed IPv4 creation will illegal format (two dots)");
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -121,7 +111,6 @@ public class IPv4Test {
 	System.out.println("# IPv4Test constructorFromStringTestNegativePrefixLength");
 	String ipStr = "255.2.4.46/-1";
 	new IPv4(ipStr);
-	fail("Allowed IPv4 creation will illegal format (prefix length < 0). ");
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -129,7 +118,6 @@ public class IPv4Test {
 	System.out.println("# IPv4Test constructorFromStringTestPrefixLengthOver32");
 	String ipStr = "255.2.4.46/33";
 	new IPv4(ipStr);
-	fail("Allowed IPv4 creation will illegal format (prefix length > 32)");
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -137,7 +125,6 @@ public class IPv4Test {
 	System.out.println("# IPv4Test constructorFromStringTestExtraNumbers");
 	String ipStr = "255.2.4.46/1 5";
 	new IPv4(ipStr);
-	fail("Allowed IPv4 creation will illegal format (extra numbers)");
     }
 
     @Test
@@ -378,6 +365,16 @@ public class IPv4Test {
 		FirewallTestsUtility.getRandomPrefixLengthIPv4());
 	IPv6 ip6 = FirewallTestsUtility.getRandomIPv6();
 	assertFalse(ip4.contains(ip6));
+    }
+
+    @Test
+    public void cloneTest() {
+	System.out.println("# IPv4Test cloneTest");
+	int[] address = FirewallTestsUtility.getRandomAddressIPv4();
+	IPv4 ip = new IPv4(address);
+	IPv4 ipClone = ip.clone();
+	assertFalse(ip == ipClone);
+	assertEquals(ip, ipClone);
     }
 
 }

@@ -41,6 +41,6 @@ public class HitsController {
 	    System.err.println(e.getMessage());
 	    throw e;
 	}
-
     }
+
 }

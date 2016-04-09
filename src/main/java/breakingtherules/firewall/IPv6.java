@@ -1,9 +1,11 @@
 package breakingtherules.firewall;
 
+import breakingtherules.utilities.CloneablePublic;
+
 /**
  * IP on protocol IPv6
  */
-public class IPv6 extends IP {
+public class IPv6 extends IP implements CloneablePublic {
 
     /**
      * IPv6 that represents 'Any' IPv6 (contains all others)
@@ -36,7 +38,17 @@ public class IPv6 extends IP {
      *            String IP
      */
     public IPv6(String ip) {
-	super(ip, STRING_SEPARATOR);
+	super(ip);
+    }
+
+    /**
+     * Constructor based on boolean array that represent the bits in IP
+     * 
+     * @param ip
+     *            the IP's bits
+     */
+    public IPv6(boolean[] ip) {
+	super(ip);
     }
 
     /**
@@ -104,6 +116,18 @@ public class IPv6 extends IP {
     @Override
     public boolean equals(Object o) {
 	return super.equals(o) && o instanceof IPv6;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see breakingtherules.firewall.IP#clone()
+     */
+    @Override
+    public IPv6 clone() {
+	int address[] = m_address.clone();
+	int prefix = m_prefixLength;
+	return new IPv6(address, prefix);
     }
 
     /**

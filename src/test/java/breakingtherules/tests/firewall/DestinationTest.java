@@ -4,7 +4,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 import org.junit.Test;
 
@@ -27,7 +26,6 @@ public class DestinationTest {
 	System.out.println("# DestinationTest constructorTestNullIP");
 	IP ip = null;
 	new Destination(ip);
-	fail("Allowed Destination creation will null address arg");
     }
 
     @Test
@@ -42,7 +40,6 @@ public class DestinationTest {
 	System.out.println("# DestinationTest constructorStringTestNullIP");
 	String ip = null;
 	new Destination(ip);
-	fail("Allowed Destination creation will null address arg");
     }
 
     @Test
@@ -120,6 +117,16 @@ public class DestinationTest {
 	s1 = new Destination("2.12.45.7/21");
 	s2 = new Destination("2.13.45.7/21");
 	assertNotEquals(s1, s2);
+    }
+
+    @Test
+    public void cloneTest() {
+	System.out.println("# DestinationTest cloneTest");
+	IP ip = FirewallTestsUtility.getRandomIP();
+	Destination destination = new Destination(ip);
+	Destination destinationClone = destination.clone();
+	assertFalse(destination == destinationClone);
+	assertEquals(destination, destinationClone);
     }
 
 }

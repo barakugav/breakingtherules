@@ -1,7 +1,7 @@
 package breakingtherules.tests.firewall;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.assertFalse;
 
 import java.util.List;
 
@@ -26,7 +26,6 @@ public class HitTest {
 	int id = FirewallTestsUtility.getRandomID();
 	List<Attribute> attributes = null;
 	new Hit(id, attributes);
-	fail("Allowed creating Hit with null attributes");
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -35,7 +34,6 @@ public class HitTest {
 	int id = -FirewallTestsUtility.getRandomID();
 	List<Attribute> attributes = FirewallTestsUtility.getRandomAttributes();
 	new Hit(id, attributes);
-	fail("Allowed creating Hit with negative id");
     }
 
     @Test
@@ -73,6 +71,17 @@ public class HitTest {
 	Attribute.sort(expected);
 	Attribute.sort(actual);
 	assertEquals(expected, actual);
+    }
+
+    @Test
+    public void cloneTest() {
+	System.out.println("# HitTest cloneTest");
+	int id = FirewallTestsUtility.getRandomID();
+	List<Attribute> attributes = FirewallTestsUtility.getRandomAttributes();
+	Hit hit = new Hit(id, attributes);
+	Hit hitClone = hit.clone();
+	assertFalse(hit == hitClone);
+	assertEquals(hit, hitClone);
     }
 
 }

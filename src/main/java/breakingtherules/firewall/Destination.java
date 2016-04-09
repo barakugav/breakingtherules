@@ -1,9 +1,11 @@
 package breakingtherules.firewall;
 
+import breakingtherules.utilities.CloneablePublic;
+
 /**
  * Destination attribute
  */
-public class Destination extends IPAttribute {
+public class Destination extends IPAttribute implements CloneablePublic {
 
     /**
      * Destination attribute that represent 'Any' destination (contains all
@@ -70,6 +72,16 @@ public class Destination extends IPAttribute {
     @Override
     public boolean equals(Object o) {
 	return o instanceof Destination && super.equals(o);
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see breakingtherules.firewall.IPAttribute#clone()
+     */
+    @Override
+    public Destination clone() {
+	return new Destination(getIp().clone());
     }
 
     /**

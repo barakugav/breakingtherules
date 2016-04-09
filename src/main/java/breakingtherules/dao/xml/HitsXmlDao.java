@@ -2,8 +2,9 @@ package breakingtherules.dao.xml;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Vector;
 
 import org.w3c.dom.Document;
@@ -32,7 +33,7 @@ public class HitsXmlDao implements HitsDao {
     /**
      * All loaded repositories' hits
      */
-    private Hashtable<String, List<Hit>> m_loadedHits;
+    private Map<String, List<Hit>> m_loadedHits;
 
     /**
      * Constructor
@@ -40,7 +41,7 @@ public class HitsXmlDao implements HitsDao {
      * Initialize loaded hits to empty
      */
     public HitsXmlDao() {
-	m_loadedHits = new Hashtable<String, List<Hit>>();
+	m_loadedHits = new HashMap<String, List<Hit>>();
     }
 
     /*
@@ -136,10 +137,6 @@ public class HitsXmlDao implements HitsDao {
 	endIndex = (int) Math.min(endIndex, total);
 	List<Hit> subHitsList = allHits.subList(startIndex, endIndex);
 	return new ListDto<Hit>(subHitsList, startIndex, endIndex, total);
-    }
-
-    public static void writeHits(List<Hit> hits, String repoPath) {
-
     }
 
     /**

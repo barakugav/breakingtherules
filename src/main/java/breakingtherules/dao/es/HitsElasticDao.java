@@ -37,7 +37,7 @@ import breakingtherules.firewall.Attribute;
 import breakingtherules.firewall.Filter;
 import breakingtherules.firewall.Hit;
 import breakingtherules.firewall.Rule;
-import breakingtherules.utilities.Triplet;
+import breakingtherules.utilities.Triple;
 import breakingtherules.utilities.Utility;
 
 public class HitsElasticDao implements HitsDao {
@@ -61,13 +61,13 @@ public class HitsElasticDao implements HitsDao {
      * Filter. This prevents reading ALL of the job's hits to determine the
      * number of relevant hits. Useful for getHits with startIndex and endIndex
      */
-    private HashMap<Triplet<Integer, List<Rule>, Filter>, Integer> m_totalHitsCache;
+    private HashMap<Triple<Integer, List<Rule>, Filter>, Integer> m_totalHitsCache;
 
     public HitsElasticDao() {
 	m_elasticNode = NodeBuilder.nodeBuilder().settings(Settings.settingsBuilder().put("http.enabled", false))
 		.clusterName(CLUSTER_NAME).client(true).node();
 	m_elasticClient = m_elasticNode.client();
-	m_totalHitsCache = new HashMap<Triplet<Integer, List<Rule>, Filter>, Integer>();
+	m_totalHitsCache = new HashMap<Triple<Integer, List<Rule>, Filter>, Integer>();
     }
 
     public void cleanup() {
@@ -192,14 +192,14 @@ public class HitsElasticDao implements HitsDao {
     @Override
     public ListDto<Hit> getHits(int jobId, List<Rule> rules, Filter filter) throws IOException {
 	List<Hit> hits = getHits(jobId, rules, filter, true, 0, 0);
-	m_totalHitsCache.put(new Triplet<Integer, List<Rule>, Filter>(jobId, rules, filter), hits.size());
+	m_totalHitsCache.put(new Triple<Integer, List<Rule>, Filter>(jobId, rules, filter), hits.size());
 	return new ListDto<Hit>(hits, 0, hits.size(), hits.size());
     }
 
     @Override
     public ListDto<Hit> getHits(int jobId, List<Rule> rules, Filter filter, int startIndex, int endIndex)
 	    throws IOException {
-	Integer total = m_totalHitsCache.get(new Triplet<Integer, List<Rule>, Filter>(jobId, rules, filter));
+	Integer total = m_totalHitsCache.get(new Triple<Integer, List<Rule>, Filter>(jobId, rules, filter));
 	if (total == null) {
 	    ListDto<Hit> allHits = getHits(jobId, rules, filter); // which saves
 								  // to cache

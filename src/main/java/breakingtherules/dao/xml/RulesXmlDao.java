@@ -2,8 +2,9 @@ package breakingtherules.dao.xml;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Vector;
 
 import org.springframework.stereotype.Component;
@@ -29,7 +30,7 @@ public class RulesXmlDao implements RulesDao {
     /**
      * All loaded repositories' rules
      */
-    Hashtable<String, List<Rule>> m_loadedRules;
+    private Map<String, List<Rule>> m_loadedRules;
 
     /**
      * Constructor
@@ -37,11 +38,13 @@ public class RulesXmlDao implements RulesDao {
      * Initialize loaded rules to empty
      */
     public RulesXmlDao() {
-	m_loadedRules = new Hashtable<String, List<Rule>>();
+	m_loadedRules = new HashMap<String, List<Rule>>();
     }
 
-    /**
-     * @see RulesDao#getRules(int)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see breakingtherules.dao.RulesDao#getRules(int)
      */
     @Override
     public ListDto<Rule> getRules(int jobId) throws IOException {
@@ -49,8 +52,10 @@ public class RulesXmlDao implements RulesDao {
 	return getRulesByPath(path);
     }
 
-    /**
-     * @see RulesDao#getRules(int, int, int)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see breakingtherules.dao.RulesDao#getRules(int, int, int)
      */
     @Override
     public ListDto<Rule> getRules(int jobId, int startIndex, int endIndex) throws IOException {

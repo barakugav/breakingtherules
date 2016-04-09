@@ -16,13 +16,15 @@ import breakingtherules.firewall.Rule;
 
 public class HitsPostgresDao implements HitsDao {
 
+    @SuppressWarnings("unused")
     private DataSource m_dataSource;
+
+    @SuppressWarnings("unused")
     private JdbcTemplate m_jdbcTemplateObject;
 
     public void setDataSource(DataSource dataSource) {
-	this.m_dataSource = dataSource;
-	this.m_jdbcTemplateObject = new JdbcTemplate(dataSource);
-	System.out.println("Success");
+	m_dataSource = dataSource;
+	m_jdbcTemplateObject = new JdbcTemplate(dataSource);
     }
 
     @Override

@@ -4,7 +4,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 import org.junit.Test;
 
@@ -36,7 +35,6 @@ public class ServiceTest {
 	String protocol = "TCP";
 	int port = -2;
 	new Service(protocol, port);
-	fail("Allowed to create service with negative port");
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -45,7 +43,6 @@ public class ServiceTest {
 	String protocol = "TCP";
 	int port = 1 << 16;
 	new Service(protocol, port);
-	fail("Allowed to create service with port over max port");
     }
 
     @Test
@@ -70,7 +67,6 @@ public class ServiceTest {
 	String protocol = "TCP";
 	int range[] = FirewallTestsUtility.getRandomPortRange();
 	new Service(protocol, range[1], range[0]);
-	fail("Allowed creation of service with port range and upperRange < lowerRange");
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -79,7 +75,6 @@ public class ServiceTest {
 	String protocol = "TCP";
 	int range[] = FirewallTestsUtility.getRandomPortRange();
 	new Service(protocol, -1, range[1]);
-	fail("Allowed creation of service with port range and lowerRange < 0");
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -88,14 +83,12 @@ public class ServiceTest {
 	String protocol = "TCP";
 	int range[] = FirewallTestsUtility.getRandomPortRange();
 	new Service(protocol, range[0], 1 << 16);
-	fail("Allowed creation of service with port range and upperRange >= 1 << 16");
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void contructorTestFromStringNullString() {
 	System.out.println("# ServiceTest contructorTestFromStringNullString");
 	new Service(null);
-	fail("Allowed creation of service from string with null String");
     }
 
     @Test
@@ -114,28 +107,24 @@ public class ServiceTest {
     public void contructorTestFromStringOnePortNoProtocol() {
 	System.out.println("# ServiceTest contructorTestFromStringOnePortNoProtocol");
 	new Service("80");
-	fail("Allowed creation of service from String without protocol");
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void contructorTestFromStringOnePortNoProtocolAndSpace() {
 	System.out.println("# ServiceTest contructorTestFromStringOnePortNoProtocolAndSpace");
 	new Service(" 80");
-	fail("Allowed creation of service from String without protocol and space");
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void contructorTestFromStringOnePortNegative() {
 	System.out.println("# ServiceTest contructorTestFromStringOnePortNegative");
 	new Service("TCP -1");
-	fail("Allowed creation of service from String with negative port");
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void contructorTestFromStringOnePortOver2pow16() {
 	System.out.println("# ServiceTest contructorTestFromStringOnePortOver2pow16");
 	new Service("TCP 65536");
-	fail("Allowed creation of service from String with port over 1 << 16");
     }
 
     @Test
@@ -154,35 +143,30 @@ public class ServiceTest {
     public void contructorTestFromStringPortRangeNoProtocolWithSpace() {
 	System.out.println("# ServiceTest contructorTestFromStringPortRangeNoProtocolWithSpace");
 	new Service(" 80-100");
-	fail("Allowed creation of service from string with port range with no protocol with space");
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void contructorTestFromStringPortRangeUpperRangeUnderLowerRange() {
 	System.out.println("# ServiceTest contructorTestFromStringPortRangeUpperRangeUnderLowerRange");
 	new Service("TCP 100-80");
-	fail("Allowed creation of service from string with port range upperRange < lowerRange");
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void contructorTestFromStringPortRangeNegative() {
 	System.out.println("# ServiceTest contructorTestFromStringPortRangeNegative");
 	new Service("TCP -1-100");
-	fail("Allowed creation of service from string negative port");
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void contructorTestFromStringPortRangePortOver2pow16() {
 	System.out.println("# ServiceTest contructorTestFromStringPortRangePortOver2pow16");
 	new Service("TCP 80-65536");
-	fail("Allowed creation of service from string with port over 1 << 16");
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void contructorTestFromStringPortRangeNaN() {
 	System.out.println("# ServiceTest contructorTestFromStringPortRangeNaN");
 	new Service("TCP sdw-100");
-	fail("Allowed creation of service from string with characters instead of numebr");
     }
 
     @Test
@@ -430,6 +414,17 @@ public class ServiceTest {
 	s1 = new Service("Any TCP");
 	s2 = new Service("Any UDP");
 	assertNotEquals(s1, s2);
+    }
+
+    @Test
+    public void cloneTest() {
+	System.out.println("# ServiceTest cloneTest");
+	String protocol = "TCP";
+	int port = FirewallTestsUtility.getRandomPort();
+	Service service = new Service(protocol, port);
+	Service serviceClone = service.clone();
+	assertFalse(service == serviceClone);
+	assertEquals(service, serviceClone);
     }
 
 }

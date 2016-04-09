@@ -2,12 +2,14 @@ package breakingtherules.firewall;
 
 import org.springframework.util.StringUtils;
 
+import breakingtherules.utilities.CloneablePublic;
+
 /**
  * Service attribute
  * 
  * Has a protocol member and port number
  */
-public class Service implements Attribute {
+public class Service implements Attribute, CloneablePublic {
 
     /**
      * Type of the service (HTTP, HTTPS, etc)
@@ -331,6 +333,16 @@ public class Service implements Attribute {
 	} else {
 	    return m_protocol + " " + m_portRangeStart + "-" + m_portRangeEnd;
 	}
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see java.lang.Object#clone()
+     */
+    @Override
+    public Service clone() {
+	return new Service(m_protocol, m_portRangeStart, m_portRangeEnd);
     }
 
     /*

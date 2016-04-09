@@ -6,7 +6,6 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 import java.util.Random;
 
@@ -31,7 +30,6 @@ public class IPv6Test {
 	System.out.println("# IPv6Test constructorTestBasicWillNullAdressTest");
 	int[] address = null;
 	new IPv6(address);
-	fail("Allowed IPv6 creation will null address arg");
     }
 
     @Test
@@ -48,7 +46,6 @@ public class IPv6Test {
 	int[] address = null;
 	int prefixLength = FirewallTestsUtility.getRandomPrefixLengthIPv6();
 	new IPv6(address, prefixLength);
-	fail("Allowed IPv6 creation will null address arg");
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -57,7 +54,6 @@ public class IPv6Test {
 	int[] address = FirewallTestsUtility.getRandomAddressIPv6();
 	int prefixLength = -1;
 	new IPv6(address, prefixLength);
-	fail("Allowed IPv6 creation will illegal prefix length arg");
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -66,7 +62,7 @@ public class IPv6Test {
 	int[] address = FirewallTestsUtility.getRandomAddressIPv6();
 	int prefixLength = 129;
 	new IPv6(address, prefixLength);
-	fail("Allowed IPv6 creation will illegal prefix length arg ( > 128)");
+
     }
 
     @Test
@@ -81,7 +77,7 @@ public class IPv6Test {
 	System.out.println("# IPv6Test constructorFromStringTest7Blocks");
 	String ipStr = "255:0:46:4784:48:74:89";
 	new IPv6(ipStr);
-	fail("Allowed IPv6 creation will illegal format (7 blocks)");
+
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -89,7 +85,6 @@ public class IPv6Test {
 	System.out.println("# IPv6Test constructorFromStringTest9Blocks");
 	String ipStr = "255:0:2:46:47863:32146:879:11112:30";
 	new IPv6(ipStr);
-	fail("Allowed IPv6 creation will illegal format (9 blocks)");
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -97,7 +92,6 @@ public class IPv6Test {
 	System.out.println("# IPv6Test constructorFromStringTestBlockOver65535");
 	String ipStr = "255:65536:4:46:801:24020:4852:31";
 	new IPv6(ipStr);
-	fail("Allowed IPv6 creation will illegal format (block over 65535)");
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -105,7 +99,6 @@ public class IPv6Test {
 	System.out.println("# IPv6Test constructorFromStringTestBlockUnder0");
 	String ipStr = "255:-55:4:46:44:879:326:15";
 	new IPv6(ipStr);
-	fail("Allowed IPv6 creation will illegal format (block under 0)");
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -113,7 +106,6 @@ public class IPv6Test {
 	System.out.println("# IPv6Test constructorFromStringTestDoubleDot");
 	String ipStr = "255::2:4:46:1:1:1:1";
 	new IPv6(ipStr);
-	fail("Allowed IPv6 creation will illegal format (two dots)");
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -121,7 +113,6 @@ public class IPv6Test {
 	System.out.println("# IPv6Test constructorFromStringTestNegativePrefixLength");
 	String ipStr = "255:2:4:46:4:5:6:1/-1";
 	new IPv6(ipStr);
-	fail("Allowed IPv6 creation will illegal format (prefix length < 0). ");
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -129,7 +120,6 @@ public class IPv6Test {
 	System.out.println("# IPv6Test constructorFromStringTestPrefixLengthOver32");
 	String ipStr = "255:2:549:785:324:7841:4:46/129";
 	new IPv6(ipStr);
-	fail("Allowed IPv6 creation will illegal format (prefix length > 128)");
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -137,7 +127,6 @@ public class IPv6Test {
 	System.out.println("# IPv6Test constructorFromStringTestExtraNumbers");
 	String ipStr = "255:2:4:46:14:48:79:13245/1 5";
 	new IPv6(ipStr);
-	fail("Allowed IPv6 creation will illegal format (extra numbers)");
     }
 
     @Test
@@ -368,6 +357,16 @@ public class IPv6Test {
 		FirewallTestsUtility.getRandomPrefixLengthIPv6());
 	IPv4 ip4 = FirewallTestsUtility.getRandomIPv4();
 	assertFalse(ip6.contains(ip4));
+    }
+
+    @Test
+    public void cloneTest() {
+	System.out.println("# IPv6Test cloneTest");
+	int[] address = FirewallTestsUtility.getRandomAddressIPv6();
+	IPv6 ip = new IPv6(address);
+	IPv6 ipClone = ip.clone();
+	assertFalse(ip == ipClone);
+	assertEquals(ip, ipClone);
     }
 
 }

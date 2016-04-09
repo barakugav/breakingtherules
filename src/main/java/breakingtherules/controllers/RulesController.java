@@ -31,9 +31,11 @@ public class RulesController {
     public void createRule() throws IllegalArgumentException, IOException, NoCurrentJobException {
 	m_job.addCurrentFilterToRules();
     }
-    
+
     @RequestMapping(value = "/rule", method = RequestMethod.DELETE)
-    public void deleteRule(@RequestParam("id") int ruleId) throws IllegalArgumentException, IOException, NoCurrentJobException {
+    public void deleteRule(@RequestParam("id") int ruleId)
+	    throws IllegalArgumentException, IOException, NoCurrentJobException {
 	m_job.deleteRule(ruleId);
     }
+
 }

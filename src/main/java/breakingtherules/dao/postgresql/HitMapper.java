@@ -10,8 +10,15 @@ import breakingtherules.firewall.Attribute;
 import breakingtherules.firewall.Hit;
 
 public class HitMapper implements RowMapper<Hit> {
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see org.springframework.jdbc.core.RowMapper#mapRow(java.sql.ResultSet,
+     * int)
+     */
     public Hit mapRow(ResultSet rs, int rowNum) throws SQLException {
-	Hit hit = new Hit(rs.getInt(PostgresConfig.ID), new ArrayList<Attribute>());
-	return hit;
+	return new Hit(rs.getInt(PostgresConfig.ID), new ArrayList<Attribute>());
     }
+
 }

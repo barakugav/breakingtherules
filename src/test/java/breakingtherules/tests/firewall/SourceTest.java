@@ -4,7 +4,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 import org.junit.Test;
 
@@ -27,7 +26,6 @@ public class SourceTest {
 	System.out.println("# SourceTest constructorTestNullIP");
 	IP ip = null;
 	new Source(ip);
-	fail("Allowed Source creation will null address arg");
     }
 
     @Test
@@ -42,7 +40,6 @@ public class SourceTest {
 	System.out.println("# SourceTest constructorStringTestNullIP");
 	String ip = null;
 	new Source(ip);
-	fail("Allowed Source creation will null address arg");
     }
 
     @Test
@@ -119,6 +116,16 @@ public class SourceTest {
 	IP ip = FirewallTestsUtility.getRandomIP();
 	Source des = new Source(ip);
 	assertTrue(ip.toString().equals(des.toString()));
+    }
+
+    @Test
+    public void cloneTest() {
+	System.out.println("# SourceTest cloneTest");
+	IP ip = FirewallTestsUtility.getRandomIP();
+	Source source = new Source(ip);
+	Source sourceClone = source.clone();
+	assertFalse(source == sourceClone);
+	assertEquals(source, sourceClone);
     }
 
 }

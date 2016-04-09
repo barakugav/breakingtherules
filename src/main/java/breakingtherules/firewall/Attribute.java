@@ -5,10 +5,12 @@ import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import breakingtherules.utilities.CloneablePublic;
+
 /**
  * Attribute of a hit
  */
-public interface Attribute {
+public interface Attribute extends CloneablePublic {
 
     /**
      * Checks if this attribute contain another
@@ -42,6 +44,14 @@ public interface Attribute {
      */
     @JsonProperty("str")
     public String toString();
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see breakingtherules.utilities.CloneablePublic#clone()
+     */
+    @Override
+    public Attribute clone();
 
     public static final int TYPES_COUNT = 3;
     public static final int NULL_TYPE_ID = -1;

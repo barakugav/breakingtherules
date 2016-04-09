@@ -6,10 +6,13 @@ import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import breakingtherules.utilities.CloneablePublic;
+import breakingtherules.utilities.Utility;
+
 /**
  * IP address, can be {@link IPv4} or {@link IPv6}
  */
-public abstract class IP implements Comparable<IP> {
+public abstract class IP implements Comparable<IP>, CloneablePublic {
 
     /**
      * IP address
@@ -20,6 +23,33 @@ public abstract class IP implements Comparable<IP> {
      * Length of the constant prefix
      */
     protected final int m_prefixLength;
+
+    /**
+     * Constructor
+     * 
+     * @param ip
+     *            boolean array that represents the bits in the IP
+     */
+    public IP(boolean[] ip) {
+	if (ip == null) {
+	    throw new IllegalArgumentException("Ip can't be null");
+	} else if (ip.length != getMaxLength()) {
+	    throw new IllegalArgumentException(
+		    "Unexpected ip length: " + Utility.format(getMaxLength(), ip.length));
+	}
+
+	m_address = new int[getNumberOfBlocks()];
+	for (int blockNum = 0; blockNum < getNumberOfBlocks(); blockNum++) {
+	    int blockValue = 0;
+	    for (int bitNum = 0; bitNum < getBlockSize(); bitNum++) {
+		boolean bitValue = ip[blockNum * getBlockSize() + bitNum];
+		blockValue <<= 1;
+		blockValue += bitValue ? 1 : 0;
+	    }
+	    m_address[blockNum] = blockValue;
+	}
+	m_prefixLength = getMaxLength();
+    }
 
     /**
      * Constructor
@@ -58,7 +88,8 @@ public abstract class IP implements Comparable<IP> {
      * @param expectedSeparator
      *            String separator between two blocks in the String IP
      */
-    protected IP(String ip, String expectedSeparator) {
+    protected IP(String ip) {
+	String expectedSeparator = getStringSeparator();
 	List<Integer> address = new ArrayList<Integer>();
 	int separatorIndex = ip.indexOf(expectedSeparator);
 	try {
@@ -287,6 +318,14 @@ public abstract class IP implements Comparable<IP> {
 	return true;
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see java.lang.Object#clone()
+     */
+    @Override
+    public abstract IP clone();
+
     /**
      * Create new IP from String IP
      * 
@@ -296,9 +335,9 @@ public abstract class IP implements Comparable<IP> {
      *            String IP
      * @return IP object based on the String IP
      */
-    public static IP fromString(String ip) throws IllegalArgumentException {
+    public static IP fromString(String ip) {
 	if (ip == null) {
-	    throw new IllegalArgumentException("Null arg");
+	    throw new IllegalArgumentException("Null ip");
 	}
 
 	if (ip.equals("Any")) {
@@ -320,6 +359,31 @@ public abstract class IP implements Comparable<IP> {
     }
 
     /**
+     * Create new IP from boolean array
+     * 
+     * @param ip
+     *            bits of the IP
+     * @param clazz
+     *            class of the requested IP - IPv4, IPv6 or AnyIP
+     * @return IP object based on the boolean bits
+     */
+    public static IP fromBooleans(boolean[] ip, Class<?> clazz) {
+	if (ip == null || clazz == null) {
+	    throw new IllegalArgumentException("Arguments can't be null!");
+	}
+	if (clazz.equals(IPv4.class)) {
+	    return new IPv4(ip);
+	} else if (clazz.equals(IPv6.class)) {
+	    return new IPv6(ip);
+	} else if (clazz.equals(AnyIP.class)) {
+	    return AnyIP.instance;
+	} else {
+	    throw new IllegalArgumentException(
+		    "Choosen class in unkwon. Expected IPv4, IPv6 or AnyIP. Actual: " + clazz.getName());
+	}
+    }
+
+    /**
      * Get the max length of this IP's address
      * 
      * @return max length of the IP's address
@@ -329,13 +393,24 @@ public abstract class IP implements Comparable<IP> {
 	return getBlockSize() * getNumberOfBlocks();
     }
 
-    public int getBit(int bitNumber) {
+    /**
+     * Get the value of specific bit in the IP
+     * 
+     * @param bitNumber
+     *            the bit's number
+     * @return value of the requested bit
+     */
+    public boolean getBit(int bitNumber) {
 	if (bitNumber < 0 || bitNumber > getMaxLength()) {
 	    throw new IllegalArgumentException("Bit number should be in range [0, " + getMaxLength() + "]");
 	}
 	int blockNum = bitNumber == 0 ? 0 : bitNumber / getBlockSize();
 	int bitNumInBlock = bitNumber - blockNum * getBlockSize();
-	return (m_address[blockNum] & (1 << bitNumInBlock)) != 0 ? 1 : 0;
+	return (m_address[blockNum] & (1 << bitNumInBlock)) != 0;
+    }
+
+    public boolean getLastBit() {
+	return getBit(getConstPrefixLength());
     }
 
     /*
@@ -517,6 +592,10 @@ public abstract class IP implements Comparable<IP> {
 	@Override
 	public String getStringSeparator() {
 	    return null;
+	}
+
+	public AnyIP clone() {
+	    return this;
 	}
 
     }

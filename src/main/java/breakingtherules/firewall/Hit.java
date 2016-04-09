@@ -2,10 +2,13 @@ package breakingtherules.firewall;
 
 import java.util.List;
 
+import breakingtherules.utilities.CloneablePublic;
+import breakingtherules.utilities.Utility;
+
 /**
  * Hit with attributes
  */
-public class Hit extends AttributesContainer {
+public class Hit extends AttributesContainer implements CloneablePublic {
 
     /**
      * Id of the hit
@@ -60,8 +63,26 @@ public class Hit extends AttributesContainer {
 	return super.hashCode() + m_id << 16;
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see breakingtherules.firewall.AttributesContainer#toString()
+     */
+    @Override
     public String toString() {
 	return "ID = " + m_id + ", " + super.toString();
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see breakingtherules.firewall.AttributesContainer#clone()
+     */
+    @Override
+    public Hit clone() {
+	List<Attribute> attributes = getAttributes();
+	List<Attribute> attributesClone = Utility.cloneList(attributes);
+	return new Hit(m_id, attributesClone);
     }
 
 }

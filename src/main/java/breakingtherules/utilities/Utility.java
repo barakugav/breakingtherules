@@ -1,6 +1,7 @@
 package breakingtherules.utilities;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
@@ -15,6 +16,64 @@ public class Utility {
     private static final char SPACE = ' ';
 
     private static final char TAB = '\t';
+
+    /**
+     * Put a value in a list at an index even if the list is too small.
+     * <p>
+     * This method simulate the list as array that allow random access even if
+     * the list wasn't grown naturally by <code>List.add(E e)</code>. The list
+     * will be appended by nulls up to the desire index if needed
+     * 
+     * @param list
+     *            the list
+     * @param index
+     *            index in the list
+     * @param value
+     *            new value in the list
+     */
+    public static <T> void put(List<T> list, int index, T value) {
+	if (list == null) {
+	    throw new IllegalArgumentException("list can't be null");
+	}
+	if (index < 0) {
+	    throw new IndexOutOfBoundsException("index must be positive " + index);
+	}
+	while (list.size() <= index) {
+	    list.add(null);
+	}
+	list.set(index, value);
+    }
+
+    /**
+     * Clone an object
+     * 
+     * @param e
+     *            element
+     * @return clone of the element or null if the element is null
+     */
+    @SuppressWarnings("unchecked")
+    public static <T extends CloneablePublic> T clone(T e) {
+	return e == null ? null : (T) e.clone();
+    }
+
+    /**
+     * Clone a list
+     * 
+     * @param list
+     *            the list
+     * @return clone of the list
+     */
+    public static <T extends CloneablePublic> List<T> cloneList(List<T> list) {
+	if (list == null) {
+	    throw new IllegalArgumentException("List can't be null!");
+	}
+
+	List<T> listClone = new ArrayList<T>();
+	for (T e : list) {
+	    listClone.add(clone(e));
+	}
+	return listClone;
+    }
 
     /**
      * Get a sub list of a list by offset and size
@@ -96,6 +155,90 @@ public class Utility {
     }
 
     /**
+     * Get a double iterator over a list
+     * <p>
+     * A double iterator is an iterator that iterate over two elements at a
+     * time.
+     * 
+     * @param list
+     *            the list
+     * @return double iterator iver the list
+     */
+    public static <T> Iterator<Pair<T, T>> getDoubleIterator(List<T> list) {
+	if (list == null) {
+	    throw new IllegalArgumentException("list  can't be null");
+	}
+	return new Iterator<Pair<T, T>>() {
+
+	    Iterator<T> iteratorToNextElement;
+
+	    Iterator<T> iteratorToCurrentElement;
+
+	    {
+		iteratorToCurrentElement = list.iterator();
+		iteratorToNextElement = list.iterator();
+		if (iteratorToNextElement.hasNext()) {
+		    iteratorToNextElement.next();
+		}
+	    }
+
+	    @Override
+	    public boolean hasNext() {
+		return iteratorToNextElement.hasNext();
+	    }
+
+	    @Override
+	    public Pair<T, T> next() {
+		T first = iteratorToCurrentElement.next();
+		T second = iteratorToNextElement.next();
+		return new Pair<T, T>(first, second);
+	    }
+	};
+    }
+
+    /**
+     * Get a double iterator over two lists
+     * <p>
+     * The double iterator allow to iterate over two list simultaneously
+     * 
+     * @param listA
+     *            first list
+     * @param listB
+     *            second list
+     * @return double iterator over the two list
+     */
+    public static <T, U> Iterator<Pair<T, U>> getDoubleIterator(List<T> listA, List<U> listB) {
+	if (listA == null || listB == null) {
+	    throw new IllegalArgumentException("Lists can't be null!");
+	}
+	if (listA.size() != listB.size()) {
+	    throw new IllegalArgumentException("The list should be the same size!");
+	}
+	return new Iterator<Pair<T, U>>() {
+
+	    Iterator<T> iteratorA;
+	    Iterator<U> iteratorB;
+
+	    {
+		iteratorA = listA.iterator();
+		iteratorB = listB.iterator();
+	    }
+
+	    @Override
+	    public boolean hasNext() {
+		return iteratorA.hasNext() && iteratorB.hasNext();
+	    }
+
+	    @Override
+	    public Pair<T, U> next() {
+		T a = iteratorA.next();
+		U b = iteratorB.next();
+		return new Pair<T, U>(a, b);
+	    }
+	};
+    }
+
+    /**
      * Break string text to words (treat tabs as spaces, ignore multiple spaces
      * and tabs in a row)
      * 
@@ -106,31 +249,43 @@ public class Utility {
      *             if line is null
      */
     public static List<String> breakToWords(String text) {
+	return breakToWords(text, "" + SPACE, "" + TAB);
+    }
+
+    /**
+     * Break string text to words by input separator sequences (for example,
+     * spaces and tabs)
+     * 
+     * @param text
+     *            the text to break
+     * @param separatorSequences
+     *            list of sequences the method will treat as separators between
+     *            words
+     * @return list of all words in the text separated by the separatorSequences
+     */
+    public static List<String> breakToWords(String text, String... separatorSequences) {
 	if (text == null) {
 	    throw new IllegalArgumentException("line can't be null");
 	}
+	if (separatorSequences == null) {
+	    throw new IllegalArgumentException("Seperator sequences can't be null");
+	}
+
 	List<String> words = new ArrayList<String>();
-	int spaceIndex = nextSpaceOrTab(text);
+	int[] nextSeparator = positionOf(text, separatorSequences);
+	int separatorIndex = nextSeparator[0];
+	int separatorLength = nextSeparator[1];
 
-	// First word
-	if (spaceIndex >= 1) {
-	    words.add(text.substring(0, spaceIndex));
-	}
-
-	// Middle words
-	while (spaceIndex >= 0) {
-	    int nextSpaceIndex = nextSpaceOrTab(text.substring(spaceIndex + 1));
-
-	    if (nextSpaceIndex > 0) {
-		String word = text.substring(spaceIndex + 1, spaceIndex + nextSpaceIndex + 1);
+	while (separatorIndex >= 0) {
+	    String word = text.substring(0, separatorIndex);
+	    if (!word.isEmpty())
 		words.add(word);
-	    }
-
-	    text = text.substring(spaceIndex + 1);
-	    spaceIndex = nextSpaceOrTab(text);
+	    text = text.substring(separatorIndex + separatorLength);
+	    nextSeparator = positionOf(text, separatorSequences);
+	    separatorIndex = nextSeparator[0];
+	    separatorLength = nextSeparator[1];
 	}
-
-	// End word
+	// Last word
 	if (!text.isEmpty()) {
 	    words.add(text);
 	}
@@ -178,6 +333,46 @@ public class Utility {
     }
 
     /**
+     * Generate a string message of 'expected' and 'actual' case
+     * 
+     * @param expected
+     *            the expected value
+     * @param actual
+     *            the actual value
+     * @return string message representing the expectation
+     */
+    public static String format(Object expected, Object actual) {
+	return "Expected <" + toString(expected) + "> actual <" + toString(actual) + ">";
+    }
+
+    /**
+     * Evaluate the string representation of an object
+     * 
+     * @param o
+     *            the object
+     * @return a string representing the object
+     */
+    public static String toString(Object o) {
+	String str = Arrays.deepToString(new Object[] { o });
+	str = str.substring(1);
+	str = str.substring(0, str.length() - 1);
+	return str;
+    }
+
+    /**
+     * Checks if two objects are equals
+     * 
+     * @param o1
+     *            first object
+     * @param o2
+     *            second object
+     * @return true if the two objects are equals
+     */
+    public static boolean equals(Object o1, Object o2) {
+	return Arrays.deepEquals(new Object[] { o1 }, new Object[] { o2 });
+    }
+
+    /**
      * Log 2 of a number
      * 
      * @param num
@@ -188,48 +383,79 @@ public class Utility {
 	return StrictMath.log(num) / StrictMath.log(2);
     }
 
-    public static <T> Iterator<Pair<T, T>> getDoubleIterator(final List<T> list) {
-	return new Iterator<Pair<T, T>>() {
-
-	    Iterator<T> iteratorToNextElement;
-
-	    Iterator<T> iteratorToCurrentElement;
-
-	    {
-		iteratorToCurrentElement = list.iterator();
-		iteratorToNextElement = list.iterator();
-		if (iteratorToNextElement.hasNext()) {
-		    iteratorToNextElement.next();
-		}
-	    }
-
-	    @Override
-	    public boolean hasNext() {
-		return iteratorToNextElement.hasNext();
-	    }
-
-	    @Override
-	    public Pair<T, T> next() {
-		T first = iteratorToCurrentElement.next();
-		T second = iteratorToNextElement.next();
-		return new Pair<T, T>(first, second);
-	    }
-	};
+    /**
+     * Return the first index of one of the sequences
+     * 
+     * @param text
+     *            the searched text
+     * @param sequences
+     *            list of searched sequences
+     * @return first index of one of the sequences in the text or -1 if non
+     *         found
+     */
+    public static int indexOf(String text, String... sequences) {
+	return positionOf(text, sequences)[0];
     }
 
     /**
-     * Get the index of the next space or tab
+     * Return the last index of one of the sequences
      * 
      * @param text
-     *            the text
-     * @return index of the first space or tab in the text, -1 if non found
+     *            the searched text
+     * @param sequences
+     *            list of searched sequences
+     * @return last index of one of the sequences in the text or -1 if non found
      */
-    private static int nextSpaceOrTab(String text) {
-	int space = text.indexOf(SPACE);
-	int tab = text.indexOf(TAB);
+    public static int lastIndexOf(String text, String... sequences) {
+	return lastPositionOf(text, sequences)[0];
+    }
 
-	int min = Math.min(space, tab);
-	return min != -1 ? min : Math.max(space, tab);
+    /**
+     * Return pair of index and length of the first sequence out of the input
+     * sequences
+     * 
+     * @param text
+     *            the searched text
+     * @param sequences
+     *            list of searched sequences
+     * @return pair of index and length of the found sequence or -1 in the index
+     *         field if non found
+     */
+    public static int[] positionOf(String text, String... sequences) {
+	int index = -1;
+	int length = -1;
+	for (String seq : sequences) {
+	    int seqIndex = text.indexOf(seq);
+	    if (seqIndex != -1 && (index == -1 || seqIndex < index)) {
+		index = seqIndex;
+		length = seq.length();
+	    }
+	}
+	return new int[] { index, length };
+    }
+
+    /**
+     * Return pair of index and length of the last sequence out of the input
+     * sequences
+     * 
+     * @param text
+     *            the searched text
+     * @param sequences
+     *            list of searched sequences
+     * @return pair of index and length of the found sequence or -1 in the index
+     *         field if non found
+     */
+    public static int[] lastPositionOf(String text, String... sequences) {
+	int index = -1;
+	int length = -1;
+	for (String seq : sequences) {
+	    int seqIndex = text.lastIndexOf(seq);
+	    if (seqIndex > index) {
+		index = seqIndex;
+		length = seq.length();
+	    }
+	}
+	return new int[] { index, length };
     }
 
 }

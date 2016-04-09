@@ -20,6 +20,13 @@ public class SimpleAlgorithm implements SuggestionsAlgorithm {
      */
     private static final int NUMBER_OF_SUGGESTIONS = 10;
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * breakingtherules.services.algorithm.SuggestionsAlgorithm#getSuggestions(
+     * java.util.List, java.lang.String)
+     */
     public List<Suggestion> getSuggestions(List<Hit> hits, String attType) {
 	// The answer list
 	List<Suggestion> allSuggestionsList = new ArrayList<Suggestion>();

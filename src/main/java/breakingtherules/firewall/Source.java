@@ -1,9 +1,11 @@
 package breakingtherules.firewall;
 
+import breakingtherules.utilities.CloneablePublic;
+
 /**
  * Source attribute, represent a source IP of a hit
  */
-public class Source extends IPAttribute {
+public class Source extends IPAttribute implements CloneablePublic {
 
     /**
      * Source attribute that represent 'Any' source (contains all others)
@@ -50,6 +52,16 @@ public class Source extends IPAttribute {
     @Override
     public boolean equals(Object o) {
 	return o instanceof Source && super.equals(o);
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see breakingtherules.firewall.IPAttribute#clone()
+     */
+    @Override
+    public Source clone() {
+	return new Source(getIp().clone());
     }
 
     /*

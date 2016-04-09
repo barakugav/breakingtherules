@@ -23,7 +23,7 @@ public class InformationAlgorithm implements SuggestionsAlgorithm {
 
     private static final double DEFAULT_RULE_WIEGHT = 5;
 
-    private static final double NEXT_LAYER_FACTOR = 0.7;
+    private static final double NEXT_LAYER_FACTOR = 0.75;
 
     static {
 	configCheck();
@@ -76,12 +76,15 @@ public class InformationAlgorithm implements SuggestionsAlgorithm {
     }
 
     private IP[] getIPSuggestions(List<IPNode> nodes) {
-	if (nodes == null)
+	if (nodes == null) {
 	    throw new IllegalArgumentException("Nodes list can't be null");
-	if (nodes.size() == 0)
+	}
+	if (nodes.size() == 0) {
 	    return new IP[0];
-	if (nodes.size() == 1)
+	}
+	if (nodes.size() == 1) {
 	    return new IP[] { nodes.get(0).ip };
+	}
 
 	// # currentLayer - the current IP layer the algorithm is working on
 	//
@@ -261,9 +264,6 @@ public class InformationAlgorithm implements SuggestionsAlgorithm {
 	if (hits == null) {
 	    throw new IllegalArgumentException("Hits list can't be null");
 	}
-	if (hits.isEmpty()) {
-	    return;
-	}
 
 	for (Hit hit : hits) {
 	    if (hit == null) {
@@ -313,10 +313,10 @@ public class InformationAlgorithm implements SuggestionsAlgorithm {
 	    return ip.toString() + " " + size + " " + compressSize + " nets=" + Arrays.toString(subnets);
 	}
 
+	@Override
 	public boolean equals(Object o) {
 	    if (o == this) {
-		// TODO why false?
-		return false;
+		return true;
 	    } else if (o == null) {
 		return false;
 	    } else if (!(o instanceof IPNode)) {
