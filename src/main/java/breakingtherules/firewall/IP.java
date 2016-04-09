@@ -404,13 +404,13 @@ public abstract class IP implements Comparable<IP>, CloneablePublic {
 	if (bitNumber < 0 || bitNumber > getMaxLength()) {
 	    throw new IllegalArgumentException("Bit number should be in range [0, " + getMaxLength() + "]");
 	}
-	int blockNum = bitNumber == 0 ? 0 : bitNumber / getBlockSize();
+	int blockNum = bitNumber == 0 ? 0 : (bitNumber-1) / getBlockSize();
 	int bitNumInBlock = bitNumber - blockNum * getBlockSize();
 	return (m_address[blockNum] & (1 << bitNumInBlock)) != 0;
     }
 
-    public boolean getLastBit() {
-	return getBit(getConstPrefixLength());
+    public boolean getLastBit() {	
+	return getBit(m_prefixLength);
     }
 
     /*

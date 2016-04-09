@@ -7,6 +7,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -21,7 +22,7 @@ import breakingtherules.firewall.Hit;
 import breakingtherules.firewall.IP;
 import breakingtherules.firewall.IPAttribute;
 import breakingtherules.utilities.Pair;
-import breakingtherules.utilities.TextBuilder;
+import breakingtherules.utilities.TextPrinter;
 import breakingtherules.utilities.Utility;
 
 /**
@@ -81,7 +82,7 @@ public class CSVScrambler implements Runnable {
 	}
 	reader.close();
 
-	m_input = lines.iterator();
+	setInput(lines.iterator());
     }
 
     /**
@@ -143,7 +144,9 @@ public class CSVScrambler implements Runnable {
 	    // Scramble by destination
 	    Node destinationTree = buildTree(hits, Attribute.DESTINATION_TYPE_ID);
 	    scrambleTree(destinationTree);
-	    hits = rebuildHits(sourceTree, Attribute.DESTINATION_TYPE_ID);
+	    hits = rebuildHits(destinationTree, Attribute.DESTINATION_TYPE_ID);
+
+	    Collections.shuffle(hits); // Because why not
 
 	    CSVParser.toCSV(m_columnsTypes, hits, m_outputFile);
 
@@ -226,45 +229,49 @@ public class CSVScrambler implements Runnable {
 	 */
 	public static void run(String args[]) {
 	    try {
-		TextBuilder builder = new TextBuilder();
+		TextPrinter printer = new TextPrinter();
+		CSVScrambler scrambler = null;
+		boolean success = true;
 
 		List<String> argsList = Arrays.asList(args);
 		if (args.length == 0) {
-		    builder.appendln("No arguments given. Use " + HELP_FLAG + " for help");
+		    printer.println("No arguments given. Use " + HELP_FLAG + " for help");
 		} else if (argsList.contains(HELP_FLAG) || argsList.contains(HELP_FLAG_SHORT)) {
-		    helpMessage(builder);
+		    helpMessage(printer);
 		} else {
-		    boolean success = true;
+
 		    Map<String, String> flags = new HashMap<String, String>();
 
 		    // Read flags
 		    if (success) {
-			success &= readFlags(args, flags, builder);
+			success &= readFlags(args, flags, printer);
 		    }
 
 		    // Check flags
 		    if (success) {
-			success &= checkFlags(flags, builder);
+			success &= checkFlags(flags, printer);
 		    }
 
 		    // Minimize flags
 		    if (success) {
-			Map<String, String> minimizedFlags = new HashMap<String, String>();
-			success &= minimizeFlags(flags, minimizedFlags, builder);
-			flags = minimizedFlags;
+			success &= minimizeFlags(flags, printer);
 		    }
 
-		    // Parse flags and run
+		    // Parse flags and prepare to run
 		    if (success) {
-			parseFlagsAndRun(flags);
+			scrambler = parseFlags(flags);
+			printer.println("Start scramblering...");
 		    }
 
 		    if (!success) {
-			builder.appendln("Use " + HELP_FLAG + " for help");
+			printer.println("Use " + HELP_FLAG + " for help");
 		    }
 		}
 
-		System.out.println(builder.getText());
+		if (success && scrambler != null) {
+		    scrambler.run();
+		}
+
 	    } catch (Exception e) {
 		e.printStackTrace();
 	    }
@@ -273,10 +280,10 @@ public class CSVScrambler implements Runnable {
 	/**
 	 * Append the builder with the help message
 	 * 
-	 * @param builder
-	 *            text builder used to build a message to the user
+	 * @param printer
+	 *            text printer used to print a message to the user
 	 */
-	private static void helpMessage(TextBuilder builder) {
+	private static void helpMessage(TextPrinter printer) {
 	    String title = "========= CSV Scrambler =========";
 
 	    String message = "The CSV Scrambler is a tool used to scramble IPs of hits from and to CSV files.";
@@ -294,8 +301,8 @@ public class CSVScrambler implements Runnable {
 	    String outputInfo = "output file for scrambler, optinal, input file will be overriden if not provided";
 	    String sourceInfo = "column number in the input file of source";
 	    String destinationInfo = "column number in the input file of destination";
-	    String serviceProtocol = "column number in the input file of service protocol code";
-	    String servicePort = "column number in the input file of service port";
+	    String serviceProtocolInfo = "column number in the input file of service protocol code";
+	    String servicePortInfo = "column number in the input file of service port";
 
 	    String example1 = "For example: " + INPUT_FLAG + " input.csv " + OUTPUT_FLAG + " output.csv " + SOURCE_FLAG
 		    + " 0 " + DESTINATION_FLAG + " 1 " + SERVICE_PROTOCOL_FLAG + " 2 " + SERVICE_PORT_FLAG + " 3";
@@ -303,33 +310,33 @@ public class CSVScrambler implements Runnable {
 		    + SOURCE_FLAG_SHORT + " 0 " + DESTINATION_FLAG_SHORT + " 1 " + SERVICE_PROTOCOL_FLAG_SHORT + " 2 "
 		    + SERVICE_PORT_FLAG_SHORT + " 3";
 
-	    builder.appendln();
-	    builder.appendln(title);
-	    builder.appendln();
-	    builder.appendln(message);
-	    builder.appendln();
-	    builder.appendln(flags);
-	    builder.appendln();
-	    builder.appendln(inputFlag);
-	    builder.appedIndentedln(inputInfo);
-	    builder.appendln();
-	    builder.appendln(outputFlag);
-	    builder.appedIndentedln(outputInfo);
-	    builder.appendln();
-	    builder.appendln(sourceFlag);
-	    builder.appedIndentedln(sourceInfo);
-	    builder.appendln();
-	    builder.appendln(destinationFlag);
-	    builder.appedIndentedln(destinationInfo);
-	    builder.appendln();
-	    builder.appendln(serviceProtocolFlag);
-	    builder.appedIndentedln(serviceProtocol);
-	    builder.appendln();
-	    builder.appendln(servicePortFlag);
-	    builder.appedIndentedln(servicePort);
-	    builder.appendln();
-	    builder.appendln(example1);
-	    builder.appendln(example2);
+	    printer.println();
+	    printer.println(title);
+	    printer.println();
+	    printer.println(message);
+	    printer.println();
+	    printer.println(flags);
+	    printer.println();
+	    printer.println(inputFlag);
+	    printer.printIndentedln(inputInfo);
+	    printer.println();
+	    printer.println(outputFlag);
+	    printer.printIndentedln(outputInfo);
+	    printer.println();
+	    printer.println(sourceFlag);
+	    printer.printIndentedln(sourceInfo);
+	    printer.println();
+	    printer.println(destinationFlag);
+	    printer.printIndentedln(destinationInfo);
+	    printer.println();
+	    printer.println(serviceProtocolFlag);
+	    printer.printIndentedln(serviceProtocolInfo);
+	    printer.println();
+	    printer.println(servicePortFlag);
+	    printer.printIndentedln(servicePortInfo);
+	    printer.println();
+	    printer.println(example1);
+	    printer.println(example2);
 	}
 
 	/**
@@ -339,27 +346,27 @@ public class CSVScrambler implements Runnable {
 	 *            runner arguments
 	 * @param flags
 	 *            map of the flags, filled by this method
-	 * @param builder
-	 *            text builder used to build a message to the user
+	 * @param printer
+	 *            text printer used to print a message to the user
 	 * @return true if no error detected
 	 */
-	private static boolean readFlags(String[] args, Map<String, String> flags, TextBuilder builder) {
+	private static boolean readFlags(String[] args, Map<String, String> flags, TextPrinter printer) {
 	    boolean success = true;
 	    String lastFlag = null;
 	    for (String arg : args) {
 		if (arg.startsWith("-")) {
 		    if (flags.containsKey(arg)) {
-			builder.appendln("More than one flags of type " + arg);
+			printer.println("More than one flags of type " + arg);
 			success = false;
 		    }
 		    if (lastFlag != null) {
-			builder.appendln("Expected for value flag " + lastFlag);
+			printer.println("Expected value for flag " + lastFlag);
 			success = false;
 		    }
 		    lastFlag = arg;
 		} else {
 		    if (lastFlag == null) {
-			builder.appendln("Expected flag before " + arg);
+			printer.println("Expected flag before " + arg);
 			success = false;
 		    } else {
 			flags.put(lastFlag, arg);
@@ -368,7 +375,7 @@ public class CSVScrambler implements Runnable {
 		}
 	    }
 	    if (lastFlag != null) {
-		builder.appendln("Expected value for flag " + lastFlag);
+		printer.println("Expected value for flag " + lastFlag);
 		success = false;
 	    }
 	    return success;
@@ -379,19 +386,19 @@ public class CSVScrambler implements Runnable {
 	 * 
 	 * @param flags
 	 *            the flags map
-	 * @param builder
-	 *            text builder used to build a message to the user
+	 * @param printer
+	 *            text printer used to print a message to the user
 	 * @return true if no error detected
 	 */
-	private static boolean checkFlags(Map<String, String> flags, TextBuilder builder) {
+	private static boolean checkFlags(Map<String, String> flags, TextPrinter printer) {
 	    boolean success = true;
 
 	    // Input flag
 	    if (!flags.containsKey(INPUT_FLAG) && !flags.containsKey(INPUT_FLAG_SHORT)) {
-		builder.appendln("Arguments doesn't contains input file");
+		printer.println("Arguments doesn't contains input file");
 		success = false;
 	    } else if (flags.containsKey(INPUT_FLAG) && flags.containsKey(INPUT_FLAG_SHORT)) {
-		builder.appendln("Arguments contains 2 input files");
+		printer.println("Arguments contains 2 input files");
 		success = false;
 	    }
 
@@ -399,27 +406,27 @@ public class CSVScrambler implements Runnable {
 	    if (!flags.containsKey(OUTPUT_FLAG) && !flags.containsKey(OUTPUT_FLAG_SHORT)) {
 		String message = "Arguments doesn't contains output file"
 			+ (success ? ", using the input file as output" : "");
-		builder.appendln(message);
+		printer.println(message);
 	    } else if (flags.containsKey(OUTPUT_FLAG) && flags.containsKey(OUTPUT_FLAG_SHORT)) {
-		builder.appendln("Arguments contains 2 output files");
+		printer.println("Arguments contains 2 output files");
 		success = false;
 	    }
 
 	    // Attributes columns flags
 	    if (flags.containsKey(SOURCE_FLAG) && flags.containsKey(SOURCE_FLAG_SHORT)) {
-		builder.appendln("Arguments contains 2 source flags");
+		printer.println("Arguments contains 2 source flags");
 		success = false;
 	    }
 	    if (flags.containsKey(DESTINATION_FLAG) && flags.containsKey(DESTINATION_FLAG_SHORT)) {
-		builder.appendln("Arguments contains 2 destination flags");
+		printer.println("Arguments contains 2 destination flags");
 		success = false;
 	    }
 	    if (flags.containsKey(SERVICE_PROTOCOL_FLAG) && flags.containsKey(SERVICE_PROTOCOL_FLAG_SHORT)) {
-		builder.appendln("Arguments contains 2 service ");
+		printer.println("Arguments contains 2 service ");
 		success = false;
 	    }
 	    if (flags.containsKey(SERVICE_PORT_FLAG) && flags.containsKey(SERVICE_PORT_FLAG_SHORT)) {
-		builder.appendln("Arguments contains 2 service port flags");
+		printer.println("Arguments contains 2 service port flags");
 		success = false;
 	    }
 
@@ -432,16 +439,14 @@ public class CSVScrambler implements Runnable {
 	 * 
 	 * @param flags
 	 *            current flags map
-	 * @param minimizedFlags
-	 *            minimized flags map, filled by this method
-	 * @param builder
-	 *            text builder used to build a message to the user
+	 * @param printer
+	 *            text printer used to print a message to the user
 	 * @return if no error detected
 	 */
-	private static boolean minimizeFlags(Map<String, String> flags, Map<String, String> minimizedFlags,
-		TextBuilder builder) {
+	private static boolean minimizeFlags(Map<String, String> flags, TextPrinter printer) {
 	    boolean success = true;
 
+	    Map<String, String> minimizedFlags = new HashMap<String, String>();
 	    for (String flag : flags.keySet()) {
 		switch (flag) {
 		case INPUT_FLAG:
@@ -469,23 +474,26 @@ public class CSVScrambler implements Runnable {
 		    minimizedFlags.put(SERVICE_PORT_FLAG, flags.get(flag));
 		    break;
 		default:
-		    builder.appendln("Unknown flag " + flag);
+		    printer.println("Unknown flag " + flag);
 		    success = false;
 		}
 	    }
+	    flags.clear();
+	    flags.putAll(minimizedFlags);
 
 	    return success;
 	}
 
 	/**
-	 * Parse the flags map and start the CSVScrambler
+	 * Parse the flags map and create the CSVScrambler
 	 * 
 	 * @param flags
 	 *            flags map
+	 * @return CSVScrambler configurated by the flags
 	 * @throws IOException
 	 *             if IO error occurs
 	 */
-	private static void parseFlagsAndRun(Map<String, String> flags) throws IOException {
+	private static CSVScrambler parseFlags(Map<String, String> flags) throws IOException {
 	    String input = flags.get(INPUT_FLAG);
 	    String output = flags.containsKey(OUTPUT_FLAG) ? flags.get(OUTPUT_FLAG) : input;
 	    String source = flags.get(SOURCE_FLAG);
@@ -511,6 +519,7 @@ public class CSVScrambler implements Runnable {
 	    scrambler.setInputFromFile(input);
 	    scrambler.setOutputFile(output);
 	    scrambler.setcolumnsTypes(columnsTypes);
+	    return scrambler;
 	}
 
     }
@@ -557,10 +566,15 @@ public class CSVScrambler implements Runnable {
 	    }
 
 	    // Last node
-	    Node beforeLast = currentLayer.get(currentLayer.size() - 2);
 	    Node last = currentLayer.get(currentLayer.size() - 1);
-	    if (!IP.isBrothers(beforeLast.ip, last.ip)) {
-		Node parent = buildNode(last, beforeLast);
+	    if (currentLayer.size() >= 2) {
+		Node beforeLast = currentLayer.get(currentLayer.size() - 2);
+		if (!IP.isBrothers(beforeLast.ip, last.ip)) {
+		    Node parent = buildNode(last, beforeLast);
+		    nextLayer.add(parent);
+		}
+	    } else {
+		Node parent = buildNode(last, null);
 		nextLayer.add(parent);
 	    }
 
@@ -588,11 +602,13 @@ public class CSVScrambler implements Runnable {
 	} else {
 	    parent.right = a;
 	}
-	if (IP.isBrothers(a.ip, b.ip)) {
-	    if (isFirstLeftChild) {
-		parent.right = b;
-	    } else {
-		parent.left = b;
+	if (b != null) {
+	    if (IP.isBrothers(a.ip, b.ip)) {
+		if (isFirstLeftChild) {
+		    parent.right = b;
+		} else {
+		    parent.left = b;
+		}
 	    }
 	}
 	return parent;
@@ -612,7 +628,7 @@ public class CSVScrambler implements Runnable {
 
 	for (Hit hit : hits) {
 	    Leaf lastNode = nodes.size() == 0 ? null : (Leaf) nodes.get(nodes.size() - 1);
-	    if (lastNode != null && lastNode.ip.equals(fromHit(hit, ipAttId))) {
+	    if (lastNode != null && lastNode.ip.equals(fromHit(hit, ipAttId).getIp())) {
 		lastNode.hits.add(hit);
 	    } else {
 		Leaf node = new Leaf();
@@ -859,6 +875,11 @@ public class CSVScrambler implements Runnable {
 	 */
 	Node right;
 
+	@Override
+	public String toString() {
+	    return ip.toString();
+	}
+
     }
 
     /**
@@ -879,6 +900,11 @@ public class CSVScrambler implements Runnable {
 	 * List of hits matching this leaf's IP
 	 */
 	List<Hit> hits;
+
+	@Override
+	public String toString() {
+	    return super.toString() + " " + hits.toString();
+	}
 
     }
 

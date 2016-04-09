@@ -16,17 +16,20 @@ public class TextBuilder {
     /**
      * Max line size
      */
-    private int m_maxLine;
+    private final int m_maxLine;
 
     /**
      * Indent size
      */
-    private int m_indentSize;
+    private final int m_indentSize;
 
     /**
      * Array of sequences treated by this builder as words separators
      */
-    private String[] m_separatorSequences;
+    private final String[] m_separatorSequences;
+
+    private static final String SPACE = " ";
+    private static final String LINE_SEPARATOR = System.lineSeparator();
 
     /**
      * Default max line
@@ -38,17 +41,24 @@ public class TextBuilder {
      */
     private static final int DEFAULT_TAB_SIZE = 4;
 
-    private static final String SPACE = " ";
-    private static final String LINE_SEPARATOR = System.lineSeparator();
+    private static final String[] DEFAULT_SEPARATORS_SEQUENCES = new String[] { SPACE };
 
     /**
      * Constructor
      */
     public TextBuilder() {
+	this(DEFAULT_MAX_LINE, DEFAULT_TAB_SIZE, DEFAULT_SEPARATORS_SEQUENCES);
+    }
+
+    public TextBuilder(int max) {
+	this(max, DEFAULT_TAB_SIZE, DEFAULT_SEPARATORS_SEQUENCES);
+    }
+
+    public TextBuilder(int max, int indentSize, String[] separators) {
 	m_builder = new StringBuilder();
-	m_maxLine = DEFAULT_MAX_LINE;
-	m_indentSize = DEFAULT_TAB_SIZE;
-	m_separatorSequences = new String[] { SPACE };
+	m_maxLine = max;
+	m_indentSize = indentSize;
+	m_separatorSequences = separators;
     }
 
     /**
@@ -130,32 +140,6 @@ public class TextBuilder {
      */
     public String getText() {
 	return m_builder.toString();
-    }
-
-    /**
-     * Set the max line size of this builder. This method intended to be used
-     * when creating the builder and not during the build of the text
-     * 
-     * @param max
-     *            new max size
-     */
-    public void setMaxLine(int max) {
-	if (max <= 0) {
-	    throw new IllegalArgumentException("max line should be positive " + max);
-	}
-	m_maxLine = max;
-    }
-
-    /**
-     * Set the separator sequences this builder will use to different between
-     * words. This method intended to be used when creating the builder and not
-     * during the build of the text
-     * 
-     * @param separators
-     *            list of separators
-     */
-    public void setSeparators(List<String> separators) {
-	m_separatorSequences = ArraysUtilities.toArray(separators);
     }
 
     /**

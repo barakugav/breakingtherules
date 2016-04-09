@@ -1,4 +1,4 @@
-package breakingtherules.tests.utilities;
+package breakingtherules.tests;
 
 import org.junit.Assert;
 

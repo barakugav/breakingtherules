@@ -70,7 +70,7 @@ public class Hit extends AttributesContainer implements CloneablePublic {
      */
     @Override
     public String toString() {
-	return "ID = " + m_id + ", " + super.toString();
+	return "{ID = " + m_id + ", " + super.toString() + "}";
     }
 
     /*

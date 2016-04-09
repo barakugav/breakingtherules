@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Objects;
 
 import breakingtherules.utilities.CloneablePublic;
+import breakingtherules.utilities.Utility;
 
 /**
  * The AttributesContainer class is a container of attributes
@@ -106,11 +107,7 @@ public abstract class AttributesContainer implements CloneablePublic {
      * @see java.lang.Object#toString()
      */
     public String toString() {
-	String str = "";
-	for (Attribute att : m_attributes) {
-	    str += att + ", ";
-	}
-	return str;
+	return Utility.toString(m_attributes);
     }
 
     /*

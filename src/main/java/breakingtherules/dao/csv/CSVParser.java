@@ -194,8 +194,8 @@ public class CSVParser {
 	    throw new IllegalArgumentException("Repo path can't be null");
 	}
 	File outputFile = new File(outputPath);
-	if (!outputFile.canWrite()) {
-	    throw new IOException("File can't be written");
+	if (outputFile.exists() && !outputFile.canWrite()) {
+	    throw new IOException("File already exist and can't be over written");
 	}
 
 	BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile));

@@ -1,4 +1,4 @@
-package breakingtherules.tests.algorithm;
+package breakingtherules.tests.services.algorithm;
 
 import static org.junit.Assert.fail;
 

@@ -1,6 +1,6 @@
 package breakingtherules.tests.utilities;
 
-import static breakingtherules.tests.utilities.JUnitUtilities.advanceAssertEquals;
+import static breakingtherules.tests.JUnitUtilities.advanceAssertEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;

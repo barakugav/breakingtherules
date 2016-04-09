@@ -13,8 +13,7 @@ public class TextBuilderTest {
     @Test
     public void appendTestNoWrap() {
 	System.out.println("# TextBuilderTest appendTestNoWrap");
-	TextBuilder builder = new TextBuilder();
-	builder.setMaxLine(20);
+	TextBuilder builder = new TextBuilder(20);
 	String expected = "Hello world!";
 
 	builder.append(expected);
@@ -25,8 +24,7 @@ public class TextBuilderTest {
     @Test
     public void appendTestWithWrap() {
 	System.out.println("# TextBuilderTest appendTestWithWrap");
-	TextBuilder builder = new TextBuilder();
-	builder.setMaxLine(20);
+	TextBuilder builder = new TextBuilder(20);
 	String expectedFirstRow = "Hello big world,";
 	String expectedSecondRow = "what is up?";
 	String expected = expectedFirstRow + System.lineSeparator() + expectedSecondRow;
@@ -40,15 +38,13 @@ public class TextBuilderTest {
     @Test(expected = IllegalArgumentException.class)
     public void setMaxLineTestNegative() {
 	System.out.println("# TextBuilderTest setMaxLineTestNegative");
-	TextBuilder builder = new TextBuilder();
-	builder.setMaxLine(-1);
+	new TextBuilder(-1);
     }
 
     @Test
     public void toStringTest() {
 	System.out.println("# TextBuilderTest toStringTest");
-	TextBuilder builder = new TextBuilder();
-	builder.setMaxLine(20);
+	TextBuilder builder = new TextBuilder(20);
 
 	builder.appendln(LoremIpsum);
 	String expected = builder.getText();
