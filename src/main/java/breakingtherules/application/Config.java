@@ -12,6 +12,7 @@ import breakingtherules.dao.es.HitsElasticDao;
 import breakingtherules.dao.postgresql.HitsPostgresDao;
 import breakingtherules.dao.xml.HitsXmlDao;
 import breakingtherules.services.algorithm.InformationAlgorithm;
+import breakingtherules.services.algorithm.SimpleAlgorithm;
 import breakingtherules.services.algorithm.SuggestionsAlgorithm;
 
 @Configuration
@@ -19,7 +20,7 @@ import breakingtherules.services.algorithm.SuggestionsAlgorithm;
 public class Config {
 
     @Bean
-    public DataSource dataSource() {
+    public DataSource jdbcDataSource() {
 	DriverManagerDataSource ds = new DriverManagerDataSource();
 	ds.setDriverClassName("org.postgresql.Driver");
 	ds.setUrl("jdbc:posgresql://localhost:3306/TEST");
@@ -31,16 +32,16 @@ public class Config {
     // @Bean
     public HitsDao hitsPostgresDao() {
 	HitsPostgresDao dao = new HitsPostgresDao();
-	dao.setDataSource(dataSource());
+	dao.setDataSource(jdbcDataSource());
 	return dao;
     }
 
-    // @Bean
+    @Bean
     public HitsDao hitsXmlDao() {
 	return new HitsXmlDao();
     }
 
-    @Bean(destroyMethod = "cleanup")
+    // @Bean(destroyMethod = "cleanup")
     public HitsDao hitsElasticDao() {
 	return new HitsElasticDao();
     }
@@ -48,6 +49,11 @@ public class Config {
     @Bean
     public SuggestionsAlgorithm infoAlgorithm() {
 	return new InformationAlgorithm();
+    }
+
+    // @Bean
+    public SuggestionsAlgorithm simpleAlgorithm() {
+	return new SimpleAlgorithm();
     }
 
 }

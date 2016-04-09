@@ -1,7 +1,10 @@
 package breakingtherules.firewall;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import breakingtherules.dao.HitsDao;
 import breakingtherules.utilities.CloneablePublic;
@@ -43,6 +46,17 @@ public class Filter extends AttributesContainer implements CloneablePublic {
 	    }
 	}
 	return true;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see breakingtherules.firewall.AttributesContainer#getAttributes()
+     */
+    @Override
+    @JsonProperty("attributes")
+    public List<Attribute> getAttributes() {
+	return Arrays.asList(m_attributes);
     }
 
     /*

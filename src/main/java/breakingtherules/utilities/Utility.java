@@ -366,7 +366,7 @@ public class Utility {
      *            first object
      * @param o2
      *            second object
-     * @return true if the two objects are equals
+     * @return true if the two objects are equal
      */
     public static boolean equals(Object o1, Object o2) {
 	return Arrays.deepEquals(new Object[] { o1 }, new Object[] { o2 });

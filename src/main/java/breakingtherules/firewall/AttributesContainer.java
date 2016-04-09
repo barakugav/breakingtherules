@@ -15,7 +15,7 @@ public abstract class AttributesContainer implements CloneablePublic {
     /**
      * The attributes this container contains
      */
-    private final Attribute[] m_attributes;
+    protected final Attribute[] m_attributes;
 
     /**
      * Constructor
@@ -58,7 +58,7 @@ public abstract class AttributesContainer implements CloneablePublic {
      * @return the wanted attribute
      */
     public Attribute getAttribute(int typeId) {
-	return (0 <= typeId || typeId < m_attributes.length) ? m_attributes[typeId] : null;
+	return (0 <= typeId && typeId < m_attributes.length) ? m_attributes[typeId] : null;
     }
 
     /*

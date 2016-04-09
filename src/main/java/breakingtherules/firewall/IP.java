@@ -409,7 +409,9 @@ public abstract class IP implements Comparable<IP>, CloneablePublic {
 	return (m_address[blockNum] & (1 << bitNumInBlock)) != 0;
     }
 
-    public boolean getLastBit() {	
+    @JsonIgnore
+    public boolean getLastBit() {
+	// TODO what if this is the Any IP ?? This method is not defined...
 	return getBit(m_prefixLength);
     }
 
