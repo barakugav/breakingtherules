@@ -207,7 +207,16 @@ public class HitsElasticDao implements HitsDao {
 	return new Hit(hitId, attrs);
 
     }
-
+    
+    @Override
+    public int getHitsNumber(int jobId, List<Rule> rules, Filter filter) throws IOException {
+	Integer number = m_totalHitsCache.get(new Triple<>(jobId, rules, filter));
+	if (number != null)
+	    return number;
+	else
+	    return getHits(jobId, rules, filter).getSize();
+    }
+    
     @Override
     public ListDto<Hit> getHits(int jobId, List<Rule> rules, Filter filter) throws IOException {
 	List<Hit> hits = getHits(jobId, rules, filter, true, 0, 0);
@@ -275,7 +284,6 @@ public class HitsElasticDao implements HitsDao {
 
 	// Scroll until no hits are returned or endIndex has been reached
 	while (true) {
-	    System.out.println(scrollResp.getHits().getTotalHits());
 	    // Go over search results
 	    for (SearchHit srchHit : scrollResp.getHits().getHits()) {
 		// Add the hit to the answer list, if it passes rules and

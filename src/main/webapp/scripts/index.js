@@ -20,10 +20,10 @@ var settings = {
 	
 	var app = angular.module('BreakingTheRules', ['btrData']);
 
-	// Set job before ng-app begins
-	app.factory('SetJob', ['$http', function ($http) {
-		var job_id = parseInt(window.prompt(settings.guiStrings.JOB_PROMPT, 1));
-		return $http.put('/job?job_id=' + job_id);
+	// Set job before ng-app begins. Happens only once.
+	app.factory('SetJob', ['BtrData', function (BtrData) {
+		var jobId = parseInt(window.prompt(settings.guiStrings.JOB_PROMPT, 1));
+		return BtrData.setJob(jobId);
 	}]);
 
 	app.controller('GlobalController', ['$scope', 'BtrData', function($scope, BtrData) {
@@ -176,7 +176,6 @@ var settings = {
 
 		sugCtrl.refresh = function () {
 			BtrData.getSuggestions().success(function (data) {
-				console.dir(data);
 				sugCtrl.allSuggestions = settings.attributes.map(function (attrName) {
 					for (var i = 0; i < data.length; i++) {
 						if (data[i].type == attrName)

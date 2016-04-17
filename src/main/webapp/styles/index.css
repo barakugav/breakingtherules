@@ -59,6 +59,11 @@ h2 {
 
 /* Suggestions table
 *************************************************/
+.LoadingImage {
+  width: 200px;
+  display: block;
+  margin: 0 auto; }
+
 .SuggestionTable li {
   display: block;
   list-style: none;

@@ -4,6 +4,10 @@
 
 	app.factory('BtrData', ['$http', function ($http) {
 
+		function setJob(jobId) {
+			return $http.put('/job?job_id=' + jobId);
+		}
+
 		function getRules() {
 			return $http.get('/rule');
 		}
@@ -43,6 +47,7 @@
 		}
 
 		return {
+			setJob: setJob,
 			getRules: getRules,
 			postRule: postRule,
 			putNewFilter: putNewFilter,

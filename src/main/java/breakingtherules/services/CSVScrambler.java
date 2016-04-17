@@ -478,7 +478,7 @@ public class CSVScrambler implements Runnable {
 		Utility.put(columnsTypes, Integer.parseInt(source), CSVParser.SOURCE);
 	    }
 	    if (destination != null) {
-		Utility.put(columnsTypes, Integer.parseInt(destination), CSVParser.DESCRIPTION);
+		Utility.put(columnsTypes, Integer.parseInt(destination), CSVParser.DESTINATION);
 	    }
 	    if (serviceProtocol != null) {
 		Utility.put(columnsTypes, Integer.parseInt(serviceProtocol), CSVParser.SERVICE_PROTOCOL);
@@ -528,7 +528,7 @@ public class CSVScrambler implements Runnable {
 		Files.copy(tempFilePath, outputPath, StandardCopyOption.REPLACE_EXISTING);
 		inputFile = outputFile;
 	    }
-	    if (columnsTypes.contains(CSVParser.DESCRIPTION)) {
+	    if (columnsTypes.contains(CSVParser.DESTINATION)) {
 		Node tree = buildTree(inputFile, columnsTypes, Attribute.DESTINATION_TYPE_ID);
 		scrambleTree(tree);
 		updateHits(inputFile, tempFilePath.toString(), columnsTypes, Attribute.DESTINATION_TYPE_ID, tree);

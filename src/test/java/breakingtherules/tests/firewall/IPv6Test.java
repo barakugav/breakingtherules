@@ -178,7 +178,7 @@ public class IPv6Test {
     @Test
     public void getChildrenTest() {
 	System.out.println("# IPv6Test getChildrenTest");
-	IPv6 ip = new IPv6(FirewallTestsUtility.getRandomAddressIPv6(), rand.nextInt(28) + 101);
+	IPv6 ip = new IPv6(FirewallTestsUtility.getRandomAddressIPv6(), rand.nextInt(28) + 100);
 	assertEquals(ip.hasChildren(), ip.getChildren()[0] != null);
 	assertEquals(ip.hasChildren(), ip.getChildren()[1] != null);
     }

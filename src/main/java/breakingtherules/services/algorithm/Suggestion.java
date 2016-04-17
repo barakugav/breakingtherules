@@ -21,7 +21,7 @@ public class Suggestion implements Comparable<Suggestion> {
     private int m_size;
 
     /**
-     * Score of this suggestion
+     * Score of this suggestion, given by the suggestion algorithm
      */
     private double m_score;
 
@@ -35,6 +35,22 @@ public class Suggestion implements Comparable<Suggestion> {
 	m_attribute = att;
 	m_size = 0;
 	m_score = 0;
+    }
+
+    /**
+     * Constructor
+     * 
+     * @param att
+     *            The attribute of this suggestion
+     * @param size
+     *            Size of this suggestion - the number of hits that match it
+     * @param score
+     *            Score of this suggestion, given by the suggestion algorithm
+     */
+    public Suggestion(Attribute att, int size, double score) {
+	m_attribute = att;
+	m_size = size;
+	m_score = score;
     }
 
     /**

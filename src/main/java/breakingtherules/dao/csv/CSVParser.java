@@ -34,7 +34,7 @@ public class CSVParser {
      * IDs for attributes used by this parser
      */
     public static final int SOURCE = 0;
-    public static final int DESCRIPTION = 1;
+    public static final int DESTINATION = 1;
     public static final int SERVICE_PROTOCOL = 2;
     public static final int SERVICE_PORT = 3;
 
@@ -46,7 +46,7 @@ public class CSVParser {
     static {
 	List<Integer> list = new ArrayList<>();
 	list.add(SOURCE);
-	list.add(DESCRIPTION);
+	list.add(DESTINATION);
 	list.add(SERVICE_PORT);
 	list.add(SERVICE_PROTOCOL);
 	DEFAULT_COLUMNS_TYPES = Collections.unmodifiableList(list);
@@ -65,8 +65,8 @@ public class CSVParser {
 	    String source = words.get(columnsTypes.indexOf(SOURCE));
 	    attributes.add(fromCSVSource(source));
 	}
-	if (columnsTypes.contains(DESCRIPTION)) {
-	    String destination = words.get(columnsTypes.indexOf(DESCRIPTION));
+	if (columnsTypes.contains(DESTINATION)) {
+	    String destination = words.get(columnsTypes.indexOf(DESTINATION));
 	    attributes.add(fromCSVDestination(destination));
 	}
 	if (columnsTypes.contains(SERVICE_PROTOCOL) && columnsTypes.contains(SERVICE_PORT)) {
@@ -87,7 +87,7 @@ public class CSVParser {
 		Source source = (Source) hit.getAttribute(Attribute.SOURCE_TYPE_ID);
 		colomnValue = toCSVSource(source);
 		break;
-	    case DESCRIPTION:
+	    case DESTINATION:
 		Destination destination = (Destination) hit.getAttribute(Attribute.DESTINATION_TYPE_ID);
 		colomnValue = toCSVDestination(destination);
 		break;
@@ -255,7 +255,7 @@ public class CSVParser {
 		if (columnsTypes.contains(SOURCE) && hit.getAttribute(Attribute.SOURCE_TYPE_ID) == null) {
 		    throw new IllegalArgumentException("Source attribute is missing in one of the hits");
 		}
-		if (columnsTypes.contains(DESCRIPTION) && hit.getAttribute(Attribute.DESTINATION_TYPE_ID) == null) {
+		if (columnsTypes.contains(DESTINATION) && hit.getAttribute(Attribute.DESTINATION_TYPE_ID) == null) {
 		    throw new IllegalArgumentException("Destination attribute is missing in one of the hits");
 		}
 		if (columnsTypes.contains(SOURCE) && hit.getAttribute(Attribute.SOURCE_TYPE_ID) == null) {

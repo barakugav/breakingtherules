@@ -15,15 +15,55 @@ import breakingtherules.firewall.Source;
 import breakingtherules.utilities.Pair;
 import breakingtherules.utilities.Utility;
 
+/**
+ * Algorithm to get suggestions for rules. Based in information theory.
+ * 
+ * This algorithm is intended only for IP type attributes - i.e. Source and
+ * Destination. This means that for other attributes, this algorithm backs up to
+ * a different algorithm, i.e. SimpleAlgorithm.
+ * 
+ * This algorithm uses dynamic programming. It is based on a recursive rule to
+ * decide if a certain node in the IP tree is worth separating, or if it is best
+ * united (suggested on its own). The recursive rule also gives the node a
+ * certain score, and the lower the score - the better the node, because we were
+ * able to express the same amount of information with less bits (information
+ * theory).
+ * 
+ * The recursive rule is: f(x) = min { |x| ( log( Sx ) - log ( P(x) ) )
+ * f(x.right) + f(x.left) + K } Where: |x| is the number of hits under subnet x
+ * Sx is the size of the subnet x (which is a power of 2) P(x) is the
+ * probability of the subnet x, i.e. the percentage of hits that are in it out
+ * of all hits K is a constant that allows the user to choose the permissiveness
+ * of the rules they would like.
+ */
 public class InformationAlgorithm implements SuggestionsAlgorithm {
 
+    /**
+     * Number of suggestions that returned in each suggestions request
+     */
+    private static final int NUMBER_OF_SUGGESTIONS = 10;
+
+    /**
+     * Default value for the ruleWeight parameter
+     */
+    private static final double DEFAULT_RULE_WIEGHT = 3000;
+
+    /**
+     * An estimation to the percentage of nodes in the next layer (out of the
+     * current layer length)
+     */
+    private static final double NEXT_LAYER_FACTOR = 0.75;
+
+    /**
+     * Allows configuration, if the user wants more general rules (high
+     * ruleWeight) or more specific rules (low ruleWeight)
+     */
     private double m_ruleWeight;
 
+    /**
+     * Used when the attribute type if not Source or Destination
+     */
     private SimpleAlgorithm m_simpleAlgorithm;
-
-    private static final double DEFAULT_RULE_WIEGHT = 5;
-
-    private static final double NEXT_LAYER_FACTOR = 0.75;
 
     static {
 	configCheck();
@@ -35,6 +75,7 @@ public class InformationAlgorithm implements SuggestionsAlgorithm {
     }
 
     public void setRuleWeight(double weight) {
+	System.out.println("New rule weight");
 	m_ruleWeight = weight;
     }
 
@@ -55,35 +96,44 @@ public class InformationAlgorithm implements SuggestionsAlgorithm {
 	}
     }
 
+    private static final Comparator<Suggestion> SUGGESTION_COMPARATOR_REV = new Comparator<Suggestion>() {
+	@Override
+	public int compare(Suggestion arg0, Suggestion arg1) {
+	    return Integer.compare(arg1.getSize(), arg0.getSize());
+	}
+    };
+
     private List<Suggestion> getSuggestionsDestination(List<Hit> hits) {
 	List<IPNode> nodes = asIPNodeList(hits, Attribute.DESTINATION_TYPE_ID);
-	IP[] subnets = getIPSuggestions(nodes);
+	IPNode[] subnets = getIPSuggestions(nodes);
 	List<Suggestion> suggestions = new ArrayList<Suggestion>();
-	for (IP subnet : subnets) {
-	    suggestions.add(new Suggestion(new Destination(subnet)));
+	for (IPNode subnet : subnets) {
+	    suggestions.add(new Suggestion(new Destination(subnet.ip), subnet.size, 1 / subnet.compressSize));
 	}
-	return suggestions;
+	suggestions.sort(SUGGESTION_COMPARATOR_REV);
+	return Utility.subList(suggestions, 0, NUMBER_OF_SUGGESTIONS);
     }
 
     private List<Suggestion> getSuggestionsSource(List<Hit> hits) {
 	List<IPNode> nodes = asIPNodeList(hits, Attribute.SOURCE_TYPE_ID);
-	IP[] subnets = getIPSuggestions(nodes);
+	IPNode[] subnets = getIPSuggestions(nodes);
 	List<Suggestion> suggestions = new ArrayList<Suggestion>();
-	for (IP subnet : subnets) {
-	    suggestions.add(new Suggestion(new Source(subnet)));
+	for (IPNode subnet : subnets) {
+	    suggestions.add(new Suggestion(new Source(subnet.ip), subnet.size, 1 / subnet.compressSize));
 	}
-	return suggestions;
+	suggestions.sort(SUGGESTION_COMPARATOR_REV);
+	return Utility.subList(suggestions, 0, NUMBER_OF_SUGGESTIONS);
     }
 
-    private IP[] getIPSuggestions(List<IPNode> nodes) {
+    private IPNode[] getIPSuggestions(List<IPNode> nodes) {
 	if (nodes == null) {
 	    throw new IllegalArgumentException("Nodes list can't be null");
 	}
 	if (nodes.size() == 0) {
-	    return new IP[0];
+	    return new IPNode[0];
 	}
 	if (nodes.size() == 1) {
-	    return new IP[] { nodes.get(0).ip };
+	    return new IPNode[] { nodes.get(0) };
 	}
 
 	// # currentLayer - the current IP layer the algorithm is working on
@@ -181,15 +231,16 @@ public class InformationAlgorithm implements SuggestionsAlgorithm {
 			parent.compressSize = union;
 
 			// subnetwork is the parent subnetwork
-			parent.subnets = new IP[] { ipParentA };
+			parent.bestSubnets = new IPNode[] { parent };
 		    } else {
 			// using separated small subnetworks
 			parent.compressSize = separated;
 
 			// union the two subnetworks from both child nodes
-			parent.subnets = new IP[nodeA.subnets.length + nodeB.subnets.length];
-			System.arraycopy(nodeA.subnets, 0, parent.subnets, 0, nodeA.subnets.length);
-			System.arraycopy(nodeB.subnets, 0, parent.subnets, nodeA.subnets.length, nodeB.subnets.length);
+			parent.bestSubnets = new IPNode[nodeA.bestSubnets.length + nodeB.bestSubnets.length];
+			System.arraycopy(nodeA.bestSubnets, 0, parent.bestSubnets, 0, nodeA.bestSubnets.length);
+			System.arraycopy(nodeB.bestSubnets, 0, parent.bestSubnets, nodeA.bestSubnets.length,
+				nodeB.bestSubnets.length);
 		    }
 
 		    // Used the current node and next node, increase index by 2
@@ -201,7 +252,7 @@ public class InformationAlgorithm implements SuggestionsAlgorithm {
 		    // Copy all value from current node to parent node
 		    parent.size = nodeA.size;
 		    parent.compressSize = nodeA.compressSize;
-		    parent.subnets = nodeA.subnets;
+		    parent.bestSubnets = nodeA.bestSubnets;
 		}
 
 		// Add the finished parent node to next layer list
@@ -218,7 +269,7 @@ public class InformationAlgorithm implements SuggestionsAlgorithm {
 		parent.ip = nodeB.ip.getParent();
 		parent.size = nodeB.size;
 		parent.compressSize = nodeB.compressSize;
-		parent.subnets = nodeB.subnets;
+		parent.bestSubnets = nodeB.bestSubnets;
 		nextLayer.add(parent);
 	    }
 
@@ -228,7 +279,7 @@ public class InformationAlgorithm implements SuggestionsAlgorithm {
 
 	// list size is 1, the only element is the parent node of all others
 	IPNode root = currentLayer.get(0);
-	return root.subnets;
+	return root.bestSubnets;
     }
 
     private List<IPNode> asIPNodeList(List<Hit> list, int attTypeId) {
@@ -240,7 +291,7 @@ public class InformationAlgorithm implements SuggestionsAlgorithm {
 	    IPNode ipNode = new IPNode();
 	    ipNode.compressSize = m_ruleWeight;
 	    ipNode.ip = ((IPAttribute) hit.getAttribute(attTypeId)).getIp();
-	    ipNode.subnets = new IP[] { ipNode.ip };
+	    ipNode.bestSubnets = new IPNode[] { ipNode };
 	    ipNode.size = 1;
 	    allNodes.add(ipNode);
 	}
@@ -306,11 +357,16 @@ public class InformationAlgorithm implements SuggestionsAlgorithm {
 
 	double compressSize;
 
-	IP[] subnets;
+	IPNode[] bestSubnets;
 
 	@Override
 	public String toString() {
-	    return ip.toString() + " " + size + " " + compressSize + " nets=" + Arrays.toString(subnets);
+	    String ans = "";
+	    ans += ip.toString() + " " + size + " " + compressSize + " nets=" + Arrays.toString(bestSubnets);
+	    for (IPNode subnet : bestSubnets) {
+		ans += subnet.ip + ", ";
+	    }
+	    return ans;
 	}
 
 	@Override

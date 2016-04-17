@@ -35,6 +35,14 @@
 			</tr>
 		</table>
 
+		<!-- Statistics about the state of the job -->
+		<h2>Statistics</h2>
+		<ul>
+			<li>0% of hits have been covered by new rules.</li>
+			<li>100% of hits, still hit the original rule.</li>
+		</ul>
+
+
 		<!-- The hits under the current filter -->
 		<div ng-controller="HitsTableController as hitsCtrl">
 			<h2>
@@ -77,27 +85,35 @@
 
 		<!-- Suggestions for future rules -->
 		<h2>Suggestions</h2>
-		<table ng-controller="SuggestionController as sugCtrl" class="table SuggestionTable">
-				<tr>
-					<th ng-repeat="attSuggestion in sugCtrl.allSuggestions">
-						{{ attSuggestion.type }}
-					</th>
-				</tr>
-				<tr>
-					<td ng-repeat="attSuggestions in sugCtrl.allSuggestions">
-						<ul>
-							<li ng-repeat="sug in attSuggestions.suggestions"
-								ng-click="sugCtrl.addToFilter(sug)">
-								{{ sug.attribute.str }} <span>({{ sug.score * 100| number :1 }}%)</span>
-							</li>
-						</ul>
-					</td>
-				</tr>	
-			</tbody>
-		</table>
+		<div ng-controller="SuggestionController as sugCtrl">
+			<img src="./img/spinner.gif" 
+				alt="Loading..." 
+				ng-if="!sugCtrl.allSuggestions" 
+				class="LoadingImage"/>
+			<table class="table SuggestionTable">
+				<tbody>
+					<tr>
+						<th ng-repeat="attSuggestion in sugCtrl.allSuggestions">
+							{{ attSuggestion.type }}
+						</th>
+					</tr>
+					<tr>
+						<td ng-repeat="attSuggestions in sugCtrl.allSuggestions">
+							<ul>
+								<li ng-repeat="sug in attSuggestions.suggestions"
+									ng-click="sugCtrl.addToFilter(sug)">
+									<!-- {{ sug.attribute.str }} <span>({{ sug.score * 100| number :1 }}%)</span> -->
+									{{ sug.attribute.str }} <span>({{ sug.size }} hits)</span>
+								</li>
+							</ul>
+						</td>
+					</tr>	
+				</tbody>
+			</table>
+		</div>
+
 
 	</div>
-
 
 	<script src="./scripts/ext/jquery.min.js"></script>
 	<script src="./scripts/ext/angular.min.js"></script>

@@ -28,6 +28,11 @@ public class HitsPostgresDao implements HitsDao {
     }
 
     @Override
+    public int getHitsNumber(int jobId, List<Rule> rules, Filter filter) throws IOException {
+	return 0;
+    }
+
+    @Override
     public ListDto<Hit> getHits(int jobId, List<Rule> rules, Filter filter) throws IOException {
 	return new ListDto<Hit>(new ArrayList<Hit>(), 0, 10, 235);
     }
