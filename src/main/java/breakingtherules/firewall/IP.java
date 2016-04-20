@@ -396,7 +396,7 @@ public abstract class IP implements Comparable<IP>, Cloneable {
 	}
 	int blockNum = bitNumber == 0 ? 0 : (bitNumber - 1) / getBlockSize();
 	int bitNumInBlock = bitNumber - blockNum * getBlockSize();
-	return (m_address[blockNum] & (1 << bitNumInBlock)) != 0;
+	return (m_address[blockNum] & (1 << (getBlockSize() - bitNumInBlock))) != 0;
     }
 
     /**
@@ -406,7 +406,6 @@ public abstract class IP implements Comparable<IP>, Cloneable {
      */
     @JsonIgnore
     public boolean getLastBit() {
-	// TODO what if this is the Any IP ?? This method is not defined...
 	return getBit(m_prefixLength);
     }
 

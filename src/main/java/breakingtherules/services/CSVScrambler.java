@@ -1,28 +1,28 @@
 package breakingtherules.services;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.Writer;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Random;
 
 import breakingtherules.dao.csv.CSVParser;
-import breakingtherules.dao.xml.HitsXmlDao;
 import breakingtherules.firewall.Attribute;
 import breakingtherules.firewall.Hit;
 import breakingtherules.firewall.IP;
 import breakingtherules.firewall.IPAttribute;
-import breakingtherules.utilities.Pair;
+import breakingtherules.utilities.LinesIterator;
 import breakingtherules.utilities.TextPrinter;
 import breakingtherules.utilities.Utility;
 
@@ -35,7 +35,7 @@ public class CSVScrambler implements Runnable {
     /**
      * Input iterator of string lines
      */
-    private Iterator<String> m_input;
+    private String m_inputFile;
 
     /**
      * Output file path
@@ -51,7 +51,7 @@ public class CSVScrambler implements Runnable {
      * Constructor
      */
     public CSVScrambler() {
-	m_input = null;
+	m_inputFile = null;
 	m_outputFile = null;
 	m_columnsTypes = null;
     }
@@ -64,7 +64,7 @@ public class CSVScrambler implements Runnable {
      * @throws IOException
      *             if fails to read from file
      */
-    public void setInputFromFile(String filePath) throws IOException {
+    public void setInput(String filePath) throws IOException {
 	if (filePath == null) {
 	    throw new IllegalArgumentException("File path can't be null");
 	}
@@ -75,26 +75,7 @@ public class CSVScrambler implements Runnable {
 	    throw new IOException("File read is not permitted!");
 	}
 
-	BufferedReader reader = new BufferedReader(new FileReader(repoFile));
-	List<String> lines = new ArrayList<String>();
-	String line;
-	while ((line = reader.readLine()) != null) {
-	    lines.add(line);
-	}
-	reader.close();
-
-	setInput(lines.iterator());
-    }
-
-    /**
-     * Set the input iterator for this scrambler
-     * 
-     * @param input
-     *            input lines iterator
-     */
-    public void setInput(Iterator<String> input) {
-	Objects.requireNonNull(input, "Input can't be null!");
-	m_input = input;
+	m_inputFile = filePath;
     }
 
     /**
@@ -103,7 +84,7 @@ public class CSVScrambler implements Runnable {
      * @param path
      *            path to output file
      */
-    public void setOutputFile(String path) {
+    public void setOutput(String path) {
 	Objects.requireNonNull(path, "Output path can't be null!");
 	m_outputFile = path;
     }
@@ -114,7 +95,7 @@ public class CSVScrambler implements Runnable {
      * @param columnsTypes
      *            configuration of the CSV file
      */
-    public void setcolumnsTypes(List<Integer> columnsTypes) {
+    public void setColumnsTypes(List<Integer> columnsTypes) {
 	Objects.requireNonNull(columnsTypes, "columns types can't be null!");
 	m_columnsTypes = columnsTypes;
     }
@@ -126,7 +107,7 @@ public class CSVScrambler implements Runnable {
      */
     @Override
     public void run() {
-	if (m_input == null) {
+	if (m_inputFile == null) {
 	    throw new IllegalStateException("Input wasn't set!");
 	} else if (m_outputFile == null) {
 	    throw new IllegalStateException("Output file wasn't set!");
@@ -135,29 +116,7 @@ public class CSVScrambler implements Runnable {
 	}
 
 	try {
-	    List<Hit> hits = CSVParser.fromCSV(m_columnsTypes, m_input);
-
-	    // Scramble by source
-	    if (m_columnsTypes.contains(CSVParser.SOURCE)) {
-		Node sourceTree = buildTree(hits, Attribute.SOURCE_TYPE_ID);
-		scrambleTree(sourceTree);
-		updateHits(sourceTree, Attribute.SOURCE_TYPE_ID);
-	    }
-
-	    // Scramble by destination
-	    if (m_columnsTypes.contains(CSVParser.DESCRIPTION)) {
-		Node destinationTree = buildTree(hits, Attribute.DESTINATION_TYPE_ID);
-		scrambleTree(destinationTree);
-		updateHits(destinationTree, Attribute.DESTINATION_TYPE_ID);
-	    }
-
-	    Collections.shuffle(hits); // Because we can
-
-	    if (m_outputFile.endsWith(".xml")) {
-		HitsXmlDao.toXml(hits, m_outputFile);
-	    } else {
-		CSVParser.toCSV(m_columnsTypes, hits, m_outputFile);
-	    }
+	    run(m_inputFile, m_outputFile, m_columnsTypes);
 
 	} catch (IOException e) {
 	    e.printStackTrace();
@@ -529,140 +488,127 @@ public class CSVScrambler implements Runnable {
 	    }
 
 	    CSVScrambler scrambler = new CSVScrambler();
-	    scrambler.setInputFromFile(input);
-	    scrambler.setOutputFile(output);
-	    scrambler.setcolumnsTypes(columnsTypes);
+	    scrambler.setInput(input);
+	    scrambler.setOutput(output);
+	    scrambler.setColumnsTypes(columnsTypes);
 	    return scrambler;
 	}
 
     }
 
     /**
-     * Build node tree from hit list
+     * Run the scrambler
      * 
-     * @param hits
-     *            list of the hits
+     * @param inputFile
+     *            path to input file
+     * @param outputFile
+     *            path to output path
+     * @param columnsTypes
+     *            orders of the attributes in the input file
+     * @throws IOException
+     *             if an I/O errors occur
+     */
+    private static void run(String inputFile, String outputFile, List<Integer> columnsTypes) throws IOException {
+	Objects.requireNonNull(inputFile);
+	Objects.requireNonNull(outputFile);
+	Objects.requireNonNull(columnsTypes);
+
+	File tempFile = null;
+
+	try {
+	    Path outputPath = Paths.get(outputFile);
+	    Path tempFilePath = Files.createTempFile("tempCSVScramblerFile", ".csv");
+	    tempFile = tempFilePath.toFile();
+
+	    if (columnsTypes.contains(CSVParser.SOURCE)) {
+		Node tree = buildTree(inputFile, columnsTypes, Attribute.SOURCE_TYPE_ID);
+		scrambleTree(tree);
+		updateHits(inputFile, tempFilePath.toString(), columnsTypes, Attribute.SOURCE_TYPE_ID, tree);
+
+		Files.copy(tempFilePath, outputPath, StandardCopyOption.REPLACE_EXISTING);
+		inputFile = outputFile;
+	    }
+	    if (columnsTypes.contains(CSVParser.DESCRIPTION)) {
+		Node tree = buildTree(inputFile, columnsTypes, Attribute.DESTINATION_TYPE_ID);
+		scrambleTree(tree);
+		updateHits(inputFile, tempFilePath.toString(), columnsTypes, Attribute.DESTINATION_TYPE_ID, tree);
+
+		Files.copy(tempFilePath, outputPath, StandardCopyOption.REPLACE_EXISTING);
+		inputFile = outputFile;
+	    }
+
+	} catch (Exception e) {
+	    throw e;
+	} finally {
+	    if (tempFile != null) {
+		tempFile.delete();
+	    }
+	}
+    }
+
+    /**
+     * Build a tree of the IP attribute of the this in the input file
+     * 
+     * @param inputFile
+     *            path to input file
+     * @param columnsTypes
+     *            orders of the attributes in the input file
      * @param ipAttId
      *            id of the IP attribute
-     * @return root to built tree
+     * @return root node to the built tree
+     * @throws IOException
+     *             if an I/O errors occur
      */
-    private static Node buildTree(List<Hit> hits, final int ipAttId) {
-	checkHits(hits, ipAttId);
-	// After this check, we can assume that the list is valid (as detailed
-	// in checkHits documentation) for all our operations
+    private static Node buildTree(String inputFile, List<Integer> columnsTypes, int ipAttId) throws IOException {
+	Map<IP, Node> existingNodes = new HashMap<>();
+	CSVParser parser = new CSVParser(columnsTypes);
 
-	hits.sort(new Comparator<Hit>() {
-
-	    @Override
-	    public int compare(Hit o1, Hit o2) {
-		IPAttribute att1 = (IPAttribute) o1.getAttribute(ipAttId);
-		IPAttribute att2 = (IPAttribute) o2.getAttribute(ipAttId);
-		return att1.compareTo(att2);
-	    }
-	});
-
-	List<Node> currentLayer = fromHits(hits, ipAttId);
-
-	while (currentLayer.get(0).ip.getConstPrefixLength() > 0) {
-	    List<Node> nextLayer = new ArrayList<Node>();
-
-	    Iterator<Pair<Node, Node>> it = Utility.getDoubleIterator(currentLayer);
+	LinesIterator it = null;
+	try {
+	    it = new LinesIterator(inputFile);
 	    while (it.hasNext()) {
-		Pair<Node, Node> pair = it.next();
-		Node parent = buildNode(pair.first, pair.second);
-		if (IP.isBrothers(pair.first.ip, pair.second.ip)) {
-		    if (it.hasNext()) {
-			it.next();
+		String line = it.next();
+		Hit hit = parser.fromCSV(line);
+		IP ip = ((IPAttribute) hit.getAttribute(ipAttId)).getIp();
+
+		if (existingNodes.containsKey(ip))
+		    continue;
+		Node node = new Node();
+		node.ip = ip;
+		existingNodes.put(node.ip, node);
+
+		while (ip.hasParent()) {
+		    ip = ip.getParent();
+		    Node parent = existingNodes.get(ip);
+		    if (parent != null) {
+			parent.attach(node);
+			break;
 		    }
-		}
-		nextLayer.add(parent);
-	    }
-
-	    // Last node - if is the single one in the layer, or if it's not
-	    // brother of the one before him: and him alone
-	    int layerSize = currentLayer.size();
-	    Node last = currentLayer.get(layerSize - 1);
-	    if (layerSize == 1 || !IP.isBrothers(last.ip, currentLayer.get(layerSize - 2).ip)) {
-		Node parent = buildNode(last, null);
-		nextLayer.add(parent);
-	    }
-
-	    currentLayer = nextLayer;
-	}
-
-	return currentLayer.get(0);
-    }
-
-    /**
-     * Build a single node from it's two children
-     * 
-     * @param a
-     *            first child
-     * @param b
-     *            second child
-     * @return parent node of the children
-     */
-    private static Node buildNode(Node a, Node b) {
-	Node parent = new Node();
-	parent.ip = a.ip.getParent();
-	boolean isFirstLeftChild = a.ip.getLastBit();
-	if (isFirstLeftChild) {
-	    parent.left = a;
-	} else {
-	    parent.right = a;
-	}
-	if (b != null) {
-	    if (IP.isBrothers(a.ip, b.ip)) {
-		if (isFirstLeftChild) {
-		    parent.right = b;
-		} else {
-		    parent.left = b;
+		    parent = new Node();
+		    parent.ip = ip;
+		    existingNodes.put(parent.ip, parent);
+		    parent.attach(node);
+		    node = parent;
 		}
 	    }
-	}
-	return parent;
-    }
 
-    /**
-     * Convert list of hits to list of leaf nodes list
-     * 
-     * @param hits
-     *            list of hits
-     * @param ipAttId
-     *            id of IP attribute
-     * @return list of leaf nodes built from hits
-     */
-    private static List<Node> fromHits(List<Hit> hits, int ipAttId) {
-	List<Node> nodes = new ArrayList<Node>();
-
-	for (Hit hit : hits) {
-	    Leaf lastNode = nodes.size() == 0 ? null : (Leaf) nodes.get(nodes.size() - 1);
-	    if (lastNode != null && lastNode.ip.equals(fromHit(hit, ipAttId).getIp())) {
-		lastNode.hits.add(hit);
-	    } else {
-		Leaf node = new Leaf();
-		node.ip = fromHit(hit, ipAttId).getIp();
-		node.left = null;
-		node.right = null;
-		node.hits.add(hit);
-		nodes.add(node);
+	} catch (IOException e) {
+	    throw e;
+	} finally {
+	    if (it != null) {
+		it.close();
 	    }
 	}
 
-	return nodes;
-    }
+	Node root = null;
+	if (!existingNodes.isEmpty()) {
+	    root = existingNodes.values().iterator().next();
+	    while (root.ip.hasParent()) {
+		root = existingNodes.get(root.ip.getParent());
+	    }
+	}
 
-    /**
-     * Get the IP attribute from hit
-     * 
-     * @param hit
-     *            the hit
-     * @param ipAttId
-     *            id of IP attribute
-     * @return IPAttribute of the hit
-     */
-    private static IPAttribute fromHit(Hit hit, int ipAttId) {
-	return (IPAttribute) hit.getAttribute(ipAttId);
+	return root;
     }
 
     /**
@@ -687,9 +633,6 @@ public class CSVScrambler implements Runnable {
 	if (node == null) {
 	    return;
 	}
-	if (node instanceof Leaf) {
-	    return;
-	}
 	if (rand.nextBoolean()) {
 	    Node temp = node.left;
 	    node.left = node.right;
@@ -700,51 +643,80 @@ public class CSVScrambler implements Runnable {
     }
 
     /**
-     * Update hits after tree was scrambled
+     * Update the IP attributes of all hits from the input file and write them
+     * to a new file
      * 
-     * @param root
-     *            root to scrambled tree
+     * @param inputFile
+     *            path to input file
+     * @param outputFile
+     *            path to output file
+     * @param columnsTypes
+     *            orders of the attributes in the input file
      * @param ipAttId
-     *            id of IP attribute
-     * @return list of hits built from tree
+     *            id of the IP attribute
+     * @param tree
+     *            root node of the scrambled IP attribute tree
+     * @throws IOException
+     *             if an I/O errors occur
      */
-    private static void updateHits(Node root, int ipAttId) {
-	updateHits(root, ipAttId, new boolean[0]);
+    private static void updateHits(String inputFile, String outputFile, List<Integer> columnsTypes, int ipAttId,
+	    Node tree) throws IOException {
+	CSVParser parser = new CSVParser(columnsTypes);
+
+	LinesIterator it = null;
+	Writer writer = null;
+	try {
+	    it = new LinesIterator(inputFile);
+	    writer = new FileWriter(outputFile);
+	    String lineSeparator = System.lineSeparator();
+
+	    while (it.hasNext()) {
+		String line = it.next();
+		Hit hit = parser.fromCSV(line);
+		updateHit(hit, ipAttId, tree);
+		line = parser.toCSV(hit);
+		writer.append(line + lineSeparator);
+	    }
+
+	} catch (IOException e) {
+	    throw e;
+	} finally {
+	    if (it != null) {
+		it.close();
+	    }
+	    if (writer != null) {
+		writer.close();
+	    }
+	}
     }
 
     /**
-     * Update hits after tree was scrambled
+     * Update one hit to match the scrambled tree
      * 
-     * @param node
-     *            parent of sub tree
+     * @param hit
+     *            the hit
      * @param ipAttId
-     *            id of IP attribute
-     * @param prefix
-     *            boolean array of right and left decisions until this node
-     * @return list of bits built from sub tree
+     *            id of the IP attribute
+     * @param tree
+     *            root node of the scrambled IP attribute tree
      */
-    private static void updateHits(Node node, int ipAttId, boolean[] prefix) {
-	if (node == null) {
-	    return;
-	}
-	if (node instanceof Leaf) {
-	    Leaf leaf = (Leaf) node;
-	    for (Hit hit : leaf.hits) {
-		updateHit(hit, ipAttId, prefix);
+    private static void updateHit(Hit hit, int ipAttId, Node tree) {
+	IP ip = ((IPAttribute) hit.getAttribute(ipAttId)).getIp();
+
+	boolean[] a = new boolean[0];
+	while (!tree.ip.equals(ip)) {
+	    boolean[] b = new boolean[a.length + 1];
+	    System.arraycopy(a, 0, b, 0, a.length);
+	    if (tree.left != null && tree.left.ip.contains(ip)) {
+		b[a.length] = false;
+		tree = tree.left;
+	    } else {
+		b[a.length] = true;
+		tree = tree.right;
 	    }
-	    return;
+	    a = b;
 	}
-
-	boolean[] leftPrefix = new boolean[prefix.length + 1];
-	boolean[] rightPrefix = new boolean[prefix.length + 1];
-
-	System.arraycopy(prefix, 0, leftPrefix, 0, prefix.length);
-	System.arraycopy(prefix, 0, rightPrefix, 0, prefix.length);
-	leftPrefix[prefix.length] = false;
-	rightPrefix[prefix.length] = true;
-
-	updateHits(node.left, ipAttId, leftPrefix);
-	updateHits(node.right, ipAttId, rightPrefix);
+	updateHit(hit, ipAttId, a);
     }
 
     /**
@@ -763,88 +735,6 @@ public class CSVScrambler implements Runnable {
 	IP currentIp = attribute.getIp();
 	IP newIp = IP.fromBooleans(prefix, currentIp.getClass());
 	attribute.setIp(newIp);
-    }
-
-    /**
-     * Check the valid state of the hit list. The list isn't valid if:
-     * <ul>
-     * <li>List is null</li>
-     * <li>One of the hits is null</li>
-     * <li>Not every hit have the desire attribute</li>
-     * <li>Not every hit have the same IP type (IPv4 or IPv6) of the desire
-     * attribute</li>
-     * </ul>
-     * 
-     * @param hits
-     *            the hit list
-     * @param ipAttId
-     *            the desire attribute
-     * @throws IllegalArgumentException
-     *             if one of the above doesn't enforced
-     */
-    private static void checkHits(List<Hit> hits, int ipAttId) {
-	if (hits == null) {
-	    throw new IllegalArgumentException("Hits list can't be null");
-	}
-	if (hits.isEmpty()) {
-	    return;
-	}
-
-	Hit firstHit = hits.get(0);
-	hitNullCheck(firstHit);
-	IPAttribute firstHitAtt = (IPAttribute) firstHit.getAttribute(ipAttId);
-	attributeCheck(firstHitAtt);
-	// "IPv4" or "IPv6"
-	Class<?> expectedIpClass = firstHitAtt.getIp().getClass();
-
-	for (Hit hit : hits) {
-	    hitNullCheck(hit);
-	    IPAttribute att = (IPAttribute) hit.getAttribute(ipAttId);
-	    attributeCheck(att);
-	    Class<?> actualIpClass = att.getIp().getClass();
-	    ipClassCheck(expectedIpClass, actualIpClass);
-	}
-    }
-
-    /**
-     * Check the desire attribute
-     * 
-     * @param attribute
-     *            the checked attribute
-     */
-    private static void attributeCheck(IPAttribute attribute) {
-	if (attribute == null) {
-	    throw new IllegalArgumentException("One of the hits doesn't have the desire ip attribute");
-	}
-	if (attribute.getIp().getConstPrefixLength() != attribute.getIp().getMaxLength()) {
-	    throw new IllegalArgumentException("One of the hits contains IP of a subnet! (should be specific IP)");
-	}
-    }
-
-    /**
-     * Check a hit if it is null
-     * 
-     * @param hit
-     *            the checked hit
-     */
-    private static void hitNullCheck(Hit hit) {
-	if (hit == null) {
-	    throw new IllegalArgumentException("All hits shouldn't be null!");
-	}
-    }
-
-    /**
-     * Check if the expected IP class is equals to the actual IP class
-     * 
-     * @param expected
-     *            expected class
-     * @param actual
-     *            actual class
-     */
-    private static void ipClassCheck(Class<?> expected, Class<?> actual) {
-	if (!expected.equals(actual)) {
-	    throw new IllegalArgumentException("Not all hits have the same IP type");
-	}
     }
 
     /**
@@ -882,30 +772,11 @@ public class CSVScrambler implements Runnable {
 	    return ip.toString();
 	}
 
-    }
-
-    /**
-     * The Leaf object extends the Node and holds a list of hits that matched
-     * the leaf IP
-     */
-    private static class Leaf extends Node {
-
-	/**
-	 * Constructor
-	 */
-	public Leaf() {
-	    super();
-	    hits = new ArrayList<Hit>();
-	}
-
-	/**
-	 * List of hits matching this leaf's IP
-	 */
-	List<Hit> hits;
-
-	@Override
-	public String toString() {
-	    return super.toString() + " " + hits.toString();
+	void attach(Node child) {
+	    if (child.ip.getLastBit())
+		left = child;
+	    else
+		right = child;
 	}
 
     }

@@ -2,6 +2,7 @@ package breakingtherules.utilities;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
@@ -16,6 +17,28 @@ public class Utility {
     private static final char SPACE = ' ';
 
     private static final char TAB = '\t';
+
+    /**
+     * Clone a list (not a deep clone)
+     * 
+     * @param list
+     *            the list
+     * @return clone of the list
+     */
+    public static <T> List<T> clone(List<? extends T> list) {
+	return new ArrayList<>(list);
+    }
+
+    /**
+     * Get a unmodifiable clone of a list (not a deep clone)
+     * 
+     * @param list
+     *            the list
+     * @return clone of the list that can't be modified
+     */
+    public static <T> List<T> unmodifiableClone(List<? extends T> list) {
+	return Collections.unmodifiableList(clone(list));
+    }
 
     /**
      * Put a value in a list at an index even if the list is too small.
@@ -303,15 +326,31 @@ public class Utility {
      * @return new text with the word at the end of it
      */
     public static String addWord(String text, String word, boolean tab) {
-	if (text == null || word == null) {
+	StringBuilder builder = new StringBuilder(text);
+	addWord(builder, word, tab);
+	return builder.toString();
+    }
+
+    /**
+     * Add a word to a builder
+     * 
+     * @param builder
+     *            the text builder
+     * @param word
+     *            word to add
+     * @param tab
+     *            if true, will use tab between words, else - space
+     */
+    public static void addWord(StringBuilder builder, String word, boolean tab) {
+	if (word == null) {
 	    throw new IllegalArgumentException("Arguments can't be null");
 	}
-	if (text.isEmpty()) {
-	    return word;
+	if (builder.length() != 0) {
+	    char lastChar = builder.charAt(builder.length() - 1);
+	    char spacer = tab ? TAB : SPACE;
+	    builder.append((lastChar != SPACE && lastChar != TAB) ? spacer : "");
 	}
-	char lastChar = text.charAt(text.length() - 1);
-	char spacer = tab ? TAB : SPACE;
-	return text + ((lastChar != SPACE && lastChar != TAB) ? spacer : "") + word;
+	builder.append(word);
     }
 
     /**

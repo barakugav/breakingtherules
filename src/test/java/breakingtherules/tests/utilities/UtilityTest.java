@@ -371,7 +371,7 @@ public class UtilityTest {
 	assertEquals(expected, actual);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expected = NullPointerException.class)
     public void addWordTestNullTest() {
 	System.out.println("# UtilityTest addWordTestNullTest");
 	String text = null;
