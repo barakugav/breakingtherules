@@ -2,12 +2,10 @@ package breakingtherules.firewall;
 
 import java.util.List;
 
-import breakingtherules.utilities.CloneablePublic;
-
 /**
  * Rule that apply on hits by {@link Filter}
  */
-public class Rule implements CloneablePublic {
+public class Rule {
 
     /**
      * Filter of the rule
@@ -111,8 +109,13 @@ public class Rule implements CloneablePublic {
      * @see java.lang.Object#clone()
      */
     @Override
-    public Rule clone() {
-	return new Rule(m_id, m_filter.clone());
+    public Object clone() {
+	try {
+	    return super.clone();
+	} catch (CloneNotSupportedException e) {
+	    // this shouldn't happen, since we are Cloneable
+	    throw new InternalError(e);
+	}
     }
 
 }

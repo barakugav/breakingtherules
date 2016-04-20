@@ -364,7 +364,7 @@ public class IPv6Test {
 	System.out.println("# IPv6Test cloneTest");
 	int[] address = FirewallTestsUtility.getRandomAddressIPv6();
 	IPv6 ip = new IPv6(address);
-	IPv6 ipClone = ip.clone();
+	IPv6 ipClone = (IPv6) ip.clone();
 	assertFalse(ip == ipClone);
 	assertEquals(ip, ipClone);
     }

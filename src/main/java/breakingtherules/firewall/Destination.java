@@ -1,17 +1,15 @@
 package breakingtherules.firewall;
 
-import breakingtherules.utilities.CloneablePublic;
-
 /**
  * Destination attribute
  */
-public class Destination extends IPAttribute implements CloneablePublic {
+public class Destination extends IPAttribute {
 
     /**
      * Destination attribute that represent 'Any' destination (contains all
      * others)
      */
-    private static final Destination ANY_DESTINATION;
+    public static final Destination ANY_DESTINATION;
 
     static {
 	ANY_DESTINATION = new Destination(IP.getAnyIP());
@@ -80,18 +78,13 @@ public class Destination extends IPAttribute implements CloneablePublic {
      * @see breakingtherules.firewall.IPAttribute#clone()
      */
     @Override
-    public Destination clone() {
-	return new Destination(getIp().clone());
-    }
-
-    /**
-     * Get a destination that represent 'Any' destination instance (contains all
-     * others)
-     * 
-     * @return 'Any' destination
-     */
-    public static Destination getAnyDestination() {
-	return ANY_DESTINATION;
+    public Object clone() {
+	try {
+	    return super.clone();
+	} catch (CloneNotSupportedException e) {
+	    // this shouldn't happen, since we are Cloneable
+	    throw new InternalError(e);
+	}
     }
 
 }

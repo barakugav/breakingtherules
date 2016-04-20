@@ -1,11 +1,9 @@
 package breakingtherules.firewall;
 
-import breakingtherules.utilities.CloneablePublic;
-
 /**
  * IP on protocol IPv6
  */
-public class IPv6 extends IP implements CloneablePublic {
+public class IPv6 extends IP {
 
     /**
      * IPv6 that represents 'Any' IPv6 (contains all others)
@@ -124,10 +122,13 @@ public class IPv6 extends IP implements CloneablePublic {
      * @see breakingtherules.firewall.IP#clone()
      */
     @Override
-    public IPv6 clone() {
-	int address[] = m_address.clone();
-	int prefix = m_prefixLength;
-	return new IPv6(address, prefix);
+    public Object clone() {
+	try {
+	    return super.clone();
+	} catch (CloneNotSupportedException e) {
+	    // this shouldn't happen, since we are Cloneable
+	    throw new InternalError(e);
+	}
     }
 
     /**

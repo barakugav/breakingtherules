@@ -55,6 +55,8 @@ public class TextBuilder {
     }
 
     public TextBuilder(int max, int indentSize, String[] separators) {
+	if (max < 0)
+	    throw new IllegalArgumentException("max can't be negative: " + max);
 	m_builder = new StringBuilder();
 	m_maxLine = max;
 	m_indentSize = indentSize;

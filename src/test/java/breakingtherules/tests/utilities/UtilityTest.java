@@ -16,7 +16,6 @@ import java.util.Random;
 
 import org.junit.Test;
 
-import breakingtherules.utilities.CloneablePublic;
 import breakingtherules.utilities.Pair;
 import breakingtherules.utilities.Utility;
 
@@ -52,45 +51,22 @@ public class UtilityTest {
     }
 
     @Test
-    public void cloneTest() {
-	System.out.println("# UtilityTest cloneTest");
-	CloneablePublic dummy1 = new DummyClone();
-	CloneablePublic dummy2 = Utility.clone(dummy1);
-	assertFalse(dummy1 == dummy2);
-	assertEquals(dummy1, dummy2);
-    }
-
-    @Test
-    public void cloneTestNull() {
-	System.out.println("# UtilityTest cloneTestNull");
-	CloneablePublic dummy1 = null;
-	CloneablePublic dummy2 = Utility.clone(dummy1);
-	assertEquals(dummy1, dummy2);
-	assertNull(dummy2);
-    }
-
-    @Test
     public void cloneListTest() {
 	System.out.println("# UtilityTest cloneListTest");
-	List<CloneablePublic> list = new ArrayList<CloneablePublic>();
+	List<Integer> list = new ArrayList<>();
 	for (int i = 0; i < 100; i++) {
-	    list.add(new DummyClone());
+	    list.add(i);
 	}
-	List<CloneablePublic> listClone = Utility.cloneList(list);
+	List<Integer> listClone = Utility.cloneList(list);
 	assertFalse(list == listClone);
 	assertEquals(list, listClone);
-	Iterator<Pair<CloneablePublic, CloneablePublic>> it = Utility.getDoubleIterator(list, listClone);
-	while (it.hasNext()) {
-	    Pair<CloneablePublic, CloneablePublic> pair = it.next();
-	    assertFalse(pair.first == pair.second);
-	    assertEquals(pair.first, pair.second);
-	}
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void cloneListTestNull() {
 	System.out.println("# UtilityTest cloneListTestNull");
-	Utility.cloneList(null);
+	List<?> list = Utility.cloneList(null);
+	assertNull(list);
     }
 
     @Test
@@ -753,39 +729,6 @@ public class UtilityTest {
 	    list.add(rand.nextInt());
 	}
 	return list;
-    }
-
-    private static class DummyClone implements CloneablePublic {
-
-	private static int idsCounter = 0;
-
-	private int id;
-
-	public DummyClone() {
-	    id = ++idsCounter;
-	}
-
-	@Override
-	public boolean equals(Object o) {
-	    if (o == null) {
-		return false;
-	    } else if (o == this) {
-		return true;
-	    } else if (!(o instanceof DummyClone)) {
-		return false;
-	    }
-
-	    DummyClone other = (DummyClone) o;
-	    return id == other.id;
-	}
-
-	@Override
-	public DummyClone clone() {
-	    DummyClone clone = new DummyClone();
-	    clone.id = id;
-	    return clone;
-	}
-
     }
 
 }

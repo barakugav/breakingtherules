@@ -43,8 +43,7 @@ public class UtilityXmlDao {
 	    return fileDocument;
 
 	} catch (IOException | SAXException | ParserConfigurationException e) {
-	    e.printStackTrace();
-	    throw new IOException("Unable to load file: " + e.getMessage());
+	    throw new IOException("Unable to load file", e);
 	}
     }
 
@@ -70,8 +69,7 @@ public class UtilityXmlDao {
 	    transformer.transform(source, result);
 
 	} catch (TransformerException e) {
-	    e.printStackTrace();
-	    throw new IOException(e.getMessage());
+	    throw new IOException(e);
 	}
     }
 

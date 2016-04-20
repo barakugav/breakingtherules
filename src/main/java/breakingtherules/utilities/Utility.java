@@ -45,34 +45,16 @@ public class Utility {
     }
 
     /**
-     * Clone an object
-     * 
-     * @param e
-     *            element
-     * @return clone of the element or null if the element is null
-     */
-    @SuppressWarnings("unchecked")
-    public static <T extends CloneablePublic> T clone(T e) {
-	return e == null ? null : (T) e.clone();
-    }
-
-    /**
      * Clone a list
      * 
      * @param list
      *            the list
      * @return clone of the list
      */
-    public static <T extends CloneablePublic> List<T> cloneList(List<T> list) {
-	if (list == null) {
-	    throw new IllegalArgumentException("List can't be null!");
-	}
-
-	List<T> listClone = new ArrayList<T>();
-	for (T e : list) {
-	    listClone.add(clone(e));
-	}
-	return listClone;
+    public static <T> List<T> cloneList(List<? extends T> list) {
+	if (list == null)
+	    return null;
+	return new ArrayList<>(list);
     }
 
     /**

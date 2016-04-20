@@ -7,8 +7,6 @@ import java.util.List;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import breakingtherules.dao.HitsDao;
-import breakingtherules.utilities.CloneablePublic;
-import breakingtherules.utilities.Utility;
 
 /**
  * Filter of hits, base on given attributes
@@ -16,7 +14,7 @@ import breakingtherules.utilities.Utility;
  * @see Hit
  * @see HitsDao
  */
-public class Filter extends AttributesContainer implements CloneablePublic {
+public class Filter extends AttributesContainer {
 
     /**
      * Constructor
@@ -89,10 +87,13 @@ public class Filter extends AttributesContainer implements CloneablePublic {
      * @see breakingtherules.firewall.AttributesContainer#clone()
      */
     @Override
-    public Filter clone() {
-	List<Attribute> attributes = getAttributes();
-	List<Attribute> attributesClone = Utility.cloneList(attributes);
-	return new Filter(attributesClone);
+    public Object clone() {
+	try {
+	    return super.clone();
+	} catch (CloneNotSupportedException e) {
+	    // this shouldn't happen, since we are Cloneable
+	    throw new InternalError(e);
+	}
     }
 
     /**
@@ -102,9 +103,9 @@ public class Filter extends AttributesContainer implements CloneablePublic {
      */
     public static Filter getAnyFilter() {
 	List<Attribute> attributes = new ArrayList<Attribute>();
-	attributes.add(Source.getAnySource());
-	attributes.add(Destination.getAnyDestination());
-	attributes.add(Service.getAnyService());
+	attributes.add(Source.ANY_SOURCE);
+	attributes.add(Destination.ANY_DESTINATION);
+	attributes.add(Service.ANY_SERVICE);
 	return new Filter(attributes);
     }
 

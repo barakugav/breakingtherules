@@ -311,7 +311,7 @@ public class CSVParser {
 	    throw new CSVParseException("Unable to parse protocol code to integer: ", e);
 	}
 
-	String protocolStr = Service.getProtocolName(protocolInt);
+	String protocolStr = Service.protocolName(protocolInt);
 	if (protocolStr == null) {
 	    throw new CSVParseException("Unknown protocol number " + protocolInt);
 	}

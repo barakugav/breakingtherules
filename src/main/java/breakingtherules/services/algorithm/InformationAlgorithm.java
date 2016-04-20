@@ -286,7 +286,7 @@ public class InformationAlgorithm implements SuggestionsAlgorithm {
 	}
     }
 
-    private static final Comparator<IPNode> COMPARATOR_IP = new Comparator<IPNode>() {
+    private static final Comparator<IPNode> IP_COMPARATOR = new Comparator<IPNode>() {
 
 	@Override
 	public int compare(IPNode o1, IPNode o2) {
@@ -295,7 +295,7 @@ public class InformationAlgorithm implements SuggestionsAlgorithm {
     };
 
     private static void sortByIP(List<IPNode> list) {
-	list.sort(COMPARATOR_IP);
+	list.sort(IP_COMPARATOR);
     }
 
     private static class IPNode {

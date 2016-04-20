@@ -123,7 +123,7 @@ public class SourceTest {
 	System.out.println("# SourceTest cloneTest");
 	IP ip = FirewallTestsUtility.getRandomIP();
 	Source source = new Source(ip);
-	Source sourceClone = source.clone();
+	Source sourceClone = (Source) source.clone();
 	assertFalse(source == sourceClone);
 	assertEquals(source, sourceClone);
     }

@@ -124,7 +124,7 @@ public class DestinationTest {
 	System.out.println("# DestinationTest cloneTest");
 	IP ip = FirewallTestsUtility.getRandomIP();
 	Destination destination = new Destination(ip);
-	Destination destinationClone = destination.clone();
+	Destination destinationClone = (Destination) destination.clone();
 	assertFalse(destination == destinationClone);
 	assertEquals(destination, destinationClone);
     }

@@ -6,13 +6,12 @@ import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
-import breakingtherules.utilities.CloneablePublic;
 import breakingtherules.utilities.Utility;
 
 /**
  * IP address, can be {@link IPv4} or {@link IPv6}
  */
-public abstract class IP implements Comparable<IP>, CloneablePublic {
+public abstract class IP implements Comparable<IP>, Cloneable {
 
     /**
      * IP address
@@ -316,14 +315,6 @@ public abstract class IP implements Comparable<IP>, CloneablePublic {
 	}
 	return true;
     }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see java.lang.Object#clone()
-     */
-    @Override
-    public abstract IP clone();
 
     /**
      * Create new IP from String IP

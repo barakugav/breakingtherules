@@ -8,15 +8,16 @@ import org.springframework.util.StringUtils;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
-import breakingtherules.utilities.CloneablePublic;
-
 /**
  * Service attribute
  * 
  * Has a protocol member and port number
  */
-public class Service implements Attribute, CloneablePublic {
+public class Service implements Attribute {
 
+    /**
+     * Code of this service protocol
+     */
     private final int m_protocolCode;
 
     /**
@@ -30,19 +31,38 @@ public class Service implements Attribute, CloneablePublic {
     private final int m_portRangeEnd;
 
     /**
-     * Service that represents 'Any' service (contains all others)
-     */
-    private static final Service ANY_SERVICE;
-
-    /**
      * Service of protocol 'Any protocol'
      */
     public static final int ANY_PROTOCOL = -1;
 
+    /**
+     * Service that represents 'Any' service (contains all others)
+     */
+    public static final Service ANY_SERVICE;
+
+    /**
+     * The minimum legal port number
+     */
+    private static final int MIN_PORT = 0;
+
+    /**
+     * The maximum legal port number
+     */
+    private static final int MAX_PORT = (1 << 16) - 1;
+
+    /**
+     * All names of the protocol. Name for protocol with code x is in
+     * PROTOCOL_NAMES[x]
+     */
     private static final String[] PROTOCOL_NAMES;
+
+    /**
+     * Map from protocol names to their codes
+     */
     private static final Map<String, Integer> PROTOCOL_CODES;
 
     static {
+	ANY_SERVICE = new Service(ANY_PROTOCOL, MIN_PORT, MAX_PORT);
 	PROTOCOL_NAMES = new String[256];
 	PROTOCOL_NAMES[0] = "HOPORT";
 	PROTOCOL_NAMES[1] = "ICMP";
@@ -206,49 +226,53 @@ public class Service implements Attribute, CloneablePublic {
     }
 
     /**
-     * The minimum legal port number
-     */
-    public static final int MIN_PORT = 0;
-
-    /**
-     * The maximum legal port number
-     */
-    public static final int MAX_PORT = (1 << 16) - 1;
-
-    static {
-	ANY_SERVICE = new Service(ANY_PROTOCOL, MIN_PORT, MAX_PORT);
-    }
-
-    /**
      * Constructor
      * 
-     * @param type
-     *            type of the service
+     * @param protocol
+     *            protocol of the service
      * @param port
      *            port number of the service
      */
-    public Service(String protocol, int port) throws IllegalArgumentException {
-	this(getProtocolCode(protocol), port, port);
+    public Service(String protocol, int port) {
+	this(protocolCode(protocol), port, port);
     }
 
     /**
      * Constructor
      * 
-     * @param type
-     *            type of the service
+     * @param protocol
+     *            protocol of the service
      * @param portRangeStart
      *            start of the port range of the service
      * @param portRangeEnd
      *            end of the port range of the service
      */
-    public Service(String protocol, int portRangeStart, int portRangeEnd) throws IllegalArgumentException {
-	this(getProtocolCode(protocol), portRangeStart, portRangeEnd);
+    public Service(String protocol, int portRangeStart, int portRangeEnd) {
+	this(protocolCode(protocol), portRangeStart, portRangeEnd);
     }
 
+    /**
+     * Constructor
+     * 
+     * @param protocol
+     *            protocol code of the service
+     * @param port
+     *            port number of the service
+     */
     public Service(int protocol, int port) {
 	this(protocol, port, port);
     }
 
+    /**
+     * Constructor
+     * 
+     * @param protocol
+     *            protocol code of the service
+     * @param portRangeStart
+     *            start of the port range of the service
+     * @param portRangeEnd
+     *            end of the port range of the service
+     */
     public Service(int protocol, int portRangeStart, int portRangeEnd) {
 	if (protocol < -1 || protocol > 255)
 	    throw new IllegalArgumentException("protocol should be in range [-1, 255]: " + protocol);
@@ -272,7 +296,7 @@ public class Service implements Attribute, CloneablePublic {
      * @param service
      *            String service in format ('port' 'service type')
      */
-    public Service(String service) throws IllegalArgumentException {
+    public Service(String service) {
 	if (service == null) {
 	    throw new IllegalArgumentException("Null args");
 	}
@@ -291,7 +315,7 @@ public class Service implements Attribute, CloneablePublic {
 	    m_portRangeEnd = MAX_PORT;
 	    String protString = service.substring("Any ".length());
 	    if (protString.matches("[a-zA-Z]+")) {
-		m_protocolCode = getProtocolCode(protString);
+		m_protocolCode = protocolCode(protString);
 		return;
 	    }
 	    throw new IllegalArgumentException("Bad protocol name in 'any port' option.");
@@ -363,7 +387,7 @@ public class Service implements Attribute, CloneablePublic {
 	if (service.equals("Any") || service.equals("Port") || service.equals("Ports"))
 	    m_protocolCode = ANY_PROTOCOL;
 	else
-	    m_protocolCode = getProtocolCode(service);
+	    m_protocolCode = protocolCode(service);
 
     }
 
@@ -373,9 +397,14 @@ public class Service implements Attribute, CloneablePublic {
      * @return String protocol of the service
      */
     public String getProtocol() {
-	return getProtocolName(m_protocolCode);
+	return protocolName(m_protocolCode);
     }
 
+    /**
+     * Get the code of this service protocol
+     * 
+     * @return the protocol's code
+     */
     @JsonIgnore
     public int getProtocolCode() {
 	return m_protocolCode;
@@ -484,7 +513,6 @@ public class Service implements Attribute, CloneablePublic {
      */
     @Override
     public String toString() {
-
 	if (m_protocolCode == ANY_PROTOCOL && m_portRangeStart == MIN_PORT && m_portRangeEnd == MAX_PORT) {
 	    // All ports, all protocols
 	    return "Any";
@@ -492,7 +520,7 @@ public class Service implements Attribute, CloneablePublic {
 
 	if (m_portRangeStart == MIN_PORT && m_portRangeEnd == MAX_PORT) {
 	    // All ports, one protocol
-	    return "Any " + getProtocolName(m_protocolCode);
+	    return "Any " + protocolName(m_protocolCode);
 	}
 
 	if (m_protocolCode == ANY_PROTOCOL) {
@@ -506,9 +534,9 @@ public class Service implements Attribute, CloneablePublic {
 
 	// Some ports, one protocol
 	if (m_portRangeStart == m_portRangeEnd) {
-	    return getProtocolName(m_protocolCode) + " " + Integer.toString(m_portRangeStart);
+	    return protocolName(m_protocolCode) + " " + Integer.toString(m_portRangeStart);
 	} else {
-	    return getProtocolName(m_protocolCode) + " " + m_portRangeStart + "-" + m_portRangeEnd;
+	    return protocolName(m_protocolCode) + " " + m_portRangeStart + "-" + m_portRangeEnd;
 	}
     }
 
@@ -518,8 +546,13 @@ public class Service implements Attribute, CloneablePublic {
      * @see java.lang.Object#clone()
      */
     @Override
-    public Service clone() {
-	return new Service(m_protocolCode, m_portRangeStart, m_portRangeEnd);
+    public Object clone() {
+	try {
+	    return super.clone();
+	} catch (CloneNotSupportedException e) {
+	    // this shouldn't happen, since we are Cloneable
+	    throw new InternalError(e);
+	}
     }
 
     /*
@@ -542,22 +575,27 @@ public class Service implements Attribute, CloneablePublic {
     }
 
     /**
-     * Get service that represents 'Any' service (contains all others)
+     * Convert protocol name to it's code
      * 
-     * @return 'Any' service
+     * @param protocolName
+     *            name of the protocol
+     * @return code of the protocol
      */
-    public static Service getAnyService() {
-	return ANY_SERVICE;
-    }
-
-    public static int getProtocolCode(String protocolName) {
+    public static int protocolCode(String protocolName) {
 	Integer code = PROTOCOL_CODES.get(protocolName);
-	if (code == null)
-	    throw new IllegalArgumentException("Unknown protocol: " + protocolName);
+	if (protocolName == null || code == null)
+	    throw new IllegalArgumentException("Unknown protocol: " + String.valueOf(protocolName));
 	return code;
     }
 
-    public static String getProtocolName(int protocolCode) {
+    /**
+     * Convert protocol code to it's name
+     * 
+     * @param protocolCode
+     *            code of the protocol
+     * @return the protocol's name
+     */
+    public static String protocolName(int protocolCode) {
 	if (protocolCode < -1 || protocolCode > 255)
 	    throw new IllegalArgumentException("Protocol code should be in range [0, 255]: " + protocolCode);
 	if (protocolCode == ANY_PROTOCOL)

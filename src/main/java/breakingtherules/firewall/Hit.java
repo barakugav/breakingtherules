@@ -1,19 +1,29 @@
 package breakingtherules.firewall;
 
+import java.util.Comparator;
 import java.util.List;
-
-import breakingtherules.utilities.CloneablePublic;
-import breakingtherules.utilities.Utility;
 
 /**
  * Hit with attributes
  */
-public class Hit extends AttributesContainer implements CloneablePublic {
+public class Hit extends AttributesContainer {
 
     /**
      * Id of the hit
      */
     private final int m_id;
+
+    public static final Comparator<Hit> IDS_COMPARATOR;
+
+    static {
+	IDS_COMPARATOR = new Comparator<Hit>() {
+
+	    @Override
+	    public int compare(Hit o1, Hit o2) {
+		return o1.m_id - o2.m_id;
+	    }
+	};
+    }
 
     /**
      * Constructor
@@ -25,7 +35,7 @@ public class Hit extends AttributesContainer implements CloneablePublic {
      * @throws IllegalArgumentException
      *             if id isn't positive or attributes is null
      */
-    public Hit(int id, List<Attribute> attributes) throws IllegalArgumentException {
+    public Hit(int id, List<Attribute> attributes) {
 	super(attributes);
 	if (id < 0) {
 	    throw new IllegalArgumentException("Id should be positive number");
@@ -79,10 +89,13 @@ public class Hit extends AttributesContainer implements CloneablePublic {
      * @see breakingtherules.firewall.AttributesContainer#clone()
      */
     @Override
-    public Hit clone() {
-	List<Attribute> attributes = getAttributes();
-	List<Attribute> attributesClone = Utility.cloneList(attributes);
-	return new Hit(m_id, attributesClone);
+    public Object clone() {
+	try {
+	    return super.clone();
+	} catch (CloneNotSupportedException e) {
+	    // this shouldn't happen, since we are Cloneable
+	    throw new InternalError(e);
+	}
     }
 
 }

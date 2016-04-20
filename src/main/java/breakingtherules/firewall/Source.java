@@ -1,16 +1,14 @@
 package breakingtherules.firewall;
 
-import breakingtherules.utilities.CloneablePublic;
-
 /**
  * Source attribute, represent a source IP of a hit
  */
-public class Source extends IPAttribute implements CloneablePublic {
+public class Source extends IPAttribute {
 
     /**
      * Source attribute that represent 'Any' source (contains all others)
      */
-    private static final Source ANY_SOURCE;
+    public static final Source ANY_SOURCE;
 
     static {
 	ANY_SOURCE = new Source(IP.getAnyIP());
@@ -22,7 +20,7 @@ public class Source extends IPAttribute implements CloneablePublic {
      * @param ip
      *            IP of the source
      */
-    public Source(IP ip) throws IllegalArgumentException {
+    public Source(IP ip) {
 	super(ip);
     }
 
@@ -32,7 +30,7 @@ public class Source extends IPAttribute implements CloneablePublic {
      * @param ip
      *            String IP of the source
      */
-    public Source(String ip) throws IllegalArgumentException {
+    public Source(String ip) {
 	this(IP.fromString(ip));
     }
 
@@ -60,8 +58,13 @@ public class Source extends IPAttribute implements CloneablePublic {
      * @see breakingtherules.firewall.IPAttribute#clone()
      */
     @Override
-    public Source clone() {
-	return new Source(getIp().clone());
+    public Object clone() {
+	try {
+	    return super.clone();
+	} catch (CloneNotSupportedException e) {
+	    // this shouldn't happen, since we are Cloneable
+	    throw new InternalError(e);
+	}
     }
 
     /*
@@ -81,15 +84,6 @@ public class Source extends IPAttribute implements CloneablePublic {
      */
     public int getTypeId() {
 	return SOURCE_TYPE_ID;
-    }
-
-    /**
-     * Get a source that represent 'Any' source instance (contains all others)
-     * 
-     * @return 'Any' source
-     */
-    public static Source getAnySource() {
-	return ANY_SOURCE;
     }
 
 }

@@ -17,6 +17,7 @@ import java.util.Objects;
 import java.util.Random;
 
 import breakingtherules.dao.csv.CSVParser;
+import breakingtherules.dao.xml.HitsXmlDao;
 import breakingtherules.firewall.Attribute;
 import breakingtherules.firewall.Hit;
 import breakingtherules.firewall.IP;
@@ -140,19 +141,23 @@ public class CSVScrambler implements Runnable {
 	    if (m_columnsTypes.contains(CSVParser.SOURCE)) {
 		Node sourceTree = buildTree(hits, Attribute.SOURCE_TYPE_ID);
 		scrambleTree(sourceTree);
-		hits = rebuildHits(sourceTree, Attribute.SOURCE_TYPE_ID);
+		updateHits(sourceTree, Attribute.SOURCE_TYPE_ID);
 	    }
 
 	    // Scramble by destination
 	    if (m_columnsTypes.contains(CSVParser.DESCRIPTION)) {
 		Node destinationTree = buildTree(hits, Attribute.DESTINATION_TYPE_ID);
 		scrambleTree(destinationTree);
-		hits = rebuildHits(destinationTree, Attribute.DESTINATION_TYPE_ID);
+		updateHits(destinationTree, Attribute.DESTINATION_TYPE_ID);
 	    }
 
-	    Collections.shuffle(hits); // Because why not
+	    Collections.shuffle(hits); // Because we can
 
-	    CSVParser.toCSV(m_columnsTypes, hits, m_outputFile);
+	    if (m_outputFile.endsWith(".xml")) {
+		HitsXmlDao.toXml(hits, m_outputFile);
+	    } else {
+		CSVParser.toCSV(m_columnsTypes, hits, m_outputFile);
+	    }
 
 	} catch (IOException e) {
 	    e.printStackTrace();
@@ -234,6 +239,7 @@ public class CSVScrambler implements Runnable {
 	public static void run(String args[]) {
 	    try {
 		TextPrinter printer = new TextPrinter();
+		Map<String, String> flags = new HashMap<String, String>();
 		CSVScrambler scrambler = null;
 		boolean success = true;
 
@@ -243,8 +249,6 @@ public class CSVScrambler implements Runnable {
 		} else if (argsList.contains(HELP_FLAG) || argsList.contains(HELP_FLAG_SHORT)) {
 		    helpMessage(printer);
 		} else {
-
-		    Map<String, String> flags = new HashMap<String, String>();
 
 		    // Read flags
 		    if (success) {
@@ -272,6 +276,8 @@ public class CSVScrambler implements Runnable {
 		}
 		if (success && scrambler != null) {
 		    printer.println("Start scramblering...");
+		    if (flags.get(OUTPUT_FLAG).endsWith(".xml"))
+			printer.println("Printing in xml format...");
 		    scrambler.run();
 		    printer.println("Finished scramblering!");
 		}
@@ -301,12 +307,12 @@ public class CSVScrambler implements Runnable {
 	    String serviceProtocolFlag = SERVICE_PROTOCOL_FLAG_SHORT + " " + SERVICE_PROTOCOL_FLAG + " <column number>";
 	    String servicePortFlag = SERVICE_PORT_FLAG_SHORT + " " + SERVICE_PORT_FLAG + " <column number>";
 
-	    String inputInfo = "input file for scrambler";
-	    String outputInfo = "output file for scrambler, optinal, input file will be overriden if not provided";
-	    String sourceInfo = "column number in the input file of source";
-	    String destinationInfo = "column number in the input file of destination";
-	    String serviceProtocolInfo = "column number in the input file of service protocol code";
-	    String servicePortInfo = "column number in the input file of service port";
+	    String inputInfo = "Input file for scrambler";
+	    String outputInfo = "Output file for scrambler. Optinal, input file will be overriden if not provided. If the output file name end with '.xml' the output will be in XML format";
+	    String sourceInfo = "Column number in the input file of source";
+	    String destinationInfo = "Column number in the input file of destination";
+	    String serviceProtocolInfo = "Column number in the input file of service protocol code";
+	    String servicePortInfo = "Column number in the input file of service port";
 
 	    String example1 = "For example: " + INPUT_FLAG + " input.csv " + OUTPUT_FLAG + " output.csv " + SOURCE_FLAG
 		    + " 0 " + DESTINATION_FLAG + " 1 " + SERVICE_PROTOCOL_FLAG + " 2 " + SERVICE_PORT_FLAG + " 3";
@@ -484,6 +490,9 @@ public class CSVScrambler implements Runnable {
 	    }
 	    flags.clear();
 	    flags.putAll(minimizedFlags);
+	    if (!flags.containsKey(OUTPUT_FLAG))
+		// output wan't set - using input file as output
+		flags.put(OUTPUT_FLAG, flags.get(INPUT_FLAG));
 
 	    return success;
 	}
@@ -691,7 +700,7 @@ public class CSVScrambler implements Runnable {
     }
 
     /**
-     * Build hits back from scrambled tree
+     * Update hits after tree was scrambled
      * 
      * @param root
      *            root to scrambled tree
@@ -699,12 +708,12 @@ public class CSVScrambler implements Runnable {
      *            id of IP attribute
      * @return list of hits built from tree
      */
-    private static List<Hit> rebuildHits(Node root, int ipAttId) {
-	return rebuildHits(root, ipAttId, new boolean[0]);
+    private static void updateHits(Node root, int ipAttId) {
+	updateHits(root, ipAttId, new boolean[0]);
     }
 
     /**
-     * Build hits back from scrambled sub tree
+     * Update hits after tree was scrambled
      * 
      * @param node
      *            parent of sub tree
@@ -714,17 +723,16 @@ public class CSVScrambler implements Runnable {
      *            boolean array of right and left decisions until this node
      * @return list of bits built from sub tree
      */
-    private static List<Hit> rebuildHits(Node node, int ipAttId, boolean[] prefix) {
+    private static void updateHits(Node node, int ipAttId, boolean[] prefix) {
 	if (node == null) {
-	    return new ArrayList<Hit>();
+	    return;
 	}
 	if (node instanceof Leaf) {
 	    Leaf leaf = (Leaf) node;
-	    List<Hit> hits = new ArrayList<Hit>(leaf.hits.size());
 	    for (Hit hit : leaf.hits) {
-		hits.add(buildHit(hit, ipAttId, prefix));
+		updateHit(hit, ipAttId, prefix);
 	    }
-	    return hits;
+	    return;
 	}
 
 	boolean[] leftPrefix = new boolean[prefix.length + 1];
@@ -735,16 +743,12 @@ public class CSVScrambler implements Runnable {
 	leftPrefix[prefix.length] = false;
 	rightPrefix[prefix.length] = true;
 
-	List<Hit> left = rebuildHits(node.left, ipAttId, leftPrefix);
-	List<Hit> right = rebuildHits(node.right, ipAttId, rightPrefix);
-	List<Hit> allHits = new ArrayList<Hit>();
-	allHits.addAll(left);
-	allHits.addAll(right);
-	return allHits;
+	updateHits(node.left, ipAttId, leftPrefix);
+	updateHits(node.right, ipAttId, rightPrefix);
     }
 
     /**
-     * Build a single hit
+     * Update a single hit
      * 
      * @param hit
      *            the current hit
@@ -754,13 +758,11 @@ public class CSVScrambler implements Runnable {
      *            boolean array of right and left decisions until the hit's node
      * @return new hit with new IP
      */
-    private static Hit buildHit(Hit hit, int ipAttId, boolean[] prefix) {
-	Hit newHit = hit.clone();
-	IPAttribute attribute = (IPAttribute) newHit.getAttribute(ipAttId);
+    private static void updateHit(Hit hit, int ipAttId, boolean[] prefix) {
+	IPAttribute attribute = (IPAttribute) hit.getAttribute(ipAttId);
 	IP currentIp = attribute.getIp();
 	IP newIp = IP.fromBooleans(prefix, currentIp.getClass());
 	attribute.setIp(newIp);
-	return newHit;
     }
 
     /**
@@ -793,13 +795,13 @@ public class CSVScrambler implements Runnable {
 	IPAttribute firstHitAtt = (IPAttribute) firstHit.getAttribute(ipAttId);
 	attributeCheck(firstHitAtt);
 	// "IPv4" or "IPv6"
-	String expectedIpClass = firstHitAtt.getIp().getClass().getName();
+	Class<?> expectedIpClass = firstHitAtt.getIp().getClass();
 
 	for (Hit hit : hits) {
 	    hitNullCheck(hit);
 	    IPAttribute att = (IPAttribute) hit.getAttribute(ipAttId);
 	    attributeCheck(att);
-	    String actualIpClass = att.getIp().getClass().getName();
+	    Class<?> actualIpClass = att.getIp().getClass();
 	    ipClassCheck(expectedIpClass, actualIpClass);
 	}
     }
@@ -839,7 +841,7 @@ public class CSVScrambler implements Runnable {
      * @param actual
      *            actual class
      */
-    private static void ipClassCheck(String expected, String actual) {
+    private static void ipClassCheck(Class<?> expected, Class<?> actual) {
 	if (!expected.equals(actual)) {
 	    throw new IllegalArgumentException("Not all hits have the same IP type");
 	}

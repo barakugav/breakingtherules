@@ -4,13 +4,12 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
-import breakingtherules.utilities.CloneablePublic;
 import breakingtherules.utilities.Utility;
 
 /**
  * The AttributesContainer class is a container of attributes
  */
-public abstract class AttributesContainer implements CloneablePublic {
+public abstract class AttributesContainer implements Cloneable {
 
     /**
      * The attributes this container contains
@@ -109,14 +108,6 @@ public abstract class AttributesContainer implements CloneablePublic {
     public String toString() {
 	return Utility.toString(m_attributes);
     }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see java.lang.Object#clone()
-     */
-    @Override
-    public abstract AttributesContainer clone();
 
     /**
      * Convert attributes list to array of attributes

@@ -79,7 +79,7 @@ public class HitTest {
 	int id = FirewallTestsUtility.getRandomID();
 	List<Attribute> attributes = FirewallTestsUtility.getRandomAttributes();
 	Hit hit = new Hit(id, attributes);
-	Hit hitClone = hit.clone();
+	Hit hitClone = (Hit) hit.clone();
 	assertFalse(hit == hitClone);
 	assertEquals(hit, hitClone);
     }

@@ -5,7 +5,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Vector;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -140,6 +143,37 @@ public class HitsXmlDao implements HitsDao {
     }
 
     /**
+     * Write a list of hits to file in XML format
+     * 
+     * @param hits
+     *            list of the hits
+     * @param filePath
+     *            output file path
+     * @throws IOException
+     *             if fails to write to file
+     */
+    public static void toXml(List<Hit> hits, String filePath) throws IOException {
+	try {
+	    DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+	    DocumentBuilder builder = factory.newDocumentBuilder();
+	    Document doc = builder.newDocument();
+
+	    Element repoElm = doc.createElement(XmlDaoConfig.REPOSITORY);
+	    hits.sort(Hit.IDS_COMPARATOR);
+	    for (Hit hit : hits) {
+		Element elm = doc.createElement(XmlDaoConfig.HIT);
+		createElement(elm, hit);
+		repoElm.appendChild(elm);
+	    }
+	    doc.appendChild(repoElm);
+
+	    UtilityXmlDao.writeFile(filePath, doc);
+	} catch (ParserConfigurationException e) {
+	    throw new IOException(e);
+	}
+    }
+
+    /**
      * Load all the hits from repository
      * 
      * @param repoPath
@@ -159,7 +193,7 @@ public class HitsXmlDao implements HitsDao {
 	Document repositoryDoc = UtilityXmlDao.readFile(repoPath);
 
 	// Get all hits from repository
-	NodeList hitsList = repositoryDoc.getElementsByTagName("hit");
+	NodeList hitsList = repositoryDoc.getElementsByTagName(XmlDaoConfig.HIT);
 
 	// Extract all hits that match the filter
 	hits = new ArrayList<Hit>();
@@ -192,34 +226,45 @@ public class HitsXmlDao implements HitsDao {
      */
     private static Hit createHit(Element hitElm) {
 	// Read attributes from element
-	String id = hitElm.getAttribute("id");
-	String source = hitElm.getAttribute("source");
-	String destination = hitElm.getAttribute("destination");
-	String service = hitElm.getAttribute("service");
+	String idStr = hitElm.getAttribute(XmlDaoConfig.ID);
+	String sourceStr = hitElm.getAttribute(Attribute.SOURCE_TYPE.toLowerCase());
+	String destinationStr = hitElm.getAttribute(Attribute.DESTINATION_TYPE.toLowerCase());
+	String serviceStr = hitElm.getAttribute(Attribute.SERVICE_TYPE.toLowerCase());
 
-	if (id == null || id.equals("")) {
+	if (idStr == null || idStr.equals("")) {
 	    throw new XMLParseException("Id does not exist");
-	} else if (source == null || source.equals("")) {
+	} else if (sourceStr == null || sourceStr.equals("")) {
 	    throw new XMLParseException("Source does not exist");
-	} else if (destination == null || destination.equals("")) {
+	} else if (destinationStr == null || destinationStr.equals("")) {
 	    throw new XMLParseException("Destination does not exist");
-	} else if (service == null || service.equals("")) {
+	} else if (serviceStr == null || serviceStr.equals("")) {
 	    throw new XMLParseException("Service does not exist");
 	}
 
 	// Convert strings to attributes
-	int intID = Integer.parseInt(id);
-	Source sourceObj = new Source(source);
-	Destination destinationObj = new Destination(destination);
-	Service serviceObj = new Service(service);
+	try {
+	    int intID = Integer.parseInt(idStr);
+	    Source sourceObj = new Source(sourceStr);
+	    Destination destinationObj = new Destination(destinationStr);
+	    Service serviceObj = new Service(serviceStr);
 
-	// Create attributes vector
-	Vector<Attribute> attributes = new Vector<Attribute>();
-	attributes.add(sourceObj);
-	attributes.add(destinationObj);
-	attributes.add(serviceObj);
+	    // Create attributes list
+	    List<Attribute> attributes = new ArrayList<Attribute>();
+	    attributes.add(sourceObj);
+	    attributes.add(destinationObj);
+	    attributes.add(serviceObj);
+	    return new Hit(intID, attributes);
 
-	return new Hit(intID, attributes);
+	} catch (Exception e) {
+	    throw new XMLParseException(e);
+	}
+    }
+
+    private static void createElement(Element node, Hit hit) {
+	node.setAttribute(XmlDaoConfig.ID, "" + hit.getId());
+	for (Attribute attribute : hit.getAttributes()) {
+	    node.setAttribute(attribute.getType().toLowerCase(), attribute.toString());
+	}
     }
 
     /**

@@ -372,7 +372,7 @@ public class IPv4Test {
 	System.out.println("# IPv4Test cloneTest");
 	int[] address = FirewallTestsUtility.getRandomAddressIPv4();
 	IPv4 ip = new IPv4(address);
-	IPv4 ipClone = ip.clone();
+	IPv4 ipClone = (IPv4) ip.clone();
 	assertFalse(ip == ipClone);
 	assertEquals(ip, ipClone);
     }

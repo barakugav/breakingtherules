@@ -422,7 +422,7 @@ public class ServiceTest {
 	String protocol = "TCP";
 	int port = FirewallTestsUtility.getRandomPort();
 	Service service = new Service(protocol, port);
-	Service serviceClone = service.clone();
+	Service serviceClone = (Service) service.clone();
 	assertFalse(service == serviceClone);
 	assertEquals(service, serviceClone);
     }
