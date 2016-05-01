@@ -116,21 +116,6 @@ public class IPv6 extends IP {
 	return super.equals(o) && o instanceof IPv6;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see breakingtherules.firewall.IP#clone()
-     */
-    @Override
-    public Object clone() {
-	try {
-	    return super.clone();
-	} catch (CloneNotSupportedException e) {
-	    // this shouldn't happen, since we are Cloneable
-	    throw new InternalError(e);
-	}
-    }
-
     /**
      * Get IPv6 that represents 'Any' IPv6 (contains all others)
      * 

@@ -1,5 +1,6 @@
 package breakingtherules.firewall;
 
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
@@ -82,20 +83,15 @@ public class Hit extends AttributesContainer {
     public String toString() {
 	return "{ID = " + m_id + ", " + super.toString() + "}";
     }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see breakingtherules.firewall.AttributesContainer#clone()
-     */
-    @Override
-    public Object clone() {
-	try {
-	    return super.clone();
-	} catch (CloneNotSupportedException e) {
-	    // this shouldn't happen, since we are Cloneable
-	    throw new InternalError(e);
-	}
+    
+    public static Hit mutate(Hit hit, Attribute attribute) {
+	List<Attribute> attributes = hit.getAttributes();
+	List<Attribute> mutatedAttribues = new ArrayList<>();
+	for (Attribute att : attributes)
+	    if (att.getTypeId() != attribute.getTypeId())
+		mutatedAttribues.add(att);
+	mutatedAttribues.add(attribute);
+	return new Hit(hit.m_id, mutatedAttribues);
     }
-
+    
 }

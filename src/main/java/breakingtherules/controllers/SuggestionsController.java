@@ -22,7 +22,7 @@ public class SuggestionsController {
     @RequestMapping(value = "/suggestions", method = RequestMethod.GET)
     public List<SuggestionsDto> getSuggestions(@RequestParam(value = "amount", defaultValue = "10") int amount)
 	    throws NoCurrentJobException, IOException {
-	return job.getSuggestions();
+	return job.getSuggestions(amount);
     }
 
 }

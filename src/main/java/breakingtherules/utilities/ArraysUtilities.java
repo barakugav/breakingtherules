@@ -1,6 +1,8 @@
 package breakingtherules.utilities;
 
+import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * The ArraysUtilities class is a set of array helper methods. All methods are
@@ -73,6 +75,39 @@ public class ArraysUtilities {
      */
     public static String[] toArray(List<String> list) {
 	return list.toArray(new String[list.size()]);
+    }
+
+    public static boolean[] toArrayBoolean(List<Boolean> list) {
+	boolean[] arr = new boolean[list.size()];
+	for (int i = 0; i < arr.length; i++)
+	    arr[i] = list.get(i);
+	return arr;
+    }
+
+    public static <T> Iterator<T> iterator(T[] array) {
+	return new ArrayIterator<>(array);
+    }
+
+    private static class ArrayIterator<T> implements Iterator<T> {
+
+	private final T[] array;
+	private int index;
+
+	private ArrayIterator(T[] array) {
+	    this.array = Objects.requireNonNull(array);
+	    index = 0;
+	}
+
+	@Override
+	public boolean hasNext() {
+	    return index < array.length;
+	}
+
+	@Override
+	public T next() {
+	    return array[index++];
+	}
+
     }
 
 }

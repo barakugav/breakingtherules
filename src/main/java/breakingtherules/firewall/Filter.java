@@ -1,10 +1,7 @@
 package breakingtherules.firewall;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-
-import com.fasterxml.jackson.annotation.JsonProperty;
 
 import breakingtherules.dao.HitsDao;
 
@@ -15,6 +12,16 @@ import breakingtherules.dao.HitsDao;
  * @see HitsDao
  */
 public class Filter extends AttributesContainer {
+
+    public static final Filter ANY_FILTER;
+
+    static {
+	List<Attribute> attributes = new ArrayList<>();
+	attributes.add(Source.ANY_SOURCE);
+	attributes.add(Destination.ANY_DESTINATION);
+	attributes.add(Service.ANY_SERVICE);
+	ANY_FILTER = new Filter(attributes);
+    }
 
     /**
      * Constructor
@@ -28,6 +35,10 @@ public class Filter extends AttributesContainer {
 	super(attributes);
     }
 
+    public Filter(AttributesContainer c) {
+	super(c);
+    }
+
     /**
      * Checks if hit is matching the filter
      * 
@@ -36,7 +47,7 @@ public class Filter extends AttributesContainer {
      * @return true if all hit's attribute contained in the filter, else - false
      */
     public boolean isMatch(Hit hit) {
-	for (Attribute filterAttribute : getAttributes()) {
+	for (Attribute filterAttribute : this) {
 	    int attributeType = filterAttribute.getTypeId();
 	    Attribute hitAttribute = hit.getAttribute(attributeType);
 	    if (!filterAttribute.contains(hitAttribute)) {
@@ -49,64 +60,12 @@ public class Filter extends AttributesContainer {
     /*
      * (non-Javadoc)
      * 
-     * @see breakingtherules.firewall.AttributesContainer#getAttributes()
-     */
-    @Override
-    @JsonProperty("attributes")
-    public List<Attribute> getAttributes() {
-	return Arrays.asList(m_attributes);
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
      * @see
      * breakingtherules.firewall.AttributesContainer#equals(java.lang.Object)
      */
     @Override
     public boolean equals(Object o) {
-	if (!super.equals(o)) {
-	    return false;
-	}
-	return o instanceof Filter;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see breakingtherules.firewall.AttributesContainer#hashCode()
-     */
-    @Override
-    public int hashCode() {
-	return super.hashCode();
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see breakingtherules.firewall.AttributesContainer#clone()
-     */
-    @Override
-    public Object clone() {
-	try {
-	    return super.clone();
-	} catch (CloneNotSupportedException e) {
-	    // this shouldn't happen, since we are Cloneable
-	    throw new InternalError(e);
-	}
-    }
-
-    /**
-     * Get a filter that allow any hit ('Any' filter)
-     * 
-     * @return 'Any' filter
-     */
-    public static Filter getAnyFilter() {
-	List<Attribute> attributes = new ArrayList<Attribute>();
-	attributes.add(Source.ANY_SOURCE);
-	attributes.add(Destination.ANY_DESTINATION);
-	attributes.add(Service.ANY_SERVICE);
-	return new Filter(attributes);
+	return super.equals(o) && o instanceof Filter;
     }
 
 }

@@ -24,6 +24,11 @@ public abstract class IP implements Comparable<IP>, Cloneable {
     protected final int m_prefixLength;
 
     /**
+     * Cache for the IP's hash
+     */
+    private int hash;
+
+    /**
      * Constructor
      * 
      * @param ip
@@ -88,7 +93,7 @@ public abstract class IP implements Comparable<IP>, Cloneable {
      */
     protected IP(String ip) {
 	String expectedSeparator = getStringSeparator();
-	List<Integer> address = new ArrayList<Integer>();
+	List<Integer> address = new ArrayList<>();
 	int separatorIndex = ip.indexOf(expectedSeparator);
 	try {
 	    // Read address blocks
@@ -234,7 +239,7 @@ public abstract class IP implements Comparable<IP>, Cloneable {
 	    return false;
 	}
 
-	if (!(m_prefixLength <= other.m_prefixLength)) {
+	if (m_prefixLength > other.m_prefixLength) {
 	    return false;
 	}
 
@@ -280,7 +285,11 @@ public abstract class IP implements Comparable<IP>, Cloneable {
      */
     @Override
     public int hashCode() {
-	int hash = 1;
+	// Look for cached hash first
+	if (hash != 0 || m_address.length == 0)
+	    return hash;
+
+	hash = 1;
 	for (int i = 0; i < m_address.length; i++) {
 	    hash = hash * 31 + m_address[i];
 	}
@@ -314,6 +323,21 @@ public abstract class IP implements Comparable<IP>, Cloneable {
 	    }
 	}
 	return true;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see java.lang.Object#clone()
+     */
+    @Override
+    public Object clone() {
+	try {
+	    return super.clone();
+	} catch (CloneNotSupportedException e) {
+	    // this shouldn't happen, since we are Cloneable
+	    throw new InternalError(e);
+	}
     }
 
     /**
@@ -369,7 +393,7 @@ public abstract class IP implements Comparable<IP>, Cloneable {
 	    return AnyIP.instance;
 	} else {
 	    throw new IllegalArgumentException(
-		    "Choosen class in unkwon. Expected IPv4, IPv6 or AnyIP. Actual: " + clazz.getName());
+		    "Choosen class in unkwon. Expected IPv4, IPv6 or AnyIP. Actual: " + clazz.getSimpleName());
 	}
     }
 
@@ -433,7 +457,7 @@ public abstract class IP implements Comparable<IP>, Cloneable {
 	    }
 	}
 
-	return 0;
+	return m_prefixLength - other.m_prefixLength;
     }
 
     /**
@@ -575,6 +599,7 @@ public abstract class IP implements Comparable<IP>, Cloneable {
 	    return null;
 	}
 
+	@Override
 	public boolean getLastBit() {
 	    return false;
 	}
@@ -594,6 +619,7 @@ public abstract class IP implements Comparable<IP>, Cloneable {
 	    return null;
 	}
 
+	@Override
 	public AnyIP clone() {
 	    return this;
 	}

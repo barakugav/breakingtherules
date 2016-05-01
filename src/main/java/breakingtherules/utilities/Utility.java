@@ -4,9 +4,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.BiConsumer;
+import java.util.function.BiPredicate;
+import java.util.function.Consumer;
 
 /**
  * The Utility class provide a set of static helper methods. All method are
@@ -100,7 +102,7 @@ public class Utility {
 	if (offset < 0 || size < 0)
 	    throw new IllegalArgumentException("offset and size should be positive (" + offset + ", " + size + ")");
 	if (offset >= list.size())
-	    return new ArrayList<T>();
+	    return new ArrayList<>();
 	return list.subList(offset, Math.min(list.size(), offset + size));
     }
 
@@ -136,7 +138,7 @@ public class Utility {
 	if (list == null || comparator == null) {
 	    throw new IllegalArgumentException("Arguments can't be null");
 	}
-	List<T> filteredList = new ArrayList<T>();
+	List<T> filteredList = new ArrayList<>();
 	for (T e : list) {
 	    if (e == null) {
 		if (!filteredList.contains(null)) {
@@ -160,87 +162,43 @@ public class Utility {
     }
 
     /**
-     * Get a double iterator over a list
-     * <p>
-     * A double iterator is an iterator that iterate over two elements at a
-     * time.
+     * Iterate over a list and operate consumers over the elements. The method
+     * accept a BiPredicate that indicate if two elements need to be consumed
+     * together or not. The BiPredicate is tested only on followings elements.
      * 
-     * @param list
+     * @param l
      *            the list
-     * @return double iterator iver the list
+     * @param p
+     *            the BiPredicate that indicate if two elements need to be
+     *            consumed together or not
+     * @param c
+     *            consumer used to consume single elements if the predicate
+     *            returned false on two elements
+     * @param bc
+     *            BiConsumer used to consume two elements if the predicate
+     *            returned true on two elements
      */
-    public static <T> Iterator<Pair<T, T>> getDoubleIterator(List<T> list) {
-	if (list == null) {
-	    throw new IllegalArgumentException("list  can't be null");
+    @SuppressWarnings("unchecked")
+    public static <T> void forEach(List<? extends T> l, BiPredicate<? super T, ? super T> p, Consumer<? super T> c,
+	    BiConsumer<? super T, ? super T> bc) {
+	Object[] arr = l.toArray();
+	int length = l.size() - 1;
+	for (int i = 0; i < length; i++) {
+	    T a = (T) arr[i];
+	    T b = (T) arr[i + 1];
+	    if (p.test(a, b)) {
+		bc.accept(a, b);
+		i++;
+	    } else {
+		c.accept(a);
+	    }
 	}
-	return new Iterator<Pair<T, T>>() {
 
-	    Iterator<T> iteratorToNextElement;
-
-	    Iterator<T> iteratorToCurrentElement;
-
-	    {
-		iteratorToCurrentElement = list.iterator();
-		iteratorToNextElement = list.iterator();
-		if (iteratorToNextElement.hasNext()) {
-		    iteratorToNextElement.next();
-		}
-	    }
-
-	    @Override
-	    public boolean hasNext() {
-		return iteratorToNextElement.hasNext();
-	    }
-
-	    @Override
-	    public Pair<T, T> next() {
-		T first = iteratorToCurrentElement.next();
-		T second = iteratorToNextElement.next();
-		return new Pair<T, T>(first, second);
-	    }
-	};
-    }
-
-    /**
-     * Get a double iterator over two lists
-     * <p>
-     * The double iterator allow to iterate over two list simultaneously
-     * 
-     * @param listA
-     *            first list
-     * @param listB
-     *            second list
-     * @return double iterator over the two list
-     */
-    public static <T, U> Iterator<Pair<T, U>> getDoubleIterator(List<T> listA, List<U> listB) {
-	if (listA == null || listB == null) {
-	    throw new IllegalArgumentException("Lists can't be null!");
+	T beforeLast = (T) arr[length - 1];
+	T last = (T) arr[length];
+	if (!p.test(beforeLast, last)) {
+	    c.accept(last);
 	}
-	if (listA.size() != listB.size()) {
-	    throw new IllegalArgumentException("The list should be the same size!");
-	}
-	return new Iterator<Pair<T, U>>() {
-
-	    Iterator<T> iteratorA;
-	    Iterator<U> iteratorB;
-
-	    {
-		iteratorA = listA.iterator();
-		iteratorB = listB.iterator();
-	    }
-
-	    @Override
-	    public boolean hasNext() {
-		return iteratorA.hasNext() && iteratorB.hasNext();
-	    }
-
-	    @Override
-	    public Pair<T, U> next() {
-		T a = iteratorA.next();
-		U b = iteratorB.next();
-		return new Pair<T, U>(a, b);
-	    }
-	};
     }
 
     /**
@@ -276,7 +234,7 @@ public class Utility {
 	    throw new IllegalArgumentException("Seperator sequences can't be null");
 	}
 
-	List<String> words = new ArrayList<String>();
+	List<String> words = new ArrayList<>();
 	int[] nextSeparator = positionOf(text, separatorSequences);
 	int separatorIndex = nextSeparator[0];
 	int separatorLength = nextSeparator[1];

@@ -3,20 +3,17 @@ package breakingtherules.tests.utilities;
 import static breakingtherules.tests.JUnitUtilities.advanceAssertEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
 
 import org.junit.Test;
 
-import breakingtherules.utilities.Pair;
 import breakingtherules.utilities.Utility;
 
 public class UtilityTest {
@@ -155,7 +152,7 @@ public class UtilityTest {
 		    return o2 == null ? 0 : 1;
 		}
 		if (o2 == null) {
-		    return o1 == null ? 0 : -1;
+		    return -1;
 		}
 		return Integer.compare(o1, o2);
 	    }
@@ -209,75 +206,10 @@ public class UtilityTest {
     }
 
     @Test
-    public void getDoubleIteratorOneListTest() {
-	System.out.println("# UtilityTest getDoubleIteratorOneListTest");
-	final int size = 10;
-	List<Integer> list = getRandomList(size);
-	Iterator<Pair<Integer, Integer>> it = Utility.getDoubleIterator(list);
-	assertNotNull(it);
-	for (int i = 0; i < size - 1; i++) {
-	    assertTrue(it.hasNext());
-	    Pair<Integer, Integer> pair = it.next();
-	    assertNotNull(pair);
-	}
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void getDoubleIteratorOneListTestNull() {
-	System.out.println("# UtilityTest getDoubleIteratorOneListTestNull");
-	Utility.getDoubleIterator(null);
-    }
-
-    @Test
-    public void getDoubleIteratorTwoListsTest() {
-	System.out.println("# UtilityTest getDoubleIteratorTwoListsTest");
-	List<Integer> listA = getRandomList(5);
-	List<Integer> listB = getRandomList(5);
-	Iterator<Pair<Integer, Integer>> it = Utility.getDoubleIterator(listA, listB);
-
-	assertNotNull(it);
-
-	List<Integer> actualListA = getEmptyList();
-	List<Integer> actualListB = getEmptyList();
-	while (it.hasNext()) {
-	    Pair<Integer, Integer> pair = it.next();
-	    actualListA.add(pair.first);
-	    actualListB.add(pair.second);
-	}
-
-	assertEquals(listA, actualListA);
-	assertEquals(listB, actualListB);
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void getDoubleIteratorTwoListsTestListANull() {
-	System.out.println("# UtilityTest getDoubleIteratorTwoListsTestListANull");
-	List<Integer> listA = null;
-	List<Integer> listB = getRandomList(5);
-	Utility.getDoubleIterator(listA, listB);
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void getDoubleIteratorTwoListsTestListBNull() {
-	System.out.println("# UtilityTest getDoubleIteratorTwoListsTestListBNull");
-	List<Integer> listA = getRandomList(5);
-	List<Integer> listB = null;
-	Utility.getDoubleIterator(listA, listB);
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void getDoubleIteratorTwoListsTestDifferentSize() {
-	System.out.println("# UtilityTest getDoubleIteratorTwoListsTestDifferentSize");
-	List<Integer> listA = getRandomList(5);
-	List<Integer> listB = getRandomList(6);
-	Utility.getDoubleIterator(listA, listB);
-    }
-
-    @Test
     public void breakToWordsTest() {
 	System.out.println("# UtilityTest breakToWordsTest");
 	String text = "Hello \t\tbig\t world";
-	List<String> expected = new ArrayList<String>();
+	List<String> expected = new ArrayList<>();
 	expected.add("Hello");
 	expected.add("big");
 	expected.add("world");
@@ -288,7 +220,7 @@ public class UtilityTest {
     public void breakToWordsTestOnlyTabs() {
 	System.out.println("# UtilityTest breakToWordsTestOnlyTabs");
 	String text = "Hello\t\tbig\tworld,\t\tsup?";
-	List<String> expected = new ArrayList<String>();
+	List<String> expected = new ArrayList<>();
 	expected.add("Hello");
 	expected.add("big");
 	expected.add("world,");
@@ -301,7 +233,7 @@ public class UtilityTest {
     public void breakToWordsTestOnlySpaces() {
 	System.out.println("# UtilityTest breakToWordsTestOnlySpaces");
 	String text = "Hello  big world,  sup?";
-	List<String> expected = new ArrayList<String>();
+	List<String> expected = new ArrayList<>();
 	expected.add("Hello");
 	expected.add("big");
 	expected.add("world,");
@@ -313,7 +245,7 @@ public class UtilityTest {
     public void breakToWordsTestSpaceInStart() {
 	System.out.println("# UtilityTest breakToWordsTestSpaceInStart");
 	String text = "  Hello \t\tbig\t world";
-	List<String> expected = new ArrayList<String>();
+	List<String> expected = new ArrayList<>();
 	expected.add("Hello");
 	expected.add("big");
 	expected.add("world");
@@ -324,7 +256,7 @@ public class UtilityTest {
     public void breakToWordsTestSpaceInEnd() {
 	System.out.println("# UtilityTest breakToWordsTestSpaceInEnd");
 	String text = "Hello \t\tbig\t world ";
-	List<String> expected = new ArrayList<String>();
+	List<String> expected = new ArrayList<>();
 	expected.add("Hello");
 	expected.add("big");
 	expected.add("world");
@@ -341,7 +273,7 @@ public class UtilityTest {
     public void breakToWordsTestCustomSeparators() {
 	System.out.println("# UtilityTest breakToWordsTestCustomSeparators");
 	String text = "qHellozqqbigqzworldz[]]";
-	List<String> expected = new ArrayList<String>();
+	List<String> expected = new ArrayList<>();
 	expected.add("Hello");
 	expected.add("big");
 	expected.add("world");
@@ -717,7 +649,7 @@ public class UtilityTest {
     }
 
     private static ArrayList<Integer> getEmptyList() {
-	return new ArrayList<Integer>();
+	return new ArrayList<>();
     }
 
     private static List<Integer> getRandomList(int size) {

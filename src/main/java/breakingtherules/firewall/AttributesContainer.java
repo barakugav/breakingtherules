@@ -1,20 +1,24 @@
 package breakingtherules.firewall;
 
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+import breakingtherules.utilities.ArraysUtilities;
 import breakingtherules.utilities.Utility;
 
 /**
  * The AttributesContainer class is a container of attributes
  */
-public abstract class AttributesContainer implements Cloneable {
+abstract class AttributesContainer implements Cloneable, Iterable<Attribute> {
 
     /**
      * The attributes this container contains
      */
-    protected final Attribute[] m_attributes;
+    private final Attribute[] m_attributes;
 
     /**
      * Constructor
@@ -22,7 +26,7 @@ public abstract class AttributesContainer implements Cloneable {
      * @param attributes
      *            the attributes of this container
      */
-    public AttributesContainer(List<Attribute> attributes) {
+    protected AttributesContainer(List<Attribute> attributes) {
 	if (attributes == null) {
 	    throw new IllegalArgumentException("Tried to create hit with null attributes");
 	}
@@ -30,10 +34,22 @@ public abstract class AttributesContainer implements Cloneable {
     }
 
     /**
+     * Constructor
+     * 
+     * @param c
+     *            container with attributes to construct this container
+     */
+    protected AttributesContainer(AttributesContainer c) {
+	// Clone is not needed because everything is final
+	m_attributes = c.m_attributes;
+    }
+
+    /**
      * Get the attributes of the hit
      * 
      * @return list of the hit's attributes
      */
+    @JsonProperty("attributes")
     public List<Attribute> getAttributes() {
 	return Arrays.asList(m_attributes);
     }
@@ -58,6 +74,16 @@ public abstract class AttributesContainer implements Cloneable {
      */
     public Attribute getAttribute(int typeId) {
 	return (0 <= typeId && typeId < m_attributes.length) ? m_attributes[typeId] : null;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see java.lang.Iterable#iterator()
+     */
+    @Override
+    public Iterator<Attribute> iterator() {
+	return ArraysUtilities.iterator(m_attributes);
     }
 
     /*
@@ -105,8 +131,24 @@ public abstract class AttributesContainer implements Cloneable {
      * 
      * @see java.lang.Object#toString()
      */
+    @Override
     public String toString() {
 	return Utility.toString(m_attributes);
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see breakingtherules.firewall.AttributesContainer#clone()
+     */
+    @Override
+    public Object clone() {
+	try {
+	    return super.clone();
+	} catch (CloneNotSupportedException e) {
+	    // this shouldn't happen, since we are Cloneable
+	    throw new InternalError(e);
+	}
     }
 
     /**

@@ -8,8 +8,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 
 import breakingtherules.dao.HitsDao;
-import breakingtherules.dao.es.HitsElasticDao;
-import breakingtherules.dao.postgresql.HitsPostgresDao;
+import breakingtherules.dao.elastic.HitsElasticDao;
 import breakingtherules.dao.xml.HitsXmlDao;
 import breakingtherules.services.algorithm.InformationAlgorithm;
 import breakingtherules.services.algorithm.SimpleAlgorithm;
@@ -27,13 +26,6 @@ public class Config {
 	ds.setUsername("root");
 	ds.setPassword("admin");
 	return ds;
-    }
-
-    // @Bean
-    public HitsDao hitsPostgresDao() {
-	HitsPostgresDao dao = new HitsPostgresDao();
-	dao.setDataSource(jdbcDataSource());
-	return dao;
     }
 
     // @Bean

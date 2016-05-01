@@ -41,7 +41,7 @@ class FirewallTestsUtility {
     }
 
     static List<Attribute> getRandomAttributes() {
-	List<Attribute> attributes = new ArrayList<Attribute>();
+	List<Attribute> attributes = new ArrayList<>();
 	attributes.add(getRandomSource());
 	attributes.add(getRandomDestination());
 	attributes.add(getRandomService());

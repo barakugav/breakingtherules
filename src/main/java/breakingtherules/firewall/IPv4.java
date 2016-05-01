@@ -116,21 +116,6 @@ public class IPv4 extends IP {
 	return super.equals(o) && o instanceof IPv4;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see breakingtherules.firewall.IP#clone()
-     */
-    @Override
-    public Object clone() {
-	try {
-	    return super.clone();
-	} catch (CloneNotSupportedException e) {
-	    // this shouldn't happen, since we are Cloneable
-	    throw new InternalError(e);
-	}
-    }
-
     /**
      * Get IPv4 that represents 'Any' IPv4 (contains all others)
      * 

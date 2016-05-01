@@ -50,6 +50,7 @@ public class Destination extends IPAttribute {
      * 
      * @see breakingtherules.firewall.Attribute#getTypeId()
      */
+    @Override
     public int getTypeId() {
 	return DESTINATION_TYPE_ID;
     }
@@ -72,19 +73,9 @@ public class Destination extends IPAttribute {
 	return o instanceof Destination && super.equals(o);
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see breakingtherules.firewall.IPAttribute#clone()
-     */
     @Override
-    public Object clone() {
-	try {
-	    return super.clone();
-	} catch (CloneNotSupportedException e) {
-	    // this shouldn't happen, since we are Cloneable
-	    throw new InternalError(e);
-	}
+    public Destination mutate(IP ip) {
+	return new Destination(ip);
     }
 
 }

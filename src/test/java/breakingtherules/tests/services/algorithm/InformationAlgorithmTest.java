@@ -31,7 +31,7 @@ public class InformationAlgorithmTest {
 	try {
 	    RulesDao rulesDao = new RulesXmlDao();
 	    HitsDao hitsDao = new HitsXmlDao();
-	    Filter filter = Filter.getAnyFilter();
+	    Filter filter = Filter.ANY_FILTER;
 	    ListDto<Rule> rulesDto = rulesDao.getRules(JOB_ID);
 	    List<Rule> rules = rulesDto.getData();
 	    ListDto<Hit> hitsDto = hitsDao.getHits(JOB_ID, rules, filter);

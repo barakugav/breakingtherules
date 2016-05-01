@@ -3,6 +3,7 @@ package breakingtherules.firewall;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 import org.springframework.util.StringUtils;
 
@@ -477,7 +478,7 @@ public class Service implements Attribute {
      */
     @Override
     public int hashCode() {
-	return m_protocolCode + m_portRangeStart * (1 << 16) + m_portRangeEnd;
+	return Objects.hash(m_protocolCode, m_portRangeStart, m_portRangeEnd);
     }
 
     /*
@@ -570,6 +571,7 @@ public class Service implements Attribute {
      * 
      * @see breakingtherules.firewall.Attribute#getTypeId()
      */
+    @Override
     public int getTypeId() {
 	return SERVICE_TYPE_ID;
     }
@@ -596,10 +598,10 @@ public class Service implements Attribute {
      * @return the protocol's name
      */
     public static String protocolName(int protocolCode) {
-	if (protocolCode < -1 || protocolCode > 255)
-	    throw new IllegalArgumentException("Protocol code should be in range [0, 255]: " + protocolCode);
 	if (protocolCode == ANY_PROTOCOL)
 	    return "Any";
+	if (protocolCode < 0 || protocolCode > 255)
+	    throw new IllegalArgumentException("Protocol code should be in range [0, 255]: " + protocolCode);
 	return PROTOCOL_NAMES[protocolCode];
     }
 

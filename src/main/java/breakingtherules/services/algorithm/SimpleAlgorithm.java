@@ -27,12 +27,13 @@ public class SimpleAlgorithm implements SuggestionsAlgorithm {
      * breakingtherules.services.algorithm.SuggestionsAlgorithm#getSuggestions(
      * java.util.List, java.lang.String)
      */
+    @Override
     public List<Suggestion> getSuggestions(List<Hit> hits, String attType) {
 	// The answer list
-	List<Suggestion> allSuggestionsList = new ArrayList<Suggestion>();
+	List<Suggestion> allSuggestionsList = new ArrayList<>();
 
 	// Every possible single attribute becomes a suggestion.
-	HashMap<Attribute, Suggestion> allSuggestionsMap = new HashMap<Attribute, Suggestion>();
+	HashMap<Attribute, Suggestion> allSuggestionsMap = new HashMap<>();
 
 	// Create a suggestion for every attribute, count the number of hits
 	// that apply to it
@@ -60,7 +61,7 @@ public class SimpleAlgorithm implements SuggestionsAlgorithm {
 	Collections.sort(allSuggestionsList);
 	Collections.reverse(allSuggestionsList);
 
-	int endIndex = (int) Math.min(NUMBER_OF_SUGGESTIONS, allSuggestionsList.size());
+	int endIndex = Math.min(NUMBER_OF_SUGGESTIONS, allSuggestionsList.size());
 	return allSuggestionsList.subList(0, endIndex);
     }
 

@@ -19,6 +19,7 @@ import breakingtherules.firewall.Hit;
 import breakingtherules.firewall.Rule;
 import breakingtherules.services.algorithm.Suggestion;
 import breakingtherules.services.algorithm.SuggestionsAlgorithm;
+import breakingtherules.utilities.Utility;
 
 @Component
 @Scope(value = "session", proxyMode = ScopedProxyMode.TARGET_CLASS)
@@ -99,8 +100,8 @@ public class Job {
     public void setJob(int id) throws IOException {
 	m_id = id;
 	m_rules = m_rulesDao.getRules(id).getData();
-	m_filter = Filter.getAnyFilter(); // TODO Change to: previously used
-					  // filter
+	m_filter = Filter.ANY_FILTER; // TODO Change to: previously used
+				      // filter
     }
 
     /**
@@ -176,10 +177,10 @@ public class Job {
      * @throws IOException
      *             if DAO failed to load the job's hits
      */
-    public List<SuggestionsDto> getSuggestions() throws IOException {
+    public List<SuggestionsDto> getSuggestions(int amount) throws IOException {
 	checkJobState();
 
-	List<SuggestionsDto> suggestionsDtos = new ArrayList<SuggestionsDto>();
+	List<SuggestionsDto> suggestionsDtos = new ArrayList<>();
 	List<String> allAttributesType = getAllAttributeTypes();
 	List<Hit> hits = getHitsAll().getData();
 	for (String attType : allAttributesType) {
@@ -187,7 +188,7 @@ public class Job {
 	    SuggestionsDto attSuggestions = new SuggestionsDto(suggestions, attType);
 	    suggestionsDtos.add(attSuggestions);
 	}
-	return suggestionsDtos;
+	return Utility.subList(suggestionsDtos, 0, amount);
     }
 
     /**
@@ -211,9 +212,9 @@ public class Job {
     private List<String> getAllAttributeTypes() {
 	checkJobState();
 	if (m_allAttributeTypes == null) {
-	    m_allAttributeTypes = new ArrayList<String>();
+	    m_allAttributeTypes = new ArrayList<>();
 	    Rule demoRule = m_rules.get(0);
-	    for (Attribute att : demoRule.getAttributes()) {
+	    for (Attribute att : demoRule) {
 		m_allAttributeTypes.add(att.getType());
 	    }
 	}

@@ -88,6 +88,7 @@ public class Suggestion implements Comparable<Suggestion> {
      * 
      * Is inconsistent with x.equals(y)
      */
+    @Override
     public int compareTo(Suggestion other) {
 	Double thisScore = new Double(this.m_score);
 	Double otherScore = new Double(other.m_score);

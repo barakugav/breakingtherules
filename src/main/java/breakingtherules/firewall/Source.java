@@ -55,21 +55,6 @@ public class Source extends IPAttribute {
     /*
      * (non-Javadoc)
      * 
-     * @see breakingtherules.firewall.IPAttribute#clone()
-     */
-    @Override
-    public Object clone() {
-	try {
-	    return super.clone();
-	} catch (CloneNotSupportedException e) {
-	    // this shouldn't happen, since we are Cloneable
-	    throw new InternalError(e);
-	}
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
      * @see breakingtherules.firewall.Attribute#getType()
      */
     @Override
@@ -82,8 +67,14 @@ public class Source extends IPAttribute {
      * 
      * @see breakingtherules.firewall.Attribute#getTypeId()
      */
+    @Override
     public int getTypeId() {
 	return SOURCE_TYPE_ID;
+    }
+
+    @Override
+    public Source mutate(IP ip) {
+	return new Source(ip);
     }
 
 }

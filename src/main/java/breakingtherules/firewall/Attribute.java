@@ -3,6 +3,7 @@ package breakingtherules.firewall;
 import java.util.Comparator;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
@@ -31,6 +32,7 @@ public interface Attribute extends Cloneable {
      * 
      * @return the attribute's type id
      */
+    @JsonIgnore
     public int getTypeId();
 
     /*
@@ -40,8 +42,16 @@ public interface Attribute extends Cloneable {
      * 
      * This method was added to this interface so JSON could read it
      */
+    @Override
     @JsonProperty("str")
     public String toString();
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see java.lang.Object#clone()
+     */
+    public Object clone();
 
     public static final int TYPES_COUNT = 3;
     public static final int NULL_TYPE_ID = -1;

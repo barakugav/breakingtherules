@@ -7,6 +7,7 @@ import java.util.List;
 
 import org.junit.Test;
 
+import breakingtherules.dao.csv.CSVParseException;
 import breakingtherules.dao.csv.CSVParser;
 import breakingtherules.firewall.Hit;
 
@@ -26,7 +27,7 @@ public class CSVParserTest {
 		    System.out.println(hit);
 		}
 	    }
-	} catch (IOException e) {
+	} catch (IOException | CSVParseException e) {
 	    e.printStackTrace();
 	    fail(e.getMessage());
 	}

@@ -1,4 +1,4 @@
-package breakingtherules.dao.es;
+package breakingtherules.dao.elastic;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -43,19 +43,9 @@ import breakingtherules.utilities.Utility;
 
 public class HitsElasticDao implements HitsDao {
 
-    public static final String CLUSTER_NAME = "breakingtherules";
-    public static final String INDEX_NAME = "btr";
-    public static final String TYPE_HIT = "hit";
+    private final Node m_elasticNode;
 
-    public static final String FIELD_ID = "id";
-    public static final String FIELD_ATTRIBUTES = "attributes";
-    public static final String FIELD_JOB_ID = "jobId";
-    public static final String FIELD_ATTR_TYPEID = "typeId";
-    public static final String FIELD_ATTR_VALUE = "value";
-
-    private Node m_elasticNode;
-
-    private Client m_elasticClient;
+    private final Client m_elasticClient;
 
     /**
      * Cache for the number of hits, for a specific job, with certain Rules and
@@ -71,7 +61,7 @@ public class HitsElasticDao implements HitsDao {
 	Builder settingsBuilder = Settings.settingsBuilder();
 	settingsBuilder.put("http.enabled", false);
 	nodeBuilder.settings(settingsBuilder);
-	nodeBuilder.clusterName(CLUSTER_NAME);
+	nodeBuilder.clusterName(ElasticDaoConfig.CLUSTER_NAME);
 	nodeBuilder.client(true);
 
 	m_elasticNode = nodeBuilder.node();
@@ -83,14 +73,10 @@ public class HitsElasticDao implements HitsDao {
 	m_elasticNode.close();
     }
 
-    private void refreshIndex() {
-	m_elasticClient.admin().indices().prepareRefresh(INDEX_NAME).get();
-    }
-
     public boolean doesJobExist(int jobId) {
 	try {
-	    SearchRequestBuilder srchRequest = m_elasticClient.prepareSearch(INDEX_NAME);
-	    QueryBuilder query = QueryBuilders.termQuery(FIELD_JOB_ID, jobId);
+	    SearchRequestBuilder srchRequest = m_elasticClient.prepareSearch(ElasticDaoConfig.INDEX_NAME);
+	    QueryBuilder query = QueryBuilders.termQuery(ElasticDaoConfig.FIELD_JOB_ID, jobId);
 	    srchRequest.setQuery(query);
 	    srchRequest.setSize(0);
 	    srchRequest.setTerminateAfter(1);
@@ -105,8 +91,8 @@ public class HitsElasticDao implements HitsDao {
     public void deleteJob(int jobId) {
 	System.out.println("deleting");
 
-	QueryBuilder query = QueryBuilders.termQuery(FIELD_JOB_ID, jobId);
-	SearchRequestBuilder srchRequest = m_elasticClient.prepareSearch(INDEX_NAME);
+	QueryBuilder query = QueryBuilders.termQuery(ElasticDaoConfig.FIELD_JOB_ID, jobId);
+	SearchRequestBuilder srchRequest = m_elasticClient.prepareSearch(ElasticDaoConfig.INDEX_NAME);
 	srchRequest.setQuery(query);
 	srchRequest.setSize(DELETION_THRESHOLD);
 
@@ -124,8 +110,8 @@ public class HitsElasticDao implements HitsDao {
 	    System.out.println(hit.getId());
 
 	    DeleteRequestBuilder deleteRequest = m_elasticClient.prepareDelete();
-	    deleteRequest.setIndex(INDEX_NAME);
-	    deleteRequest.setType(TYPE_HIT);
+	    deleteRequest.setIndex(ElasticDaoConfig.INDEX_NAME);
+	    deleteRequest.setType(ElasticDaoConfig.TYPE_HIT);
 	    deleteRequest.setId(hit.getId());
 
 	    bulkDelete.add(deleteRequest);
@@ -145,23 +131,28 @@ public class HitsElasticDao implements HitsDao {
     public void addHits(List<Hit> hits, int jobId) {
 	BulkRequestBuilder bulkRequest = m_elasticClient.prepareBulk();
 	for (Hit hit : hits) {
+
 	    try {
-		XContentBuilder hitJson = XContentFactory.jsonBuilder().startObject();
-		hitJson.field(FIELD_ID, hit.getId());
-		hitJson.field(FIELD_JOB_ID, jobId);
-		hitJson.startArray(FIELD_ATTRIBUTES);
-		for (Attribute attr : hit.getAttributes()) {
+		XContentBuilder hitJson = XContentFactory.jsonBuilder();
+		hitJson.startObject();
+		hitJson.field(ElasticDaoConfig.FIELD_ID, hit.getId());
+		hitJson.field(ElasticDaoConfig.FIELD_JOB_ID, jobId);
+		hitJson.startArray(ElasticDaoConfig.FIELD_ATTRIBUTES);
+		for (Attribute attr : hit) {
 		    hitJson.startObject();
-		    hitJson.field(FIELD_ATTR_TYPEID, attr.getTypeId());
-		    hitJson.field(FIELD_ATTR_VALUE, attr.toString());
+		    hitJson.field(ElasticDaoConfig.FIELD_ATTR_TYPEID, attr.getTypeId());
+		    hitJson.field(ElasticDaoConfig.FIELD_ATTR_VALUE, attr.toString());
 		    hitJson.endObject();
 		}
 		hitJson.endArray().endObject();
 
-		IndexRequestBuilder indexRequest = m_elasticClient.prepareIndex(INDEX_NAME, TYPE_HIT);
+		IndexRequestBuilder indexRequest = m_elasticClient.prepareIndex(ElasticDaoConfig.INDEX_NAME,
+			ElasticDaoConfig.TYPE_HIT);
 		indexRequest.setSource(hitJson);
 		indexRequest.setId(elasticHitId(jobId, hit.getId()));
 		bulkRequest.add(indexRequest);
+
+		hitJson.close();
 
 	    } catch (IOException e) {
 		e.printStackTrace();
@@ -178,36 +169,6 @@ public class HitsElasticDao implements HitsDao {
 	refreshIndex();
     }
 
-    private String elasticHitId(int jobId, int hitId) {
-	return jobId + "x" + hitId;
-    }
-
-    private Hit toFirewallHit(SearchHit searchHit) {
-	Map<String, Object> fields = searchHit.getSource();
-
-	int hitId = (int) fields.get(FIELD_ID);
-	List<Attribute> attrs = new ArrayList<>();
-
-	Object allAtributes = fields.get(FIELD_ATTRIBUTES);
-	if (!(allAtributes instanceof ArrayList)) {
-	    System.out.println("Unexpected hit format");
-	    return null;
-	}
-	for (Object attribute : (ArrayList<?>) allAtributes) {
-	    if (!(attribute instanceof Map)) {
-		System.out.println("Unexpected hit format");
-		return null;
-	    }
-	    Map<?, ?> attributeHash = (Map<?, ?>) attribute;
-	    int attrTypeID = (int) attributeHash.get(FIELD_ATTR_TYPEID);
-	    String attrValue = (String) attributeHash.get(FIELD_ATTR_VALUE);
-	    attrs.add(Attribute.createFromString(attrTypeID, attrValue));
-	}
-
-	return new Hit(hitId, attrs);
-
-    }
-    
     @Override
     public int getHitsNumber(int jobId, List<Rule> rules, Filter filter) throws IOException {
 	Integer number = m_totalHitsCache.get(new Triple<>(jobId, rules, filter));
@@ -216,7 +177,7 @@ public class HitsElasticDao implements HitsDao {
 	else
 	    return getHits(jobId, rules, filter).getSize();
     }
-    
+
     @Override
     public ListDto<Hit> getHits(int jobId, List<Rule> rules, Filter filter) throws IOException {
 	List<Hit> hits = getHits(jobId, rules, filter, true, 0, 0);
@@ -237,6 +198,12 @@ public class HitsElasticDao implements HitsDao {
 	    List<Hit> hits = getHits(jobId, rules, filter, false, startIndex, endIndex);
 	    return new ListDto<>(hits, startIndex, endIndex, total);
 	}
+    }
+
+    private void refreshIndex() {
+	// TODO - why not:
+	// m_elasticClient.admin().indices().prepareRefresh(ElasticDaoConfig.INDEX_NAME).execute();
+	m_elasticClient.admin().indices().prepareRefresh(ElasticDaoConfig.INDEX_NAME).get();
     }
 
     /**
@@ -269,10 +236,10 @@ public class HitsElasticDao implements HitsDao {
 	int TIME_PER_SCROLL = 60000; // in milliseconds
 	int HITS_PER_SCROLL = 200;
 
-	QueryBuilder query = QueryBuilders.termQuery(FIELD_JOB_ID, jobId);
-	SortBuilder sort = SortBuilders.fieldSort(FIELD_ID).order(SortOrder.ASC);
+	QueryBuilder query = QueryBuilders.termQuery(ElasticDaoConfig.FIELD_JOB_ID, jobId);
+	SortBuilder sort = SortBuilders.fieldSort(ElasticDaoConfig.FIELD_ID).order(SortOrder.ASC);
 
-	SearchRequestBuilder srchRequest = m_elasticClient.prepareSearch(INDEX_NAME)
+	SearchRequestBuilder srchRequest = m_elasticClient.prepareSearch(ElasticDaoConfig.INDEX_NAME)
 		.setSearchType(SearchType.QUERY_AND_FETCH).setScroll(new TimeValue(TIME_PER_SCROLL)).setQuery(query)
 		.addSort(sort).setSize(HITS_PER_SCROLL);
 	SearchResponse scrollResp = srchRequest.execute().actionGet();
@@ -343,6 +310,36 @@ public class HitsElasticDao implements HitsDao {
 	    }
 	}
 	return true;
+    }
+
+    private static String elasticHitId(int jobId, int hitId) {
+	return jobId + "x" + hitId;
+    }
+
+    private static Hit toFirewallHit(SearchHit searchHit) {
+	Map<String, Object> fields = searchHit.getSource();
+
+	int hitId = (int) fields.get(ElasticDaoConfig.FIELD_ID);
+	List<Attribute> attrs = new ArrayList<>();
+
+	Object allAtributes = fields.get(ElasticDaoConfig.FIELD_ATTRIBUTES);
+	if (!(allAtributes instanceof ArrayList)) {
+	    System.out.println("Unexpected hit format");
+	    return null;
+	}
+	for (Object attribute : (ArrayList<?>) allAtributes) {
+	    if (!(attribute instanceof Map)) {
+		System.out.println("Unexpected hit format");
+		return null;
+	    }
+	    Map<?, ?> attributeHash = (Map<?, ?>) attribute;
+	    int attrTypeID = (int) attributeHash.get(ElasticDaoConfig.FIELD_ATTR_TYPEID);
+	    String attrValue = (String) attributeHash.get(ElasticDaoConfig.FIELD_ATTR_VALUE);
+	    attrs.add(Attribute.createFromString(attrTypeID, attrValue));
+	}
+
+	return new Hit(hitId, attrs);
+
     }
 
 }

@@ -38,7 +38,7 @@ public class HitsXmlDaoTest {
 
 	try {
 	    HitsXmlDao dao = new HitsXmlDao();
-	    dao.getHitsByPath(doc.getPath(), new ArrayList<Rule>(), Filter.getAnyFilter());
+	    dao.getHitsByPath(doc.getPath(), new ArrayList<Rule>(), Filter.ANY_FILTER);
 
 	} catch (IOException e) {
 	    e.printStackTrace();
@@ -86,6 +86,7 @@ public class HitsXmlDaoTest {
 	    }
 	}
 
+	@Override
 	public void finalize() {
 	    File file = new File(m_path);
 	    file.delete();

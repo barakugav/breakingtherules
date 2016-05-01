@@ -1,6 +1,5 @@
 package breakingtherules.controllers;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -26,8 +25,8 @@ public class FilterController {
     @RequestMapping(value = "/filter", method = RequestMethod.PUT, params = { "source", "destination", "service" })
     public void setFilter(@RequestParam(value = "source") String source,
 	    @RequestParam(value = "destination") String destination, @RequestParam(value = "service") String service)
-		    throws IllegalArgumentException, IOException {
-	List<Attribute> filterAtts = new ArrayList<Attribute>();
+		    throws IllegalArgumentException {
+	List<Attribute> filterAtts = new ArrayList<>();
 	filterAtts.add(new Source(source));
 	filterAtts.add(new Destination(destination));
 	filterAtts.add(new Service(service));

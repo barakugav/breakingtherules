@@ -44,7 +44,7 @@ public class HitsXmlDao implements HitsDao {
      * Initialize loaded hits to empty
      */
     public HitsXmlDao() {
-	m_loadedHits = new HashMap<String, List<Hit>>();
+	m_loadedHits = new HashMap<>();
     }
 	
     @Override
@@ -93,14 +93,14 @@ public class HitsXmlDao implements HitsDao {
      */
     public ListDto<Hit> getHitsByPath(String repoPath, List<Rule> rules, Filter filter) throws IOException {
 	List<Hit> allHits = loadHits(repoPath);
-	List<Hit> matchedHits = new ArrayList<Hit>();
+	List<Hit> matchedHits = new ArrayList<>();
 
 	for (Hit hit : allHits) {
 	    if (isMatch(rules, filter, hit)) {
 		matchedHits.add(hit);
 	    }
 	}
-	return new ListDto<Hit>(matchedHits, 0, matchedHits.size(), matchedHits.size());
+	return new ListDto<>(matchedHits, 0, matchedHits.size(), matchedHits.size());
     }
 
     /**
@@ -137,14 +137,13 @@ public class HitsXmlDao implements HitsDao {
 
 	int total = allHits.size();
 	if (total == 0) // return this empty list
-	    return new ListDto<Hit>(allHits, startIndex, endIndex, total);
-	;
+	    return new ListDto<>(allHits, startIndex, endIndex, total);
 	if (startIndex >= total) {
 	    throw new IndexOutOfBoundsException("Start index " + startIndex + " bigger that total count");
 	}
-	endIndex = (int) Math.min(endIndex, total);
+	endIndex = Math.min(endIndex, total);
 	List<Hit> subHitsList = allHits.subList(startIndex, endIndex);
-	return new ListDto<Hit>(subHitsList, startIndex, endIndex, total);
+	return new ListDto<>(subHitsList, startIndex, endIndex, total);
     }
 
     /**
@@ -201,10 +200,10 @@ public class HitsXmlDao implements HitsDao {
 	NodeList hitsList = repositoryDoc.getElementsByTagName(XmlDaoConfig.HIT);
 
 	// Extract all hits that match the filter
-	hits = new ArrayList<Hit>();
+	hits = new ArrayList<>();
 	for (int i = 0; i < hitsList.getLength(); i++) {
 	    Node hitNode = hitsList.item(i);
-	    if (hitNode.getNodeType() == Element.ELEMENT_NODE) {
+	    if (hitNode.getNodeType() == Node.ELEMENT_NODE) {
 		try {
 		    Element hitElm = (Element) hitNode;
 		    Hit hit = createHit(hitElm);
@@ -229,7 +228,7 @@ public class HitsXmlDao implements HitsDao {
      * @throws XMLParseException
      *             if failed to parse element to hit
      */
-    private static Hit createHit(Element hitElm) {
+    private static Hit createHit(Element hitElm) throws XMLParseException {
 	// Read attributes from element
 	String idStr = hitElm.getAttribute(XmlDaoConfig.ID);
 	String sourceStr = hitElm.getAttribute(Attribute.SOURCE_TYPE.toLowerCase());
@@ -254,7 +253,7 @@ public class HitsXmlDao implements HitsDao {
 	    Service serviceObj = new Service(serviceStr);
 
 	    // Create attributes list
-	    List<Attribute> attributes = new ArrayList<Attribute>();
+	    List<Attribute> attributes = new ArrayList<>();
 	    attributes.add(sourceObj);
 	    attributes.add(destinationObj);
 	    attributes.add(serviceObj);
@@ -267,7 +266,7 @@ public class HitsXmlDao implements HitsDao {
 
     private static void createElement(Element node, Hit hit) {
 	node.setAttribute(XmlDaoConfig.ID, "" + hit.getId());
-	for (Attribute attribute : hit.getAttributes()) {
+	for (Attribute attribute : hit) {
 	    node.setAttribute(attribute.getType().toLowerCase(), attribute.toString());
 	}
     }

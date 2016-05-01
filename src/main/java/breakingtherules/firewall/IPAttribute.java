@@ -8,7 +8,7 @@ public abstract class IPAttribute implements Attribute, Comparable<IPAttribute> 
     /**
      * IP of this attribute
      */
-    private IP m_ip;
+    private final IP m_ip;
 
     /**
      * Constructor
@@ -93,6 +93,21 @@ public abstract class IPAttribute implements Attribute, Comparable<IPAttribute> 
 	return m_ip.compareTo(o.m_ip);
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see java.lang.Object#clone()
+     */
+    @Override
+    public Object clone() {
+	try {
+	    return super.clone();
+	} catch (CloneNotSupportedException e) {
+	    // this shouldn't happen, since we are Cloneable
+	    throw new InternalError(e);
+	}
+    }
+
     /**
      * Get the IP of this attribute
      * 
@@ -101,6 +116,10 @@ public abstract class IPAttribute implements Attribute, Comparable<IPAttribute> 
     public IP getIp() {
 	return m_ip;
     }
+    
+    public static IPAttribute mutate(IPAttribute attribute, IP ip) {
+	return attribute.mutate(ip);
+    }
 
     /**
      * Set the IP of the attribute to a new one
@@ -108,8 +127,8 @@ public abstract class IPAttribute implements Attribute, Comparable<IPAttribute> 
      * @param ip
      *            new IP
      */
-    public void setIp(IP ip) {
-	m_ip = ip;
-    }
+    protected abstract IPAttribute mutate(IP ip);
+    
+    
 
 }

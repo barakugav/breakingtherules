@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Vector;
 
 import org.springframework.stereotype.Component;
 import org.w3c.dom.Document;
@@ -38,7 +37,7 @@ public class RulesXmlDao implements RulesDao {
      * Initialize loaded rules to empty
      */
     public RulesXmlDao() {
-	m_loadedRules = new HashMap<String, List<Rule>>();
+	m_loadedRules = new HashMap<>();
     }
 
     /*
@@ -74,7 +73,7 @@ public class RulesXmlDao implements RulesDao {
      */
     public ListDto<Rule> getRulesByPath(String repoPath) throws IOException {
 	List<Rule> rules = loadRules(repoPath);
-	return new ListDto<Rule>(rules, 0, rules.size(), rules.size());
+	return new ListDto<>(rules, 0, rules.size(), rules.size());
     }
 
     /**
@@ -107,9 +106,9 @@ public class RulesXmlDao implements RulesDao {
 	if (startIndex >= total) {
 	    throw new IndexOutOfBoundsException("Start index bigger that total count");
 	}
-	endIndex = (int) Math.min(endIndex, total);
+	endIndex = Math.min(endIndex, total);
 	List<Rule> subRulesList = rules.subList(startIndex, endIndex);
-	return new ListDto<Rule>(subRulesList, startIndex, endIndex, total);
+	return new ListDto<>(subRulesList, startIndex, endIndex, total);
     }
 
     /**
@@ -132,10 +131,10 @@ public class RulesXmlDao implements RulesDao {
 	    NodeList rulesList = repositoryDoc.getElementsByTagName("rule");
 
 	    // Parse into rule objects
-	    rules = new ArrayList<Rule>();
+	    rules = new ArrayList<>();
 	    for (int i = 0; i < rulesList.getLength(); i++) {
 		Node ruleNode = rulesList.item(i);
-		if (ruleNode.getNodeType() == Element.ELEMENT_NODE) {
+		if (ruleNode.getNodeType() == Node.ELEMENT_NODE) {
 		    Element ruleElm = (Element) ruleNode;
 		    Rule rule = createRule(ruleElm);
 		    rules.add(rule);
@@ -168,7 +167,7 @@ public class RulesXmlDao implements RulesDao {
 	Service newService = new Service(service);
 
 	// Create attributes vector
-	Vector<Attribute> attributes = new Vector<Attribute>();
+	List<Attribute> attributes = new ArrayList<>();
 	attributes.add(newSource);
 	attributes.add(newDestination);
 	attributes.add(newService);

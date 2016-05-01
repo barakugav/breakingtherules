@@ -1,6 +1,6 @@
 package breakingtherules.dao;
 
-public class ParseException extends RuntimeException {
+public class ParseException extends Exception {
 
     private static final long serialVersionUID = 1L;
 
