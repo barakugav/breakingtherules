@@ -4,9 +4,9 @@ import breakingtherules.dao.DaoConfig;
 
 public class XmlDaoConfig extends DaoConfig {
 
-    private static final String HITS_FILE = "/repository.xml";
+    private static final String HITS_FILE = "fullRepository.xml";
 
-    private static final String RULES_FILE = "/repository.xml";
+    private static final String RULES_FILE = "repository.xml";
     
     
     static final String REPOSITORY = "Repository";

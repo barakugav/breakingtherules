@@ -4,8 +4,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
-import java.util.Objects;
+import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.BiPredicate;
 import java.util.function.Consumer;
@@ -114,13 +115,14 @@ public class Utility {
      * @return new list with unique elements from the original list
      */
     public static <T> List<T> ensureUniqueness(List<T> list) {
-	return ensureUniqueness(list, new Comparator<T>() {
+	return new ArrayList<>(new HashSet<>(list));
+    }
 
-	    @Override
-	    public int compare(T o1, T o2) {
-		return Objects.equals(o1, o2) ? 0 : 1;
-	    }
-	});
+    public static <T> Set<T> ensureUniqueness(Iterable<T> iterable) {
+	Set<T> uniqeSet = new HashSet<>();
+	for (T t : iterable)
+	    uniqeSet.add(t);
+	return uniqeSet;
     }
 
     /**

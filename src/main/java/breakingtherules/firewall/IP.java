@@ -2,7 +2,6 @@ package breakingtherules.firewall;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
@@ -177,8 +176,8 @@ public abstract class IP implements Comparable<IP>, Cloneable {
      * 
      * @return this IP's network size
      */
-    public long getSubnetSize() {
-	return 1L << (getMaxLength() - m_prefixLength);
+    public int getSubnetBitsNum() {
+	return getMaxLength() - m_prefixLength;
     }
 
     /**
@@ -470,7 +469,22 @@ public abstract class IP implements Comparable<IP>, Cloneable {
      * @return true if a and b are brothers, else -false
      */
     public static boolean isBrothers(IP a, IP b) {
-	return Objects.equals(a.getParent(), b.getParent());
+	if (a.getClass() != b.getClass())
+	    return false;
+	int aPrefix = a.m_prefixLength, bPrefix = b.m_prefixLength;
+	if (aPrefix != bPrefix)
+	    return false; // Different sub network sizes
+	if (aPrefix == 0)
+	    return true; // Both are biggest sub network
+
+	int[] aAddress = a.m_address, bAddress = b.m_address;
+	int blockSize = a.getBlockSize();
+	int lastEqualBlock = (aPrefix - 1) / blockSize;
+	for (int blockNum = 0; blockNum < lastEqualBlock; blockNum++)
+	    if (aAddress[blockNum] != bAddress[blockNum])
+		return false;
+	int shiftSize = blockSize - ((aPrefix - 1) % blockSize);
+	return (aAddress[lastEqualBlock] >> shiftSize) == (bAddress[lastEqualBlock] >> shiftSize);
     }
 
     /**

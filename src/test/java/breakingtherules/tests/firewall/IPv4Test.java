@@ -11,6 +11,7 @@ import java.util.Random;
 
 import org.junit.Test;
 
+import breakingtherules.firewall.IP;
 import breakingtherules.firewall.IPv4;
 import breakingtherules.firewall.IPv6;
 
@@ -177,8 +178,8 @@ public class IPv4Test {
     public void getChildrenTest() {
 	System.out.println("# IPv4Test getChildrenTest");
 	IPv4 ip = new IPv4(FirewallTestsUtility.getRandomAddressIPv4(), rand.nextInt(11) + 22);
-	assertEquals(ip.hasChildren(), ip.getChildren()[0] != null);
-	assertEquals(ip.hasChildren(), ip.getChildren()[1] != null);
+	assertEquals(ip.hasChildren(), ip.getChildren() != null);
+	assertEquals(ip.hasChildren(), ip.getChildren() != null);
     }
 
     @Test
@@ -375,6 +376,84 @@ public class IPv4Test {
 	IPv4 ipClone = (IPv4) ip.clone();
 	assertFalse(ip == ipClone);
 	assertEquals(ip, ipClone);
+    }
+
+    @Test
+    public void isBrothersTestBit31() {
+	IPv4 ip1 = new IPv4("167.0.0.1");
+	IPv4 ip2 = new IPv4("167.0.0.0");
+	assertTrue(IP.isBrothers(ip1, ip2));
+	assertTrue(IP.isBrothers(ip2, ip1));
+    }
+
+    @Test
+    public void isBrothersTestBit31NotBrothers() {
+	IPv4 ip1 = new IPv4("167.0.0.1");
+	IPv4 ip2 = new IPv4("167.0.0.2");
+	assertFalse(IP.isBrothers(ip1, ip2));
+	assertFalse(IP.isBrothers(ip2, ip1));
+    }
+
+    @Test
+    public void isBrothersTestBit24() {
+	IPv4 ip1 = new IPv4("167.0.51.128/25");
+	IPv4 ip2 = new IPv4("167.0.51.0/25");
+	assertTrue(IP.isBrothers(ip1, ip2));
+	assertTrue(IP.isBrothers(ip2, ip1));
+    }
+
+    @Test
+    public void isBrothersTestBit24NotBrothers() {
+	IPv4 ip1 = new IPv4("10.0.1.0/25");
+	IPv4 ip2 = new IPv4("10.0.0.128/25");
+	assertFalse(IP.isBrothers(ip1, ip2));
+	assertFalse(IP.isBrothers(ip2, ip1));
+    }
+
+    @Test
+    public void isBrothersTestBit20() {
+	IPv4 ip1 = new IPv4("3.0.0.0/21");
+	IPv4 ip2 = new IPv4("3.0.0.0/21");
+	assertTrue(IP.isBrothers(ip1, ip2));
+	assertTrue(IP.isBrothers(ip2, ip1));
+    }
+
+    @Test
+    public void isBrothersTestBit20NotBrothers() {
+	IPv4 ip1 = new IPv4("167.7.8.0");
+	IPv4 ip2 = new IPv4("167.7.0.0");
+	assertFalse(IP.isBrothers(ip1, ip2));
+	assertFalse(IP.isBrothers(ip2, ip1));
+    }
+
+    @Test
+    public void isBrothersTestBit5() {
+	IPv4 ip1 = new IPv4("12.0.0.0/6");
+	IPv4 ip2 = new IPv4("8.0.0.0/6");
+	assertTrue(IP.isBrothers(ip1, ip2));
+	assertTrue(IP.isBrothers(ip2, ip1));
+    }
+
+    @Test
+    public void isBrothersTestBit5NotBrothers() {
+	IPv4 ip1 = new IPv4("4.0.0.1");
+	IPv4 ip2 = new IPv4("8.0.0.2");
+	assertFalse(IP.isBrothers(ip1, ip2));
+	assertFalse(IP.isBrothers(ip2, ip1));
+    }
+
+    @Test
+    public void isBrothersTestAnyIP() {
+	IPv4 ip1 = new IPv4("0.0.0.0/0");
+	IPv4 ip2 = new IPv4("0.0.0.0/0");
+	assertTrue(IP.isBrothers(ip1, ip2));
+	assertTrue(IP.isBrothers(ip2, ip1));
+    }
+
+    @Test
+    public void isBrothersTestItself() {
+	IPv4 ip = FirewallTestsUtility.getRandomIPv4();
+	assertTrue(IP.isBrothers(ip, ip));
     }
 
 }

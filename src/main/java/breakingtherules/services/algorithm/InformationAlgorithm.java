@@ -1,8 +1,9 @@
 package breakingtherules.services.algorithm;
 
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.List;
 
 import breakingtherules.firewall.Attribute;
@@ -11,6 +12,7 @@ import breakingtherules.firewall.Hit;
 import breakingtherules.firewall.IP;
 import breakingtherules.firewall.IPAttribute;
 import breakingtherules.firewall.Source;
+import breakingtherules.utilities.UnionList;
 import breakingtherules.utilities.Utility;
 
 /**
@@ -37,6 +39,17 @@ import breakingtherules.utilities.Utility;
 public class InformationAlgorithm implements SuggestionsAlgorithm {
 
     /**
+     * Allows configuration, if the user wants more general rules (high
+     * ruleWeight) or more specific rules (low ruleWeight)
+     */
+    private double m_ruleWeight;
+
+    /**
+     * Used when the attribute type if not Source or Destination
+     */
+    private SimpleAlgorithm m_simpleAlgorithm;
+
+    /**
      * Number of suggestions that returned in each suggestions request
      */
     private static final int NUMBER_OF_SUGGESTIONS = 10;
@@ -52,16 +65,21 @@ public class InformationAlgorithm implements SuggestionsAlgorithm {
      */
     private static final double NEXT_LAYER_FACTOR = 0.75;
 
-    /**
-     * Allows configuration, if the user wants more general rules (high
-     * ruleWeight) or more specific rules (low ruleWeight)
-     */
-    private double m_ruleWeight;
+    private static final Comparator<Suggestion> SUGGESTION_COMPARATOR = new Comparator<Suggestion>() {
 
-    /**
-     * Used when the attribute type if not Source or Destination
-     */
-    private SimpleAlgorithm m_simpleAlgorithm;
+	@Override
+	public int compare(Suggestion s1, Suggestion s2) {
+	    return s1.getSize() - s2.getSize();
+	}
+    };
+
+    private static final Comparator<IPNode> IP_COMPARATOR = new Comparator<IPNode>() {
+
+	@Override
+	public int compare(IPNode o1, IPNode o2) {
+	    return o1.ip.compareTo(o2.ip);
+	}
+    };
 
     static {
 	configCheck();
@@ -78,7 +96,7 @@ public class InformationAlgorithm implements SuggestionsAlgorithm {
     }
 
     @Override
-    public List<Suggestion> getSuggestions(List<Hit> hits, String attType) {
+    public List<Suggestion> getSuggestions(Iterable<Hit> hits, String attType) {
 	hits = Utility.ensureUniqueness(hits);
 	int attTypeId = Attribute.typeStrToTypeId(attType);
 
@@ -94,45 +112,47 @@ public class InformationAlgorithm implements SuggestionsAlgorithm {
 	}
     }
 
-    private static final Comparator<Suggestion> SUGGESTION_COMPARATOR_REV = new Comparator<Suggestion>() {
-
-	@Override
-	public int compare(Suggestion s1, Suggestion s2) {
-	    return s2.getSize() - s1.getSize();
-	}
-    };
-
-    private List<Suggestion> getSuggestionsDestination(List<Hit> hits) {
+    private List<Suggestion> getSuggestionsDestination(Iterable<Hit> hits) {
 	List<IPNode> nodes = asIPNodeList(hits, Attribute.DESTINATION_TYPE_ID);
-	IPNode[] subnets = getIPSuggestions(nodes);
-	List<Suggestion> suggestions = new ArrayList<>();
-	for (IPNode subnet : subnets) {
-	    suggestions.add(new Suggestion(new Destination(subnet.ip), subnet.size, 1 / subnet.compressSize));
+	List<SubnetSuggestion> subnets = getIPSuggestions(nodes);
+	List<Suggestion> suggestions = new ArrayList<>(subnets.size());
+	for (SubnetSuggestion subnet : subnets) {
+	    suggestions.add(new Suggestion(new Destination(subnet.ip), subnet.size, subnet.score));
 	}
-	suggestions.sort(SUGGESTION_COMPARATOR_REV);
+
+	// Sort suggestions from small to big, so reverse list after sort
+	suggestions.sort(SUGGESTION_COMPARATOR);
+	Collections.reverse(suggestions);
+
 	return Utility.subList(suggestions, 0, NUMBER_OF_SUGGESTIONS);
     }
 
-    private List<Suggestion> getSuggestionsSource(List<Hit> hits) {
+    private List<Suggestion> getSuggestionsSource(Iterable<Hit> hits) {
 	List<IPNode> nodes = asIPNodeList(hits, Attribute.SOURCE_TYPE_ID);
-	IPNode[] subnets = getIPSuggestions(nodes);
+	List<SubnetSuggestion> subnets = getIPSuggestions(nodes);
 	List<Suggestion> suggestions = new ArrayList<>();
-	for (IPNode subnet : subnets) {
-	    suggestions.add(new Suggestion(new Source(subnet.ip), subnet.size, 1 / subnet.compressSize));
+	for (SubnetSuggestion subnet : subnets) {
+	    suggestions.add(new Suggestion(new Source(subnet.ip), subnet.size, subnet.score));
 	}
-	suggestions.sort(SUGGESTION_COMPARATOR_REV);
+
+	// Sort suggestions from small to big, so reverse list after sort
+	suggestions.sort(SUGGESTION_COMPARATOR);
+	Collections.reverse(suggestions);
+
 	return Utility.subList(suggestions, 0, NUMBER_OF_SUGGESTIONS);
     }
 
-    private IPNode[] getIPSuggestions(List<IPNode> nodes) {
+    private List<SubnetSuggestion> getIPSuggestions(List<IPNode> nodes) {
 	if (nodes == null) {
 	    throw new IllegalArgumentException("Nodes list can't be null");
 	}
 	if (nodes.size() == 0) {
-	    return new IPNode[0];
+	    return new ArrayList<>();
 	}
 	if (nodes.size() == 1) {
-	    return new IPNode[] { nodes.get(0) };
+	    List<SubnetSuggestion> res = new ArrayList<>();
+	    res.add(nodes.get(0).toSuggestion());
+	    return res;
 	}
 
 	// # currentLayer - the current IP layer the algorithm is working on
@@ -150,11 +170,13 @@ public class InformationAlgorithm implements SuggestionsAlgorithm {
 	//
 	IPNode nodeA, nodeB, parent;
 
+	// # ipA - the IP of node A
+	//
+	// # ipB - the IP of node B
+	//
 	// # ipParentA - the parent IP of nodeA's IP
 	//
-	// # ipParentB - the parent IP of nodeB's IP
-	//
-	IP ipParentA, ipParentB;
+	IP ipA, ipB, ipParentA;
 
 	// # probability - probability of parent node out of the total hits
 	//
@@ -180,7 +202,7 @@ public class InformationAlgorithm implements SuggestionsAlgorithm {
 	// brother, it will be next to it. This assumption will stay for next
 	// layers too
 	currentLayer = nodes;
-	sortByIP(currentLayer);
+	currentLayer.sort(IP_COMPARATOR);
 
 	// Total size of elements (calculated out of loop for performance
 	// improvements, and because it is constant value)
@@ -201,24 +223,24 @@ public class InformationAlgorithm implements SuggestionsAlgorithm {
 	    while (index < length) {
 		nodeA = currentLayer.get(index);
 		nodeB = currentLayer.get(index + 1);
-		ipParentA = nodeA.ip.getParent();
-		ipParentB = nodeB.ip.getParent();
+		ipA = nodeA.ip;
+		ipParentA = ipA.getParent();
 
 		parent = new IPNode();
 		parent.ip = ipParentA;
 
-		// if nodeA and nodeB have same parent => brothers
-		if (ipParentA.equals(ipParentB)) {
+		// If nodeA and nodeB are brothers:
+		if (IP.isBrothers(ipA, nodeB.ip)) {
 		    parent.size = size = nodeA.size + nodeB.size;
 
 		    // size / totalSize
 		    probability = size / (double) sizeTotal;
 
-		    // size * (log(subnetwork size) + log (1 / probability)) + K
-		    union = size * (Utility.log2(ipParentA.getSubnetSize()) + Utility.log2(1 / probability))
-			    + m_ruleWeight;
+		    // union = size * (log(subnetwork size) +
+		    // log(1/probability)) + ruleWeight
+		    union = size * (ipParentA.getSubnetBitsNum() + Utility.log2(1 / probability)) + m_ruleWeight;
 
-		    // (nodeA optimal) + (nodeB optimal)
+		    // separated = (nodeA optimal) + (nodeB optimal)
 		    separated = nodeA.compressSize + nodeB.compressSize;
 
 		    // choose optimal (minimum) choice between union subnetwork
@@ -229,16 +251,13 @@ public class InformationAlgorithm implements SuggestionsAlgorithm {
 			parent.compressSize = union;
 
 			// subnetwork is the parent subnetwork
-			parent.bestSubnets = new IPNode[] { parent };
+			parent.bestSubnets = new UnionList<>(parent.toSuggestion());
 		    } else {
 			// using separated small subnetworks
 			parent.compressSize = separated;
 
 			// union the two subnetworks from both child nodes
-			parent.bestSubnets = new IPNode[nodeA.bestSubnets.length + nodeB.bestSubnets.length];
-			System.arraycopy(nodeA.bestSubnets, 0, parent.bestSubnets, 0, nodeA.bestSubnets.length);
-			System.arraycopy(nodeB.bestSubnets, 0, parent.bestSubnets, nodeA.bestSubnets.length,
-				nodeB.bestSubnets.length);
+			parent.bestSubnets = nodeA.bestSubnets.unionTo(nodeB.bestSubnets);
 		    }
 
 		    // Used the current node and next node, increase index by 2
@@ -261,9 +280,10 @@ public class InformationAlgorithm implements SuggestionsAlgorithm {
 	    // and copy his properties (no brother for sure)
 	    nodeA = currentLayer.get(length - 1);
 	    nodeB = currentLayer.get(length);
-	    if (!IP.isBrothers(nodeA.ip, nodeB.ip)) {
+	    ipB = nodeB.ip;
+	    if (!IP.isBrothers(nodeA.ip, ipB)) {
 		parent = new IPNode();
-		parent.ip = nodeB.ip.getParent();
+		parent.ip = ipB.getParent();
 		parent.size = nodeB.size;
 		parent.compressSize = nodeB.compressSize;
 		parent.bestSubnets = nodeB.bestSubnets;
@@ -276,24 +296,23 @@ public class InformationAlgorithm implements SuggestionsAlgorithm {
 
 	// list size is 1, the only element is the parent node of all others
 	IPNode root = currentLayer.get(0);
-	return root.bestSubnets;
+	return root.bestSubnets.toList();
     }
 
-    private List<IPNode> asIPNodeList(List<Hit> list, int attTypeId) {
-	List<IPNode> allNodes = new ArrayList<>(list.size());
+    private List<IPNode> asIPNodeList(Iterable<Hit> list, int attTypeId) {
+	List<IPNode> allNodes = new ArrayList<>();
 
-	int listSize = list.size();
-	for (int i = 0; i < listSize; i++) {
-	    Hit hit = list.get(i);
+	for (Iterator<Hit> it = list.iterator(); it.hasNext();) {
+	    Hit hit = it.next();
 	    IPNode ipNode = new IPNode();
 	    ipNode.compressSize = m_ruleWeight;
 	    ipNode.ip = ((IPAttribute) hit.getAttribute(attTypeId)).getIp();
-	    ipNode.bestSubnets = new IPNode[] { ipNode };
+	    ipNode.bestSubnets = new UnionList<>(ipNode.toSuggestion());
 	    ipNode.size = 1;
 	    allNodes.add(ipNode);
 	}
 
-	sortByIP(allNodes);
+	allNodes.sort(IP_COMPARATOR);
 
 	List<IPNode> uniqueNodes = new ArrayList<>();
 	IPNode lastNode = null;
@@ -308,7 +327,7 @@ public class InformationAlgorithm implements SuggestionsAlgorithm {
 	return uniqueNodes;
     }
 
-    private static void checkHits(List<Hit> hits, int attId) {
+    private static void checkHits(Iterable<Hit> hits, int attId) {
 	if (hits == null) {
 	    throw new IllegalArgumentException("Hits list can't be null");
 	}
@@ -326,24 +345,12 @@ public class InformationAlgorithm implements SuggestionsAlgorithm {
 
     @SuppressWarnings("unused")
     private static void configCheck() {
-	if (DEFAULT_RULE_WIEGHT <= 0) {
-	    throw new IllegalStateException("DEFAULT_RULE_WIEGHT should be > 0");
+	if (!(0 < DEFAULT_RULE_WIEGHT)) {
+	    throw new InternalError("DEFAULT_RULE_WIEGHT should be > 0");
 	}
 	if (!(0 < NEXT_LAYER_FACTOR && NEXT_LAYER_FACTOR < 1)) {
-	    throw new IllegalStateException("NEXT_LAYER_FACTOR should be > 0, < 1");
+	    throw new InternalError("NEXT_LAYER_FACTOR should be > 0, < 1");
 	}
-    }
-
-    private static final Comparator<IPNode> IP_COMPARATOR = new Comparator<IPNode>() {
-
-	@Override
-	public int compare(IPNode o1, IPNode o2) {
-	    return o1.ip.compareTo(o2.ip);
-	}
-    };
-
-    private static void sortByIP(List<IPNode> list) {
-	list.sort(IP_COMPARATOR);
     }
 
     private static class IPNode {
@@ -354,7 +361,7 @@ public class InformationAlgorithm implements SuggestionsAlgorithm {
 
 	double compressSize;
 
-	IPNode[] bestSubnets;
+	UnionList<SubnetSuggestion> bestSubnets;
 
 	@Override
 	public boolean equals(Object o) {
@@ -377,14 +384,46 @@ public class InformationAlgorithm implements SuggestionsAlgorithm {
 
 	@Override
 	public String toString() {
-	    String ans = "";
-	    ans += ip.toString() + " " + size + " " + compressSize + " nets=" + Arrays.toString(bestSubnets);
-	    for (IPNode subnet : bestSubnets) {
-		ans += subnet.ip + ", ";
+	    StringBuilder builder = new StringBuilder();
+	    builder.append(ip);
+	    builder.append(' ');
+	    builder.append(size);
+	    builder.append(' ');
+	    builder.append(compressSize);
+	    builder.append(" nets=");
+	    if (bestSubnets == null) {
+		builder.append("null");
+	    } else {
+		builder.append('[');
+		final String spacer = ", ";
+		for (SubnetSuggestion node : bestSubnets) {
+		    builder.append(node.ip);
+		    builder.append(spacer);
+		}
+		builder.append(']');
 	    }
-	    return ans;
+	    return builder.toString();
 	}
 
+	private SubnetSuggestion toSuggestion() {
+	    SubnetSuggestion node = new SubnetSuggestion();
+	    node.ip = ip;
+	    node.size = size;
+	    node.score = 1 / compressSize;
+	    return node;
+	}
+
+    }
+
+    private static class SubnetSuggestion {
+	IP ip;
+	int size;
+	double score;
+
+	@Override
+	public String toString() {
+	    return ip.toString() + " " + size + " " + score;
+	}
     }
 
 }

@@ -17,13 +17,13 @@ import breakingtherules.firewall.Hit;
 import breakingtherules.firewall.Rule;
 import breakingtherules.services.algorithm.InformationAlgorithm;
 import breakingtherules.services.algorithm.Suggestion;
-import breakingtherules.services.algorithm.SuggestionsAlgorithm;
 
 public class InformationAlgorithmTest {
 
-    private static final int JOB_ID = 1;
+    private static final int RULE_WEIGHT = 25;
+    private static final int JOB_ID = 4;
     private static final String ATTRIBUTE = Attribute.DESTINATION_TYPE;
-    private static final boolean PRINT_RESULTS = false;
+    private static final boolean PRINT_RESULTS = true;
 
     @Test
     public void getSuggestionTest() {
@@ -37,7 +37,8 @@ public class InformationAlgorithmTest {
 	    ListDto<Hit> hitsDto = hitsDao.getHits(JOB_ID, rules, filter);
 	    List<Hit> hits = hitsDto.getData();
 
-	    SuggestionsAlgorithm algorithm = new InformationAlgorithm();
+	    InformationAlgorithm algorithm = new InformationAlgorithm();
+	    algorithm.setRuleWeight(RULE_WEIGHT);
 	    List<Suggestion> suggestions = algorithm.getSuggestions(hits, ATTRIBUTE);
 
 	    if (PRINT_RESULTS) {

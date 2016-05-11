@@ -28,16 +28,19 @@ public class SimpleAlgorithm implements SuggestionsAlgorithm {
      * java.util.List, java.lang.String)
      */
     @Override
-    public List<Suggestion> getSuggestions(List<Hit> hits, String attType) {
+    public List<Suggestion> getSuggestions(Iterable<Hit> hits, String attType) {
 	// The answer list
 	List<Suggestion> allSuggestionsList = new ArrayList<>();
 
 	// Every possible single attribute becomes a suggestion.
 	HashMap<Attribute, Suggestion> allSuggestionsMap = new HashMap<>();
 
+	int hitsCounter = 0;
+
 	// Create a suggestion for every attribute, count the number of hits
 	// that apply to it
 	for (Hit hit : hits) {
+	    hitsCounter++;
 	    Attribute att = hit.getAttribute(attType);
 	    if (att == null)
 		continue;
@@ -54,7 +57,7 @@ public class SimpleAlgorithm implements SuggestionsAlgorithm {
 
 	// Calculate scores
 	for (Suggestion suggestion : allSuggestionsList) {
-	    suggestion.setScore(suggestion.getSize() / (double) hits.size());
+	    suggestion.setScore(suggestion.getSize() / (double) hitsCounter);
 	}
 
 	// Sort by score

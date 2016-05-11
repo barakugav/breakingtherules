@@ -95,6 +95,11 @@ public class Suggestion implements Comparable<Suggestion> {
 	return thisScore.compareTo(otherScore);
     }
 
+    @Override
+    public String toString() {
+	return m_attribute.toString() + " size=" + m_size + " score:" + m_score;
+    }
+
     /**
      * Set the score of this suggestion
      * 

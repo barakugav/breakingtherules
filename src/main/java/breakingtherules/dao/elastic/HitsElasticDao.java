@@ -246,8 +246,9 @@ public class HitsElasticDao implements HitsDao {
 
 	List<Hit> relevantHits = new ArrayList<>();
 	int i = 0; // to only take the relevant indices.
-	if (all)
+	if (all) {
 	    startIndex = 0;
+	}
 
 	// Scroll until no hits are returned or endIndex has been reached
 	while (true) {

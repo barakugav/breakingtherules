@@ -162,7 +162,7 @@ public class UtilityTest {
 	assertEquals(expected, actual);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expected = NullPointerException.class)
     public void ensureUniquenessNullListTest() {
 	System.out.println("# UtilityTest ensureUniquenessNullListTest");
 	Utility.ensureUniqueness(null);

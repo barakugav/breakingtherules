@@ -13,11 +13,11 @@ public interface SuggestionsAlgorithm {
      * Get suggestion of a attribute type for filters and rules
      * 
      * @param hits
-     *            list of hits the algorithm should operate on
+     *            iterable object of hits
      * @param attType
      *            requested suggestion type
      * @return suggestions list
      */
-    public List<Suggestion> getSuggestions(List<Hit> hits, String attType);
+    public List<Suggestion> getSuggestions(Iterable<Hit> hits, String attType);
 
 }

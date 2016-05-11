@@ -1,6 +1,7 @@
 package breakingtherules.dao.xml;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -37,6 +38,8 @@ public class UtilityXmlDao {
     public static Document readFile(String path) throws IOException {
 	try {
 	    File repoFile = new File(path);
+	    if (!repoFile.exists())
+		throw new FileNotFoundException(path);
 	    DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 	    DocumentBuilder builder = factory.newDocumentBuilder();
 	    Document fileDocument = builder.parse(repoFile);

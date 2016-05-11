@@ -1,5 +1,6 @@
 package breakingtherules.dto;
 
+import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -7,7 +8,7 @@ import java.util.List;
  * This DTO saves the indexes of this elements list out of the total list, and
  * some parameters about the total list
  */
-public class ListDto<T> {
+public class ListDto<T> implements Iterable<T> {
 
     /**
      * Data list to be passed
@@ -98,6 +99,16 @@ public class ListDto<T> {
      */
     public int getTotal() {
 	return m_total;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see java.lang.Iterable#iterator()
+     */
+    @Override
+    public Iterator<T> iterator() {
+	return m_data.iterator();
     }
 
 }

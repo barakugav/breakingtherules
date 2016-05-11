@@ -46,12 +46,12 @@ public class HitsXmlDao implements HitsDao {
     public HitsXmlDao() {
 	m_loadedHits = new HashMap<>();
     }
-	
+
     @Override
-    public int getHitsNumber(int jobId, List<Rule> rules, Filter filter) throws IOException { 
+    public int getHitsNumber(int jobId, List<Rule> rules, Filter filter) throws IOException {
 	return getHits(jobId, rules, filter).getSize();
     }
-    
+
     /*
      * (non-Javadoc)
      * 
