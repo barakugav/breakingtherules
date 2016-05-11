@@ -11,5 +11,10 @@ public class ElasticDaoConfig {
     static final String FIELD_JOB_ID = "jobId";
     static final String FIELD_ATTR_TYPEID = "typeId";
     static final String FIELD_ATTR_VALUE = "value";
-    
+
+    static final int DELETION_THRESHOLD = 5000;
+
+    static final int TIME_PER_SCROLL = 60000; // in milliseconds
+    static final int HITS_PER_SCROLL = 5000;
+
 }

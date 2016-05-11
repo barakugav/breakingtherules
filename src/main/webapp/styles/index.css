@@ -1,17 +1,41 @@
-/* General
-******************************************/
+/* Default Behavior
+*************************************************/
+h1 {
+  margin: 2rem 0;
+  color: #E8F5E9; }
+
 h2 {
-  margin-top: 4rem;
-  margin-bottom: .5rem; }
+  margin-top: 1rem;
+  margin-bottom: 1rem; }
+
+h3 {
+  font-size: 2rem;
+  margin-top: .4rem; }
 
 .btn {
   padding-top: .2rem;
   padding-bottom: .2rem; }
 
+body {
+  margin-bottom: 3rem;
+  background-color: #43A047; }
+
+section {
+  background-color: #E8F5E9;
+  border-radius: 1rem;
+  padding: 1.5rem;
+  margin: 1rem 0; }
+
+/* Utilities
+*************************************************/
 .u-italics {
   font-style: italic; }
 
-/* Arrows */
+.u-emph {
+  font-weight: bold; }
+
+/* Shared Components
+*************************************************/
 .Arrow-top, .Arrow-bottom, .Arrow-left, .Arrow-right {
   display: inline-block;
   width: 0;
@@ -34,15 +58,32 @@ h2 {
   border: 7px solid transparent;
   border-left: 7px solid black; }
 
-/* Hits table
+.CollapseToggler input {
+  width: 0;
+  margin: 0;
+  padding: 0;
+  display: none; }
+.CollapseToggler:hover {
+  color: black; }
+
+.AlignedTable th, .SuggestionTable th, .AlignedTable td, .SuggestionTable td {
+  width: 29%; }
+.AlignedTable th:first-child, .SuggestionTable th:first-child, .AlignedTable td:first-child, .SuggestionTable td:first-child {
+  width: 13%; }
+
+/* Progress Section
 *************************************************/
-.HitsTable .ClearableInput {
-  width: 80%; }
-.HitsTable td {
-  padding-top: .2rem !important;
-  padding-bottom: .2rem !important; }
-.HitsTable .TableButton {
-  margin-bottom: .2rem; }
+.ProgressList li {
+  font-size: 2rem;
+  list-style-image: url("../img/RightArrow.PNG"); }
+.ProgressList .CollapseToggler {
+  font-size: 1.6rem;
+  margin-left: .3rem; }
+
+/* Filter
+*************************************************/
+.btn-success {
+  background-color: #4CAF50; }
 
 .ClearableInput {
   position: relative; }
@@ -53,16 +94,30 @@ h2 {
     right: 1rem;
     top: 1rem; }
 
+/* Hits View
+*************************************************/
+.HitsView .CollapseToggler {
+  font-size: 1.6rem; }
+
+.HitsTable .ClearableInput {
+  width: 80%; }
+.HitsTable td {
+  padding-top: .2rem !important;
+  padding-bottom: .2rem !important; }
+.HitsTable .TableButton {
+  margin-bottom: .2rem; }
+
 .PageTurner ul {
   border: 1px solid gray;
   margin: 0 auto; }
 
 /* Suggestions table
 *************************************************/
-.LoadingImage {
+.LoadingBar {
   width: 200px;
   display: block;
-  margin: 0 auto; }
+  margin: 0 auto;
+  height: 150px; }
 
 .SuggestionTable li {
   display: block;

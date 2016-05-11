@@ -1,11 +1,32 @@
-/* General
-******************************************/
+/* Default Behavior
+*************************************************/
 
-// Defaults
+// The colors were taken from the Material Design color pallete, ordered from light to dark
+$c-green-50: #E8F5E9;
+$c-green-100: #C8E6C9;
+$c-green-200: #A5D6A7;
+$c-green-300: #81C784;
+$c-green-400: #66BB6A;
+$c-green-500: #4CAF50;
+$c-green-600: #43A047;
+$c-green-700: #388E3C;
+$c-green-800: #2E7D32;
+$c-green-900: #1B5E20;
+
+
+h1 {
+	margin: 2rem 0;
+	color: $c-green-50;
+}
 
 h2 {
-	margin-top: 4rem;
-	margin-bottom: .5rem;
+	margin-top: 1rem;
+	margin-bottom: 1rem;
+}
+
+h3 {
+	font-size: 2rem;
+	margin-top: .4rem;
 }
 
 .btn {
@@ -13,16 +34,35 @@ h2 {
 	padding-bottom: .2rem;
 }
 
-// Utilities
+body {
+	margin-bottom: 3rem;
+	background-color: $c-green-600;
+}
+
+section {
+	background-color: $c-green-50;
+	border-radius: 1rem;
+	padding: 1.5rem;
+	margin: 1rem 0;
+}
+
+
+/* Utilities
+*************************************************/
 
 .u-italics {
 	font-style: italic;
 }
 
-// Shared components
+.u-emph {
+	font-weight: bold;
+}
 
 
-/* Arrows */
+/* Shared Components
+*************************************************/
+
+// Arrows
 $directions: top, bottom, left, right;
 @function opposite($direction) {
 	@if ($direction == left) { @return right; }
@@ -45,10 +85,72 @@ $w-arrow: 7px;
 	}
 }
 
+.CollapseToggler {
+	input {
+		width: 0;
+		margin: 0;
+		padding: 0;
+		display: none;
+	}
 
+	&:hover {
+		color: black;
+	}
+}
 
-/* Hits table
+.AlignedTable {
+	th, td {
+		width: 29%;
+	}
+	th:first-child, td:first-child {
+		width: 13%;
+	}
+}
+
+/* Progress Section
 *************************************************/
+
+.ProgressList {
+	li {
+		font-size: 2rem;
+		list-style-image: url('../img/RightArrow.PNG');
+	}
+	.CollapseToggler {
+		font-size: 1.6rem;
+		margin-left: .3rem;
+	}
+}
+
+
+/* Filter
+*************************************************/
+
+.btn-success {
+	background-color: $c-green-500;
+}
+
+
+.ClearableInput {
+	position: relative;
+
+	 i {
+		opacity: 0.5;
+		color: black;
+		position: absolute;
+		right: 1rem;
+		top: 1rem;
+	}
+}
+
+
+/* Hits View
+*************************************************/
+
+.HitsView {
+	.CollapseToggler {
+		font-size: 1.6rem;
+	}
+}
 
 .HitsTable {
 	
@@ -66,18 +168,6 @@ $w-arrow: 7px;
 
 }
 
-.ClearableInput {
-	position: relative;
-
-	 i {
-		opacity: 0.5;
-		color: black;
-		position: absolute;
-		right: 1rem;
-		top: 1rem;
-	}
-}
-
 .PageTurner ul {
 	border: 1px solid gray;
 	margin: 0 auto;
@@ -88,12 +178,16 @@ $w-arrow: 7px;
 /* Suggestions table
 *************************************************/
 
-.LoadingImage {
+.LoadingBar {
 	width: 200px;
 	display: block;
 	margin: 0 auto;
+	height: 150px;
 }
 
+.SuggestionTable {
+	@extend .AlignedTable;
+}
 .SuggestionTable li {
 	display: block;
 	list-style: none;

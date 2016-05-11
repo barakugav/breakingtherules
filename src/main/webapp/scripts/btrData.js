@@ -31,6 +31,7 @@
 		}
 
 		function getSuggestions() {
+			console.log('Getting suggestions');
 			return $http.get('/suggestions');
 		}
 

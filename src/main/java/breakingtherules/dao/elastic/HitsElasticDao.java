@@ -54,8 +54,6 @@ public class HitsElasticDao implements HitsDao {
      */
     private Map<Triple<Integer, List<Rule>, Filter>, Integer> m_totalHitsCache;
 
-    private static final int DELETION_THRESHOLD = 5000;
-
     public HitsElasticDao() {
 	NodeBuilder nodeBuilder = NodeBuilder.nodeBuilder();
 	Builder settingsBuilder = Settings.settingsBuilder();
@@ -94,10 +92,10 @@ public class HitsElasticDao implements HitsDao {
 	QueryBuilder query = QueryBuilders.termQuery(ElasticDaoConfig.FIELD_JOB_ID, jobId);
 	SearchRequestBuilder srchRequest = m_elasticClient.prepareSearch(ElasticDaoConfig.INDEX_NAME);
 	srchRequest.setQuery(query);
-	srchRequest.setSize(DELETION_THRESHOLD);
+	srchRequest.setSize(ElasticDaoConfig.DELETION_THRESHOLD);
 
 	SearchHits hitsRes = srchRequest.get().getHits();
-	if (hitsRes.totalHits() > DELETION_THRESHOLD) {
+	if (hitsRes.totalHits() > ElasticDaoConfig.DELETION_THRESHOLD) {
 	    System.out
 		    .println("Job is too big to delete programatically. Please delete manually through ElasticSearch.");
 	}
@@ -233,15 +231,12 @@ public class HitsElasticDao implements HitsDao {
      *         exists
      */
     private List<Hit> getHits(int jobId, List<Rule> rules, Filter filter, boolean all, int startIndex, int endIndex) {
-	int TIME_PER_SCROLL = 60000; // in milliseconds
-	int HITS_PER_SCROLL = 200;
-
 	QueryBuilder query = QueryBuilders.termQuery(ElasticDaoConfig.FIELD_JOB_ID, jobId);
 	SortBuilder sort = SortBuilders.fieldSort(ElasticDaoConfig.FIELD_ID).order(SortOrder.ASC);
 
 	SearchRequestBuilder srchRequest = m_elasticClient.prepareSearch(ElasticDaoConfig.INDEX_NAME)
-		.setSearchType(SearchType.QUERY_AND_FETCH).setScroll(new TimeValue(TIME_PER_SCROLL)).setQuery(query)
-		.addSort(sort).setSize(HITS_PER_SCROLL);
+		.setSearchType(SearchType.QUERY_AND_FETCH).setScroll(new TimeValue(ElasticDaoConfig.TIME_PER_SCROLL))
+		.setQuery(query).addSort(sort).setSize(ElasticDaoConfig.HITS_PER_SCROLL);
 	SearchResponse scrollResp = srchRequest.execute().actionGet();
 
 	List<Hit> relevantHits = new ArrayList<>();
@@ -252,6 +247,7 @@ public class HitsElasticDao implements HitsDao {
 
 	// Scroll until no hits are returned or endIndex has been reached
 	while (true) {
+	    System.out.println("Indaloop");
 	    // Go over search results
 	    for (SearchHit srchHit : scrollResp.getHits().getHits()) {
 		// Add the hit to the answer list, if it passes rules and
@@ -274,7 +270,7 @@ public class HitsElasticDao implements HitsDao {
 
 	    // Get next batch
 	    scrollResp = m_elasticClient.prepareSearchScroll(scrollResp.getScrollId())
-		    .setScroll(new TimeValue(TIME_PER_SCROLL)).execute().actionGet();
+		    .setScroll(new TimeValue(ElasticDaoConfig.TIME_PER_SCROLL)).execute().actionGet();
 	    // Break condition: No hits are returned
 	    if (scrollResp.getHits().getHits().length == 0) {
 		break;
@@ -303,9 +299,6 @@ public class HitsElasticDao implements HitsDao {
 	    return false;
 	}
 	for (Rule rule : rules) {
-	    // TODO
-	    // 'id > 1'?
-	    // Why 'rule.isMatch(hit)' and not '!rule.isMatch(hit)'?
 	    if (rule.getId() > 1 && rule.isMatch(hit)) {
 		return false;
 	    }

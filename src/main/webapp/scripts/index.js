@@ -31,34 +31,42 @@ var settings = {
 
 		$scope.$on('ruleCreateRequest', function () {
 			BtrData.postRule().then(function () {
+				$.notify('New rule created! Updating statistics...', { 
+					position: 'top center',
+					className: 'success'
+				});
 				$scope.$broadcast('rulesChanged');
 			});
 		});
 	}]);
 
-	app.controller('RulesController', ['$rootScope', '$scope', 'BtrData', 'SetJob', function ($rootScope, $scope, BtrData, SetJob) {
-		var rulesCtrl = this;
-		rulesCtrl.rules = [];
+	app.controller('ProgressCtrl', ['$rootScope', '$scope', 'BtrData', 'SetJob', function ($rootScope, $scope, BtrData, SetJob) {
+		var progCtrl = this;
+		progCtrl.rules = [];
 
-		rulesCtrl.updateRules = function () {
+		progCtrl.updateRules = function () {
 			BtrData.getRules().success(function (data) {
-				rulesCtrl.rules = data;
+				progCtrl.rules = data;
 			});
 		};
 
-		rulesCtrl.delete = function (id) {
+		progCtrl.deleteRule = function (id) {
 			BtrData.deleteRuleById(id).then(function () {
-				rulesCtrl.updateRules();
+				$.notify('Rule deleted. Updating statistics...', { 
+					position: 'top center',
+					className: 'info'
+				});
+				progCtrl.updateRules();
 				$rootScope.$broadcast('rulesChanged');
 			});
 		};
 
 		$scope.$on('rulesChanged', function () {
-			rulesCtrl.updateRules();
+			progCtrl.updateRules();
 		});
 
 		SetJob.then(function () {
-			rulesCtrl.updateRules();
+			progCtrl.updateRules();
 		});	
 	}]);
 
@@ -170,10 +178,6 @@ var settings = {
 	app.controller('SuggestionController', ['BtrData', '$rootScope', 'SetJob', function (BtrData, $rootScope, SetJob) {
 		var sugCtrl = this;
 
-		SetJob.then(function () {
-			sugCtrl.refresh();
-		});
-
 		sugCtrl.refresh = function () {
 			BtrData.getSuggestions().success(function (data) {
 				sugCtrl.allSuggestions = settings.attributes.map(function (attrName) {
@@ -267,6 +271,13 @@ var settings = {
 		    }
 		};
 	});
+
+	app.directive('loadingBar', function() {
+		return {
+			restrict: 'E',
+			templateUrl: './components/loading-bar.html'
+		};
+	})
 
 
 	// Taken from http://codepen.io/WinterJoey/pen/sfFaK
