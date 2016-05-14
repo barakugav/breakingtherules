@@ -199,8 +199,8 @@ public class HitsElasticDao implements HitsDao {
     }
 
     private void refreshIndex() {
-	// TODO - why not:
-	// m_elasticClient.admin().indices().prepareRefresh(ElasticDaoConfig.INDEX_NAME).execute();
+	// using "execute" instead of "get" in the following line, does not
+	// ensure that the refresh will happen immediately
 	m_elasticClient.admin().indices().prepareRefresh(ElasticDaoConfig.INDEX_NAME).get();
     }
 

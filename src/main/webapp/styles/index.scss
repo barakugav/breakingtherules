@@ -107,12 +107,34 @@ $w-arrow: 7px;
 	}
 }
 
+/* Job Choosing
+*************************************************/
+
+.JobChoosebox {
+	input {
+		width: 400px;
+	}
+	button {
+		margin-top: 1rem;
+		margin-left: 100px;
+		min-width: 200px;
+		background-color: $c-green-200;
+	}
+}
+
 /* Progress Section
 *************************************************/
 
+.ProgressBox {
+	table {
+		border-bottom: 1px solid #ddd;
+		margin-bottom: 3rem;
+	}
+}
+
 .ProgressList {
 	li {
-		font-size: 1.8rem;
+		font-size: 1.7rem;
 		margin-top: .6rem;
 		margin-bottom: .6rem;
 		list-style-image: url('../img/RightArrow.PNG');
@@ -126,6 +148,12 @@ $w-arrow: 7px;
 
 /* Filter
 *************************************************/
+
+.FilterTable {
+	@extend .AlignedTable;
+
+	margin-bottom: 1rem;	
+}
 
 .btn-success {
 	background-color: $c-green-500;
@@ -152,6 +180,8 @@ $w-arrow: 7px;
 	.CollapseToggler {
 		font-size: 1.6rem;
 	}
+
+	margin-bottom: 1.5rem;
 }
 
 .HitsTable {

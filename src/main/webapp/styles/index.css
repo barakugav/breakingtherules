@@ -66,15 +66,29 @@ section {
 .CollapseToggler:hover {
   color: black; }
 
-.AlignedTable th, .SuggestionTable th, .AlignedTable td, .SuggestionTable td {
+.AlignedTable th, .FilterTable th, .SuggestionTable th, .AlignedTable td, .FilterTable td, .SuggestionTable td {
   width: 29%; }
-.AlignedTable th:first-child, .SuggestionTable th:first-child, .AlignedTable td:first-child, .SuggestionTable td:first-child {
+.AlignedTable th:first-child, .FilterTable th:first-child, .SuggestionTable th:first-child, .AlignedTable td:first-child, .FilterTable td:first-child, .SuggestionTable td:first-child {
   width: 13%; }
+
+/* Job Choosing
+*************************************************/
+.JobChoosebox input {
+  width: 400px; }
+.JobChoosebox button {
+  margin-top: 1rem;
+  margin-left: 100px;
+  min-width: 200px;
+  background-color: #A5D6A7; }
 
 /* Progress Section
 *************************************************/
+.ProgressBox table {
+  border-bottom: 1px solid #ddd;
+  margin-bottom: 3rem; }
+
 .ProgressList li {
-  font-size: 1.8rem;
+  font-size: 1.7rem;
   margin-top: .6rem;
   margin-bottom: .6rem;
   list-style-image: url("../img/RightArrow.PNG"); }
@@ -84,6 +98,9 @@ section {
 
 /* Filter
 *************************************************/
+.FilterTable {
+  margin-bottom: 1rem; }
+
 .btn-success {
   background-color: #4CAF50; }
 
@@ -98,8 +115,10 @@ section {
 
 /* Hits View
 *************************************************/
-.HitsView .CollapseToggler {
-  font-size: 1.6rem; }
+.HitsView {
+  margin-bottom: 1.5rem; }
+  .HitsView .CollapseToggler {
+    font-size: 1.6rem; }
 
 .HitsTable .ClearableInput {
   width: 80%; }

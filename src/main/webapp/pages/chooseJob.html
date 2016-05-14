@@ -1,0 +1,12 @@
+<div class="container" ng-controller="ChooseJobController as ChJobCtrl">
+
+	<h1>BreakingTheRules</h1>
+	
+	<section class="JobChoosebox">
+		<h2>Choose a Job</h2>
+		<p>Enter the job number you would like to work on:	</p>
+		<input type="text" class="form-control" 
+			ng-model="ChJobCtrl.jobId" on-enter-key="ChJobCtrl.submit()" />
+		<button class="btn" ng-click="ChJobCtrl.submit()">Continue</button>
+	</section>
+</div>

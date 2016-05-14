@@ -175,7 +175,10 @@ public class Job {
 	    if (r.getId() == ruleId) {
 		m_rules.remove(r);
 
-		m_coveredHitsCount -= r.getVolume();
+		m_coveredHitsCount -= r.getVolume(); // TODO but what if other
+						     // rules catch it?? Maybe
+						     // remove all rules above
+						     // and add them again
 		m_filteredHitsCount = m_hitsDao.getHitsNumber(m_id, m_rules, m_filter);
 		m_originalRule.setVolume(m_totalHitsCount - m_coveredHitsCount);
 		return;

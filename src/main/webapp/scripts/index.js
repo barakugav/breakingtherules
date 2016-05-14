@@ -1,4 +1,4 @@
-"use strict";
+'use strict';
 
 /****************** Settings ************************/
 
@@ -16,7 +16,6 @@ var settings = {
 
 var events = {
 	// global events
-	RULES_CREATE_REQUEST: 'ruleCreateRequest',
 	RULES_CHANGED: 'rulesChanged',
 	FILTER_UPDATE: 'filterUpdate',
 	SUGGESTION_CHOSEN: 'suggestionChosen',
@@ -33,16 +32,10 @@ var events = {
 	
 	var app = angular.module('BreakingTheRules', ['btrData', 'ngRoute']);
 
-	// app.config(['$routeProvider', function($routeProvider) {
-	// 	$routeProvider
-	// 		.when('/', { templateUrl: 'pages/chooseJob.html' })
-	// 		.when('/main', { templateUrl: 'pages/main.html' })
-	// }]);
-
-	// Set job before ng-app begins. Happens only once.
-	app.factory('SetJob', ['BtrData', function (BtrData) {
-		var jobId = parseInt(window.prompt(settings.guiStrings.JOB_PROMPT, 1));
-		return BtrData.setJob(jobId);
+	app.config(['$routeProvider', function($routeProvider) {
+		$routeProvider
+			.when('/', { templateUrl: 'pages/chooseJob.html' })
+			.when('/main', { templateUrl: 'pages/main.html' });
 	}]);
 
 	app.factory('Notify', [function () {
@@ -75,62 +68,80 @@ var events = {
 	}]);
 
 	app.factory('StatusMonitor', ['BtrData', function (BtrData) {
-		var originalRule;
-		var createdRulesCount;
-		var totalHitsCount;
-		var coveredHitsCount;
-		var filteredHitsCount;
+		var status;
+		var curPromise;
 
-		/**
-		 * Synchronously updates the status information
-		 */
 		function update() {
-			var promise = BtrData.getStatus();
+			var newPromise = BtrData.getStatus();
+			newPromise.then(function (response) {
+				status = response.data;
+			});
+			curPromise = newPromise;
+			return newPromise;
+		}
+		function onReady(f) {
+			curPromise.then(f);
 		}
 
 		function getOriginalRule() {
-			return originalRule;
+			return status.originalRule;
 		}
-
 		function getCreatedRulesCount() {
-			return createdRulesCount;
+			return status.createdRulesCount;
 		}
-
 		function getTotalHitsCount() {
-			return totalHitsCount;
+			return status.totalHitsCount;
 		}
-
 		function getCoveredHitsCount() {
-			return coveredHitsCount;
+			return status.coveredHitsCount;
+		}
+		function getFilteredHitsCount() {
+			return status.filteredHitsCount;
 		}
 
-		function getFilteredHitsCount() {
-			return filteredHitsCount;
-		}
+		update();
 
 		return {
 			update: update,
+			onReady: onReady,
+
 			getOriginalRule: getOriginalRule,
 			getCreatedRulesCount: getCreatedRulesCount,
 			getTotalHitsCount: getTotalHitsCount,
+			getCoveredHitsCount: getCoveredHitsCount,
 			getFilteredHitsCount: getFilteredHitsCount
 		};
 	}]);
 
-	app.controller('GlobalController', ['$scope', 'BtrData', 'Notify', function($scope, BtrData, Notify) {
+	app.controller('MainController', ['$rootScope', 'BtrData', 'Notify', 'StatusMonitor', function($rootScope, BtrData, Notify, StatusMonitor) {
 		this.attributes = settings.attributes;
 
-		$scope.$on(events.RULES_CREATE_REQUEST, function () {
-			BtrData.postRule().then(function () {
-				Notify.success('New rule created! Updating statistics...');
-				$scope.$broadcast(events.RULES_CHANGED);
-			});
+		$rootScope.$on(events.FILTER_UPDATE, function () {
+			StatusMonitor.update();
+		})
+		$rootScope.$on(events.RULES_CHANGED, function () {
+			StatusMonitor.update();
 		});
 	}]);
 
-	app.controller('ProgressCtrl', ['$rootScope', '$scope', 'BtrData', 'SetJob', 'Notify', function ($rootScope, $scope, BtrData, SetJob, Notify) {
+	app.controller('ChooseJobController', ['BtrData', '$location', function (BtrData, $location) {
+		this.submit = function () {
+			BtrData.setJob(this.jobId).then(function () {
+				$location.url('/main');
+			});
+		};
+	}]);
+
+	app.controller('ProgressCtrl', ['$rootScope', 'BtrData', 'Notify', 'StatusMonitor', function ($rootScope, BtrData, Notify, StatusMonitor) {
 		var progCtrl = this;
 		progCtrl.rules = [];
+
+		progCtrl.init = function () {
+			progCtrl.updateRules();
+			StatusMonitor.onReady(function () {
+				progCtrl.originalRule = StatusMonitor.getOriginalRule();
+			});
+		};
 
 		progCtrl.updateRules = function () {
 			BtrData.getRules().success(function (data) {
@@ -138,31 +149,36 @@ var events = {
 			});
 		};
 
+		progCtrl.getCoveredPercentage = function () {
+			return 100 * StatusMonitor.getCoveredHitsCount() / StatusMonitor.getTotalHitsCount();
+		};
+		progCtrl.getUncoveredPercentage = function () {
+			return 100 - progCtrl.getCoveredPercentage();
+		}
+
 		progCtrl.deleteRule = function (id) {
 			BtrData.deleteRuleById(id).then(function () {
 				Notify.info('Rule deleted. Updating statistics...');
 				progCtrl.updateRules();
-				$rootScope.$broadcast(events.RULES_CHANGED);
+				$rootScope.$emit(events.RULES_CHANGED);
 			});
 		};
 
-		$scope.$on(events.RULES_CHANGED, function () {
+		$rootScope.$on(events.RULES_CHANGED, function () {
 			progCtrl.updateRules();
 		});
 
-		SetJob.then(function () {
-			progCtrl.updateRules();
-		});	
+		progCtrl.init();
 	}]);
 
-	app.controller('FilterController', ['$scope', 'BtrData', '$rootScope', 'SetJob', function($scope, BtrData, $rootScope, SetJob) {
+	app.controller('FilterController', ['$rootScope', 'BtrData', 'Notify', function($rootScope, BtrData, Notify) {
 		var filterCtrl = this;
 		filterCtrl.filter = {};
 		filterCtrl.hasFilter = false;
 
-		SetJob.then(function () {
+		filterCtrl.init = function () {
 			filterCtrl.updateFilter();
-		});
+		};
 
 		filterCtrl.updateFilter = function () {
 			BtrData.getFilter().success(function (data) {
@@ -192,14 +208,21 @@ var events = {
 			});
 		};
 
-		$scope.$on(events.RULES_CHANGED, function () {
+		filterCtrl.createRule = function () {
+			BtrData.postRule().then(function () {
+				Notify.success('New rule created! Updating statistics...');
+				$rootScope.$emit(events.RULES_CHANGED);
+			});
+		};
+
+		$rootScope.$on(events.RULES_CHANGED, function () {
 			filterCtrl.filter.attributes.forEach(function (att) {
 				att.field = 'Any';
 			});
 			filterCtrl.setFilter();
 		});
 
-		$scope.$on(events.SUGGESTION_CHOSEN, function (event, sug) {
+		$rootScope.$on(events.SUGGESTION_CHOSEN, function (event, sug) {
 			var matchFound = false;
 			filterCtrl.filter.attributes.forEach(function (filterAttr) {
 				if (filterAttr.type === sug.attribute.type) {
@@ -213,10 +236,11 @@ var events = {
 			}
 		});
 
-		$scope.$on(events.INPUT_CLEARED, function () {
+		$rootScope.$on(events.INPUT_CLEARED, function () {
 			filterCtrl.setFilter();
 		});
 
+		filterCtrl.init();
 	}]);
 
 	app.controller('HitsTableController', ['$scope', 'BtrData', '$rootScope', function ($scope, BtrData, $rootScope) {
@@ -257,10 +281,9 @@ var events = {
 		$scope.$on(events.PAGE_CHANGE, function (event, pageNum) {
 			hitsCtrl.setPage(pageNum);
 		});
-
 	}]);
 
-	app.controller('SuggestionController', ['BtrData', '$rootScope', 'SetJob', function (BtrData, $rootScope, SetJob) {
+	app.controller('SuggestionController', ['BtrData', '$rootScope', 'StatusMonitor', function (BtrData, $rootScope, StatusMonitor) {
 		var sugCtrl = this;
 
 		sugCtrl.refresh = function () {
@@ -275,13 +298,16 @@ var events = {
 		};
 
 		sugCtrl.addToFilter = function (suggestion) {
-			$rootScope.$broadcast(events.SUGGESTION_CHOSEN, suggestion);
+			$rootScope.$emit(events.SUGGESTION_CHOSEN, suggestion);
 		};
+
+		sugCtrl.filteredHitsCount = function () {
+			return StatusMonitor.getFilteredHitsCount();
+		}
 
 		$rootScope.$on(events.FILTER_UPDATE, function () {
 			sugCtrl.refresh();
 		});
-
 	}]);
 
 	app.directive('pageTurner', function () {
@@ -313,7 +339,7 @@ var events = {
 		};
 	});
 
-	app.directive('clearableInput', ['$window', '$rootScope', function ($window, $rootScope) {
+	app.directive('clearableInput', ['$window', function ($window) {
 		return {
 			restrict: 'AE',
 			link: function (scope, element, attr) {
@@ -363,9 +389,8 @@ var events = {
 		};
 	});
 
-
-	// Taken from http://codepen.io/WinterJoey/pen/sfFaK
 	app.filter('capitalize', function() {
+		// Taken from http://codepen.io/WinterJoey/pen/sfFaK
 		return function(input, all) {
 			var reg = (all) ? /([^\W_]+[^\s-]*) */g : /([^\W_]+[^\s-]*)/;
 			return (!!input) ? input.replace(reg, function(txt){return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();}) : '';

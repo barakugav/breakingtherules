@@ -1,0 +1,140 @@
+<div class="container" ng-controller="MainController as mainCtrl">
+
+	<h1>BreakingTheRules</h1>
+	
+	<section ng-controller="ProgressCtrl as progCtrl" class="ProgressBox">
+		<h2>Progress</h2> 
+		<p>In order to break down the original permissive rule, we need to create new rules to cover all the hits that were covered by the permissive rule. This is the original rule:</p>
+		<table class="table AlignedTable">
+			<tr>
+				<th></th>
+				<th ng-repeat="att in mainCtrl.attributes">{{ att | capitalize }}</th>
+			</tr>
+			<tr>
+				<td class="u-emph">Original Rule</td>
+				<td ng-repeat="attribute in progCtrl.originalRule.attributes"> {{ attribute.str }} </td>
+			</tr>
+		</table>
+		<p>Progress already made:</p>
+		<ul class="ProgressList">
+			<li>
+				<span class="u-emph">{{ progCtrl.getCoveredPercentage() | number }}%</span> 
+				of hits have been covered by new rules.
+			</li>
+			<li>
+				<span class="u-emph">{{ progCtrl.getUncoveredPercentage() | number }}%</span> 
+				of hits, still hit the original rule.
+			</li>
+			<li>
+				<span class="u-emph">{{ progCtrl.rules.length }}</span> rules have already been created. 
+				<label class="CollapseToggler" ng-show="progCtrl.rules.length > 0">
+					<i class="glyphicon" 
+						ng-class="{ 'glyphicon-expand': !progCtrl.areRulesToggled, 'glyphicon-collapse-down': progCtrl.areRulesToggled }">
+					</i>
+					<input type="checkbox" ng-model="progCtrl.areRulesToggled"/> 
+					Show rules created
+				</label>
+			</li>
+		</ul>
+		<table class="table" ng-show="progCtrl.areRulesToggled && progCtrl.rules.length > 0">
+			<tr>
+				<th></th>
+				<th ng-repeat="att in mainCtrl.attributes">{{ att | capitalize }}</th>
+				<th></th>
+			</tr>
+			<tr ng-repeat="rule in progCtrl.rules | orderBy:'-id' ">
+				<td> {{ rule.id }} </td>
+				<td ng-repeat="attribute in rule.attributes"> {{ attribute.str }} </td>
+				<td>
+					<button class="btn btn-danger" 
+						ng-click="progCtrl.deleteRule(rule.id)">
+						Delete Rule
+					</button>
+				</td>
+			</tr>
+		</table>
+	</section>
+	
+	<section>
+		<h2>Create New Rules</h2>
+		<p>Enter any filter you like in inputs below. Once you have a good filter and would like to turn it into a rule, press the "Add Rule" button. Underneath, there are statistics of all the hits that match the current filter, and they can be used to change the filter and create new rules.</p>
+		<table class="table FilterTable">
+			<tr>
+				<th></th>
+				<th ng-repeat="att in mainCtrl.attributes">{{ att | capitalize }}</th>
+			</tr>
+			<tr ng-controller="FilterController as filterCtrl">
+				<td> 
+					<button class="btn TableButton" ng-click="filterCtrl.setFilter()">Re-Filter</button> <br />
+					<button 
+						class="btn btn-success TableButton" ng-click="filterCtrl.createRule()">Add Rule</button>
+				</td>
+				<td ng-repeat="attribute in filterCtrl.filter.attributes">
+					<div clearable-input="true" class="ClearableInput">
+						<input type="text" 
+							class="form-control" 
+							ng-model="attribute.field" 
+							placeholder="Any" 
+							on-enter-key="filterCtrl.setFilter()" />
+					</div>
+				</td>
+			</tr>
+		</table>
+
+		<div ng-controller="HitsTableController as hitsCtrl" class="HitsView">
+			<label class="CollapseToggler">
+				<i class="glyphicon" 
+					ng-class="{ 'glyphicon-expand': !hitsCtrl.isToggled, 'glyphicon-collapse-down': hitsCtrl.isToggled }">
+				</i>
+				<input type="checkbox" ng-model="hitsCtrl.isToggled" /> 
+				Browse the hits that match the current filter
+			</label>
+			<table class="table HitsTable" ng-show="hitsCtrl.isToggled">
+				<tr>
+					<th></th>
+					<th ng-repeat="att in mainCtrl.attributes">{{ att | capitalize }}</th>
+				</tr>
+				<tr ng-repeat="hit in hitsCtrl.allHits">
+					<td> {{ hit.id }} </td>
+					<td ng-repeat="attribute in hit.attributes"> {{ attribute.str }} </td>
+				</tr>
+			</table>
+			<page-turner 
+				nav-size="hitsCtrl.NAV_SIZE" 
+				current-page="hitsCtrl.page"
+				num-of-pages="hitsCtrl.numOfPages"
+				ng-show="hitsCtrl.isToggled">
+			</page-turner>
+		</div>
+
+		<div ng-controller="SuggestionController as sugCtrl">
+			<h3>Hit Statistics for current filter (total: {{ sugCtrl.filteredHitsCount() }} hits)</h3>
+			<loading-bar 
+				ng-if="!sugCtrl.allSuggestions" 
+				class="LoadingBar"></loading-bar>
+			<table class="table SuggestionTable" ng-if="sugCtrl.allSuggestions">
+				<tbody>
+					<tr>
+						<th></th>
+						<th ng-repeat="attSuggestion in sugCtrl.allSuggestions">
+							{{ attSuggestion.type }}
+						</th>
+					</tr>
+					<tr>
+						<td></td>
+						<td ng-repeat="attSuggestions in sugCtrl.allSuggestions">
+							<ul>
+								<li ng-repeat="sug in attSuggestions.suggestions"
+									ng-click="sugCtrl.addToFilter(sug)">
+									<!-- {{ sug.attribute.str }} <span>({{ sug.score * 100| number :1 }}%)</span> -->
+									{{ sug.attribute.str }} <span>({{ sug.size }} hits)</span>
+								</li>
+							</ul>
+						</td>
+					</tr>	
+				</tbody>
+			</table>
+		</div>
+
+	</section>
+</div>
