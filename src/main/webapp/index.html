@@ -14,8 +14,31 @@
 		
 		<section ng-controller="ProgressCtrl as progCtrl">
 			<h2>Progress</h2> 
-			<p>In order to break down the original permissive rules, we need to create new rules to cover all the hits that were covered by the permissive rule. This is the original rule:</p>
-			<table  class="table">
+			<p>In order to break down the original permissive rule, we need to create new rules to cover all the hits that were covered by the permissive rule. This is the original rule:</p>
+			<table class="table">
+				<tr>
+					<th ng-repeat="att in globalCtrl.attributes">{{ att | capitalize }}</th>
+					<th></th>
+				</tr>
+				<tr>
+					<td ng-repeat="attribute in progCtrl.originalRule.attributes"> {{ attribute.str }} </td>
+				</tr>
+			</table>
+			<ul class="ProgressList">
+				<li><span class="u-emph">0%</span> of hits have been covered by new rules.</li>
+				<li><span class="u-emph">100%</span> of hits, still hit the original rule.</li>
+				<li>
+					<span class="u-emph">{{ progCtrl.rules.length }}</span> rules have already been created. 
+					<label class="CollapseToggler" ng-show="progCtrl.rules.length > 0">
+						<i class="glyphicon" 
+							ng-class="{ 'glyphicon-expand': !progCtrl.areRulesToggled, 'glyphicon-collapse-down': progCtrl.areRulesToggled }">
+						</i>
+						<input type="checkbox" ng-model="progCtrl.areRulesToggled"/> 
+						Show rules created
+					</label>
+				</li>
+			</ul>
+			<table class="table" ng-show="progCtrl.areRulesToggled && progCtrl.rules.length > 0">
 				<tr>
 					<th></th>
 					<th ng-repeat="att in globalCtrl.attributes">{{ att | capitalize }}</th>
@@ -26,27 +49,12 @@
 					<td ng-repeat="attribute in rule.attributes"> {{ attribute.str }} </td>
 					<td>
 						<button class="btn btn-danger" 
-							ng-click="progCtrl.deleteRule(rule.id)"
-							ng-hide="rule.id === 1">
+							ng-click="progCtrl.deleteRule(rule.id)">
 							Delete Rule
 						</button>
 					</td>
 				</tr>
 			</table>
-			<ul class="ProgressList">
-				<li><span class="u-emph">0%</span> of hits have been covered by new rules.</li>
-				<li><span class="u-emph">100%</span> of hits, still hit the original rule.</li>
-				<li>
-					<span class="u-emph">0</span> rules have already been created. 
-					<label class="CollapseToggler">
-						<i class="glyphicon" 
-							ng-class="{ 'glyphicon-expand': !progCtrl.areRulesToggled, 'glyphicon-collapse-down': progCtrl.areRulesToggled }">
-						</i>
-						<input type="checkbox" ng-model="progCtrl.areRulesToggled" /> 
-						Show rules created
-					</label>
-				</li>
-			</ul>
 		</section>
 		
 		<section>
@@ -135,6 +143,7 @@
 
 	<script src="./scripts/ext/jquery.min.js"></script>
 	<script src="./scripts/ext/angular.min.js"></script>
+	<script src="./scripts/ext/angular-route.min.js"></script>
 	<script src="./scripts/ext/bootstrap.min.js"></script>
 	<script src="./scripts/ext/notify.min.js"></script>
 

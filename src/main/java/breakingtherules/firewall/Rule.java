@@ -13,26 +13,66 @@ public class Rule extends Filter {
     private final int m_id;
 
     /**
+     * The number of hits that apply to this rule
+     */
+    private int m_volume;
+
+    /**
      * Constructor
      * 
+     * @param id
+     *            The rule serial number
      * @param filter
      *            filter of the rule
      */
     public Rule(int id, Filter filter) {
 	super(filter);
 	m_id = id;
+	m_volume = 0;
     }
 
     /**
      * 
      * Constructor
      * 
+     * @param id
+     *            The rule serial number
      * @param attributes
      *            attributes that represent the rule
      */
     public Rule(int id, List<Attribute> attributes) {
 	super(attributes);
 	m_id = id;
+	m_volume = 0;
+    }
+
+    /**
+     * 
+     * @param id
+     *            The rule serial number
+     * @param filter
+     *            filter of the rule
+     * @param volume
+     *            The number of hits that apply to this rule
+     */
+    public Rule(int id, Filter filter, int volume) {
+	super(filter);
+	m_id = id;
+	m_volume = volume;
+    }
+
+    /**
+     * @param id
+     *            The rule serial number
+     * @param attributes
+     *            attributes that represent the rule
+     * @param volume
+     *            The number of hits that apply to this rule
+     */
+    public Rule(int id, List<Attribute> attributes, int volume) {
+	super(attributes);
+	m_id = id;
+	m_volume = volume;
     }
 
     /**
@@ -42,6 +82,21 @@ public class Rule extends Filter {
      */
     public int getId() {
 	return m_id;
+    }
+
+    /**
+     * @return The number of hits that apply to this rule
+     */
+    public int getVolume() {
+	return m_volume;
+    }
+
+    /**
+     * @param vol
+     *            The number of hits that apply to this rule
+     */
+    public void setVolume(int vol) {
+	m_volume = vol;
     }
 
     /*

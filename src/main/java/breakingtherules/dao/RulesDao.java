@@ -11,11 +11,19 @@ import breakingtherules.firewall.Rule;
 public interface RulesDao {
 
     /**
+     * @param jobId
+     *            The id of the job that is in question
+     * @return The original rule of the given job
+     * @throws IOException
+     */
+    public Rule getOriginalRule(int jobId) throws IOException;
+
+    /**
      * Get all rules from repository
      * 
      * @param jobId
      *            id of the rules' job
-     * @return all rules
+     * @return all rules created
      * @throws IOException
      *             if failed to read from memory
      */

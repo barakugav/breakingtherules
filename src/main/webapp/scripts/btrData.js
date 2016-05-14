@@ -43,6 +43,10 @@
 			return $http.get('/filter');
 		}
 
+		function getStatus() {
+			return $http.get('/status');
+		}
+
 		function deleteRuleById(id) {
 			return $http.delete('/rule?id=' + id);
 		}
@@ -55,6 +59,7 @@
 			getSuggestions: getSuggestions,
 			getHits: getHits,
 			getFilter: getFilter,
+			getStatus: getStatus,
 			deleteRuleById: deleteRuleById
 		};
 	}]);

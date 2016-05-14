@@ -7,6 +7,8 @@ import java.util.List;
  * DTO object that have a list of elements out of a bigger total elements list.
  * This DTO saves the indexes of this elements list out of the total list, and
  * some parameters about the total list
+ * 
+ * @param <T> The internal type of the list 
  */
 public class ListDto<T> implements Iterable<T> {
 
@@ -83,7 +85,7 @@ public class ListDto<T> implements Iterable<T> {
     /**
      * Get the size of the elements list this DTO has
      * 
-     * @return
+     * @return Size of the internal list
      */
     public int getSize() {
 	if (m_data == null) {

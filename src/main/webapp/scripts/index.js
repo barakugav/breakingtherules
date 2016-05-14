@@ -9,16 +9,35 @@ var settings = {
 	},
 	
 	attributes: [
-		"Source", "Destination", "Service"
-	]	
+		'Source', 'Destination', 'Service'
+	]
+
+};
+
+var events = {
+	// global events
+	RULES_CREATE_REQUEST: 'ruleCreateRequest',
+	RULES_CHANGED: 'rulesChanged',
+	FILTER_UPDATE: 'filterUpdate',
+	SUGGESTION_CHOSEN: 'suggestionChosen',
+
+	// specific events
+	INPUT_CLEARED: 'inputCleared',
+	PAGE_CHANGE: 'pageChange',
 
 };
 
 /**************** Main Angular ********************/
 
-(function() {
+(function (angular, $) {
 	
-	var app = angular.module('BreakingTheRules', ['btrData']);
+	var app = angular.module('BreakingTheRules', ['btrData', 'ngRoute']);
+
+	// app.config(['$routeProvider', function($routeProvider) {
+	// 	$routeProvider
+	// 		.when('/', { templateUrl: 'pages/chooseJob.html' })
+	// 		.when('/main', { templateUrl: 'pages/main.html' })
+	// }]);
 
 	// Set job before ng-app begins. Happens only once.
 	app.factory('SetJob', ['BtrData', function (BtrData) {
@@ -26,21 +45,90 @@ var settings = {
 		return BtrData.setJob(jobId);
 	}]);
 
-	app.controller('GlobalController', ['$scope', 'BtrData', function($scope, BtrData) {
+	app.factory('Notify', [function () {
+		var notificationPosition = 'top center';
+
+		function success(message) {
+			$.notify(message, { 
+				position: notificationPosition,
+				className: 'success'
+			});
+		}
+		function info(message) {
+			$.notify(message, { 
+				position: notificationPosition,
+				className: 'info'
+			});
+		}
+		function warn(message) {
+			$.notify(message, { 
+				position: notificationPosition,
+				className: 'warning'
+			});
+		}
+
+		return {
+			success: success,
+			info: info,
+			warn: warn
+		};
+	}]);
+
+	app.factory('StatusMonitor', ['BtrData', function (BtrData) {
+		var originalRule;
+		var createdRulesCount;
+		var totalHitsCount;
+		var coveredHitsCount;
+		var filteredHitsCount;
+
+		/**
+		 * Synchronously updates the status information
+		 */
+		function update() {
+			var promise = BtrData.getStatus();
+		}
+
+		function getOriginalRule() {
+			return originalRule;
+		}
+
+		function getCreatedRulesCount() {
+			return createdRulesCount;
+		}
+
+		function getTotalHitsCount() {
+			return totalHitsCount;
+		}
+
+		function getCoveredHitsCount() {
+			return coveredHitsCount;
+		}
+
+		function getFilteredHitsCount() {
+			return filteredHitsCount;
+		}
+
+		return {
+			update: update,
+			getOriginalRule: getOriginalRule,
+			getCreatedRulesCount: getCreatedRulesCount,
+			getTotalHitsCount: getTotalHitsCount,
+			getFilteredHitsCount: getFilteredHitsCount
+		};
+	}]);
+
+	app.controller('GlobalController', ['$scope', 'BtrData', 'Notify', function($scope, BtrData, Notify) {
 		this.attributes = settings.attributes;
 
-		$scope.$on('ruleCreateRequest', function () {
+		$scope.$on(events.RULES_CREATE_REQUEST, function () {
 			BtrData.postRule().then(function () {
-				$.notify('New rule created! Updating statistics...', { 
-					position: 'top center',
-					className: 'success'
-				});
-				$scope.$broadcast('rulesChanged');
+				Notify.success('New rule created! Updating statistics...');
+				$scope.$broadcast(events.RULES_CHANGED);
 			});
 		});
 	}]);
 
-	app.controller('ProgressCtrl', ['$rootScope', '$scope', 'BtrData', 'SetJob', function ($rootScope, $scope, BtrData, SetJob) {
+	app.controller('ProgressCtrl', ['$rootScope', '$scope', 'BtrData', 'SetJob', 'Notify', function ($rootScope, $scope, BtrData, SetJob, Notify) {
 		var progCtrl = this;
 		progCtrl.rules = [];
 
@@ -52,16 +140,13 @@ var settings = {
 
 		progCtrl.deleteRule = function (id) {
 			BtrData.deleteRuleById(id).then(function () {
-				$.notify('Rule deleted. Updating statistics...', { 
-					position: 'top center',
-					className: 'info'
-				});
+				Notify.info('Rule deleted. Updating statistics...');
 				progCtrl.updateRules();
-				$rootScope.$broadcast('rulesChanged');
+				$rootScope.$broadcast(events.RULES_CHANGED);
 			});
 		};
 
-		$scope.$on('rulesChanged', function () {
+		$scope.$on(events.RULES_CHANGED, function () {
 			progCtrl.updateRules();
 		});
 
@@ -94,7 +179,7 @@ var settings = {
 					else
 						attr.field = '';
 				});
-				$rootScope.$emit('filterUpdate', filterCtrl.hasFilter);
+				$rootScope.$emit(events.FILTER_UPDATE, filterCtrl.hasFilter);
 			});
 		};
 
@@ -107,14 +192,14 @@ var settings = {
 			});
 		};
 
-		$scope.$on('rulesChanged', function () {
+		$scope.$on(events.RULES_CHANGED, function () {
 			filterCtrl.filter.attributes.forEach(function (att) {
 				att.field = 'Any';
-			})
+			});
 			filterCtrl.setFilter();
 		});
 
-		$scope.$on('suggestionChosen', function (event, sug) {
+		$scope.$on(events.SUGGESTION_CHOSEN, function (event, sug) {
 			var matchFound = false;
 			filterCtrl.filter.attributes.forEach(function (filterAttr) {
 				if (filterAttr.type === sug.attribute.type) {
@@ -128,7 +213,7 @@ var settings = {
 			}
 		});
 
-		$scope.$on('inputCleared', function () {
+		$scope.$on(events.INPUT_CLEARED, function () {
 			filterCtrl.setFilter();
 		});
 
@@ -164,12 +249,12 @@ var settings = {
 			hitsCtrl.requestPage();
 		};
 
-		$rootScope.$on('filterUpdate', function (event, isntEmpty) {
+		$rootScope.$on(events.FILTER_UPDATE, function (event, isntEmpty) {
 			hitsCtrl.refresh();
 			hitsCtrl.hasFilter = isntEmpty;
 		});
 
-		$scope.$on('pageChange', function (event, pageNum) {
+		$scope.$on(events.PAGE_CHANGE, function (event, pageNum) {
 			hitsCtrl.setPage(pageNum);
 		});
 
@@ -190,10 +275,10 @@ var settings = {
 		};
 
 		sugCtrl.addToFilter = function (suggestion) {
-			$rootScope.$broadcast('suggestionChosen', suggestion);
+			$rootScope.$broadcast(events.SUGGESTION_CHOSEN, suggestion);
 		};
 
-		$rootScope.$on('filterUpdate', function () {
+		$rootScope.$on(events.FILTER_UPDATE, function () {
 			sugCtrl.refresh();
 		});
 
@@ -228,7 +313,6 @@ var settings = {
 		};
 	});
 
-
 	app.directive('clearableInput', ['$window', '$rootScope', function ($window, $rootScope) {
 		return {
 			restrict: 'AE',
@@ -237,13 +321,13 @@ var settings = {
 				button.classList.add('glyphicon');
 				button.classList.add('glyphicon-remove');
 				var input = element.find('input');
-				if (!input || input.length == 0)
+				if (!input || input.length === 0)
 					throw new Error('clearableInput does should have an input element inside');
 				input = angular.element(input);
 				button.addEventListener('click', function () {
 					input.val('');
 					input.triggerHandler('input');
-					scope.$emit('inputCleared', input);
+					scope.$emit(events.INPUT_CLEARED, input);
 				});
 				element[0].appendChild(button);
 			}
@@ -277,7 +361,7 @@ var settings = {
 			restrict: 'E',
 			templateUrl: './components/loading-bar.html'
 		};
-	})
+	});
 
 
 	// Taken from http://codepen.io/WinterJoey/pen/sfFaK
@@ -285,10 +369,10 @@ var settings = {
 		return function(input, all) {
 			var reg = (all) ? /([^\W_]+[^\s-]*) */g : /([^\W_]+[^\s-]*)/;
 			return (!!input) ? input.replace(reg, function(txt){return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();}) : '';
-		}
+		};
 	});
 
-})();
+})(angular, jQuery);
 
 
 /******************* UTILS ******************/
@@ -297,7 +381,7 @@ var settings = {
 // Python `range`
 function range(a ,b) {
 	var ans = [];
-	if (a >= b) return a;
+	if (a >= b) return [a];
 	for (var num = a; num < b; num++)
 		ans.push(num);
 	return ans;

@@ -20,6 +20,7 @@ public class Destination extends IPAttribute {
      * 
      * @param ip
      *            IP of the destination
+     * @throws IllegalArgumentException
      */
     public Destination(IP ip) throws IllegalArgumentException {
 	super(ip);

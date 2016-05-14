@@ -1,5 +1,6 @@
 package breakingtherules.controllers;
 
+import java.io.IOException;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,13 +28,13 @@ public class RulesController {
     }
 
     @RequestMapping(value = "/rule", method = RequestMethod.POST)
-    public void createRule() throws IllegalArgumentException, NoCurrentJobException {
+    public void createRule() throws IllegalArgumentException, NoCurrentJobException, IOException {
 	m_job.addCurrentFilterToRules();
     }
 
     @RequestMapping(value = "/rule", method = RequestMethod.DELETE)
     public void deleteRule(@RequestParam("id") int ruleId)
-	    throws IllegalArgumentException, NoCurrentJobException {
+	    throws IllegalArgumentException, NoCurrentJobException, IOException {
 	m_job.deleteRule(ruleId);
     }
 

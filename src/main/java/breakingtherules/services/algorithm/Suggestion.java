@@ -63,14 +63,14 @@ public class Suggestion implements Comparable<Suggestion> {
     }
 
     /**
-     * Get the size of this suggestion
+     * @return the size of this suggestion
      */
     public int getSize() {
 	return m_size;
     }
 
     /**
-     * Get the score of this suggestion
+     * @return the score of this suggestion
      */
     public double getScore() {
 	return m_score;

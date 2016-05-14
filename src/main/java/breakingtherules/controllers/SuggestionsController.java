@@ -22,12 +22,13 @@ public class SuggestionsController {
     @RequestMapping(value = "/suggestions", method = RequestMethod.GET)
     public List<SuggestionsDto> getSuggestions(@RequestParam(value = "amount", defaultValue = "10") int amount)
 	    throws NoCurrentJobException, IOException {
-	
-	long startTime = System.currentTimeMillis();
+
+	// long startTime = System.currentTimeMillis();
 	List<SuggestionsDto> ans = job.getSuggestions(amount);
-	long endTime = System.currentTimeMillis();
-	
-	System.out.println("The time it took to get suggestions is " + (endTime - startTime) + " milliseconds");
+	// long endTime = System.currentTimeMillis();
+
+	// System.out.println("The time it took to get suggestions is " +
+	// (endTime - startTime) + " milliseconds");
 	return ans;
     }
 

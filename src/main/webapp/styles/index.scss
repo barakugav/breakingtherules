@@ -112,7 +112,9 @@ $w-arrow: 7px;
 
 .ProgressList {
 	li {
-		font-size: 2rem;
+		font-size: 1.8rem;
+		margin-top: .6rem;
+		margin-bottom: .6rem;
 		list-style-image: url('../img/RightArrow.PNG');
 	}
 	.CollapseToggler {

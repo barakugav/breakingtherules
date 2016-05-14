@@ -287,7 +287,7 @@ public class HitsXmlDao implements HitsDao {
 	    return false;
 	}
 	for (Rule rule : rules) {
-	    if (rule.getId() > 1 && rule.isMatch(hit)) {
+	    if (rule.isMatch(hit)) {
 		return false;
 	    }
 	}

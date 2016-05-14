@@ -128,6 +128,9 @@ public class CSVScrambler implements Runnable {
 
     /**
      * Run the scrambler from command line
+     * 
+     * @param args
+     *            All the arguments for the scrambler, {@link CSVScrambler.CSVScramblerRunner}
      */
     public static void main(String[] args) {
 	try {

@@ -43,6 +43,23 @@ public class RulesXmlDao implements RulesDao {
     /*
      * (non-Javadoc)
      * 
+     * @see breakingtherules.dao.RulesDao#getOriginalRule(int)
+     */
+    @Override
+    public Rule getOriginalRule(int jobId) throws IOException {
+	String path = XmlDaoConfig.getRulesFile(jobId);
+	// Load from file
+	Document repositoryDoc = UtilityXmlDao.readFile(path);
+
+	// Get all rules from repository
+	Element ruleElem = (Element) repositoryDoc.getElementsByTagName("original-rule").item(0);
+	Rule rule = createRule(ruleElem);
+	return rule;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
      * @see breakingtherules.dao.RulesDao#getRules(int)
      */
     @Override

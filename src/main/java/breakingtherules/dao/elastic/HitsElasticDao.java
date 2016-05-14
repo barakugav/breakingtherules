@@ -247,7 +247,6 @@ public class HitsElasticDao implements HitsDao {
 
 	// Scroll until no hits are returned or endIndex has been reached
 	while (true) {
-	    System.out.println("Indaloop");
 	    // Go over search results
 	    for (SearchHit srchHit : scrollResp.getHits().getHits()) {
 		// Add the hit to the answer list, if it passes rules and
@@ -299,7 +298,7 @@ public class HitsElasticDao implements HitsDao {
 	    return false;
 	}
 	for (Rule rule : rules) {
-	    if (rule.getId() > 1 && rule.isMatch(hit)) {
+	    if (rule.isMatch(hit)) {
 		return false;
 	    }
 	}
