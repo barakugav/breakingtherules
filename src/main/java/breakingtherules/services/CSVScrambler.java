@@ -51,7 +51,7 @@ public class CSVScrambler implements Runnable {
     private List<Integer> m_columnsTypes;
 
     /**
-     * Constructor
+     * Construct new CSVScrambler
      */
     public CSVScrambler() {
 	m_inputFile = null;
@@ -67,11 +67,9 @@ public class CSVScrambler implements Runnable {
      * @throws IOException
      *             if fails to read from file
      */
-    public void setInput(String filePath) throws IOException {
-	if (filePath == null) {
-	    throw new IllegalArgumentException("File path can't be null");
-	}
-	File repoFile = new File(filePath);
+    public void setInput(final String filePath) throws IOException {
+	// Check that file path is valid
+	final File repoFile = new File(filePath);
 	if (!repoFile.exists()) {
 	    throw new FileNotFoundException("File not found: " + filePath);
 	} else if (!repoFile.canRead()) {
@@ -87,9 +85,8 @@ public class CSVScrambler implements Runnable {
      * @param path
      *            path to output file
      */
-    public void setOutput(String path) {
-	Objects.requireNonNull(path, "Output path can't be null!");
-	m_outputFile = path;
+    public void setOutput(final String path) {
+	m_outputFile = Objects.requireNonNull(path, "Output path can't be null!");
     }
 
     /**
@@ -98,9 +95,8 @@ public class CSVScrambler implements Runnable {
      * @param columnsTypes
      *            configuration of the CSV file
      */
-    public void setColumnsTypes(List<Integer> columnsTypes) {
-	Objects.requireNonNull(columnsTypes, "columns types can't be null!");
-	m_columnsTypes = columnsTypes;
+    public void setColumnsTypes(final List<Integer> columnsTypes) {
+	m_columnsTypes = Objects.requireNonNull(columnsTypes, "columns types can't be null!");
     }
 
     /*
@@ -121,7 +117,7 @@ public class CSVScrambler implements Runnable {
 	try {
 	    run(m_inputFile, m_outputFile, m_columnsTypes);
 
-	} catch (IOException | CSVParseException e) {
+	} catch (final IOException | CSVParseException e) {
 	    e.printStackTrace();
 	}
     }
@@ -130,19 +126,20 @@ public class CSVScrambler implements Runnable {
      * Run the scrambler from command line
      * 
      * @param args
-     *            All the arguments for the scrambler, {@link CSVScrambler.CSVScramblerRunner}
+     *            All the arguments for the scrambler,
+     *            {@link CSVScrambler.CSVScramblerRunner}
      */
-    public static void main(String[] args) {
+    public static void main(final String[] args) {
 	try {
 	    CSVScramblerRunner.run(args);
-	} catch (Exception e) {
+	} catch (final Exception e) {
 	    e.printStackTrace();
 	}
     }
 
     /**
      * The CSVScramblerRunner is a class used to run the CSVScrambler with the
-     * CMD flags. Used by {@link CSVScrambler#main(String[])}
+     * CMD flags. Used by {@link CSVScrambler#main(String[])}.
      */
     public static class CSVScramblerRunner implements Runnable {
 
@@ -170,7 +167,7 @@ public class CSVScrambler implements Runnable {
 	public static final String SERVICE_PORT_FLAG_SHORT = "-spo";
 
 	/**
-	 * Constructor
+	 * Construct new CSVScramblerRunner with no args
 	 */
 	public CSVScramblerRunner() {
 	    m_args = null;
@@ -180,9 +177,9 @@ public class CSVScrambler implements Runnable {
 	 * Set the arguments for this runner
 	 * 
 	 * @param args
-	 *            arguments for runner
+	 *            arguments for runner. Null is allowed to clean the args.
 	 */
-	public void setArgs(String[] args) {
+	public void setArgs(final String[] args) {
 	    this.m_args = args;
 	}
 
@@ -198,7 +195,7 @@ public class CSVScrambler implements Runnable {
 	    }
 	    try {
 		run(m_args);
-	    } catch (Exception e) {
+	    } catch (final Exception e) {
 		e.printStackTrace();
 	    }
 	}
@@ -209,14 +206,15 @@ public class CSVScrambler implements Runnable {
 	 * @param args
 	 *            array of flags and configurations
 	 * @throws IOException
+	 *             if any I/O errors occurs
 	 */
-	public static void run(String args[]) throws IOException {
-	    TextPrinter printer = new TextPrinter();
-	    Map<String, String> flags = new HashMap<>();
+	public static void run(final String args[]) throws IOException {
+	    final TextPrinter printer = new TextPrinter();
+	    final Map<String, String> flags = new HashMap<>();
 	    CSVScrambler scrambler = null;
 	    boolean success = true;
 
-	    List<String> argsList = Arrays.asList(args);
+	    final List<String> argsList = Arrays.asList(args);
 	    if (args.length == 0) {
 		printer.println("No arguments given. Use " + HELP_FLAG + " for help");
 	    } else if (argsList.contains(HELP_FLAG) || argsList.contains(HELP_FLAG_SHORT)) {
@@ -260,7 +258,7 @@ public class CSVScrambler implements Runnable {
 	 * @param printer
 	 *            text printer used to print a message to the user
 	 */
-	private static void helpMessage(TextPrinter printer) {
+	private static void helpMessage(final TextPrinter printer) {
 	    String title = "========= CSV Scrambler =========";
 
 	    String message = "The CSV Scrambler is a tool used to scramble IPs of hits from and to CSV files.";
@@ -327,10 +325,11 @@ public class CSVScrambler implements Runnable {
 	 *            text printer used to print a message to the user
 	 * @return true if no error detected
 	 */
-	private static boolean readFlags(String[] args, Map<String, String> flags, TextPrinter printer) {
+	private static boolean readFlags(final String[] args, final Map<String, String> flags,
+		final TextPrinter printer) {
 	    boolean success = true;
 	    String lastFlag = null;
-	    for (String arg : args) {
+	    for (final String arg : args) {
 		if (arg.startsWith("-")) {
 		    if (flags.containsKey(arg)) {
 			printer.println("More than one flags of type " + arg);
@@ -367,7 +366,7 @@ public class CSVScrambler implements Runnable {
 	 *            text printer used to print a message to the user
 	 * @return true if no error detected
 	 */
-	private static boolean checkFlags(Map<String, String> flags, TextPrinter printer) {
+	private static boolean checkFlags(final Map<String, String> flags, final TextPrinter printer) {
 	    boolean success = true;
 
 	    // Input flag
@@ -381,7 +380,7 @@ public class CSVScrambler implements Runnable {
 
 	    // Output flag
 	    if (!flags.containsKey(OUTPUT_FLAG) && !flags.containsKey(OUTPUT_FLAG_SHORT)) {
-		String message = "Arguments doesn't contains output file"
+		final String message = "Arguments doesn't contains output file"
 			+ (success ? ", using the input file as output" : "");
 		printer.println(message);
 	    } else if (flags.containsKey(OUTPUT_FLAG) && flags.containsKey(OUTPUT_FLAG_SHORT)) {
@@ -420,10 +419,10 @@ public class CSVScrambler implements Runnable {
 	 *            text printer used to print a message to the user
 	 * @return if no error detected
 	 */
-	private static boolean minimizeFlags(Map<String, String> flags, TextPrinter printer) {
+	private static boolean minimizeFlags(final Map<String, String> flags, final TextPrinter printer) {
 	    boolean success = true;
 
-	    Map<String, String> minimizedFlags = new HashMap<>();
+	    final Map<String, String> minimizedFlags = new HashMap<>();
 	    for (String flag : flags.keySet()) {
 		switch (flag) {
 		case INPUT_FLAG:
@@ -457,9 +456,10 @@ public class CSVScrambler implements Runnable {
 	    }
 	    flags.clear();
 	    flags.putAll(minimizedFlags);
-	    if (!flags.containsKey(OUTPUT_FLAG))
+	    if (!flags.containsKey(OUTPUT_FLAG)) {
 		// output wan't set - using input file as output
 		flags.put(OUTPUT_FLAG, flags.get(INPUT_FLAG));
+	    }
 
 	    return success;
 	}
@@ -473,15 +473,15 @@ public class CSVScrambler implements Runnable {
 	 * @throws IOException
 	 *             if IO error occurs
 	 */
-	private static CSVScrambler parseFlags(Map<String, String> flags) throws IOException {
-	    String input = flags.get(INPUT_FLAG);
-	    String output = flags.containsKey(OUTPUT_FLAG) ? flags.get(OUTPUT_FLAG) : input;
-	    String source = flags.get(SOURCE_FLAG);
-	    String destination = flags.get(DESTINATION_FLAG);
-	    String serviceProtocol = flags.get(SERVICE_PROTOCOL_FLAG);
-	    String servicePort = flags.get(SERVICE_PORT_FLAG);
+	private static CSVScrambler parseFlags(final Map<String, String> flags) throws IOException {
+	    final String input = flags.get(INPUT_FLAG);
+	    final String output = flags.containsKey(OUTPUT_FLAG) ? flags.get(OUTPUT_FLAG) : input;
+	    final String source = flags.get(SOURCE_FLAG);
+	    final String destination = flags.get(DESTINATION_FLAG);
+	    final String serviceProtocol = flags.get(SERVICE_PROTOCOL_FLAG);
+	    final String servicePort = flags.get(SERVICE_PORT_FLAG);
 
-	    List<Integer> columnsTypes = new ArrayList<>();
+	    final List<Integer> columnsTypes = new ArrayList<>();
 	    if (source != null) {
 		Utility.put(columnsTypes, Integer.parseInt(source), CSVParser.SOURCE);
 	    }
@@ -495,7 +495,7 @@ public class CSVScrambler implements Runnable {
 		Utility.put(columnsTypes, Integer.parseInt(servicePort), CSVParser.SERVICE_PORT);
 	    }
 
-	    CSVScrambler scrambler = new CSVScrambler();
+	    final CSVScrambler scrambler = new CSVScrambler();
 	    scrambler.setInput(input);
 	    scrambler.setOutput(output);
 	    scrambler.setColumnsTypes(columnsTypes);
@@ -518,7 +518,7 @@ public class CSVScrambler implements Runnable {
      * @throws CSVParseException
      *             if fails to parse file
      */
-    private static void run(String inputFile, String outputFile, List<Integer> columnsTypes)
+    private static void run(String inputFile, String outputFile, final List<Integer> columnsTypes)
 	    throws IOException, CSVParseException {
 	Objects.requireNonNull(inputFile);
 	Objects.requireNonNull(outputFile);
@@ -527,8 +527,8 @@ public class CSVScrambler implements Runnable {
 	File tempFile = null;
 
 	try {
-	    Path outputPath = Paths.get(outputFile);
-	    Path tempFilePath = Files.createTempFile("tempCSVScramblerFile", ".csv");
+	    final Path outputPath = Paths.get(outputFile);
+	    final Path tempFilePath = Files.createTempFile("tempCSVScramblerFile", ".csv");
 	    tempFile = tempFilePath.toFile();
 
 	    if (columnsTypes.contains(CSVParser.SOURCE)) {
@@ -570,22 +570,22 @@ public class CSVScrambler implements Runnable {
      * @throws CSVParseException
      *             if fails to parse file
      */
-    private static Node buildTree(String inputFile, List<Integer> columnsTypes, int ipAttId)
+    private static Node buildTree(final String inputFile, final List<Integer> columnsTypes, final int ipAttId)
 	    throws IOException, CSVParseException {
-	Map<IP, Node> existingNodes = new HashMap<>();
-	CSVParser parser = new CSVParser(columnsTypes);
+	final Map<IP, Node> existingNodes = new HashMap<>();
+	final CSVParser parser = new CSVParser(columnsTypes);
 
 	LinesIterator it = null;
 	try {
-	    it = new LinesIterator(inputFile);
-	    for (String line : it) {
-		Hit hit = parser.fromCSV(line);
+	    for (it = new LinesIterator(inputFile); it.hasNext();) {
+		final String line = it.next();
+		final Hit hit = parser.fromCSV(line);
 		IP ip = ((IPAttribute) hit.getAttribute(ipAttId)).getIp();
 
-		if (existingNodes.containsKey(ip))
+		if (existingNodes.containsKey(ip)) {
 		    continue;
-		Node node = new Node();
-		node.ip = ip;
+		}
+		Node node = new Node(ip);
 		existingNodes.put(node.ip, node);
 
 		while (ip.hasParent()) {
@@ -595,16 +595,15 @@ public class CSVScrambler implements Runnable {
 			parent.attach(node);
 			break;
 		    }
-		    parent = new Node();
-		    parent.ip = ip;
+		    parent = new Node(ip);
 		    existingNodes.put(parent.ip, parent);
 		    parent.attach(node);
 		    node = parent;
 		}
 	    }
-	} catch (UncheckedIOException e) {
+	} catch (final UncheckedIOException e) {
 	    throw e.getCause();
-	} catch (CSVParseException e) {
+	} catch (final CSVParseException e) {
 	    throw new CSVParseException("In line " + it.lineNumber() + ": ", e);
 	} finally {
 	    if (it != null) {
@@ -621,6 +620,7 @@ public class CSVScrambler implements Runnable {
 	}
 
 	return root;
+
     }
 
     /**
@@ -629,7 +629,7 @@ public class CSVScrambler implements Runnable {
      * @param root
      *            root of the tree
      */
-    private static void scrambleTree(Node root) {
+    private static void scrambleTree(final Node root) {
 	scrambleTree(root, new Random());
     }
 
@@ -641,15 +641,19 @@ public class CSVScrambler implements Runnable {
      * @param rand
      *            random object used to scramble
      */
-    private static void scrambleTree(Node node, Random rand) {
+    private static void scrambleTree(final Node node, final Random rand) {
 	if (node == null) {
 	    return;
 	}
+
+	// Switch children order in 50% chance
 	if (rand.nextBoolean()) {
 	    Node temp = node.left;
 	    node.left = node.right;
 	    node.right = temp;
 	}
+
+	// Scramble recursive
 	scrambleTree(node.left, rand);
 	scrambleTree(node.right, rand);
     }
@@ -673,27 +677,27 @@ public class CSVScrambler implements Runnable {
      * @throws CSVParseException
      *             if fails to parse file
      */
-    private static void mutateHits(String inputFile, String outputFile, List<Integer> columnsTypes, int ipAttId,
-	    Node tree) throws IOException, CSVParseException {
+    private static void mutateHits(final String inputFile, final String outputFile, final List<Integer> columnsTypes,
+	    final int ipAttId, final Node tree) throws IOException, CSVParseException {
 	CSVParser parser = new CSVParser(columnsTypes);
 
 	LinesIterator it = null;
 	Writer writer = null;
 	try {
-	    it = new LinesIterator(inputFile);
 	    writer = new FileWriter(outputFile);
 	    String lineSeparator = System.lineSeparator();
 
-	    for (String line : it) {
+	    for (it = new LinesIterator(inputFile); it.hasNext();) {
+		String line = it.next();
 		Hit hit = parser.fromCSV(line);
 		hit = mutateHit(hit, ipAttId, tree);
 		line = parser.toCSV(hit);
 		writer.append(line + lineSeparator);
 	    }
 
-	} catch (UncheckedIOException e) {
+	} catch (final UncheckedIOException e) {
 	    throw e.getCause();
-	} catch (CSVParseException e) {
+	} catch (final CSVParseException e) {
 	    throw new CSVParseException("In line " + it.lineNumber() + ": ", e);
 	} finally {
 	    if (it != null) {
@@ -715,10 +719,10 @@ public class CSVScrambler implements Runnable {
      * @param tree
      *            root node of the scrambled IP attribute tree
      */
-    private static Hit mutateHit(Hit hit, int ipAttId, Node tree) {
+    private static Hit mutateHit(final Hit hit, final int ipAttId, Node tree) {
 	IP ip = ((IPAttribute) hit.getAttribute(ipAttId)).getIp();
 
-	List<Boolean> prefix = new ArrayList<>(32);
+	final List<Boolean> prefix = new ArrayList<>(32);
 	while (!tree.ip.equals(ip)) {
 	    if (tree.left != null && tree.left.ip.contains(ip)) {
 		prefix.add(false);
@@ -742,12 +746,11 @@ public class CSVScrambler implements Runnable {
      *            boolean array of right and left decisions until the hit's node
      * @return new hit with new IP
      */
-    private static Hit mutateHit(Hit hit, int ipAttId, boolean[] prefix) {
-	IPAttribute attribute = (IPAttribute) hit.getAttribute(ipAttId);
-	IP currentIp = attribute.getIp();
-	IP newIp = IP.fromBooleans(prefix, currentIp.getClass());
-	attribute = IPAttribute.mutate(attribute, newIp);
-	return Hit.mutate(hit, attribute);
+    private static Hit mutateHit(final Hit hit, final int ipAttId, final boolean[] prefix) {
+	final IPAttribute attribute = (IPAttribute) hit.getAttribute(ipAttId);
+	final IP currentIp = attribute.getIp();
+	final IP newIp = IP.fromBooleans(prefix, currentIp.getClass());
+	return Hit.mutate(hit, attribute.createMutation(newIp));
     }
 
     /**
@@ -757,28 +760,26 @@ public class CSVScrambler implements Runnable {
     private static class Node {
 
 	/**
-	 * Constructor
-	 */
-	public Node() {
-	    ip = null;
-	    left = null;
-	    right = null;
-	}
-
-	/**
 	 * IP of the node
 	 */
-	IP ip;
+	private final IP ip;
 
 	/**
 	 * Left child of the node
 	 */
-	Node left;
+	private Node left;
 
 	/**
 	 * Right child of the node
 	 */
-	Node right;
+	private Node right;
+
+	/**
+	 * Construct new Node
+	 */
+	public Node(final IP ip) {
+	    this.ip = ip;
+	}
 
 	@Override
 	public String toString() {
@@ -786,18 +787,20 @@ public class CSVScrambler implements Runnable {
 	}
 
 	/**
-	 * Attach a child to this node. This method is <b>NOT SAFE</b> and
-	 * should be used carefully. The method doesn't check if the child is
-	 * actually the child of this node
+	 * Attach a child to this node.
+	 * <p>
+	 * This method is <b>NOT SAFE</b> and should be used carefully. The
+	 * method doesn't check if the child is actually the child of this node.
 	 * 
 	 * @param child
 	 *            the child of this node to attach
 	 */
-	void attach(Node child) {
-	    if (child.ip.getLastBit())
+	private void attach(Node child) {
+	    if (child.ip.getLastBit()) {
 		left = child;
-	    else
+	    } else {
 		right = child;
+	    }
 	}
 
     }

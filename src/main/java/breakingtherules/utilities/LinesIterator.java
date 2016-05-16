@@ -7,17 +7,14 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.UncheckedIOException;
-import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.List;
 import java.util.NoSuchElementException;
-import java.util.Objects;
 
 /**
  * The LinesIterator is used to iterate over lines of a file without loading all
  * of them to the memory
  */
-public class LinesIterator implements Iterable<String>, Iterator<String>, Closeable {
+public class LinesIterator implements Iterator<String>, Closeable {
 
     /**
      * Reader is used by this iterator
@@ -42,7 +39,7 @@ public class LinesIterator implements Iterable<String>, Iterator<String>, Closea
      * @throws FileNotFoundException
      *             if file wan't found
      */
-    public LinesIterator(String path) throws FileNotFoundException {
+    public LinesIterator(final String path) throws FileNotFoundException {
 	this(new File(path));
     }
 
@@ -55,20 +52,9 @@ public class LinesIterator implements Iterable<String>, Iterator<String>, Closea
      *             if fail wan't found
      */
     public LinesIterator(File file) throws FileNotFoundException {
-	Objects.requireNonNull(file);
 	reader = new BufferedReader(new FileReader(file));
 	line = null;
 	lineNumber = 0;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see java.lang.Iterable#iterator()
-     */
-    @Override
-    public Iterator<String> iterator() {
-	return this;
     }
 
     /**
@@ -83,7 +69,7 @@ public class LinesIterator implements Iterable<String>, Iterator<String>, Closea
 	try {
 	    openCheck();
 	    return line != null || (line = reader.readLine()) != null;
-	} catch (IOException e) {
+	} catch (final IOException e) {
 	    throw new UncheckedIOException(e);
 	}
     }
@@ -98,14 +84,13 @@ public class LinesIterator implements Iterable<String>, Iterator<String>, Closea
     @Override
     public String next() throws UncheckedIOException {
 	try {
-	    openCheck();
 	    if (!hasNext())
 		throw new NoSuchElementException();
-	    String nextLine = this.line;
+	    final String nextLine = this.line;
 	    line = reader.readLine();
 	    lineNumber++;
 	    return nextLine;
-	} catch (IOException e) {
+	} catch (final IOException e) {
 	    throw new UncheckedIOException(e);
 	}
     }
@@ -117,24 +102,6 @@ public class LinesIterator implements Iterable<String>, Iterator<String>, Closea
      */
     public int lineNumber() {
 	return lineNumber;
-    }
-
-    /**
-     * Get the remaining lines
-     * 
-     * @return list of remaining lines
-     * @throws IOException
-     *             if any I/O errors occurs
-     */
-    public List<String> remainingLines() throws IOException {
-	try {
-	    List<String> lines = new ArrayList<>();
-	    while (hasNext())
-		lines.add(next());
-	    return lines;
-	} catch (UncheckedIOException e) {
-	    throw e.getCause();
-	}
     }
 
     /*

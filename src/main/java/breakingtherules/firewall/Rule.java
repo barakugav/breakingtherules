@@ -25,10 +25,8 @@ public class Rule extends Filter {
      * @param filter
      *            filter of the rule
      */
-    public Rule(int id, Filter filter) {
-	super(filter);
-	m_id = id;
-	m_volume = 0;
+    public Rule(final int id, final Filter filter) {
+	this(id, filter, 0);
     }
 
     /**
@@ -40,10 +38,8 @@ public class Rule extends Filter {
      * @param attributes
      *            attributes that represent the rule
      */
-    public Rule(int id, List<Attribute> attributes) {
-	super(attributes);
-	m_id = id;
-	m_volume = 0;
+    public Rule(final int id, final List<Attribute> attributes) {
+	this(id, attributes, 0);
     }
 
     /**
@@ -55,7 +51,7 @@ public class Rule extends Filter {
      * @param volume
      *            The number of hits that apply to this rule
      */
-    public Rule(int id, Filter filter, int volume) {
+    public Rule(final int id, final Filter filter, final int volume) {
 	super(filter);
 	m_id = id;
 	m_volume = volume;
@@ -69,7 +65,7 @@ public class Rule extends Filter {
      * @param volume
      *            The number of hits that apply to this rule
      */
-    public Rule(int id, List<Attribute> attributes, int volume) {
+    public Rule(final int id, final List<Attribute> attributes, final int volume) {
 	super(attributes);
 	m_id = id;
 	m_volume = volume;
@@ -95,7 +91,7 @@ public class Rule extends Filter {
      * @param vol
      *            The number of hits that apply to this rule
      */
-    public void setVolume(int vol) {
+    public void setVolume(final int vol) {
 	m_volume = vol;
     }
 
@@ -105,8 +101,8 @@ public class Rule extends Filter {
      * @see java.lang.Object#equals(java.lang.Object)
      */
     @Override
-    public boolean equals(Object o) {
-	return super.equals(o) && o instanceof Rule && m_id == ((Rule) o).m_id;
+    public boolean equals(final Object o) {
+	return o instanceof Rule && super.equals(o) && m_id == ((Rule) o).m_id;
     }
 
     /*

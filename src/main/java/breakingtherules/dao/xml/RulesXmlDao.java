@@ -2,9 +2,7 @@ package breakingtherules.dao.xml;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.springframework.stereotype.Component;
 import org.w3c.dom.Document;
@@ -19,6 +17,7 @@ import breakingtherules.firewall.Destination;
 import breakingtherules.firewall.Rule;
 import breakingtherules.firewall.Service;
 import breakingtherules.firewall.Source;
+import breakingtherules.utilities.Utility;
 
 /**
  * Implementation of {@link RulesDao} by XML repository
@@ -27,17 +26,9 @@ import breakingtherules.firewall.Source;
 public class RulesXmlDao implements RulesDao {
 
     /**
-     * All loaded repositories' rules
-     */
-    private Map<String, List<Rule>> m_loadedRules;
-
-    /**
      * Constructor
-     * 
-     * Initialize loaded rules to empty
      */
     public RulesXmlDao() {
-	m_loadedRules = new HashMap<>();
     }
 
     /*
@@ -46,14 +37,14 @@ public class RulesXmlDao implements RulesDao {
      * @see breakingtherules.dao.RulesDao#getOriginalRule(int)
      */
     @Override
-    public Rule getOriginalRule(int jobId) throws IOException {
-	String path = XmlDaoConfig.getRulesFile(jobId);
+    public Rule getOriginalRule(final int jobId) throws IOException {
+	final String path = XmlDaoConfig.getRulesFile(jobId);
 	// Load from file
-	Document repositoryDoc = UtilityXmlDao.readFile(path);
+	final Document repositoryDoc = UtilityXmlDao.readFile(path);
 
 	// Get all rules from repository
-	Element ruleElem = (Element) repositoryDoc.getElementsByTagName("original-rule").item(0);
-	Rule rule = createRule(ruleElem);
+	final Element ruleElem = (Element) repositoryDoc.getElementsByTagName("original-rule").item(0);
+	final Rule rule = createRule(ruleElem);
 	return rule;
     }
 
@@ -63,8 +54,8 @@ public class RulesXmlDao implements RulesDao {
      * @see breakingtherules.dao.RulesDao#getRules(int)
      */
     @Override
-    public ListDto<Rule> getRules(int jobId) throws IOException {
-	String path = XmlDaoConfig.getRulesFile(jobId);
+    public ListDto<Rule> getRules(final int jobId) throws IOException {
+	final String path = XmlDaoConfig.getRulesFile(jobId);
 	return getRulesByPath(path);
     }
 
@@ -74,8 +65,8 @@ public class RulesXmlDao implements RulesDao {
      * @see breakingtherules.dao.RulesDao#getRules(int, int, int)
      */
     @Override
-    public ListDto<Rule> getRules(int jobId, int startIndex, int endIndex) throws IOException {
-	String path = XmlDaoConfig.getRulesFile(jobId);
+    public ListDto<Rule> getRules(final int jobId, final int startIndex, final int endIndex) throws IOException {
+	final String path = XmlDaoConfig.getRulesFile(jobId);
 	return getRulesByPath(path, startIndex, endIndex);
     }
 
@@ -88,9 +79,10 @@ public class RulesXmlDao implements RulesDao {
      * @throws IOException
      *             if failed to read from memory
      */
-    public ListDto<Rule> getRulesByPath(String repoPath) throws IOException {
-	List<Rule> rules = loadRules(repoPath);
-	return new ListDto<>(rules, 0, rules.size(), rules.size());
+    public ListDto<Rule> getRulesByPath(final String repoPath) throws IOException {
+	final List<Rule> rules = loadRules(repoPath);
+	final int size = rules.size();
+	return new ListDto<>(rules, 0, size, size);
     }
 
     /**
@@ -107,7 +99,8 @@ public class RulesXmlDao implements RulesDao {
      * @throws IOException
      *             if failed to read from memory
      */
-    public ListDto<Rule> getRulesByPath(String repoPath, int startIndex, int endIndex) throws IOException {
+    public ListDto<Rule> getRulesByPath(final String repoPath, final int startIndex, final int endIndex)
+	    throws IOException {
 	if (startIndex < 0) {
 	    throw new IllegalArgumentException("Start index < 0");
 	} else if (startIndex > endIndex) {
@@ -117,14 +110,13 @@ public class RulesXmlDao implements RulesDao {
 	// null exception will be thrown later
 
 	// Extract all rules
-	List<Rule> rules = loadRules(repoPath);
+	final List<Rule> rules = loadRules(repoPath);
 
-	int total = rules.size();
+	final int total = rules.size();
 	if (startIndex >= total) {
 	    throw new IndexOutOfBoundsException("Start index bigger that total count");
 	}
-	endIndex = Math.min(endIndex, total);
-	List<Rule> subRulesList = rules.subList(startIndex, endIndex);
+	final List<Rule> subRulesList = Utility.subList(rules, startIndex, endIndex - startIndex);
 	return new ListDto<>(subRulesList, startIndex, endIndex, total);
     }
 
@@ -137,27 +129,24 @@ public class RulesXmlDao implements RulesDao {
      * @throws IOException
      *             if failed to read from file
      */
-    private List<Rule> loadRules(String repoPath) throws IOException {
+    private static List<Rule> loadRules(final String repoPath) throws IOException {
 	// Check if this repository is already loaded
-	List<Rule> rules = m_loadedRules.get(repoPath);
-	if (rules == null) {
-	    // Load from file
-	    Document repositoryDoc = UtilityXmlDao.readFile(repoPath);
+	// Load from file
+	final Document repositoryDoc = UtilityXmlDao.readFile(repoPath);
 
-	    // Get all rules from repository
-	    NodeList rulesList = repositoryDoc.getElementsByTagName("rule");
+	// Get all rules from repository
+	final NodeList rulesList = repositoryDoc.getElementsByTagName("rule");
 
-	    // Parse into rule objects
-	    rules = new ArrayList<>();
-	    for (int i = 0; i < rulesList.getLength(); i++) {
-		Node ruleNode = rulesList.item(i);
-		if (ruleNode.getNodeType() == Node.ELEMENT_NODE) {
-		    Element ruleElm = (Element) ruleNode;
-		    Rule rule = createRule(ruleElm);
-		    rules.add(rule);
-		}
+	// Parse into rule objects
+	final List<Rule> rules = new ArrayList<>();
+	final int length = rulesList.getLength();
+	for (int i = 0; i < length; i++) {
+	    final Node ruleNode = rulesList.item(i);
+	    if (ruleNode.getNodeType() == Node.ELEMENT_NODE) {
+		final Element ruleElm = (Element) ruleNode;
+		final Rule rule = createRule(ruleElm);
+		rules.add(rule);
 	    }
-	    m_loadedRules.put(repoPath, rules);
 	}
 
 	return rules;
@@ -170,21 +159,21 @@ public class RulesXmlDao implements RulesDao {
      *            XML element with rule attributes
      * @return rule object with the element attributes
      */
-    private static Rule createRule(Element ruleElm) {
+    private static Rule createRule(final Element ruleElm) {
 	// Read attributes from element
-	String id = ruleElm.getAttribute("id");
-	String source = ruleElm.getAttribute("source");
-	String destination = ruleElm.getAttribute("destination");
-	String service = ruleElm.getAttribute("service");
+	final String id = ruleElm.getAttribute("id");
+	final String source = ruleElm.getAttribute("source");
+	final String destination = ruleElm.getAttribute("destination");
+	final String service = ruleElm.getAttribute("service");
 
 	// Convert strings to attributes
-	int newId = Integer.parseInt(id);
-	Source newSource = new Source(source);
-	Destination newDestination = new Destination(destination);
-	Service newService = new Service(service);
+	final int newId = Integer.parseInt(id);
+	final Source newSource = new Source(source);
+	final Destination newDestination = new Destination(destination);
+	final Service newService = new Service(service);
 
 	// Create attributes vector
-	List<Attribute> attributes = new ArrayList<>();
+	final List<Attribute> attributes = new ArrayList<>();
 	attributes.add(newSource);
 	attributes.add(newDestination);
 	attributes.add(newService);

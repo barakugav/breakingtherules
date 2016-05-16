@@ -1,6 +1,6 @@
 package breakingtherules.tests.utilities;
 
-import static breakingtherules.tests.JUnitUtilities.advanceAssertEquals;
+import static breakingtherules.tests.JUnitUtilities.deepAssertEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
@@ -34,7 +34,7 @@ public class UtilityTest {
 	}
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expected = NullPointerException.class)
     public void putTestNull() {
 	System.out.println("# UtilityTest putTestNull");
 	Utility.put(null, 0, 0);
@@ -48,25 +48,6 @@ public class UtilityTest {
     }
 
     @Test
-    public void cloneListTest() {
-	System.out.println("# UtilityTest cloneListTest");
-	List<Integer> list = new ArrayList<>();
-	for (int i = 0; i < 100; i++) {
-	    list.add(i);
-	}
-	List<Integer> listClone = Utility.cloneList(list);
-	assertFalse(list == listClone);
-	assertEquals(list, listClone);
-    }
-
-    @Test
-    public void cloneListTestNull() {
-	System.out.println("# UtilityTest cloneListTestNull");
-	List<?> list = Utility.cloneList(null);
-	assertNull(list);
-    }
-
-    @Test
     public void subListTest() {
 	System.out.println("# UtilityTest subListTest");
 	List<Integer> list = getRandomList(10);
@@ -77,7 +58,7 @@ public class UtilityTest {
 	assertEquals(expected, actual);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expected = NullPointerException.class)
     public void subListNullTest() {
 	System.out.println("# UtilityTest subListNullTest");
 	Utility.subList(null, 0, 0);
@@ -118,7 +99,7 @@ public class UtilityTest {
 	List<Integer> expected = (ArrayList<Integer>) list.clone();
 	expected.remove(2);
 	expected.remove(5);
-	List<Integer> actual = Utility.ensureUniqueness(list);
+	List<Integer> actual = new ArrayList<>(Utility.ensureUniqueness(list));
 
 	actual.sort(null);
 	expected.sort(null);
@@ -141,7 +122,7 @@ public class UtilityTest {
 	List<Integer> expected = (ArrayList<Integer>) list.clone();
 	expected.remove(2);
 	expected.remove(5);
-	List<Integer> actual = Utility.ensureUniqueness(list);
+	List<Integer> actual = new ArrayList<>(Utility.ensureUniqueness(list));
 
 	// Special comparator is needed because there are some null elements
 	Comparator<Integer> c = new Comparator<Integer>() {
@@ -166,43 +147,6 @@ public class UtilityTest {
     public void ensureUniquenessNullListTest() {
 	System.out.println("# UtilityTest ensureUniquenessNullListTest");
 	Utility.ensureUniqueness(null);
-    }
-
-    @Test
-    public void ensureUniquenessCustomTest() {
-	System.out.println("# UtilityTest ensureUniquenessCustomTest");
-	ArrayList<Integer> list = getEmptyList();
-	list.add(0);
-	list.add(11);
-	list.add(10);
-	list.add(2);
-	list.add(8);
-	list.add(4);
-	list.add(21);
-	list.add(51);
-	list.add(50);
-
-	@SuppressWarnings("unchecked")
-	List<Integer> expected = (ArrayList<Integer>) list.clone();
-	expected.remove(2);
-	expected.remove(7);
-	List<Integer> actual = Utility.ensureUniqueness(list, new Comparator<Integer>() {
-
-	    @Override
-	    public int compare(Integer o1, Integer o2) {
-		return o1 == o2 - 1 || o2 == o1 - 1 ? 0 : 1;
-	    }
-	});
-
-	actual.sort(null);
-	expected.sort(null);
-	assertEquals(expected, actual);
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void ensureUniquenessNullComparatorTest() {
-	System.out.println("# UtilityTest ensureUniquenessNullComparatorTest");
-	Utility.ensureUniqueness(getEmptyList(), null);
     }
 
     @Test
@@ -263,7 +207,7 @@ public class UtilityTest {
 	assertEquals(expected, Utility.breakToWords(text));
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expected = NullPointerException.class)
     public void breakToWordsTestNull() {
 	System.out.println("# UtilityTest breakToWordsTestNull");
 	Utility.breakToWords(null);
@@ -311,12 +255,14 @@ public class UtilityTest {
 	Utility.addWord(text, word);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void addWordTestNullWord() {
 	System.out.println("# UtilityTest addWordTestNullWord");
 	String text = "hello big";
 	String word = null;
-	Utility.addWord(text, word);
+	String expected = text + " null";
+	String actual = Utility.addWord(text, word);
+	assertEquals(expected, actual);
     }
 
     @Test
@@ -546,7 +492,7 @@ public class UtilityTest {
 	String sequence = "ad";
 	int[] expected = new int[] { 6, 2 };
 	int[] actual = Utility.positionOf(text, sequence);
-	advanceAssertEquals(expected, actual);
+	deepAssertEquals(expected, actual);
     }
 
     @Test
@@ -557,7 +503,7 @@ public class UtilityTest {
 	String sequence2 = "44";
 	int[] expected = new int[] { 6, 2 };
 	int[] actual = Utility.positionOf(text, sequence1, sequence2);
-	advanceAssertEquals(expected, actual);
+	deepAssertEquals(expected, actual);
     }
 
     @Test
@@ -568,7 +514,7 @@ public class UtilityTest {
 	String sequence2 = "33";
 	int[] expected = new int[] { -1, -1 };
 	int[] actual = Utility.positionOf(text, sequence1, sequence2);
-	advanceAssertEquals(expected, actual);
+	deepAssertEquals(expected, actual);
     }
 
     @Test(expected = NullPointerException.class)
@@ -596,7 +542,7 @@ public class UtilityTest {
 	String sequence = "ads";
 	int[] expected = new int[] { 11, 3 };
 	int[] actual = Utility.lastPositionOf(text, sequence);
-	advanceAssertEquals(expected, actual);
+	deepAssertEquals(expected, actual);
     }
 
     @Test
@@ -607,7 +553,7 @@ public class UtilityTest {
 	String sequence2 = "44";
 	int[] expected = new int[] { 16, 2 };
 	int[] actual = Utility.lastPositionOf(text, sequence1, sequence2);
-	advanceAssertEquals(expected, actual);
+	deepAssertEquals(expected, actual);
     }
 
     @Test
@@ -618,7 +564,7 @@ public class UtilityTest {
 	String sequence2 = "33";
 	int[] expected = new int[] { -1, -1 };
 	int[] actual = Utility.lastPositionOf(text, sequence1, sequence2);
-	advanceAssertEquals(expected, actual);
+	deepAssertEquals(expected, actual);
     }
 
     @Test(expected = NullPointerException.class)

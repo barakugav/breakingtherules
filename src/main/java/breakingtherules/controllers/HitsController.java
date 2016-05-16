@@ -23,9 +23,11 @@ public class HitsController {
 
     /**
      * Answers the GET hits query
-     * @param startIndex Index of the first hit wanted, inclusive
-     * @param endIndex Index of the last hit wanted, exclusive
      * 
+     * @param startIndex
+     *            Index of the first hit wanted, inclusive
+     * @param endIndex
+     *            Index of the last hit wanted, exclusive
      * @return List of all the appropriate hits
      * @throws IOException
      *             if failed

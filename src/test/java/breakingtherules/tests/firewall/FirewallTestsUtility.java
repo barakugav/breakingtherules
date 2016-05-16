@@ -28,9 +28,9 @@ class FirewallTestsUtility {
 	int prefixLength = rand.nextInt(ipID * 48 - 160); // 32 or 128
 
 	if (ipID == 4) {
-	    return new IPv4(address, prefixLength);
+	    return IPv4.create(address, prefixLength);
 	} else if (ipID == 6) {
-	    return new IPv6(address, prefixLength);
+	    return IPv6.create(address, prefixLength);
 	} else {
 	    return null;
 	}
@@ -91,7 +91,7 @@ class FirewallTestsUtility {
     static IPv4 getRandomIPv4() {
 	int[] address = getRandomAddressIPv4();
 	int prefixLength = getRandomPrefixLengthIPv4();
-	return new IPv4(address, prefixLength);
+	return IPv4.create(address, prefixLength);
     }
 
     static int[] getRandomAddressIPv4() {
@@ -109,7 +109,7 @@ class FirewallTestsUtility {
     static IPv6 getRandomIPv6() {
 	int[] address = getRandomAddressIPv6();
 	int prefixLength = getRandomPrefixLengthIPv6();
-	return new IPv6(address, prefixLength);
+	return IPv6.create(address, prefixLength);
     }
 
     static int[] getRandomAddressIPv6() {

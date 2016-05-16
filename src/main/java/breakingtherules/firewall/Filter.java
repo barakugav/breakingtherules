@@ -16,7 +16,7 @@ public class Filter extends AttributesContainer {
     public static final Filter ANY_FILTER;
 
     static {
-	List<Attribute> attributes = new ArrayList<>();
+	final List<Attribute> attributes = new ArrayList<>();
 	attributes.add(Source.ANY_SOURCE);
 	attributes.add(Destination.ANY_DESTINATION);
 	attributes.add(Service.ANY_SERVICE);
@@ -31,11 +31,11 @@ public class Filter extends AttributesContainer {
      * @param attributes
      *            list of wanted attributes
      */
-    public Filter(List<Attribute> attributes) {
+    public Filter(final List<Attribute> attributes) {
 	super(attributes);
     }
 
-    public Filter(AttributesContainer c) {
+    public Filter(final AttributesContainer c) {
 	super(c);
     }
 
@@ -46,10 +46,10 @@ public class Filter extends AttributesContainer {
      *            hit to compare to the filter
      * @return true if all hit's attribute contained in the filter, else - false
      */
-    public boolean isMatch(Hit hit) {
-	for (Attribute filterAttribute : this) {
-	    int attributeType = filterAttribute.getTypeId();
-	    Attribute hitAttribute = hit.getAttribute(attributeType);
+    public boolean isMatch(final Hit hit) {
+	for (final Attribute filterAttribute : this) {
+	    final int attributeType = filterAttribute.getTypeId();
+	    final Attribute hitAttribute = hit.getAttribute(attributeType);
 	    if (!filterAttribute.contains(hitAttribute)) {
 		return false;
 	    }
@@ -64,8 +64,8 @@ public class Filter extends AttributesContainer {
      * breakingtherules.firewall.AttributesContainer#equals(java.lang.Object)
      */
     @Override
-    public boolean equals(Object o) {
-	return super.equals(o) && o instanceof Filter;
+    public boolean equals(final Object o) {
+	return o instanceof Filter && super.equals(o);
     }
 
 }

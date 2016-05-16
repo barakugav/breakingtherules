@@ -52,11 +52,11 @@ public class HitsElasticDao implements HitsDao {
      * Filter. This prevents reading ALL of the job's hits to determine the
      * number of relevant hits. Useful for getHits with startIndex and endIndex
      */
-    private Map<Triple<Integer, List<Rule>, Filter>, Integer> m_totalHitsCache;
+    private final Map<Triple<Integer, List<Rule>, Filter>, Integer> m_totalHitsCache;
 
     public HitsElasticDao() {
-	NodeBuilder nodeBuilder = NodeBuilder.nodeBuilder();
-	Builder settingsBuilder = Settings.settingsBuilder();
+	final NodeBuilder nodeBuilder = NodeBuilder.nodeBuilder();
+	final Builder settingsBuilder = Settings.settingsBuilder();
 	settingsBuilder.put("http.enabled", false);
 	nodeBuilder.settings(settingsBuilder);
 	nodeBuilder.clusterName(ElasticDaoConfig.CLUSTER_NAME);
@@ -73,15 +73,15 @@ public class HitsElasticDao implements HitsDao {
 
     public boolean doesJobExist(int jobId) {
 	try {
-	    SearchRequestBuilder srchRequest = m_elasticClient.prepareSearch(ElasticDaoConfig.INDEX_NAME);
-	    QueryBuilder query = QueryBuilders.termQuery(ElasticDaoConfig.FIELD_JOB_ID, jobId);
+	    final SearchRequestBuilder srchRequest = m_elasticClient.prepareSearch(ElasticDaoConfig.INDEX_NAME);
+	    final QueryBuilder query = QueryBuilders.termQuery(ElasticDaoConfig.FIELD_JOB_ID, jobId);
 	    srchRequest.setQuery(query);
 	    srchRequest.setSize(0);
 	    srchRequest.setTerminateAfter(1);
-	    SearchResponse response = srchRequest.get();
+	    final SearchResponse response = srchRequest.get();
 	    return response.getHits().totalHits() > 0;
 
-	} catch (IndexNotFoundException e) {
+	} catch (final IndexNotFoundException e) {
 	    return false;
 	}
     }
@@ -89,12 +89,12 @@ public class HitsElasticDao implements HitsDao {
     public void deleteJob(int jobId) {
 	System.out.println("deleting");
 
-	QueryBuilder query = QueryBuilders.termQuery(ElasticDaoConfig.FIELD_JOB_ID, jobId);
-	SearchRequestBuilder srchRequest = m_elasticClient.prepareSearch(ElasticDaoConfig.INDEX_NAME);
+	final QueryBuilder query = QueryBuilders.termQuery(ElasticDaoConfig.FIELD_JOB_ID, jobId);
+	final SearchRequestBuilder srchRequest = m_elasticClient.prepareSearch(ElasticDaoConfig.INDEX_NAME);
 	srchRequest.setQuery(query);
 	srchRequest.setSize(ElasticDaoConfig.DELETION_THRESHOLD);
 
-	SearchHits hitsRes = srchRequest.get().getHits();
+	final SearchHits hitsRes = srchRequest.get().getHits();
 	if (hitsRes.totalHits() > ElasticDaoConfig.DELETION_THRESHOLD) {
 	    System.out
 		    .println("Job is too big to delete programatically. Please delete manually through ElasticSearch.");
@@ -103,40 +103,40 @@ public class HitsElasticDao implements HitsDao {
 	    System.out.println("nothing to delete");
 	    return;
 	}
-	BulkRequestBuilder bulkDelete = m_elasticClient.prepareBulk();
-	for (SearchHit hit : hitsRes.getHits()) {
+	final BulkRequestBuilder bulkDelete = m_elasticClient.prepareBulk();
+	for (final SearchHit hit : hitsRes.getHits()) {
 	    System.out.println(hit.getId());
 
-	    DeleteRequestBuilder deleteRequest = m_elasticClient.prepareDelete();
+	    final DeleteRequestBuilder deleteRequest = m_elasticClient.prepareDelete();
 	    deleteRequest.setIndex(ElasticDaoConfig.INDEX_NAME);
 	    deleteRequest.setType(ElasticDaoConfig.TYPE_HIT);
 	    deleteRequest.setId(hit.getId());
 
 	    bulkDelete.add(deleteRequest);
 	}
-	BulkResponse deleteResponse = bulkDelete.execute().actionGet();
+	final BulkResponse deleteResponse = bulkDelete.execute().actionGet();
 	if (deleteResponse.hasFailures()) {
 	    throw new RuntimeException(deleteResponse.buildFailureMessage());
 	}
 	refreshIndex();
     }
 
-    public void addHit(Hit hit, int jobId) {
+    public void addHit(final Hit hit, final int jobId) {
 	addHits(Collections.singletonList(hit), jobId);
 	refreshIndex();
     }
 
-    public void addHits(List<Hit> hits, int jobId) {
-	BulkRequestBuilder bulkRequest = m_elasticClient.prepareBulk();
-	for (Hit hit : hits) {
+    public void addHits(final List<Hit> hits, final int jobId) {
+	final BulkRequestBuilder bulkRequest = m_elasticClient.prepareBulk();
+	for (final Hit hit : hits) {
 
 	    try {
-		XContentBuilder hitJson = XContentFactory.jsonBuilder();
+		final XContentBuilder hitJson = XContentFactory.jsonBuilder();
 		hitJson.startObject();
 		hitJson.field(ElasticDaoConfig.FIELD_ID, hit.getId());
 		hitJson.field(ElasticDaoConfig.FIELD_JOB_ID, jobId);
 		hitJson.startArray(ElasticDaoConfig.FIELD_ATTRIBUTES);
-		for (Attribute attr : hit) {
+		for (final Attribute attr : hit) {
 		    hitJson.startObject();
 		    hitJson.field(ElasticDaoConfig.FIELD_ATTR_TYPEID, attr.getTypeId());
 		    hitJson.field(ElasticDaoConfig.FIELD_ATTR_VALUE, attr.toString());
@@ -144,7 +144,7 @@ public class HitsElasticDao implements HitsDao {
 		}
 		hitJson.endArray().endObject();
 
-		IndexRequestBuilder indexRequest = m_elasticClient.prepareIndex(ElasticDaoConfig.INDEX_NAME,
+		final IndexRequestBuilder indexRequest = m_elasticClient.prepareIndex(ElasticDaoConfig.INDEX_NAME,
 			ElasticDaoConfig.TYPE_HIT);
 		indexRequest.setSource(hitJson);
 		indexRequest.setId(elasticHitId(jobId, hit.getId()));
@@ -152,15 +152,15 @@ public class HitsElasticDao implements HitsDao {
 
 		hitJson.close();
 
-	    } catch (IOException e) {
+	    } catch (final IOException e) {
 		e.printStackTrace();
 	    }
 	}
-	BulkResponse bulkResponse = bulkRequest.execute().actionGet();
+	final BulkResponse bulkResponse = bulkRequest.execute().actionGet();
 	if (bulkResponse.hasFailures()) {
 	    System.out.println("Bulk add request had failures.");
 	    // process failures by iterating through each bulk response item
-	    for (BulkItemResponse item : bulkResponse) {
+	    for (final BulkItemResponse item : bulkResponse) {
 		System.out.println(item.getFailureMessage());
 	    }
 	}
@@ -168,32 +168,33 @@ public class HitsElasticDao implements HitsDao {
     }
 
     @Override
-    public int getHitsNumber(int jobId, List<Rule> rules, Filter filter) throws IOException {
-	Integer number = m_totalHitsCache.get(new Triple<>(jobId, rules, filter));
-	if (number != null)
-	    return number;
-	else
+    public int getHitsNumber(final int jobId, final List<Rule> rules, final Filter filter) throws IOException {
+	final Integer cachedSize = m_totalHitsCache.get(new Triple<>(jobId, rules, filter));
+	if (cachedSize != null) {
+	    return cachedSize;
+	} else {
 	    return getHits(jobId, rules, filter).getSize();
+	}
     }
 
     @Override
-    public ListDto<Hit> getHits(int jobId, List<Rule> rules, Filter filter) throws IOException {
-	List<Hit> hits = getHits(jobId, rules, filter, true, 0, 0);
+    public ListDto<Hit> getHits(final int jobId, final List<Rule> rules, final Filter filter) throws IOException {
+	final List<Hit> hits = getHits(jobId, rules, filter, true, 0, 0);
 	m_totalHitsCache.put(new Triple<>(jobId, rules, filter), hits.size());
 	return new ListDto<>(hits, 0, hits.size(), hits.size());
     }
 
     @Override
-    public ListDto<Hit> getHits(int jobId, List<Rule> rules, Filter filter, int startIndex, int endIndex)
-	    throws IOException {
-	Integer total = m_totalHitsCache.get(new Triple<>(jobId, rules, filter));
+    public ListDto<Hit> getHits(final int jobId, final List<Rule> rules, final Filter filter, final int startIndex,
+	    final int endIndex) throws IOException {
+	final Integer total = m_totalHitsCache.get(new Triple<>(jobId, rules, filter));
 	if (total == null) {
-	    ListDto<Hit> allHits = getHits(jobId, rules, filter); // which saves
-								  // to cache
-	    List<Hit> hits = Utility.subList(allHits.getData(), startIndex, endIndex - startIndex);
+	    // getHits(int, List<Rule>, Filter) save to cache
+	    final ListDto<Hit> allHits = getHits(jobId, rules, filter);
+	    final List<Hit> hits = Utility.subList(allHits.getData(), startIndex, endIndex - startIndex);
 	    return new ListDto<>(hits, startIndex, endIndex, allHits.getData().size());
 	} else {
-	    List<Hit> hits = getHits(jobId, rules, filter, false, startIndex, endIndex);
+	    final List<Hit> hits = getHits(jobId, rules, filter, false, startIndex, endIndex);
 	    return new ListDto<>(hits, startIndex, endIndex, total);
 	}
     }
@@ -230,16 +231,18 @@ public class HitsElasticDao implements HitsDao {
      * @return A ListDto of the relevant hits, from the given range, if such
      *         exists
      */
-    private List<Hit> getHits(int jobId, List<Rule> rules, Filter filter, boolean all, int startIndex, int endIndex) {
-	QueryBuilder query = QueryBuilders.termQuery(ElasticDaoConfig.FIELD_JOB_ID, jobId);
-	SortBuilder sort = SortBuilders.fieldSort(ElasticDaoConfig.FIELD_ID).order(SortOrder.ASC);
+    private List<Hit> getHits(final int jobId, final List<Rule> rules, final Filter filter, final boolean all,
+	    int startIndex, final int endIndex) {
+	final QueryBuilder query = QueryBuilders.termQuery(ElasticDaoConfig.FIELD_JOB_ID, jobId);
+	final SortBuilder sort = SortBuilders.fieldSort(ElasticDaoConfig.FIELD_ID).order(SortOrder.ASC);
 
-	SearchRequestBuilder srchRequest = m_elasticClient.prepareSearch(ElasticDaoConfig.INDEX_NAME)
+	// TODO - make this code readable
+	final SearchRequestBuilder srchRequest = m_elasticClient.prepareSearch(ElasticDaoConfig.INDEX_NAME)
 		.setSearchType(SearchType.QUERY_AND_FETCH).setScroll(new TimeValue(ElasticDaoConfig.TIME_PER_SCROLL))
 		.setQuery(query).addSort(sort).setSize(ElasticDaoConfig.HITS_PER_SCROLL);
 	SearchResponse scrollResp = srchRequest.execute().actionGet();
 
-	List<Hit> relevantHits = new ArrayList<>();
+	final List<Hit> relevantHits = new ArrayList<>();
 	int i = 0; // to only take the relevant indices.
 	if (all) {
 	    startIndex = 0;
@@ -248,10 +251,10 @@ public class HitsElasticDao implements HitsDao {
 	// Scroll until no hits are returned or endIndex has been reached
 	while (true) {
 	    // Go over search results
-	    for (SearchHit srchHit : scrollResp.getHits().getHits()) {
+	    for (final SearchHit srchHit : scrollResp.getHits().getHits()) {
 		// Add the hit to the answer list, if it passes rules and
 		// filters
-		Hit firewallHit = toFirewallHit(srchHit);
+		final Hit firewallHit = toFirewallHit(srchHit);
 		if (isMatch(rules, filter, firewallHit)) {
 		    // Found a hit that passes the rules and the filter
 		    if (all || (i >= startIndex && i < endIndex)) {
@@ -267,6 +270,7 @@ public class HitsElasticDao implements HitsDao {
 		break;
 	    }
 
+	    // TODO - make this code readable
 	    // Get next batch
 	    scrollResp = m_elasticClient.prepareSearchScroll(scrollResp.getScrollId())
 		    .setScroll(new TimeValue(ElasticDaoConfig.TIME_PER_SCROLL)).execute().actionGet();
@@ -293,11 +297,11 @@ public class HitsElasticDao implements HitsDao {
      *            the hit that being checked
      * @return true if hit match all rules and filter, else - false
      */
-    private static boolean isMatch(List<Rule> rules, Filter filter, Hit hit) {
+    private static boolean isMatch(final List<Rule> rules, final Filter filter, final Hit hit) {
 	if (!filter.isMatch(hit)) {
 	    return false;
 	}
-	for (Rule rule : rules) {
+	for (final Rule rule : rules) {
 	    if (rule.isMatch(hit)) {
 		return false;
 	    }
@@ -305,34 +309,32 @@ public class HitsElasticDao implements HitsDao {
 	return true;
     }
 
-    private static String elasticHitId(int jobId, int hitId) {
+    private static String elasticHitId(final int jobId, final int hitId) {
 	return jobId + "x" + hitId;
     }
 
-    private static Hit toFirewallHit(SearchHit searchHit) {
-	Map<String, Object> fields = searchHit.getSource();
+    private static Hit toFirewallHit(final SearchHit searchHit) {
+	final Map<String, Object> fields = searchHit.getSource();
 
-	int hitId = (int) fields.get(ElasticDaoConfig.FIELD_ID);
-	List<Attribute> attrs = new ArrayList<>();
+	final int hitId = (int) fields.get(ElasticDaoConfig.FIELD_ID);
+	final List<Attribute> attrs = new ArrayList<>();
 
-	Object allAtributes = fields.get(ElasticDaoConfig.FIELD_ATTRIBUTES);
+	final Object allAtributes = fields.get(ElasticDaoConfig.FIELD_ATTRIBUTES);
 	if (!(allAtributes instanceof ArrayList)) {
 	    System.out.println("Unexpected hit format");
 	    return null;
 	}
-	for (Object attribute : (ArrayList<?>) allAtributes) {
+	for (final Object attribute : (ArrayList<?>) allAtributes) {
 	    if (!(attribute instanceof Map)) {
 		System.out.println("Unexpected hit format");
 		return null;
 	    }
-	    Map<?, ?> attributeHash = (Map<?, ?>) attribute;
-	    int attrTypeID = (int) attributeHash.get(ElasticDaoConfig.FIELD_ATTR_TYPEID);
-	    String attrValue = (String) attributeHash.get(ElasticDaoConfig.FIELD_ATTR_VALUE);
+	    final Map<?, ?> attributeHash = (Map<?, ?>) attribute;
+	    final int attrTypeID = (int) attributeHash.get(ElasticDaoConfig.FIELD_ATTR_TYPEID);
+	    final String attrValue = (String) attributeHash.get(ElasticDaoConfig.FIELD_ATTR_VALUE);
 	    attrs.add(Attribute.createFromString(attrTypeID, attrValue));
 	}
-
 	return new Hit(hitId, attrs);
-
     }
 
 }

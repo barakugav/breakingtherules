@@ -31,11 +31,11 @@ public class UnionList<E> implements Iterable<E> {
      *            initialize elements
      */
     @SafeVarargs
-    public UnionList(E... initElements) {
+    public UnionList(final E... initElements) {
 	if (initElements.length > 0) {
 	    first = last = new Node<>(initElements[0]);
 	    for (int i = 1; i < initElements.length; i++) {
-		Node<E> node = new Node<>(initElements[i]);
+		final Node<E> node = new Node<>(initElements[i]);
 		last.next = node;
 		last = node;
 	    }
@@ -53,7 +53,7 @@ public class UnionList<E> implements Iterable<E> {
      *            another union list to consume elements from
      * @return the united list - this list
      */
-    public UnionList<E> transferElementsFrom(UnionList<E> other) {
+    public UnionList<E> transferElementsFrom(final UnionList<E> other) {
 	if (last == null) {
 	    first = other.first;
 	} else {
@@ -81,9 +81,10 @@ public class UnionList<E> implements Iterable<E> {
      * @return new array list that contains all elements from this list
      */
     public ArrayList<E> toArrayList() {
-	ArrayList<E> l = new ArrayList<>();
-	for (E e : this)
+	final ArrayList<E> l = new ArrayList<>();
+	for (E e : this) {
 	    l.add(e);
+	}
 	return l;
     }
 
@@ -94,11 +95,12 @@ public class UnionList<E> implements Iterable<E> {
      */
     @Override
     public String toString() {
-	Node<E> f = first, l = last;
-	if (f == null)
+	final Node<E> f = first, l = last;
+	if (f == null) {
 	    return "[]";
+	}
 
-	StringBuilder builder = new StringBuilder('[');
+	final StringBuilder builder = new StringBuilder('[');
 	final String spacer = ", ";
 	for (Node<E> cursor = f; cursor != l; cursor = cursor.next) {
 	    builder.append(cursor.data);
@@ -136,7 +138,7 @@ public class UnionList<E> implements Iterable<E> {
 	 * @param e
 	 *            element of the node
 	 */
-	private Node(E e) {
+	private Node(final E e) {
 	    data = e;
 	}
 
@@ -165,7 +167,7 @@ public class UnionList<E> implements Iterable<E> {
 	 * @param begin
 	 *            beginning node to iterate from
 	 */
-	private LinkedListIterator(Node<E> begin) {
+	private LinkedListIterator(final Node<E> begin) {
 	    cursor = begin;
 	}
 
@@ -186,10 +188,11 @@ public class UnionList<E> implements Iterable<E> {
 	 */
 	@Override
 	public E next() {
-	    if (cursor == null)
+	    final Node<E> c = cursor;
+	    if (c == null)
 		throw new NoSuchElementException();
-	    E data = cursor.data;
-	    cursor = cursor.next;
+	    E data = c.data;
+	    cursor = c.next;
 	    return data;
 	}
 

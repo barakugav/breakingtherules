@@ -18,7 +18,7 @@ public abstract class IPAttribute implements Attribute, Comparable<IPAttribute> 
      * @param ip
      *            the IP of this attribute
      */
-    public IPAttribute(IP ip) {
+    public IPAttribute(final IP ip) {
 	m_ip = Objects.requireNonNull(ip);
     }
 
@@ -30,11 +30,9 @@ public abstract class IPAttribute implements Attribute, Comparable<IPAttribute> 
      * Attribute)
      */
     @Override
-    public boolean contains(Attribute other) {
+    public boolean contains(final Attribute other) {
 	if (this == other) {
 	    return true;
-	} else if (other == null) {
-	    return false;
 	} else if (!(other instanceof IPAttribute)) {
 	    return false;
 	}
@@ -59,11 +57,9 @@ public abstract class IPAttribute implements Attribute, Comparable<IPAttribute> 
      * @see java.lang.Object#equals(java.lang.Object)
      */
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(final Object o) {
 	if (o == this) {
 	    return true;
-	} else if (o == null) {
-	    return false;
 	} else if (!(o instanceof IPAttribute)) {
 	    return false;
 	}
@@ -88,7 +84,7 @@ public abstract class IPAttribute implements Attribute, Comparable<IPAttribute> 
      * @see java.lang.Comparable#compareTo(java.lang.Object)
      */
     @Override
-    public int compareTo(IPAttribute o) {
+    public int compareTo(final IPAttribute o) {
 	return m_ip.compareTo(o.m_ip);
     }
 
@@ -101,16 +97,13 @@ public abstract class IPAttribute implements Attribute, Comparable<IPAttribute> 
 	return m_ip;
     }
 
-    public static IPAttribute mutate(IPAttribute attribute, IP ip) {
-	return attribute.mutate(ip);
-    }
-
     /**
-     * Set the IP of the attribute to a new one
+     * Create a copy of this attribute with an IP mutation
      * 
      * @param ip
-     *            new IP
+     *            the desire change/mutation
+     * @return mutation of this attribute with the IP mutation
      */
-    protected abstract IPAttribute mutate(IP ip);
+    public abstract IPAttribute createMutation(IP ip);
 
 }

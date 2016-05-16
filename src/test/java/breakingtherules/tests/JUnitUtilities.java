@@ -6,9 +6,15 @@ import breakingtherules.utilities.Utility;
 
 public class JUnitUtilities {
 
-    public static void advanceAssertEquals(Object o1, Object o2) {
-	if (!Utility.equals(o1, o2)) {
-	    Assert.fail(Utility.format(o1, o2));
+    public static void deepAssertEquals(Object expected, Object actual) {
+	deepAssertEquals(null, expected, actual);
+    }
+
+    public static void deepAssertEquals(String message, Object expected, Object actual) {
+	if (!Utility.equals(expected, actual)) {
+	    message = message != null ? message + ": " : "";
+	    message += Utility.format(expected, actual);
+	    Assert.fail(message);
 	}
     }
 

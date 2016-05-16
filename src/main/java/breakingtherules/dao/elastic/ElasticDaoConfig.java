@@ -1,6 +1,6 @@
 package breakingtherules.dao.elastic;
 
-public class ElasticDaoConfig {
+class ElasticDaoConfig {
 
     static final String CLUSTER_NAME = "breakingtherules";
     static final String INDEX_NAME = "btr";

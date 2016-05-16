@@ -22,7 +22,7 @@ public class Destination extends IPAttribute {
      *            IP of the destination
      * @throws IllegalArgumentException
      */
-    public Destination(IP ip) throws IllegalArgumentException {
+    public Destination(final IP ip) throws IllegalArgumentException {
 	super(ip);
     }
 
@@ -32,7 +32,7 @@ public class Destination extends IPAttribute {
      * @param ip
      *            string IP of the destination
      */
-    public Destination(String ip) {
+    public Destination(final String ip) {
 	this(IP.fromString(ip));
     }
 
@@ -61,7 +61,7 @@ public class Destination extends IPAttribute {
      * attribute is a destination attribute
      */
     @Override
-    public boolean contains(Attribute other) {
+    public boolean contains(final Attribute other) {
 	return other instanceof Destination && super.contains(other);
     }
 
@@ -70,12 +70,12 @@ public class Destination extends IPAttribute {
      * attribute is a destination attribute
      */
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(final Object o) {
 	return o instanceof Destination && super.equals(o);
     }
 
     @Override
-    public Destination mutate(IP ip) {
+    public Destination createMutation(final IP ip) {
 	return new Destination(ip);
     }
 

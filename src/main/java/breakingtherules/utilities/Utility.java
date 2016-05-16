@@ -2,14 +2,10 @@ package breakingtherules.utilities;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.function.BiConsumer;
-import java.util.function.BiPredicate;
-import java.util.function.Consumer;
 
 /**
  * The Utility class provide a set of static helper methods. All method are
@@ -18,30 +14,9 @@ import java.util.function.Consumer;
 public class Utility {
 
     private static final char SPACE = ' ';
-
     private static final char TAB = '\t';
-
-    /**
-     * Clone a list (not a deep clone)
-     * 
-     * @param list
-     *            the list
-     * @return clone of the list
-     */
-    public static <T> List<T> clone(List<? extends T> list) {
-	return new ArrayList<>(list);
-    }
-
-    /**
-     * Get a unmodifiable clone of a list (not a deep clone)
-     * 
-     * @param list
-     *            the list
-     * @return clone of the list that can't be modified
-     */
-    public static <T> List<T> unmodifiableClone(List<? extends T> list) {
-	return Collections.unmodifiableList(clone(list));
-    }
+    private static final String SPACE_STR = "" + SPACE;
+    private static final String TAB_STR = "" + TAB;
 
     /**
      * Put a value in a list at an index even if the list is too small.
@@ -57,30 +32,14 @@ public class Utility {
      * @param value
      *            new value in the list
      */
-    public static <T> void put(List<T> list, int index, T value) {
-	if (list == null) {
-	    throw new IllegalArgumentException("list can't be null");
-	}
+    public static <T> void put(final List<T> list, final int index, T value) {
 	if (index < 0) {
 	    throw new IndexOutOfBoundsException("index must be positive " + index);
 	}
-	while (list.size() <= index) {
+	for (int lSize = list.size(); lSize <= index; lSize++) {
 	    list.add(null);
 	}
 	list.set(index, value);
-    }
-
-    /**
-     * Clone a list
-     * 
-     * @param list
-     *            the list
-     * @return clone of the list
-     */
-    public static <T> List<T> cloneList(List<? extends T> list) {
-	if (list == null)
-	    return null;
-	return new ArrayList<>(list);
     }
 
     /**
@@ -97,110 +56,40 @@ public class Utility {
      * @throws IllegalArgumentException
      *             if list is null, offset < 0, size < 0
      */
-    public static <T> List<T> subList(List<T> list, int offset, int size) {
-	if (list == null)
-	    throw new IllegalArgumentException("list can't be null");
-	if (offset < 0 || size < 0)
+    public static <T> List<T> subList(final List<T> list, final int offset, final int size) {
+	if (offset < 0 || size < 0) {
 	    throw new IllegalArgumentException("offset and size should be positive (" + offset + ", " + size + ")");
-	if (offset >= list.size())
+	}
+	if (offset >= list.size()) {
 	    return new ArrayList<>();
-	return list.subList(offset, Math.min(list.size(), offset + size));
+	}
+
+	// Clone sub list because List.SubList(...) save a reference to the
+	// original list and therefore, the whole list is always kept in memory.
+	return new ArrayList<>(list.subList(offset, Math.min(list.size(), offset + size)));
     }
 
-    /**
-     * Ensure the uniqueness of a list. Uses <code>T.equals()</code>
-     * 
-     * @param list
-     *            the list
-     * @return new list with unique elements from the original list
-     */
-    public static <T> List<T> ensureUniqueness(List<T> list) {
-	return new ArrayList<>(new HashSet<>(list));
-    }
-
-    public static <T> Set<T> ensureUniqueness(Iterable<T> iterable) {
-	Set<T> uniqeSet = new HashSet<>();
-	for (T t : iterable)
+    public static <T> Set<T> ensureUniqueness(final Iterable<T> iterable) {
+	final int estimatedSize = iterable instanceof Collection<?> ? (int) (((Collection<?>) iterable).size()) : 16;
+	final Set<T> uniqeSet = new HashSet<>(estimatedSize);
+	for (final T t : iterable) {
 	    uniqeSet.add(t);
+	}
 	return uniqeSet;
     }
 
-    /**
-     * Ensure the uniqueness of the list by custom comparator (used, only for
-     * equals comparisons)
-     * 
-     * @param list
-     *            the list
-     * @param comparator
-     *            the comparator used to equal the elements
-     * @return new list with unique elements from the original list using the
-     *         custom comparator
-     */
-    public static <T> List<T> ensureUniqueness(List<T> list, Comparator<T> comparator) {
-	if (list == null || comparator == null) {
-	    throw new IllegalArgumentException("Arguments can't be null");
-	}
-	List<T> filteredList = new ArrayList<>();
-	for (T e : list) {
-	    if (e == null) {
-		if (!filteredList.contains(null)) {
-		    filteredList.add(null);
-		}
-		continue;
-	    }
-
-	    boolean found = false;
-	    for (T existE : filteredList) {
-		if (comparator.compare(e, existE) == 0) {
-		    found = true;
+    public static int countOccurrencesOf(final String st, final char... chars) {
+	int c = 0;
+	final char[] a = st.toCharArray();
+	for (int i = a.length; i-- > 0;) {
+	    for (int j = chars.length; j-- > 0;) {
+		if (a[i] == chars[j]) {
+		    c++;
 		    break;
 		}
 	    }
-	    if (!found) {
-		filteredList.add(e);
-	    }
 	}
-	return filteredList;
-    }
-
-    /**
-     * Iterate over a list and operate consumers over the elements. The method
-     * accept a BiPredicate that indicate if two elements need to be consumed
-     * together or not. The BiPredicate is tested only on followings elements.
-     * 
-     * @param l
-     *            the list
-     * @param p
-     *            the BiPredicate that indicate if two elements need to be
-     *            consumed together or not
-     * @param c
-     *            consumer used to consume single elements if the predicate
-     *            returned false on two elements
-     * @param bc
-     *            BiConsumer used to consume two elements if the predicate
-     *            returned true on two elements
-     */
-    @SuppressWarnings("unchecked")
-    public static <T> void forEach(List<? extends T> l, BiPredicate<? super T, ? super T> p, Consumer<? super T> c,
-	    BiConsumer<? super T, ? super T> bc) {
-	Object[] arr = l.toArray();
-	int length = l.size() - 1;
-	for (int i = 0; i < length; i++) {
-	    T a = (T) arr[i];
-	    T b = (T) arr[i + 1];
-	    if (p.test(a, b)) {
-		bc.accept(a, b);
-		i++;
-	    } else {
-		c.accept(a);
-	    }
-	}
-
-	T beforeLast = (T) arr[length - 1];
-	T last = (T) arr[length];
-	if (!p.test(beforeLast, last)) {
-	    c.accept(last);
-	}
+	return c;
     }
 
     /**
@@ -213,8 +102,8 @@ public class Utility {
      * @throws IllegalArgumentException
      *             if line is null
      */
-    public static List<String> breakToWords(String text) {
-	return breakToWords(text, "" + SPACE, "" + TAB);
+    public static List<String> breakToWords(final String text) {
+	return breakToWords(text, SPACE_STR, TAB_STR);
     }
 
     /**
@@ -228,23 +117,17 @@ public class Utility {
      *            words
      * @return list of all words in the text separated by the separatorSequences
      */
-    public static List<String> breakToWords(String text, String... separatorSequences) {
-	if (text == null) {
-	    throw new IllegalArgumentException("line can't be null");
-	}
-	if (separatorSequences == null) {
-	    throw new IllegalArgumentException("Seperator sequences can't be null");
-	}
-
+    public static List<String> breakToWords(String text, final String... separatorSequences) {
 	List<String> words = new ArrayList<>();
 	int[] nextSeparator = positionOf(text, separatorSequences);
 	int separatorIndex = nextSeparator[0];
 	int separatorLength = nextSeparator[1];
 
 	while (separatorIndex >= 0) {
-	    String word = text.substring(0, separatorIndex);
-	    if (!word.isEmpty())
+	    final String word = text.substring(0, separatorIndex);
+	    if (!word.isEmpty()) {
 		words.add(word);
+	    }
 	    text = text.substring(separatorIndex + separatorLength);
 	    nextSeparator = positionOf(text, separatorSequences);
 	    separatorIndex = nextSeparator[0];
@@ -268,7 +151,7 @@ public class Utility {
      *            next word in the text
      * @return new text with the word at the end of it
      */
-    public static String addWord(String text, String word) {
+    public static String addWord(final String text, final String word) {
 	return addWord(text, word, false);
     }
 
@@ -285,8 +168,8 @@ public class Utility {
      *            used
      * @return new text with the word at the end of it
      */
-    public static String addWord(String text, String word, boolean tab) {
-	StringBuilder builder = new StringBuilder(text);
+    public static String addWord(final String text, final String word, final boolean tab) {
+	final StringBuilder builder = new StringBuilder(text);
 	addWord(builder, word, tab);
 	return builder.toString();
     }
@@ -301,13 +184,10 @@ public class Utility {
      * @param tab
      *            if true, will use tab between words, else - space
      */
-    public static void addWord(StringBuilder builder, String word, boolean tab) {
-	if (word == null) {
-	    throw new IllegalArgumentException("Arguments can't be null");
-	}
+    public static void addWord(final StringBuilder builder, final String word, final boolean tab) {
 	if (builder.length() != 0) {
-	    char lastChar = builder.charAt(builder.length() - 1);
-	    char spacer = tab ? TAB : SPACE;
+	    final char lastChar = builder.charAt(builder.length() - 1);
+	    final char spacer = tab ? TAB : SPACE;
 	    builder.append((lastChar != SPACE && lastChar != TAB) ? spacer : "");
 	}
 	builder.append(word);
@@ -322,8 +202,13 @@ public class Utility {
      *            the actual value
      * @return string message representing the expectation
      */
-    public static String format(Object expected, Object actual) {
-	return "Expected <" + toString(expected) + "> actual <" + toString(actual) + ">";
+    public static String format(final Object expected, final Object actual) {
+	return "expected <" + toString(expected) + "> actual <" + toString(actual) + ">";
+    }
+
+    public static String format(final Number lower, final Number upper, final Number actual) {
+	return "expected to be in range [" + toString(lower) + ", " + toString(upper) + "], actual <" + toString(actual)
+		+ ">";
     }
 
     /**
@@ -333,7 +218,7 @@ public class Utility {
      *            the object
      * @return a string representing the object
      */
-    public static String toString(Object o) {
+    public static String toString(final Object o) {
 	String str = Arrays.deepToString(new Object[] { o });
 	str = str.substring(1);
 	str = str.substring(0, str.length() - 1);
@@ -349,7 +234,7 @@ public class Utility {
      *            second object
      * @return true if the two objects are equal
      */
-    public static boolean equals(Object o1, Object o2) {
+    public static boolean equals(final Object o1, final Object o2) {
 	return Arrays.deepEquals(new Object[] { o1 }, new Object[] { o2 });
     }
 
@@ -360,7 +245,7 @@ public class Utility {
      *            the number
      * @return log of base 2 of the number
      */
-    public static double log2(double num) {
+    public static double log2(final double num) {
 	return StrictMath.log(num) / StrictMath.log(2);
     }
 
@@ -374,7 +259,7 @@ public class Utility {
      * @return first index of one of the sequences in the text or -1 if non
      *         found
      */
-    public static int indexOf(String text, String... sequences) {
+    public static int indexOf(final String text, final String... sequences) {
 	return positionOf(text, sequences)[0];
     }
 
@@ -387,7 +272,7 @@ public class Utility {
      *            list of searched sequences
      * @return last index of one of the sequences in the text or -1 if non found
      */
-    public static int lastIndexOf(String text, String... sequences) {
+    public static int lastIndexOf(final String text, final String... sequences) {
 	return lastPositionOf(text, sequences)[0];
     }
 
@@ -402,11 +287,11 @@ public class Utility {
      * @return pair of index and length of the found sequence or -1 in the index
      *         field if non found
      */
-    public static int[] positionOf(String text, String... sequences) {
+    public static int[] positionOf(final String text, final String... sequences) {
 	int index = -1;
 	int length = -1;
-	for (String seq : sequences) {
-	    int seqIndex = text.indexOf(seq);
+	for (final String seq : sequences) {
+	    final int seqIndex = text.indexOf(seq);
 	    if (seqIndex != -1 && (index == -1 || seqIndex < index)) {
 		index = seqIndex;
 		length = seq.length();
@@ -426,11 +311,11 @@ public class Utility {
      * @return pair of index and length of the found sequence or -1 in the index
      *         field if non found
      */
-    public static int[] lastPositionOf(String text, String... sequences) {
+    public static int[] lastPositionOf(final String text, final String... sequences) {
 	int index = -1;
 	int length = -1;
-	for (String seq : sequences) {
-	    int seqIndex = text.lastIndexOf(seq);
+	for (final String seq : sequences) {
+	    final int seqIndex = text.lastIndexOf(seq);
 	    if (seqIndex > index) {
 		index = seqIndex;
 		length = seq.length();

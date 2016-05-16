@@ -10,11 +10,11 @@ public class XMLParseException extends ParseException {
 	super();
     }
 
-    public XMLParseException(String message) {
+    public XMLParseException(final String message) {
 	super(message);
     }
 
-    public XMLParseException(Throwable cause) {
+    public XMLParseException(final Throwable cause) {
 	super(cause);
     }
 

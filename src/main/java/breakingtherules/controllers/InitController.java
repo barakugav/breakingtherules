@@ -30,7 +30,7 @@ public class InitController {
      * @param job_id
      *            The id of the new job to handle
      * @return true if succeeded, else - false
-     * @throws IOException 
+     * @throws IOException
      * @throws NoCurrentJobException
      *             if job wan't set yet
      */

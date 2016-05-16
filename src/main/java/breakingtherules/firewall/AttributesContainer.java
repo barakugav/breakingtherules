@@ -8,7 +8,7 @@ import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import breakingtherules.utilities.ArraysUtilities;
+import breakingtherules.utilities.ArraysUtilities.ArrayIterator;
 import breakingtherules.utilities.Utility;
 
 /**
@@ -19,7 +19,7 @@ abstract class AttributesContainer implements Iterable<Attribute> {
     /**
      * The attributes this container contains
      */
-    private final Attribute[] m_attributes;
+    protected final Attribute[] m_attributes;
 
     /**
      * Constructor
@@ -27,8 +27,12 @@ abstract class AttributesContainer implements Iterable<Attribute> {
      * @param attributes
      *            the attributes of this container
      */
-    protected AttributesContainer(List<Attribute> attributes) {
+    public AttributesContainer(final List<Attribute> attributes) {
 	m_attributes = toArray(attributes);
+    }
+
+    protected AttributesContainer(final Attribute[] attributes) {
+	m_attributes = Objects.requireNonNull(attributes);
     }
 
     /**
@@ -37,7 +41,7 @@ abstract class AttributesContainer implements Iterable<Attribute> {
      * @param c
      *            container with attributes to construct this container
      */
-    protected AttributesContainer(AttributesContainer c) {
+    public AttributesContainer(final AttributesContainer c) {
 	// Clone is not needed because everything is final
 	m_attributes = c.m_attributes;
     }
@@ -59,7 +63,7 @@ abstract class AttributesContainer implements Iterable<Attribute> {
      *            wanted attribute type
      * @return the wanted attribute
      */
-    public Attribute getAttribute(String type) {
+    public Attribute getAttribute(final String type) {
 	return getAttribute(Attribute.typeStrToTypeId(type));
     }
 
@@ -70,7 +74,7 @@ abstract class AttributesContainer implements Iterable<Attribute> {
      *            wanted attribute type id
      * @return the wanted attribute
      */
-    public Attribute getAttribute(int typeId) {
+    public Attribute getAttribute(final int typeId) {
 	Attribute[] attributes = m_attributes;
 	return (0 <= typeId && typeId < attributes.length) ? attributes[typeId] : null;
     }
@@ -82,7 +86,7 @@ abstract class AttributesContainer implements Iterable<Attribute> {
      */
     @Override
     public Iterator<Attribute> iterator() {
-	return ArraysUtilities.iterator(m_attributes);
+	return new ArrayIterator<>(m_attributes);
     }
 
     /*
@@ -91,21 +95,19 @@ abstract class AttributesContainer implements Iterable<Attribute> {
      * @see java.lang.Object#equals(java.lang.Object)
      */
     @Override
-    public boolean equals(Object o) {
-	if (o == null) {
-	    return false;
-	} else if (o == this) {
+    public boolean equals(final Object o) {
+	if (o == this) {
 	    return true;
 	} else if (!(o instanceof AttributesContainer)) {
 	    return false;
 	}
 
-	AttributesContainer other = (AttributesContainer) o;
-	Attribute[] thisAttributes = m_attributes;
-	Attribute[] otherAttributes = other.m_attributes;
+	final AttributesContainer other = (AttributesContainer) o;
+	final Attribute[] thisAttributes = m_attributes;
+	final Attribute[] otherAttributes = other.m_attributes;
 	for (int i = 0; i < Attribute.TYPES_COUNT; i++) {
-	    Attribute thisAttr = thisAttributes[i];
-	    Attribute otherAttr = otherAttributes[i];
+	    final Attribute thisAttr = thisAttributes[i];
+	    final Attribute otherAttr = otherAttributes[i];
 	    if (!Objects.equals(thisAttr, otherAttr)) {
 		return false;
 	    }
@@ -121,7 +123,7 @@ abstract class AttributesContainer implements Iterable<Attribute> {
     @Override
     public int hashCode() {
 	int h = 1;
-	for (Attribute attribute : m_attributes) {
+	for (final Attribute attribute : m_attributes) {
 	    h = h * 31 + (attribute == null ? 0 : attribute.hashCode());
 	}
 	return h;
@@ -146,10 +148,10 @@ abstract class AttributesContainer implements Iterable<Attribute> {
      * @throws IllegalArgumentException
      *             if there are more than one attributes of the same type
      */
-    private static Attribute[] toArray(List<Attribute> attributesList) {
-	Attribute[] attributesArr = new Attribute[Attribute.TYPES_COUNT];
-	for (Attribute attribute : attributesList) {
-	    int attId = attribute.getTypeId();
+    private static Attribute[] toArray(final List<Attribute> attributesList) {
+	final Attribute[] attributesArr = new Attribute[Attribute.TYPES_COUNT];
+	for (final Attribute attribute : attributesList) {
+	    final int attId = attribute.getTypeId();
 	    if (attributesArr[attId] != null) {
 		throw new IllegalArgumentException(
 			"More then one attribute of the same type (" + attribute.getType() + ")");

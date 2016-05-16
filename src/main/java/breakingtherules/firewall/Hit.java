@@ -1,6 +1,5 @@
 package breakingtherules.firewall;
 
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
@@ -20,9 +19,10 @@ public class Hit extends AttributesContainer {
 	IDS_COMPARATOR = new Comparator<Hit>() {
 
 	    @Override
-	    public int compare(Hit o1, Hit o2) {
+	    public int compare(final Hit o1, final Hit o2) {
 		return o1.m_id - o2.m_id;
 	    }
+
 	};
     }
 
@@ -36,11 +36,16 @@ public class Hit extends AttributesContainer {
      * @throws IllegalArgumentException
      *             if id isn't positive or attributes is null
      */
-    public Hit(int id, List<Attribute> attributes) {
+    public Hit(final int id, final List<Attribute> attributes) {
 	super(attributes);
 	if (id < 0) {
 	    throw new IllegalArgumentException("Id should be positive number");
 	}
+	m_id = id;
+    }
+
+    protected Hit(final int id, final Attribute[] attributes) {
+	super(attributes);
 	m_id = id;
     }
 
@@ -60,8 +65,8 @@ public class Hit extends AttributesContainer {
      * breakingtherules.firewall.AttributesContainer#equals(java.lang.Object)
      */
     @Override
-    public boolean equals(Object o) {
-	return super.equals(o) && o instanceof Hit && m_id == ((Hit) o).m_id;
+    public boolean equals(final Object o) {
+	return o instanceof Hit && super.equals(o) && m_id == ((Hit) o).m_id;
     }
 
     /*
@@ -83,15 +88,11 @@ public class Hit extends AttributesContainer {
     public String toString() {
 	return "{ID = " + m_id + ", " + super.toString() + "}";
     }
-    
-    public static Hit mutate(Hit hit, Attribute attribute) {
-	List<Attribute> attributes = hit.getAttributes();
-	List<Attribute> mutatedAttribues = new ArrayList<>();
-	for (Attribute att : attributes)
-	    if (att.getTypeId() != attribute.getTypeId())
-		mutatedAttribues.add(att);
-	mutatedAttribues.add(attribute);
+
+    public static Hit mutate(final Hit hit, final Attribute attribute) {
+	final Attribute[] mutatedAttribues = hit.m_attributes.clone();
+	mutatedAttribues[attribute.getTypeId()] = attribute;
 	return new Hit(hit.m_id, mutatedAttribues);
     }
-    
+
 }

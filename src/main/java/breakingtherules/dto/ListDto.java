@@ -8,7 +8,8 @@ import java.util.List;
  * This DTO saves the indexes of this elements list out of the total list, and
  * some parameters about the total list
  * 
- * @param <T> The internal type of the list 
+ * @param <T>
+ *            The internal type of the list
  */
 public class ListDto<T> implements Iterable<T> {
 
@@ -48,7 +49,7 @@ public class ListDto<T> implements Iterable<T> {
      * @param total
      *            the size of the total elements list
      */
-    public ListDto(List<T> data, int startIndex, int endIndex, int total) {
+    public ListDto(final List<T> data, final int startIndex, final int endIndex, final int total) {
 	m_total = total;
 	m_startIndex = startIndex;
 	m_endIndex = endIndex;
@@ -88,10 +89,7 @@ public class ListDto<T> implements Iterable<T> {
      * @return Size of the internal list
      */
     public int getSize() {
-	if (m_data == null) {
-	    return 0;
-	}
-	return m_data.size();
+	return m_data != null ? m_data.size() : 0;
     }
 
     /**

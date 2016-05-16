@@ -2,7 +2,7 @@ package breakingtherules.utilities;
 
 import java.util.Iterator;
 import java.util.List;
-import java.util.Objects;
+import java.util.NoSuchElementException;
 
 /**
  * The ArraysUtilities class is a set of array helper methods. All methods are
@@ -17,24 +17,15 @@ public class ArraysUtilities {
      *            some boolean arrays
      * @return new boolean array that is a merge of all others
      */
-    public static boolean[] merge(boolean[]... arrays) {
-	if (arrays == null) {
-	    throw new IllegalArgumentException("Arrays can't be null");
-	}
-	for (boolean[] array : arrays) {
-	    if (array == null) {
-		throw new IllegalArgumentException("Non of the arrays can be null");
-	    }
-	}
-
+    public static boolean[] merge(final boolean[]... arrays) {
 	int length = 0;
-	for (boolean[] array : arrays) {
+	for (final boolean[] array : arrays) {
 	    length += array.length;
 	}
 
-	boolean[] result = new boolean[length];
+	final boolean[] result = new boolean[length];
 	int offset = 0;
-	for (boolean[] array : arrays) {
+	for (final boolean[] array : arrays) {
 	    System.arraycopy(array, 0, result, offset, array.length);
 	    offset += array.length;
 	}
@@ -52,14 +43,14 @@ public class ArraysUtilities {
      *            requested boolean array length
      * @return boolean array that represents the number
      */
-    public static boolean[] intToBooleans(int num, int length) {
+    public static boolean[] intToBooleans(int num, final int length) {
 	if (length < 0) {
 	    throw new IllegalArgumentException("length can't be negaive " + length);
 	}
-	boolean[] result = new boolean[length];
 
+	final boolean[] result = new boolean[length];
 	for (int i = 0; i < length; i++) {
-	    result[result.length - i - 1] = num % 2 == 1;
+	    result[result.length - i - 1] = (num & 1) == 1;
 	    num >>= 1;
 	}
 
@@ -73,39 +64,42 @@ public class ArraysUtilities {
      *            list of strings to convert
      * @return an array with the strings out of the list
      */
-    public static String[] toArray(List<String> list) {
+    public static String[] toArray(final List<String> list) {
 	return list.toArray(new String[list.size()]);
     }
 
-    public static boolean[] toArrayBoolean(List<Boolean> list) {
-	boolean[] arr = new boolean[list.size()];
-	for (int i = 0; i < arr.length; i++)
-	    arr[i] = list.get(i);
+    public static boolean[] toArrayBoolean(final List<Boolean> list) {
+	final boolean[] arr = new boolean[list.size()];
+	int i = 0;
+	for (final Iterator<Boolean> it = list.iterator(); it.hasNext();) {
+	    arr[i++] = it.next();
+	}
 	return arr;
     }
 
-    public static <T> Iterator<T> iterator(T[] array) {
-	return new ArrayIterator<>(array);
-    }
+    public static class ArrayIterator<T> implements Iterator<T> {
 
-    private static class ArrayIterator<T> implements Iterator<T> {
-
+	private final int length;
 	private final T[] array;
 	private int index;
 
-	private ArrayIterator(T[] array) {
-	    this.array = Objects.requireNonNull(array);
-	    index = 0;
+	public ArrayIterator(final T[] array) {
+	    this.array = array;
+	    length = array.length;
 	}
 
 	@Override
 	public boolean hasNext() {
-	    return index < array.length;
+	    return index < length;
 	}
 
 	@Override
 	public T next() {
-	    return array[index++];
+	    final int i = index;
+	    if (i >= length)
+		throw new NoSuchElementException();
+	    index = i + 1;
+	    return array[i];
 	}
 
     }

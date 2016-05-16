@@ -5,9 +5,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
-import org.springframework.util.StringUtils;
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
+
+import breakingtherules.utilities.Utility;
 
 /**
  * Service attribute
@@ -219,29 +219,30 @@ public class Service implements Attribute {
 	PROTOCOL_NAMES[254] = "[experimentation and testing]";
 	PROTOCOL_NAMES[255] = "Reserved";
 
-	Map<String, Integer> map = new HashMap<>();
-	for (int protocolNumber = 0; protocolNumber < PROTOCOL_NAMES.length; protocolNumber++) {
-	    String protocolName = PROTOCOL_NAMES[protocolNumber];
-	    if (protocolName != null)
-		map.put(protocolName, protocolNumber);
+	final Map<String, Integer> map = new HashMap<>();
+	for (int protocolCode = PROTOCOL_NAMES.length; protocolCode-- > 0;) {
+	    final String protocolName = PROTOCOL_NAMES[protocolCode];
+	    if (protocolName != null) {
+		map.put(protocolName, Integer.valueOf(protocolCode));
+	    }
 	}
 	PROTOCOL_CODES = Collections.unmodifiableMap(map);
     }
 
     /**
-     * Constructor
+     * Construct new service with protocol and specific number
      * 
      * @param protocol
      *            protocol of the service
      * @param port
      *            port number of the service
      */
-    public Service(String protocol, int port) {
+    public Service(final String protocol, final int port) {
 	this(protocolCode(protocol), port, port);
     }
 
     /**
-     * Constructor
+     * Construct new service with protocol and port range
      * 
      * @param protocol
      *            protocol of the service
@@ -250,19 +251,19 @@ public class Service implements Attribute {
      * @param portRangeEnd
      *            end of the port range of the service
      */
-    public Service(String protocol, int portRangeStart, int portRangeEnd) {
+    public Service(final String protocol, final int portRangeStart, final int portRangeEnd) {
 	this(protocolCode(protocol), portRangeStart, portRangeEnd);
     }
 
     /**
-     * Constructor
+     * Construct new service by protocol code and specific port
      * 
      * @param protocol
      *            protocol code of the service
      * @param port
      *            port number of the service
      */
-    public Service(int protocol, int port) {
+    public Service(final int protocol, final int port) {
 	this(protocol, port, port);
     }
 
@@ -276,10 +277,10 @@ public class Service implements Attribute {
      * @param portRangeEnd
      *            end of the port range of the service
      */
-    public Service(int protocol, int portRangeStart, int portRangeEnd) {
-	if (protocol < -1 || protocol > 255)
+    public Service(final int protocol, final int portRangeStart, final int portRangeEnd) {
+	if (protocol != ANY_PROTOCOL && (protocol < 0 || protocol > 255)) {
 	    throw new IllegalArgumentException("protocol should be in range [-1, 255]: " + protocol);
-	if (portRangeStart < MIN_PORT || portRangeStart > MAX_PORT) {
+	} else if (portRangeStart < MIN_PORT || portRangeStart > MAX_PORT) {
 	    throw new IllegalArgumentException("Port not in range: " + portRangeStart + ". should be in range ["
 		    + MIN_PORT + ", " + MAX_PORT + "]");
 	} else if (portRangeEnd < MIN_PORT || portRangeEnd > MAX_PORT) {
@@ -329,11 +330,9 @@ public class Service implements Attribute {
 	// Service is in the format "[Protocol] [Port(s)]"
 
 	// Find separators
-	int numOfSeparators = 0;
-	numOfSeparators += StringUtils.countOccurrencesOf(service, " ");
-	numOfSeparators += StringUtils.countOccurrencesOf(service, "-");
-	int separatorIndex = service.indexOf(' ');
-	int portSeparatorIndex = service.indexOf('-');
+	final int numOfSeparators = Utility.countOccurrencesOf(service, ' ') + Utility.countOccurrencesOf(service, '-');
+	final int separatorIndex = service.indexOf(' ');
+	final int portSeparatorIndex = service.indexOf('-');
 
 	switch (numOfSeparators) {
 
@@ -341,27 +340,29 @@ public class Service implements Attribute {
 	    throw new IllegalArgumentException("Unknown format, missing port or protocol");
 	case 1:
 	    // only one port number
-	    String portStr = service.substring(separatorIndex + 1);
+	    final String portStr = service.substring(separatorIndex + 1);
 	    if (portStr.equals(ANY)) {
 		m_portRangeStart = MIN_PORT;
 		m_portRangeEnd = MAX_PORT;
 	    } else {
-		int port = Integer.parseInt(portStr);
-		if (port < MIN_PORT || port > MAX_PORT)
-		    throw new IllegalArgumentException("Port should be in range [" + MIN_PORT + ", " + MAX_PORT + "]");
+		final int port = Integer.parseInt(portStr);
+		if (port != ANY_PROTOCOL && (port < MIN_PORT || port > MAX_PORT)) {
+		    throw new IllegalArgumentException("Service port: " + Utility.format(MIN_PORT, MAX_PORT, port));
+		}
 		m_portRangeStart = m_portRangeEnd = port;
 	    }
 	    service = service.substring(0, separatorIndex);
 	    break;
 	case 2:
 	    // start port
-	    String portRangeStartStr = service.substring(separatorIndex + 1, portSeparatorIndex);
+	    final String portRangeStartStr = service.substring(separatorIndex + 1, portSeparatorIndex);
 	    if (portRangeStartStr.equals(ANY)) {
 		m_portRangeStart = MIN_PORT;
 	    } else {
-		int port = Integer.parseInt(portRangeStartStr);
-		if (port < MIN_PORT || port > MAX_PORT)
-		    throw new IllegalArgumentException("Port should be in range [" + MIN_PORT + ", " + MAX_PORT + "]");
+		final int port = Integer.parseInt(portRangeStartStr);
+		if (port != ANY_PROTOCOL && (port < MIN_PORT || port > MAX_PORT)) {
+		    throw new IllegalArgumentException("Service port: " + Utility.format(MIN_PORT, MAX_PORT, port));
+		}
 		m_portRangeStart = port;
 	    }
 
@@ -370,9 +371,10 @@ public class Service implements Attribute {
 	    if (portRangeEndStr.equals(ANY)) {
 		m_portRangeEnd = MAX_PORT;
 	    } else {
-		int port = Integer.parseInt(portRangeEndStr);
-		if (port < MIN_PORT || port > MAX_PORT)
-		    throw new IllegalArgumentException("Port should be in range [" + MIN_PORT + ", " + MAX_PORT + "]");
+		final int port = Integer.parseInt(portRangeEndStr);
+		if (port != ANY_PROTOCOL && (port < MIN_PORT || port > MAX_PORT)) {
+		    throw new IllegalArgumentException("Service port: " + Utility.format(MIN_PORT, MAX_PORT, port));
+		}
 		m_portRangeEnd = port;
 	    }
 
@@ -385,15 +387,16 @@ public class Service implements Attribute {
 
 	if (m_portRangeStart > m_portRangeEnd) {
 	    throw new IllegalArgumentException("portRangeStart > portRangeEnd");
-	} else if (service.equals("")) {
+	} else if (service.isEmpty()) {
 	    throw new IllegalArgumentException("No protocol");
 	}
 
-	if (service.equals(ANY) || service.equals("Port") || service.equals("Ports"))
+	if (service.equals(ANY) || service.equals("Port") || service.equals("Ports")) {
 	    m_protocolCode = ANY_PROTOCOL;
-	else
-	    m_protocolCode = protocolCode(service);
 
+	} else {
+	    m_protocolCode = protocolCode(service);
+	}
     }
 
     /**
@@ -489,8 +492,6 @@ public class Service implements Attribute {
     public boolean equals(Object o) {
 	if (o == this) {
 	    return true;
-	} else if (o == null) {
-	    return false;
 	} else if (!(o instanceof Service)) {
 	    return false;
 	}
@@ -561,11 +562,11 @@ public class Service implements Attribute {
      *            name of the protocol
      * @return code of the protocol
      */
-    public static int protocolCode(String protocolName) {
-	Integer code = PROTOCOL_CODES.get(protocolName);
+    public static int protocolCode(final String protocolName) {
+	final Integer code = PROTOCOL_CODES.get(protocolName);
 	if (protocolName == null || code == null)
 	    throw new IllegalArgumentException("Unknown protocol: " + String.valueOf(protocolName));
-	return code;
+	return code.intValue();
     }
 
     /**
@@ -575,11 +576,13 @@ public class Service implements Attribute {
      *            code of the protocol
      * @return the protocol's name
      */
-    public static String protocolName(int protocolCode) {
-	if (protocolCode == ANY_PROTOCOL)
+    public static String protocolName(final int protocolCode) {
+	if (protocolCode == ANY_PROTOCOL) {
 	    return ANY;
-	if (protocolCode < 0 || protocolCode > 255)
+	}
+	if (protocolCode < 0 || protocolCode > 255) {
 	    throw new IllegalArgumentException("Protocol code should be in range [0, 255]: " + protocolCode);
+	}
 	return PROTOCOL_NAMES[protocolCode];
     }
 

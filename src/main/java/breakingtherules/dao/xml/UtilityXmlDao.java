@@ -35,17 +35,18 @@ public class UtilityXmlDao {
      * @throws IOException
      *             if reading from file failed
      */
-    public static Document readFile(String path) throws IOException {
+    public static Document readFile(final String path) throws IOException {
 	try {
-	    File repoFile = new File(path);
-	    if (!repoFile.exists())
+	    final File repoFile = new File(path);
+	    if (!repoFile.exists()) {
 		throw new FileNotFoundException(path);
-	    DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-	    DocumentBuilder builder = factory.newDocumentBuilder();
-	    Document fileDocument = builder.parse(repoFile);
+	    }
+	    final DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+	    final DocumentBuilder builder = factory.newDocumentBuilder();
+	    final Document fileDocument = builder.parse(repoFile);
 	    return fileDocument;
 
-	} catch (IOException | SAXException | ParserConfigurationException e) {
+	} catch (final IOException | SAXException | ParserConfigurationException e) {
 	    throw new IOException("Unable to load file", e);
 	}
     }
@@ -60,18 +61,18 @@ public class UtilityXmlDao {
      * @throws IOException
      *             if failed to write to memory
      */
-    public static void writeFile(String path, Document doc) throws IOException {
+    public static void writeFile(final String path, final Document doc) throws IOException {
 	try {
-	    File file = new File(path);
-	    TransformerFactory factory = TransformerFactory.newInstance();
-	    Transformer transformer = factory.newTransformer();
+	    final File file = new File(path);
+	    final TransformerFactory factory = TransformerFactory.newInstance();
+	    final Transformer transformer = factory.newTransformer();
 	    transformer.setOutputProperty(OutputKeys.INDENT, "yes");
 	    transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
-	    DOMSource source = new DOMSource(doc);
-	    StreamResult result = new StreamResult(file);
+	    final DOMSource source = new DOMSource(doc);
+	    final StreamResult result = new StreamResult(file);
 	    transformer.transform(source, result);
 
-	} catch (TransformerException e) {
+	} catch (final TransformerException e) {
 	    throw new IOException(e);
 	}
     }

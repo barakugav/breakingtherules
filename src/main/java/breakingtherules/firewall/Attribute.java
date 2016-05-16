@@ -47,12 +47,13 @@ public interface Attribute {
     public String toString();
 
     public static final int TYPES_COUNT = 3;
-    public static final int NULL_TYPE_ID = -1;
 
+    public static final int UNKOWN_ATTRIBUTE_ID = -1;
     public static final int SOURCE_TYPE_ID = 0;
     public static final int DESTINATION_TYPE_ID = 1;
     public static final int SERVICE_TYPE_ID = 2;
 
+    public static final String UNKOWN_ATTRIBUTE = null;
     public static final String DESTINATION_TYPE = "Destination";
     public static final String SOURCE_TYPE = "Source";
     public static final String SERVICE_TYPE = "Service";
@@ -63,7 +64,7 @@ public interface Attribute {
     public static Comparator<Attribute> ATTRIBUTES_COMPARATOR = new Comparator<Attribute>() {
 
 	@Override
-	public int compare(Attribute o1, Attribute o2) {
+	public int compare(final Attribute o1, final Attribute o2) {
 	    return o1.getTypeId() - o2.getTypeId();
 	}
     };
@@ -74,7 +75,7 @@ public interface Attribute {
      * @param attributes
      *            the attributes to sort
      */
-    public static void sort(List<Attribute> attributes) {
+    public static void sort(final List<Attribute> attributes) {
 	attributes.sort(ATTRIBUTES_COMPARATOR);
     }
 
@@ -85,7 +86,7 @@ public interface Attribute {
      *            the type string
      * @return the type id
      */
-    public static int typeStrToTypeId(String typeStr) {
+    public static int typeStrToTypeId(final String typeStr) {
 	switch (typeStr) {
 	case SOURCE_TYPE:
 	    return SOURCE_TYPE_ID;
@@ -94,7 +95,7 @@ public interface Attribute {
 	case SERVICE_TYPE:
 	    return SERVICE_TYPE_ID;
 	default:
-	    return -1;
+	    return UNKOWN_ATTRIBUTE_ID;
 	}
     }
 
@@ -110,7 +111,7 @@ public interface Attribute {
      * @return An attribute, of the wanted class, with the given value. If the
      *         class is unknown, returns null.
      */
-    public static Attribute createFromString(int typeId, String value) {
+    public static Attribute createFromString(final int typeId, final String value) {
 	switch (typeId) {
 	case SOURCE_TYPE_ID:
 	    return new Source(value);

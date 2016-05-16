@@ -20,7 +20,7 @@ public class Source extends IPAttribute {
      * @param ip
      *            IP of the source
      */
-    public Source(IP ip) {
+    public Source(final IP ip) {
 	super(ip);
     }
 
@@ -30,7 +30,7 @@ public class Source extends IPAttribute {
      * @param ip
      *            String IP of the source
      */
-    public Source(String ip) {
+    public Source(final String ip) {
 	this(IP.fromString(ip));
     }
 
@@ -39,7 +39,7 @@ public class Source extends IPAttribute {
      * attribute is a source attribute
      */
     @Override
-    public boolean contains(Attribute other) {
+    public boolean contains(final Attribute other) {
 	return other instanceof Source && super.contains(other);
     }
 
@@ -48,7 +48,7 @@ public class Source extends IPAttribute {
      * attribute is a source attribute
      */
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(final Object o) {
 	return o instanceof Source && super.equals(o);
     }
 
@@ -73,7 +73,7 @@ public class Source extends IPAttribute {
     }
 
     @Override
-    public Source mutate(IP ip) {
+    public Source createMutation(final IP ip) {
 	return new Source(ip);
     }
 

@@ -1,6 +1,6 @@
 package breakingtherules.tests.firewall;
 
-import static breakingtherules.tests.JUnitUtilities.advanceAssertEquals;
+import static breakingtherules.tests.JUnitUtilities.deepAssertEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -19,7 +19,7 @@ public class IPTest {
     @Test
     public void getBitTestFirstBlock() {
 	System.out.println("# IPTest getBitTestFirstBlock");
-	IP ip = new IPv4(new int[] { 0b00010000, 0, 0, 0 });
+	IP ip = IPv4.create(new int[] { 0b00010000, 0, 0, 0 });
 	assertEquals(false, ip.getBit(3));
 	assertEquals(true, ip.getBit(4));
 	assertEquals(false, ip.getBit(5));
@@ -28,7 +28,7 @@ public class IPTest {
     @Test
     public void getBitTest3Block() {
 	System.out.println("# IPTest getBitTest3Block");
-	IP ip = new IPv4(new int[] { 0, 0, 0b00010000, 0 });
+	IP ip = IPv4.create(new int[] { 0, 0, 0b00010000, 0 });
 	assertEquals(false, ip.getBit(19));
 	assertEquals(true, ip.getBit(20));
 	assertEquals(false, ip.getBit(21));
@@ -47,7 +47,7 @@ public class IPTest {
 	IP ip = IP.fromBooleans(addressBol, IPv4.class);
 	assertNotNull(ip);
 	assertTrue(ip instanceof IPv4);
-	advanceAssertEquals(address, ip.getAddress());
+	deepAssertEquals(address, ip.getAddress());
 
     }
 
@@ -64,7 +64,7 @@ public class IPTest {
 	IP ip = IP.fromBooleans(addressBol, IPv6.class);
 	assertNotNull(ip);
 	assertTrue(ip instanceof IPv6);
-	advanceAssertEquals(address, ip.getAddress());
+	deepAssertEquals(address, ip.getAddress());
     }
 
     @Test(expected = NullPointerException.class)

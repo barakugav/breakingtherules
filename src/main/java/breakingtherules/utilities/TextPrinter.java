@@ -38,7 +38,7 @@ public class TextPrinter {
      * @param stream
      *            output stream for this printer
      */
-    public TextPrinter(PrintStream stream) {
+    public TextPrinter(final PrintStream stream) {
 	this(stream, new TextBuilder());
     }
 
@@ -48,7 +48,7 @@ public class TextPrinter {
      * @param builder
      *            text builder used by this provider
      */
-    public TextPrinter(TextBuilder builder) {
+    public TextPrinter(final TextBuilder builder) {
 	this(System.out, builder);
     }
 
@@ -60,7 +60,7 @@ public class TextPrinter {
      * @param builder
      *            text builder used by this provider
      */
-    public TextPrinter(PrintStream stream, TextBuilder builder) {
+    public TextPrinter(final PrintStream stream, final TextBuilder builder) {
 	m_outStream = stream;
 	m_builder = builder;
 	m_alreadyPrinted = "";
@@ -71,7 +71,7 @@ public class TextPrinter {
      * 
      * @see java.lang.PrintStream#print(String)
      */
-    public void print(String s) {
+    public void print(final String s) {
 	m_builder.append(s);
 	print();
     }
@@ -81,7 +81,7 @@ public class TextPrinter {
      * 
      * @see java.lang.PrintStream#println(String)
      */
-    public void println(String s) {
+    public void println(final String s) {
 	m_builder.appendln(s);
 	print();
     }
@@ -101,7 +101,7 @@ public class TextPrinter {
      * 
      * @see breakingtherules.utilities.TextBuilder#appedIndented(String)
      */
-    public void printIndented(String s) {
+    public void printIndented(final String s) {
 	m_builder.appedIndented(s);
 	print();
     }
@@ -111,7 +111,7 @@ public class TextPrinter {
      * 
      * @see breakingtherules.utilities.TextBuilder#appedIndentedln(String)
      */
-    public void printIndentedln(String s) {
+    public void printIndentedln(final String s) {
 	m_builder.appedIndentedln(s);
 	print();
     }
@@ -120,8 +120,8 @@ public class TextPrinter {
      * Method used by all others, used to print to the actual output stream
      */
     private void print() {
-	String text = m_builder.getText();
-	String toPrint = text.substring(m_alreadyPrinted.length());
+	final String text = m_builder.getText();
+	final String toPrint = text.substring(m_alreadyPrinted.length());
 	m_alreadyPrinted = text;
 	m_outStream.print(toPrint);
     }

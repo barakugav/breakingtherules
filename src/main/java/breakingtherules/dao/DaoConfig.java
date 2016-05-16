@@ -17,7 +17,7 @@ public class DaoConfig {
      *            id of the job
      * @return string path to repository root
      */
-    public static String getRepoRoot(int id) {
+    public static String getRepoRoot(final int id) {
 	return REPOS_ROOT + id + "/";
     }
 

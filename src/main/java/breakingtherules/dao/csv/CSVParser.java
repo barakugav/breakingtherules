@@ -7,6 +7,7 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
@@ -25,9 +26,9 @@ import breakingtherules.utilities.Utility;
  */
 public class CSVParser {
 
-    private int idCounter;
+    private int m_idCounter;
 
-    private final List<Integer> columnsTypes;
+    private final List<Integer> m_columnsTypes;
 
     /**
      * IDs for attributes used by this parser
@@ -43,7 +44,7 @@ public class CSVParser {
     public static final List<Integer> DEFAULT_COLUMNS_TYPES;
 
     static {
-	List<Integer> list = new ArrayList<>();
+	final List<Integer> list = new ArrayList<>();
 	list.add(SOURCE);
 	list.add(DESTINATION);
 	list.add(SERVICE_PORT);
@@ -51,43 +52,44 @@ public class CSVParser {
 	DEFAULT_COLUMNS_TYPES = Collections.unmodifiableList(list);
     }
 
-    public CSVParser(List<Integer> columnsTypes) {
-	idCounter = 1;
-	this.columnsTypes = Utility.unmodifiableClone(columnsTypes);
+    public CSVParser(final List<Integer> columnsTypes) {
+	m_idCounter = 1;
+	// Create unmodifiable clone of the input list
+	m_columnsTypes = Collections.unmodifiableList(new ArrayList<>(columnsTypes));
     }
 
-    public Hit fromCSV(String line) throws CSVParseException {
-	List<String> words = Utility.breakToWords(line);
-	List<Attribute> attributes = new ArrayList<>();
+    public Hit fromCSV(final String line) throws CSVParseException {
+	final List<String> words = Utility.breakToWords(line);
+	final List<Attribute> attributes = new ArrayList<>();
 
-	if (columnsTypes.contains(SOURCE)) {
-	    String source = words.get(columnsTypes.indexOf(SOURCE));
+	if (m_columnsTypes.contains(SOURCE)) {
+	    final String source = words.get(m_columnsTypes.indexOf(SOURCE));
 	    attributes.add(fromCSVSource(source));
 	}
-	if (columnsTypes.contains(DESTINATION)) {
-	    String destination = words.get(columnsTypes.indexOf(DESTINATION));
+	if (m_columnsTypes.contains(DESTINATION)) {
+	    final String destination = words.get(m_columnsTypes.indexOf(DESTINATION));
 	    attributes.add(fromCSVDestination(destination));
 	}
-	if (columnsTypes.contains(SERVICE_PROTOCOL) && columnsTypes.contains(SERVICE_PORT)) {
-	    String protocol = words.get(columnsTypes.indexOf(SERVICE_PROTOCOL));
-	    String port = words.get(columnsTypes.indexOf(SERVICE_PORT));
+	if (m_columnsTypes.contains(SERVICE_PROTOCOL) && m_columnsTypes.contains(SERVICE_PORT)) {
+	    final String protocol = words.get(m_columnsTypes.indexOf(SERVICE_PROTOCOL));
+	    final String port = words.get(m_columnsTypes.indexOf(SERVICE_PORT));
 	    attributes.add(fromCSVService(port, protocol));
 	}
 
-	return new Hit(idCounter++, attributes);
+	return new Hit(m_idCounter++, attributes);
     }
 
-    public String toCSV(Hit hit) throws CSVParseException {
-	StringBuilder builder = new StringBuilder();
-	for (int colomnsType : columnsTypes) {
+    public String toCSV(final Hit hit) throws CSVParseException {
+	final StringBuilder builder = new StringBuilder();
+	for (final int colomnsType : m_columnsTypes) {
 	    String colomnValue = "";
 	    switch (colomnsType) {
 	    case SOURCE:
-		Source source = (Source) hit.getAttribute(Attribute.SOURCE_TYPE_ID);
+		final Source source = (Source) hit.getAttribute(Attribute.SOURCE_TYPE_ID);
 		colomnValue = toCSVSource(source);
 		break;
 	    case DESTINATION:
-		Destination destination = (Destination) hit.getAttribute(Attribute.DESTINATION_TYPE_ID);
+		final Destination destination = (Destination) hit.getAttribute(Attribute.DESTINATION_TYPE_ID);
 		colomnValue = toCSVDestination(destination);
 		break;
 	    case SERVICE_PROTOCOL:
@@ -120,7 +122,8 @@ public class CSVParser {
      * @throws CSVParseException
      *             if fails to parse file
      */
-    public static List<Hit> fromCSV(List<Integer> columnsTypes, int jobId) throws IOException, CSVParseException {
+    public static List<Hit> fromCSV(final List<Integer> columnsTypes, final int jobId)
+	    throws IOException, CSVParseException {
 	return fromCSV(columnsTypes, CSVDaoConfig.getHitsFile(jobId));
     }
 
@@ -137,23 +140,20 @@ public class CSVParser {
      * @throws CSVParseException
      *             if fails to parse file
      */
-    public static List<Hit> fromCSV(List<Integer> columnsTypes, String filePath) throws IOException, CSVParseException {
-	if (filePath == null) {
-	    throw new IllegalArgumentException("File path can't be null");
-	}
-	File repoFile = new File(filePath);
+    public static List<Hit> fromCSV(final List<Integer> columnsTypes, final String filePath)
+	    throws IOException, CSVParseException {
+	final File repoFile = new File(filePath);
 	if (!repoFile.exists()) {
 	    throw new FileNotFoundException("File not found: " + filePath);
 	} else if (!repoFile.canRead()) {
 	    throw new IOException("File read is not permitted!");
 	}
 
-	BufferedReader reader = new BufferedReader(new FileReader(repoFile));
+	final BufferedReader reader = new BufferedReader(new FileReader(repoFile));
 	try {
-	    final BufferedReader buffer = reader;
 	    return fromCSV(columnsTypes, new Iterator<String>() {
 
-		String line = buffer.readLine();
+		private String line = reader.readLine();
 
 		@Override
 		public boolean hasNext() {
@@ -162,15 +162,15 @@ public class CSVParser {
 
 		@Override
 		public String next() {
-		    if (line == null)
+		    String l = line;
+		    if (l == null)
 			throw new NoSuchElementException();
-		    String next = line;
 		    try {
-			line = buffer.readLine();
-		    } catch (IOException e) {
-			throw new RuntimeException(e);
+			line = reader.readLine();
+		    } catch (final IOException e) {
+			throw new UncheckedIOException(e);
 		    }
-		    return next;
+		    return l;
 		}
 	    });
 	} finally {
@@ -189,31 +189,26 @@ public class CSVParser {
      * @throws CSVParseException
      *             if fails to parse lines
      */
-    public static List<Hit> fromCSV(List<Integer> columnsTypes, Iterator<String> lines) throws CSVParseException {
-	if (columnsTypes == null) {
-	    throw new IllegalArgumentException("Colomns types list can't be null");
-	}
+    public static List<Hit> fromCSV(final List<Integer> columnsTypes, final Iterator<String> lines)
+	    throws CSVParseException {
 	if (columnsTypes.contains(SERVICE_PORT) ^ columnsTypes.contains(SERVICE_PROTOCOL)) {
 	    throw new IllegalArgumentException("Choose service port and service protocol or neither of them");
 	}
-	if (lines == null) {
-	    throw new IllegalArgumentException("Line can't be null!");
-	}
 
-	CSVParser parser = new CSVParser(columnsTypes);
-	List<Hit> hits = new ArrayList<>();
+	final CSVParser parser = new CSVParser(columnsTypes);
+	final List<Hit> hits = new ArrayList<>();
 	int lineNumber = 1;
 
 	try {
 	    while (lines.hasNext()) {
-		String line = lines.next();
+		final String line = lines.next();
 		if (line.isEmpty()) {
 		    continue;
 		}
 		hits.add(parser.fromCSV(line));
 		lineNumber++;
 	    }
-	} catch (CSVParseException e) {
+	} catch (final CSVParseException e) {
 	    throw new CSVParseException("In line " + lineNumber + ": ", e);
 	}
 
@@ -234,32 +229,22 @@ public class CSVParser {
      * @throws CSVParseException
      *             if fails to parse hits
      */
-    public static void toCSV(List<Integer> columnsTypes, List<Hit> hits, String outputPath)
+    public static void toCSV(final List<Integer> columnsTypes, final List<Hit> hits, final String outputPath)
 	    throws IOException, CSVParseException {
-	if (outputPath == null) {
-	    throw new IllegalArgumentException("Repo path can't be null");
-	}
-	File outputFile = new File(outputPath);
+	final File outputFile = new File(outputPath);
 	if (outputFile.exists() && !outputFile.canWrite()) {
 	    throw new IOException("File already exist and can't be over written");
 	}
 
-	BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile));
+	final BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile));
 	try {
-
-	    if (columnsTypes == null) {
-		throw new IllegalArgumentException("Colomns types list can't be null");
-	    }
 	    if (columnsTypes.contains(null)) {
 		throw new IllegalArgumentException("Colomns types list can't contains nulls");
 	    }
 	    if (columnsTypes.contains(SERVICE_PORT) ^ columnsTypes.contains(SERVICE_PROTOCOL)) {
 		throw new IllegalArgumentException("Choose service port and service protocol or neither of them");
 	    }
-	    if (hits == null) {
-		throw new IllegalArgumentException("Hits list can't be null");
-	    }
-	    for (Hit hit : hits) {
+	    for (final Hit hit : hits) {
 		if (columnsTypes.contains(SOURCE) && hit.getAttribute(Attribute.SOURCE_TYPE_ID) == null) {
 		    throw new IllegalArgumentException("Source attribute is missing in one of the hits");
 		}
@@ -271,13 +256,13 @@ public class CSVParser {
 		}
 	    }
 
-	    CSVParser parser = new CSVParser(columnsTypes);
-	    for (Hit hit : hits) {
+	    final CSVParser parser = new CSVParser(columnsTypes);
+	    for (final Hit hit : hits) {
 		if (hit == null) {
 		    continue;
 		}
 
-		String line = parser.toCSV(hit);
+		final String line = parser.toCSV(hit);
 		if (!line.isEmpty()) {
 		    writer.write(line);
 		    writer.newLine();
@@ -297,10 +282,10 @@ public class CSVParser {
      * @throws CSVParseException
      *             if fails to parse source
      */
-    private static Source fromCSVSource(String source) throws CSVParseException {
+    private static Source fromCSVSource(final String source) throws CSVParseException {
 	try {
 	    return new Source(source);
-	} catch (IllegalArgumentException e) {
+	} catch (final IllegalArgumentException e) {
 	    throw new CSVParseException("Unable to parse source: ", e);
 	}
     }
@@ -314,10 +299,10 @@ public class CSVParser {
      * @throws CSVParseException
      *             if fails to parse destination
      */
-    private static Destination fromCSVDestination(String destination) throws CSVParseException {
+    private static Destination fromCSVDestination(final String destination) throws CSVParseException {
 	try {
 	    return new Destination(destination);
-	} catch (IllegalArgumentException e) {
+	} catch (final IllegalArgumentException e) {
 	    throw new CSVParseException("Unable to parse destination: ", e);
 	}
     }
@@ -333,27 +318,27 @@ public class CSVParser {
      * @throws CSVParseException
      *             if fails to parse service
      */
-    private static Service fromCSVService(String port, String protocol) throws CSVParseException {
+    private static Service fromCSVService(final String port, final String protocol) throws CSVParseException {
 	int portNum, protocolInt;
 	try {
 	    portNum = Integer.parseInt(port);
-	} catch (NumberFormatException e) {
+	} catch (final NumberFormatException e) {
 	    throw new CSVParseException("Unable to parse port to integer: ", e);
 	}
 	try {
 	    protocolInt = Integer.parseInt(protocol);
-	} catch (NumberFormatException e) {
+	} catch (final NumberFormatException e) {
 	    throw new CSVParseException("Unable to parse protocol code to integer: ", e);
 	}
 
-	String protocolStr = Service.protocolName(protocolInt);
+	final String protocolStr = Service.protocolName(protocolInt);
 	if (protocolStr == null) {
 	    throw new CSVParseException("Unknown protocol number " + protocolInt);
 	}
 
 	try {
 	    return new Service(protocolStr, portNum);
-	} catch (IllegalArgumentException e) {
+	} catch (final IllegalArgumentException e) {
 	    throw new CSVParseException("Unable to parse service: ", e);
 	}
     }
@@ -367,7 +352,7 @@ public class CSVParser {
      * @throws CSVParseException
      *             if source is null
      */
-    private static String toCSVSource(Source source) throws CSVParseException {
+    private static String toCSVSource(final Source source) throws CSVParseException {
 	if (source == null) {
 	    throw new CSVParseException("Source doesn't exist");
 	}
@@ -383,7 +368,7 @@ public class CSVParser {
      * @throws CSVParseException
      *             if destination is null
      */
-    private static String toCSVDestination(Destination destination) throws CSVParseException {
+    private static String toCSVDestination(final Destination destination) throws CSVParseException {
 	if (destination == null) {
 	    throw new CSVParseException("Destination doesn't exist");
 	}
@@ -397,8 +382,8 @@ public class CSVParser {
      *            the service
      * @return CSV service protocol string
      */
-    private static String toCSVServiceProtocol(Service service) {
-	return "" + service.getProtocolCode();
+    private static String toCSVServiceProtocol(final Service service) {
+	return Integer.toString(service.getProtocolCode());
     }
 
     /**
@@ -408,8 +393,8 @@ public class CSVParser {
      *            the service
      * @return CSV service port string
      */
-    private static String toCSVServicePort(Service service) {
-	return "" + service.getPortRangeStart();
+    private static String toCSVServicePort(final Service service) {
+	return Integer.toString(service.getPortRangeStart());
     }
 
 }

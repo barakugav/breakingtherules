@@ -11,7 +11,7 @@ import breakingtherules.session.Job;
 
 @RestController
 public class JobStatusController {
-    
+
     @Autowired
     private Job m_job;
 
@@ -19,8 +19,8 @@ public class JobStatusController {
     public StatusDto getStatus() {
 	return createStatusDto(m_job);
     }
-    
-    private StatusDto createStatusDto(Job job) {
+
+    private static StatusDto createStatusDto(Job job) {
 	Rule orig = job.getOriginalRule();
 	int createdRules = job.getRules().size();
 	int totalHitsCount = job.getTotalHitsCount();

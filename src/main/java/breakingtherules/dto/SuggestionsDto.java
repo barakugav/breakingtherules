@@ -28,7 +28,7 @@ public class SuggestionsDto {
      * @param type
      *            the type of the suggestion in the list
      */
-    public SuggestionsDto(List<Suggestion> suggestions, String type) {
+    public SuggestionsDto(final List<Suggestion> suggestions, final String type) {
 	m_suggestions = suggestions;
 	m_type = type;
     }

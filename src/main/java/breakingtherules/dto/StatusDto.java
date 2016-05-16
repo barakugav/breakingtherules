@@ -8,15 +8,15 @@ import breakingtherules.firewall.Rule;
  */
 public class StatusDto {
 
-    private Rule m_originalRule;
+    private final Rule m_originalRule;
 
-    private int m_createdRulesCount;
+    private final int m_createdRulesCount;
 
-    private int m_totalHitsCount;
+    private final int m_totalHitsCount;
 
-    private int m_coveredHitsCount;
+    private final int m_coveredHitsCount;
 
-    private int m_filteredHitsCount;
+    private final int m_filteredHitsCount;
 
     /**
      * 
@@ -31,7 +31,8 @@ public class StatusDto {
      * @param filteredHits
      *            the number of hits that pass the current filter
      */
-    public StatusDto(Rule orig, int createdRules, int totalHits, int coveredHits, int filteredHits) {
+    public StatusDto(final Rule orig, final int createdRules, final int totalHits, final int coveredHits,
+	    final int filteredHits) {
 	m_originalRule = orig;
 	m_createdRulesCount = createdRules;
 	m_totalHitsCount = totalHits;

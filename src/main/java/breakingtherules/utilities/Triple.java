@@ -39,7 +39,7 @@ public class Triple<A, B, C> {
      * @param c
      *            value of third element
      */
-    public Triple(A a, B b, C c) {
+    public Triple(final A a, final B b, final C c) {
 	first = a;
 	second = b;
 	third = c;
@@ -51,10 +51,8 @@ public class Triple<A, B, C> {
      * @see java.lang.Object#equals(java.lang.Object)
      */
     @Override
-    public boolean equals(Object o) {
-	if (o == null) {
-	    return false;
-	} else if (o == this) {
+    public boolean equals(final Object o) {
+	if (o == this) {
 	    return true;
 	} else if (!(o instanceof Triple<?, ?, ?>)) {
 	    return false;
@@ -72,13 +70,7 @@ public class Triple<A, B, C> {
      */
     @Override
     public int hashCode() {
-	int hash = 0;
-	hash += Objects.hashCode(first);
-	hash <<= 10;
-	hash += Objects.hashCode(second);
-	hash <<= 10;
-	hash += Objects.hashCode(third);
-	return hash;
+	return Objects.hash(first, second, third);
     }
 
 }

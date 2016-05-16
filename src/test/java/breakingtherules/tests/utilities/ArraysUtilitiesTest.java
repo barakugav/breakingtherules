@@ -1,6 +1,6 @@
 package breakingtherules.tests.utilities;
 
-import static breakingtherules.tests.JUnitUtilities.advanceAssertEquals;
+import static breakingtherules.tests.JUnitUtilities.deepAssertEquals;
 
 import java.util.Arrays;
 
@@ -20,16 +20,16 @@ public class ArraysUtilitiesTest {
 	boolean[] b = new boolean[] { F, T, T, F, T };
 	boolean[] expected = new boolean[] { T, T, F, T, F, F, T, T, F, T };
 	boolean[] actual = ArraysUtilities.merge(a, b);
-	advanceAssertEquals(expected, actual);
+	deepAssertEquals(expected, actual);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expected = NullPointerException.class)
     public void mergeBooleansTestNullArray() {
 	System.out.println("# ArraysUtilitiesTest mergeBooleansTestNullArray");
 	ArraysUtilities.merge(new boolean[] { T, F }, null);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expected = NullPointerException.class)
     public void mergeBooleansTestNullArrays() {
 	System.out.println("# ArraysUtilitiesTest mergeBooleansTestNullArrays");
 	boolean[][] arrays = null;
@@ -43,7 +43,7 @@ public class ArraysUtilitiesTest {
 	int num = 0b011001;
 	boolean[] expected = new boolean[] { F, T, T, F, F, T };
 	boolean[] actual = ArraysUtilities.intToBooleans(num, length);
-	advanceAssertEquals(expected, actual);
+	deepAssertEquals(expected, actual);
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -58,7 +58,7 @@ public class ArraysUtilitiesTest {
 	System.out.println("# ArraysUtilitiesTest toArrayTest");
 	String[] expected = new String[] { "hello", "big", "world" };
 	String[] actual = ArraysUtilities.toArray(Arrays.asList(expected));
-	advanceAssertEquals(expected, actual);
+	deepAssertEquals(expected, actual);
     }
 
 }

@@ -13,7 +13,7 @@ public class Suggestion implements Comparable<Suggestion> {
     /**
      * The attribute of this suggestion
      */
-    private Attribute m_attribute;
+    private final Attribute m_attribute;
 
     /**
      * Size of this suggestion - the number of hits that match it
@@ -31,10 +31,8 @@ public class Suggestion implements Comparable<Suggestion> {
      * @param att
      *            attribute of this suggestion
      */
-    public Suggestion(Attribute att) {
-	m_attribute = att;
-	m_size = 0;
-	m_score = 0;
+    public Suggestion(final Attribute att) {
+	this(att, 0, 0);
     }
 
     /**
@@ -47,7 +45,7 @@ public class Suggestion implements Comparable<Suggestion> {
      * @param score
      *            Score of this suggestion, given by the suggestion algorithm
      */
-    public Suggestion(Attribute att, int size, double score) {
+    public Suggestion(final Attribute att, final int size, final double score) {
 	m_attribute = att;
 	m_size = size;
 	m_score = score;
@@ -89,10 +87,8 @@ public class Suggestion implements Comparable<Suggestion> {
      * Is inconsistent with x.equals(y)
      */
     @Override
-    public int compareTo(Suggestion other) {
-	Double thisScore = new Double(this.m_score);
-	Double otherScore = new Double(other.m_score);
-	return thisScore.compareTo(otherScore);
+    public int compareTo(final Suggestion other) {
+	return Double.compare(m_score, other.m_score);
     }
 
     @Override
@@ -106,7 +102,7 @@ public class Suggestion implements Comparable<Suggestion> {
      * @param score
      *            score of this suggestion
      */
-    protected void setScore(double score) {
+    protected void setScore(final double score) {
 	m_score = score;
     }
 
