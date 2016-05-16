@@ -1,6 +1,7 @@
 package breakingtherules.firewall;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
@@ -13,7 +14,7 @@ import breakingtherules.utilities.Utility;
 /**
  * The AttributesContainer class is a container of attributes
  */
-abstract class AttributesContainer implements Cloneable, Iterable<Attribute> {
+abstract class AttributesContainer implements Iterable<Attribute> {
 
     /**
      * The attributes this container contains
@@ -27,9 +28,6 @@ abstract class AttributesContainer implements Cloneable, Iterable<Attribute> {
      *            the attributes of this container
      */
     protected AttributesContainer(List<Attribute> attributes) {
-	if (attributes == null) {
-	    throw new IllegalArgumentException("Tried to create hit with null attributes");
-	}
 	m_attributes = toArray(attributes);
     }
 
@@ -51,7 +49,7 @@ abstract class AttributesContainer implements Cloneable, Iterable<Attribute> {
      */
     @JsonProperty("attributes")
     public List<Attribute> getAttributes() {
-	return Arrays.asList(m_attributes);
+	return Collections.unmodifiableList(Arrays.asList(m_attributes));
     }
 
     /**
@@ -73,7 +71,8 @@ abstract class AttributesContainer implements Cloneable, Iterable<Attribute> {
      * @return the wanted attribute
      */
     public Attribute getAttribute(int typeId) {
-	return (0 <= typeId && typeId < m_attributes.length) ? m_attributes[typeId] : null;
+	Attribute[] attributes = m_attributes;
+	return (0 <= typeId && typeId < attributes.length) ? attributes[typeId] : null;
     }
 
     /*
@@ -102,9 +101,11 @@ abstract class AttributesContainer implements Cloneable, Iterable<Attribute> {
 	}
 
 	AttributesContainer other = (AttributesContainer) o;
+	Attribute[] thisAttributes = m_attributes;
+	Attribute[] otherAttributes = other.m_attributes;
 	for (int i = 0; i < Attribute.TYPES_COUNT; i++) {
-	    Attribute thisAttr = m_attributes[i];
-	    Attribute otherAttr = other.m_attributes[i];
+	    Attribute thisAttr = thisAttributes[i];
+	    Attribute otherAttr = otherAttributes[i];
 	    if (!Objects.equals(thisAttr, otherAttr)) {
 		return false;
 	    }
@@ -134,21 +135,6 @@ abstract class AttributesContainer implements Cloneable, Iterable<Attribute> {
     @Override
     public String toString() {
 	return Utility.toString(m_attributes);
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see breakingtherules.firewall.AttributesContainer#clone()
-     */
-    @Override
-    public Object clone() {
-	try {
-	    return super.clone();
-	} catch (CloneNotSupportedException e) {
-	    // this shouldn't happen, since we are Cloneable
-	    throw new InternalError(e);
-	}
     }
 
     /**

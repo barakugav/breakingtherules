@@ -21,7 +21,7 @@ public class SourceTest {
 	new Source(ip);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expected = NullPointerException.class)
     public void constructorTestNullIP() {
 	System.out.println("# SourceTest constructorTestNullIP");
 	IP ip = null;
@@ -35,7 +35,7 @@ public class SourceTest {
 	new Source(ip);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expected = NullPointerException.class)
     public void constructorStringTestNullIP() {
 	System.out.println("# SourceTest constructorStringTestNullIP");
 	String ip = null;
@@ -116,16 +116,6 @@ public class SourceTest {
 	IP ip = FirewallTestsUtility.getRandomIP();
 	Source des = new Source(ip);
 	assertTrue(ip.toString().equals(des.toString()));
-    }
-
-    @Test
-    public void cloneTest() {
-	System.out.println("# SourceTest cloneTest");
-	IP ip = FirewallTestsUtility.getRandomIP();
-	Source source = new Source(ip);
-	Source sourceClone = (Source) source.clone();
-	assertFalse(source == sourceClone);
-	assertEquals(source, sourceClone);
     }
 
 }

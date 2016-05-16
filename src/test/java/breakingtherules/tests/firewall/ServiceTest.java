@@ -416,15 +416,4 @@ public class ServiceTest {
 	assertNotEquals(s1, s2);
     }
 
-    @Test
-    public void cloneTest() {
-	System.out.println("# ServiceTest cloneTest");
-	String protocol = "TCP";
-	int port = FirewallTestsUtility.getRandomPort();
-	Service service = new Service(protocol, port);
-	Service serviceClone = (Service) service.clone();
-	assertFalse(service == serviceClone);
-	assertEquals(service, serviceClone);
-    }
-
 }

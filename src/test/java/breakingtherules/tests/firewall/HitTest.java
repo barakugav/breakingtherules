@@ -1,8 +1,8 @@
 package breakingtherules.tests.firewall;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.junit.Test;
@@ -20,7 +20,7 @@ public class HitTest {
 	new Hit(id, attributes);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expected = NullPointerException.class)
     public void constructorTestNullAttributes() {
 	System.out.println("# HitTest constructorTestNullAttributes");
 	int id = FirewallTestsUtility.getRandomID();
@@ -69,19 +69,12 @@ public class HitTest {
 
 	// Sort lists for comparison
 	Attribute.sort(expected);
-	Attribute.sort(actual);
-	assertEquals(expected, actual);
-    }
+	// Clone actual list by creating new list with the elements. This is
+	// needed to be done because the hit.getAttributes() return unmodifiable
+	// list(so sort operation is not supported).
+	Attribute.sort(new ArrayList<>(actual));
 
-    @Test
-    public void cloneTest() {
-	System.out.println("# HitTest cloneTest");
-	int id = FirewallTestsUtility.getRandomID();
-	List<Attribute> attributes = FirewallTestsUtility.getRandomAttributes();
-	Hit hit = new Hit(id, attributes);
-	Hit hitClone = (Hit) hit.clone();
-	assertFalse(hit == hitClone);
-	assertEquals(hit, hitClone);
+	assertEquals(expected, actual);
     }
 
 }

@@ -25,7 +25,7 @@ public class IPv6Test {
 	new IPv6(address);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expected = NullPointerException.class)
     public void constructorTestBasicWillNullAdressTest() {
 	System.out.println("# IPv6Test constructorTestBasicWillNullAdressTest");
 	int[] address = null;
@@ -40,7 +40,7 @@ public class IPv6Test {
 	new IPv6(address, prefixLength);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expected = NullPointerException.class)
     public void constructorTestWithPrefixLengthNullAdress() {
 	System.out.println("# IPv6Test constructorTestWithPrefixLengthNullAdress");
 	int[] address = null;
@@ -357,16 +357,6 @@ public class IPv6Test {
 		FirewallTestsUtility.getRandomPrefixLengthIPv6());
 	IPv4 ip4 = FirewallTestsUtility.getRandomIPv4();
 	assertFalse(ip6.contains(ip4));
-    }
-
-    @Test
-    public void cloneTest() {
-	System.out.println("# IPv6Test cloneTest");
-	int[] address = FirewallTestsUtility.getRandomAddressIPv6();
-	IPv6 ip = new IPv6(address);
-	IPv6 ipClone = (IPv6) ip.clone();
-	assertFalse(ip == ipClone);
-	assertEquals(ip, ipClone);
     }
 
 }

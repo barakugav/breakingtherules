@@ -21,7 +21,7 @@ public class DestinationTest {
 	new Destination(ip);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expected = NullPointerException.class)
     public void constructorTestNullIP() {
 	System.out.println("# DestinationTest constructorTestNullIP");
 	IP ip = null;
@@ -35,7 +35,7 @@ public class DestinationTest {
 	new Destination(ip);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expected = NullPointerException.class)
     public void constructorStringTestNullIP() {
 	System.out.println("# DestinationTest constructorStringTestNullIP");
 	String ip = null;
@@ -117,16 +117,6 @@ public class DestinationTest {
 	s1 = new Destination("2.12.45.7/21");
 	s2 = new Destination("2.13.45.7/21");
 	assertNotEquals(s1, s2);
-    }
-
-    @Test
-    public void cloneTest() {
-	System.out.println("# DestinationTest cloneTest");
-	IP ip = FirewallTestsUtility.getRandomIP();
-	Destination destination = new Destination(ip);
-	Destination destinationClone = (Destination) destination.clone();
-	assertFalse(destination == destinationClone);
-	assertEquals(destination, destinationClone);
     }
 
 }

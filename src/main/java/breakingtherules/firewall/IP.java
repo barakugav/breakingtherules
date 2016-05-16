@@ -10,7 +10,7 @@ import breakingtherules.utilities.Utility;
 /**
  * IP address, can be {@link IPv4} or {@link IPv6}
  */
-public abstract class IP implements Comparable<IP>, Cloneable {
+public abstract class IP implements Comparable<IP> {
 
     /**
      * IP address
@@ -28,29 +28,36 @@ public abstract class IP implements Comparable<IP>, Cloneable {
     private int hash;
 
     /**
+     * String representation of any IP
+     */
+    private static final String ANY = "Any";
+
+    /**
      * Constructor
      * 
      * @param ip
      *            boolean array that represents the bits in the IP
      */
     public IP(boolean[] ip) {
-	if (ip == null) {
-	    throw new IllegalArgumentException("Ip can't be null");
-	} else if (ip.length != getMaxLength()) {
-	    throw new IllegalArgumentException("Unexpected ip length: " + Utility.format(getMaxLength(), ip.length));
+	int maxLength = getMaxLength();
+	if (ip.length != maxLength) {
+	    throw new IllegalArgumentException("Unexpected ip length: " + Utility.format(maxLength, ip.length));
 	}
 
-	m_address = new int[getNumberOfBlocks()];
-	for (int blockNum = 0; blockNum < getNumberOfBlocks(); blockNum++) {
+	final int numberOfBlocks = getNumberOfBlocks();
+	final int blockSize = getBlockSize();
+	int[] address = new int[numberOfBlocks];
+	for (int blockNum = 0; blockNum < numberOfBlocks; blockNum++) {
 	    int blockValue = 0;
-	    for (int bitNum = 0; bitNum < getBlockSize(); bitNum++) {
-		boolean bitValue = ip[blockNum * getBlockSize() + bitNum];
+	    for (int bitNum = 0; bitNum < blockSize; bitNum++) {
+		boolean bitValue = ip[blockNum * blockSize + bitNum];
 		blockValue <<= 1;
 		blockValue += bitValue ? 1 : 0;
 	    }
-	    m_address[blockNum] = blockValue;
+	    address[blockNum] = blockValue;
 	}
-	m_prefixLength = getMaxLength();
+	m_address = address;
+	m_prefixLength = maxLength;
     }
 
     /**
@@ -62,18 +69,18 @@ public abstract class IP implements Comparable<IP>, Cloneable {
      *            length of the constant prefix
      */
     protected IP(int[] address, int prefixLength) {
-	if (address == null) {
-	    throw new IllegalArgumentException("Null arg");
-	} else if (address.length != getNumberOfBlocks()) {
+	final int numberOfBlocks = getNumberOfBlocks();
+	if (address.length != numberOfBlocks) {
 	    throw new IllegalArgumentException(
-		    "Number of IP blocks doesn't match: " + address.length + " (Expected " + getNumberOfBlocks());
+		    "Number of IP blocks doesn't match: " + address.length + " (Expected " + numberOfBlocks);
 	} else if (prefixLength < 0 || prefixLength > getMaxLength()) {
 	    throw new IllegalArgumentException("Const prefix length out of range: " + prefixLength);
 	}
+	int maxBlockValue = getMaxBlockValue();
 	for (int blockValue : address) {
-	    if (blockValue < 0 || blockValue > getMaxBlockValue()) {
+	    if (blockValue < 0 || blockValue > maxBlockValue) {
 		throw new IllegalArgumentException("IP address block isn't in range: " + blockValue
-			+ ". Should be in range [0, " + getMaxBlockValue() + "]");
+			+ ". Should be in range [0, " + maxBlockValue + "]");
 	    }
 	}
 
@@ -91,7 +98,7 @@ public abstract class IP implements Comparable<IP>, Cloneable {
      *            String separator between two blocks in the String IP
      */
     protected IP(String ip) {
-	String expectedSeparator = getStringSeparator();
+	final String expectedSeparator = getStringSeparator();
 	List<Integer> address = new ArrayList<>();
 	int separatorIndex = ip.indexOf(expectedSeparator);
 	try {
@@ -134,21 +141,26 @@ public abstract class IP implements Comparable<IP>, Cloneable {
 	    throw new IllegalArgumentException("Integer parse failed: " + e.getMessage());
 	}
 
-	if (address.size() != getNumberOfBlocks()) {
+	final int numberOfBlocks = getNumberOfBlocks();
+	if (address.size() != numberOfBlocks) {
 	    throw new IllegalArgumentException(
-		    "Number of blocks is " + address.size() + " instead of " + getNumberOfBlocks());
-	} else
+		    "Number of blocks is " + address.size() + " instead of " + numberOfBlocks);
+	} else {
+	    int maxBlockValue = getMaxBlockValue();
 	    for (int blockValue : address) {
-		if (blockValue < 0 || blockValue > getMaxBlockValue())
+		if (blockValue < 0 || blockValue > maxBlockValue) {
 		    throw new IllegalArgumentException("IP address block isn't in range: " + blockValue
-			    + ". Should be in range [0, " + getMaxBlockValue() + "]");
+			    + ". Should be in range [0, " + maxBlockValue + "]");
+		}
 	    }
+	}
 
 	// Copy blocks values to m_address
-	m_address = new int[getNumberOfBlocks()];
+	int[] addressTemp = new int[numberOfBlocks];
 	for (int i = 0; i < address.size(); i++) {
-	    m_address[i] = address.get(i);
+	    addressTemp[i] = address.get(i);
 	}
+	m_address = addressTemp;
 
 	resetSuffix();
     }
@@ -176,6 +188,7 @@ public abstract class IP implements Comparable<IP>, Cloneable {
      * 
      * @return this IP's network size
      */
+    @JsonIgnore
     public int getSubnetBitsNum() {
 	return getMaxLength() - m_prefixLength;
     }
@@ -228,13 +241,9 @@ public abstract class IP implements Comparable<IP>, Cloneable {
 	    return true;
 	} else if (other == null) {
 	    return false;
-	} else if (this instanceof AnyIP) {
-	    return true;
 	} else if (other instanceof AnyIP) {
 	    return false;
-	} else if (this instanceof IPv4 && !(other instanceof IPv4)) {
-	    return false;
-	} else if (this instanceof IPv6 && !(other instanceof IPv6)) {
+	} else if (!getClass().equals(other.getClass())) {
 	    return false;
 	}
 
@@ -242,8 +251,9 @@ public abstract class IP implements Comparable<IP>, Cloneable {
 	    return false;
 	}
 
+	final int blockSize = getBlockSize();
 	int blockNum = 0;
-	for (blockNum = 0; blockNum < m_prefixLength / getBlockSize(); blockNum++) {
+	for (blockNum = 0; blockNum < m_prefixLength / blockSize; blockNum++) {
 	    if (m_address[blockNum] != other.m_address[blockNum]) {
 		return false;
 	    }
@@ -253,7 +263,7 @@ public abstract class IP implements Comparable<IP>, Cloneable {
 	    return true;
 	}
 
-	int bitsLeft = getBlockSize() - (m_prefixLength % getBlockSize());
+	int bitsLeft = blockSize - (m_prefixLength % blockSize);
 	return (m_address[blockNum] ^ other.m_address[blockNum]) < (1L << bitsLeft);
     }
 
@@ -265,16 +275,22 @@ public abstract class IP implements Comparable<IP>, Cloneable {
     @Override
     public String toString() {
 	if (m_prefixLength == 0) {
-	    return "Any";
+	    return ANY;
 	}
-	String st = Integer.toString(m_address[0]);
+
+	int[] address = m_address;
+	final String separator = getStringSeparator();
+	StringBuilder builder = new StringBuilder(Integer.toString(address[0]));
 	for (int i = 1; i < m_address.length; i++) {
-	    st += getStringSeparator() + m_address[i];
+	    builder.append(separator);
+	    builder.append(address[i]);
 	}
-	if (m_prefixLength != getMaxLength()) {
-	    st += "/" + m_prefixLength;
+	int prefix = m_prefixLength;
+	if (prefix != getMaxLength()) {
+	    builder.append("/");
+	    builder.append(prefix);
 	}
-	return st;
+	return builder.toString();
     }
 
     /*
@@ -285,14 +301,16 @@ public abstract class IP implements Comparable<IP>, Cloneable {
     @Override
     public int hashCode() {
 	// Look for cached hash first
-	if (hash != 0 || m_address.length == 0)
-	    return hash;
+	int h = hash;
+	int[] address = m_address;
+	if (h != 0 || address.length == 0)
+	    return h;
 
-	hash = 1;
-	for (int i = 0; i < m_address.length; i++) {
-	    hash = hash * 31 + m_address[i];
+	h = 1;
+	for (int i = 0; i < address.length; i++) {
+	    h = h * 31 + address[i];
 	}
-	return hash;
+	return hash = h;
     }
 
     /*
@@ -311,32 +329,19 @@ public abstract class IP implements Comparable<IP>, Cloneable {
 	}
 
 	IP other = (IP) o;
+	int[] thisAddress = m_address;
+	int[] otherAddress = other.m_address;
 	if (m_prefixLength != other.m_prefixLength) {
 	    return false;
-	} else if (m_address.length != other.m_address.length) {
+	} else if (thisAddress.length != otherAddress.length) {
 	    return false;
 	}
-	for (int i = 0; i < m_address.length; i++) {
-	    if (m_address[i] != other.m_address[i]) {
+	for (int i = 0; i < thisAddress.length; i++) {
+	    if (thisAddress[i] != otherAddress[i]) {
 		return false;
 	    }
 	}
 	return true;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see java.lang.Object#clone()
-     */
-    @Override
-    public Object clone() {
-	try {
-	    return super.clone();
-	} catch (CloneNotSupportedException e) {
-	    // this shouldn't happen, since we are Cloneable
-	    throw new InternalError(e);
-	}
     }
 
     /**
@@ -349,10 +354,6 @@ public abstract class IP implements Comparable<IP>, Cloneable {
      * @return IP object based on the String IP
      */
     public static IP fromString(String ip) {
-	if (ip == null) {
-	    throw new IllegalArgumentException("Null ip");
-	}
-
 	if (ip.equals("Any")) {
 	    return getAnyIP();
 	}
@@ -381,9 +382,6 @@ public abstract class IP implements Comparable<IP>, Cloneable {
      * @return IP object based on the boolean bits
      */
     public static IP fromBooleans(boolean[] ip, Class<?> clazz) {
-	if (ip == null || clazz == null) {
-	    throw new IllegalArgumentException("Arguments can't be null!");
-	}
 	if (clazz.equals(IPv4.class)) {
 	    return new IPv4(ip);
 	} else if (clazz.equals(IPv6.class)) {
@@ -413,13 +411,15 @@ public abstract class IP implements Comparable<IP>, Cloneable {
      *            the bit's number
      * @return value of the requested bit
      */
+    @JsonIgnore
     public boolean getBit(int bitNumber) {
 	if (bitNumber < 0 || bitNumber > getMaxLength()) {
 	    throw new IllegalArgumentException("Bit number should be in range [0, " + getMaxLength() + "]");
 	}
-	int blockNum = bitNumber == 0 ? 0 : (bitNumber - 1) / getBlockSize();
-	int bitNumInBlock = bitNumber - blockNum * getBlockSize();
-	return (m_address[blockNum] & (1 << (getBlockSize() - bitNumInBlock))) != 0;
+	final int blockSize = getBlockSize();
+	int blockNum = bitNumber == 0 ? 0 : (bitNumber - 1) / blockSize;
+	int bitNumInBlock = bitNumber - blockNum * blockSize;
+	return (m_address[blockNum] & (1 << (blockSize - bitNumInBlock))) != 0;
     }
 
     /**
@@ -449,8 +449,10 @@ public abstract class IP implements Comparable<IP>, Cloneable {
 	if (thisIpType != otherIpType) {
 	    return thisIpType - otherIpType;
 	}
-	for (int i = 0; i < m_address.length; i++) {
-	    int diff = m_address[i] - other.m_address[i];
+	int[] thisAddress = m_address;
+	int[] otherAddress = other.m_address;
+	for (int i = 0; i < thisAddress.length; i++) {
+	    int diff = thisAddress[i] - otherAddress[i];
 	    if (diff != 0) {
 		return diff;
 	    }
@@ -478,7 +480,7 @@ public abstract class IP implements Comparable<IP>, Cloneable {
 	    return true; // Both are biggest sub network
 
 	int[] aAddress = a.m_address, bAddress = b.m_address;
-	int blockSize = a.getBlockSize();
+	final int blockSize = a.getBlockSize();
 	int lastEqualBlock = (aPrefix - 1) / blockSize;
 	for (int blockNum = 0; blockNum < lastEqualBlock; blockNum++)
 	    if (aAddress[blockNum] != bAddress[blockNum])
@@ -488,29 +490,11 @@ public abstract class IP implements Comparable<IP>, Cloneable {
     }
 
     /**
-     * Get the common parent of two IPs objects (direct parent) or null if not
-     * brothers
-     * 
-     * @param a
-     *            first IP
-     * @param b
-     *            second IP
-     * @return the parent if a and b are brothers, else null
-     */
-    public static IP getCommonParent(IP a, IP b) {
-	IP parent = a.getParent();
-	if (parent.equals(b.getParent())) {
-	    return parent;
-	} else {
-	    return null;
-	}
-    }
-
-    /**
      * Get IP that represents 'Any' IP (contains) all others
      * 
      * @return instance of 'Any' IP
      */
+    @JsonIgnore
     public static IP getAnyIP() {
 	return AnyIP.instance;
     }
@@ -528,7 +512,8 @@ public abstract class IP implements Comparable<IP>, Cloneable {
 
 	// Set helper variable
 	int[][] childrenAddresses = new int[][] { m_address.clone(), m_address.clone() };
-	int helper = 1 << (getBlockSize() - m_prefixLength % getBlockSize()) - 1;
+	final int blockSize = getBlockSize();
+	int helper = 1 << (blockSize - m_prefixLength % blockSize) - 1;
 	int blockNum = m_prefixLength * getNumberOfBlocks() / getMaxLength();
 
 	childrenAddresses[0][blockNum] &= ~helper;
@@ -550,6 +535,7 @@ public abstract class IP implements Comparable<IP>, Cloneable {
      * 
      * @return size of block in the IP
      */
+    @JsonIgnore
     protected abstract int getBlockSize();
 
     /**
@@ -564,9 +550,12 @@ public abstract class IP implements Comparable<IP>, Cloneable {
      * Set all bits after const prefix to zeros
      */
     private void resetSuffix() {
+	final int blockSize = getBlockSize();
+	final int numberOfBlocks = getNumberOfBlocks();
+	final int maxLength = getMaxLength();
 	for (int bit = getMaxLength() - 1; bit >= m_prefixLength; bit--) {
-	    int andHelper = ~(1 << (getBlockSize() - (bit % getBlockSize())) - 1);
-	    int blockNum = bit * getNumberOfBlocks() / getMaxLength();
+	    int andHelper = ~(1 << (blockSize - (bit % blockSize)) - 1);
+	    int blockNum = bit * numberOfBlocks / maxLength;
 	    m_address[blockNum] &= andHelper;
 	}
     }
@@ -577,8 +566,8 @@ public abstract class IP implements Comparable<IP>, Cloneable {
      * @return max value of a block
      */
     @JsonIgnore
-    private long getMaxBlockValue() {
-	return (1L << getBlockSize()) - 1;
+    private int getMaxBlockValue() {
+	return (1 << getBlockSize()) - 1;
     }
 
     /**
@@ -619,6 +608,11 @@ public abstract class IP implements Comparable<IP>, Cloneable {
 	}
 
 	@Override
+	public boolean contains(IP other) {
+	    return true;
+	}
+
+	@Override
 	public int getNumberOfBlocks() {
 	    return 0;
 	}
@@ -634,8 +628,18 @@ public abstract class IP implements Comparable<IP>, Cloneable {
 	}
 
 	@Override
-	public AnyIP clone() {
-	    return this;
+	public boolean equals(Object o) {
+	    return o instanceof AnyIP;
+	}
+
+	@Override
+	public int hashCode() {
+	    return 0;
+	}
+
+	@Override
+	public String toString() {
+	    return ANY;
 	}
 
     }

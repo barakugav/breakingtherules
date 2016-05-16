@@ -9,7 +9,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 /**
  * Attribute of a hit
  */
-public interface Attribute extends Cloneable {
+public interface Attribute {
 
     /**
      * Checks if this attribute contain another
@@ -45,13 +45,6 @@ public interface Attribute extends Cloneable {
     @Override
     @JsonProperty("str")
     public String toString();
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see java.lang.Object#clone()
-     */
-    public Object clone();
 
     public static final int TYPES_COUNT = 3;
     public static final int NULL_TYPE_ID = -1;

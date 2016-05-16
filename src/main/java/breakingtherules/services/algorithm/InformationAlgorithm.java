@@ -47,7 +47,7 @@ public class InformationAlgorithm implements SuggestionsAlgorithm {
     /**
      * Used when the attribute type if not Source or Destination
      */
-    private SimpleAlgorithm m_simpleAlgorithm;
+    private final SimpleAlgorithm m_simpleAlgorithm;
 
     /**
      * Number of suggestions that returned in each suggestions request
@@ -65,7 +65,10 @@ public class InformationAlgorithm implements SuggestionsAlgorithm {
      */
     private static final double NEXT_LAYER_FACTOR = 0.75;
 
-    private static final Comparator<Suggestion> SUGGESTION_COMPARATOR = new Comparator<Suggestion>() {
+    /**
+     * Comparator of suggestions, comparing them by their sizes.
+     */
+    private static final Comparator<Suggestion> SUGGESTION_SIZE_COMPARATOR = new Comparator<Suggestion>() {
 
 	@Override
 	public int compare(Suggestion s1, Suggestion s2) {
@@ -73,6 +76,9 @@ public class InformationAlgorithm implements SuggestionsAlgorithm {
 	}
     };
 
+    /**
+     * Comparator of IPNodes, comparing them by their IPs.
+     */
     private static final Comparator<IPNode> IP_COMPARATOR = new Comparator<IPNode>() {
 
 	@Override
@@ -85,22 +91,53 @@ public class InformationAlgorithm implements SuggestionsAlgorithm {
 	configCheck();
     }
 
+    /**
+     * Construct new Information algorithm with default rule weight
+     */
     public InformationAlgorithm() {
-	m_ruleWeight = DEFAULT_RULE_WIEGHT;
-	m_simpleAlgorithm = new SimpleAlgorithm();
+	this(DEFAULT_RULE_WIEGHT);
     }
 
+    /**
+     * Construct new Information algorithm with specified rule weight
+     * 
+     * @param ruleWeight
+     *            weight of each rule used by this algorithm
+     * @throws IllegalArgumentException
+     *             if ruleWeight is NaN or negative
+     */
+    public InformationAlgorithm(double ruleWeight) {
+	m_simpleAlgorithm = new SimpleAlgorithm();
+	setRuleWeight(ruleWeight);
+    }
+
+    /**
+     * Set the rule weight of this algorithm to new one
+     * 
+     * @param weight
+     *            new rule weight value
+     * @throws IllegalArgumentException
+     *             if weight is NaN or negative
+     */
     public void setRuleWeight(double weight) {
-	System.out.println("New rule weight");
+	if (Double.isNaN(weight))
+	    throw new IllegalArgumentException("Rule weight can't be NaN");
+	if (weight < 0)
+	    throw new IllegalArgumentException("Rule weight can't be negative: " + weight);
 	m_ruleWeight = weight;
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * breakingtherules.services.algorithm.SuggestionsAlgorithm#getSuggestions(
+     * java.lang.Iterable, java.lang.String)
+     */
     @Override
     public List<Suggestion> getSuggestions(Iterable<Hit> hits, String attType) {
 	hits = Utility.ensureUniqueness(hits);
 	int attTypeId = Attribute.typeStrToTypeId(attType);
-
-	checkHits(hits, attTypeId);
 
 	switch (attTypeId) {
 	case Attribute.DESTINATION_TYPE_ID:
@@ -112,8 +149,19 @@ public class InformationAlgorithm implements SuggestionsAlgorithm {
 	}
     }
 
+    /**
+     * Get suggestions for hits about destination attribute
+     * 
+     * @param hits
+     *            iterable object of hits - the input for the suggestions
+     * @return list of destination suggestion
+     * @throws NullPointerException
+     *             if hits are null, or one of the hits are null
+     * @throws IllegalArgumentException
+     *             if one of the hits doesn't contains destination attribute
+     */
     private List<Suggestion> getSuggestionsDestination(Iterable<Hit> hits) {
-	List<IPNode> nodes = asIPNodeList(hits, Attribute.DESTINATION_TYPE_ID);
+	List<IPNode> nodes = toIPNodeList(hits, Attribute.DESTINATION_TYPE_ID);
 	List<SubnetSuggestion> subnets = getIPSuggestions(nodes);
 	List<Suggestion> suggestions = new ArrayList<>(subnets.size());
 	for (SubnetSuggestion subnet : subnets) {
@@ -121,14 +169,25 @@ public class InformationAlgorithm implements SuggestionsAlgorithm {
 	}
 
 	// Sort suggestions from small to big, so reverse list after sort
-	suggestions.sort(SUGGESTION_COMPARATOR);
+	suggestions.sort(SUGGESTION_SIZE_COMPARATOR);
 	Collections.reverse(suggestions);
 
 	return Utility.subList(suggestions, 0, NUMBER_OF_SUGGESTIONS);
     }
 
+    /**
+     * Get suggestions for hits about source attribute
+     * 
+     * @param hits
+     *            iterable object of hits - the input for the suggestions
+     * @return list of source suggestion
+     * @throws NullPointerException
+     *             if hits are null, or one of the hits are null
+     * @throws IllegalArgumentException
+     *             if one of the hits doesn't contains the source attribute
+     */
     private List<Suggestion> getSuggestionsSource(Iterable<Hit> hits) {
-	List<IPNode> nodes = asIPNodeList(hits, Attribute.SOURCE_TYPE_ID);
+	List<IPNode> nodes = toIPNodeList(hits, Attribute.SOURCE_TYPE_ID);
 	List<SubnetSuggestion> subnets = getIPSuggestions(nodes);
 	List<Suggestion> suggestions = new ArrayList<>();
 	for (SubnetSuggestion subnet : subnets) {
@@ -136,12 +195,19 @@ public class InformationAlgorithm implements SuggestionsAlgorithm {
 	}
 
 	// Sort suggestions from small to big, so reverse list after sort
-	suggestions.sort(SUGGESTION_COMPARATOR);
+	suggestions.sort(SUGGESTION_SIZE_COMPARATOR);
 	Collections.reverse(suggestions);
 
 	return Utility.subList(suggestions, 0, NUMBER_OF_SUGGESTIONS);
     }
 
+    /**
+     * Get suggestions for nodes about their IPs
+     * 
+     * @param nodes
+     *            list of nodes - input for the suggestion
+     * @return list of IP suggestion
+     */
     private List<SubnetSuggestion> getIPSuggestions(List<IPNode> nodes) {
 	if (nodes == null) {
 	    throw new IllegalArgumentException("Nodes list can't be null");
@@ -195,8 +261,12 @@ public class InformationAlgorithm implements SuggestionsAlgorithm {
 	//
 	// # length - bound for index
 	//
+	// # ruleWeight - weight the algorithm will give to each created rule.
+	// If this value is high, less rules will be created.
+	//
 	int size, length, index;
 	final int sizeTotal;
+	final double ruleWeight = m_ruleWeight;
 
 	// Sort the IPs, ensuring the assumption that if for a node there is a
 	// brother, it will be next to it. This assumption will stay for next
@@ -238,7 +308,7 @@ public class InformationAlgorithm implements SuggestionsAlgorithm {
 
 		    // union = size * (log(subnetwork size) +
 		    // log(1/probability)) + ruleWeight
-		    union = size * (ipParentA.getSubnetBitsNum() + Utility.log2(1 / probability)) + m_ruleWeight;
+		    union = size * (ipParentA.getSubnetBitsNum() + Utility.log2(1 / probability)) + ruleWeight;
 
 		    // separated = (nodeA optimal) + (nodeB optimal)
 		    separated = nodeA.compressSize + nodeB.compressSize;
@@ -257,7 +327,7 @@ public class InformationAlgorithm implements SuggestionsAlgorithm {
 			parent.compressSize = separated;
 
 			// union the two subnetworks from both child nodes
-			parent.bestSubnets = nodeA.bestSubnets.unionTo(nodeB.bestSubnets);
+			parent.bestSubnets = nodeA.bestSubnets.transferElementsFrom(nodeB.bestSubnets);
 		    }
 
 		    // Used the current node and next node, increase index by 2
@@ -296,17 +366,34 @@ public class InformationAlgorithm implements SuggestionsAlgorithm {
 
 	// list size is 1, the only element is the parent node of all others
 	IPNode root = currentLayer.get(0);
-	return root.bestSubnets.toList();
+	return root.bestSubnets.toArrayList();
     }
 
-    private List<IPNode> asIPNodeList(Iterable<Hit> list, int attTypeId) {
+    /**
+     * Create list of IPNodes from iterable of hits
+     * 
+     * @param hits
+     *            iterable object of hits
+     * @param ipAttTypeId
+     *            id of the IP attribute
+     * @return list of IPNodes constructed from the hits
+     * @throws NullPointerException
+     *             if hits are null, or one of the hits are null
+     * @throws IllegalArgumentException
+     *             if one of the hits doesn't contains the desire attribute
+     */
+    private List<IPNode> toIPNodeList(Iterable<Hit> hits, int ipAttTypeId) {
 	List<IPNode> allNodes = new ArrayList<>();
 
-	for (Iterator<Hit> it = list.iterator(); it.hasNext();) {
+	for (Iterator<Hit> it = hits.iterator(); it.hasNext();) {
 	    Hit hit = it.next();
 	    IPNode ipNode = new IPNode();
+	    IPAttribute att = (IPAttribute) hit.getAttribute(ipAttTypeId);
+	    if (att == null) {
+		throw new IllegalArgumentException("One of the hits doesn't have the desire attribute");
+	    }
+	    ipNode.ip = att.getIp();
 	    ipNode.compressSize = m_ruleWeight;
-	    ipNode.ip = ((IPAttribute) hit.getAttribute(attTypeId)).getIp();
 	    ipNode.bestSubnets = new UnionList<>(ipNode.toSuggestion());
 	    ipNode.size = 1;
 	    allNodes.add(ipNode);
@@ -327,32 +414,42 @@ public class InformationAlgorithm implements SuggestionsAlgorithm {
 	return uniqueNodes;
     }
 
-    private static void checkHits(Iterable<Hit> hits, int attId) {
-	if (hits == null) {
-	    throw new IllegalArgumentException("Hits list can't be null");
-	}
-
-	for (Hit hit : hits) {
-	    if (hit == null) {
-		throw new IllegalArgumentException("All hits shouldn't be null!");
-	    }
-	    Attribute att = hit.getAttribute(attId);
-	    if (att == null) {
-		throw new IllegalArgumentException("One of the hits doesn't have the desire attribute");
-	    }
-	}
-    }
-
+    /**
+     * Configuration check. Used to check the static final fields of this
+     * algorithm.
+     * 
+     * @throws InternalError
+     *             if one of the fiels is not legal
+     */
     @SuppressWarnings("unused")
     private static void configCheck() {
+	if (Double.isNaN(DEFAULT_RULE_WIEGHT)) {
+	    throw new InternalError("DEFAULT_RULE_WEIGHT is Nan");
+	}
 	if (!(0 < DEFAULT_RULE_WIEGHT)) {
-	    throw new InternalError("DEFAULT_RULE_WIEGHT should be > 0");
+	    throw new InternalError("DEFAULT_RULE_WIEGHT(" + DEFAULT_RULE_WIEGHT + ") should be > 0");
 	}
 	if (!(0 < NEXT_LAYER_FACTOR && NEXT_LAYER_FACTOR < 1)) {
-	    throw new InternalError("NEXT_LAYER_FACTOR should be > 0, < 1");
+	    throw new InternalError("NEXT_LAYER_FACTOR(" + NEXT_LAYER_FACTOR + ") should be > 0, < 1");
 	}
     }
 
+    /**
+     * The IPNode class is node in the Information IPs tree.
+     * <p>
+     * The node contains the following fields:
+     * <ul>
+     * <li>ip: IP of the node (if the node is leaf in the tree) or IP of the
+     * subnetwork of the node (if the node is a inner node in the tree).</li>
+     * <li>size: number of different hits under the ip subnetwork (exactly
+     * equals hits count as one, but different hits, even if they have the same
+     * IP, count as two).</li>
+     * <li>compressSize: value of compression size by the InformationAlgorithm.
+     * If this value is high, the node is a strong node.</li>
+     * <li>bestSubnets: list of best subnetworks that contained in the IP
+     * subnetwork of the node.</li>
+     * </ul>
+     */
     private static class IPNode {
 
 	IP ip;

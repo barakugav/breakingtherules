@@ -67,13 +67,13 @@ public class IPTest {
 	advanceAssertEquals(address, ip.getAddress());
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expected = NullPointerException.class)
     public void fromBooleansTestNullIp() {
 	System.out.println("# IPTest fromBooleansTestNullIp");
 	IP.fromBooleans(null, IPv4.class);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expected = NullPointerException.class)
     public void fromBooleansTestNullClass() {
 	System.out.println("# IPTest fromBooleansTestNullClass");
 	boolean[] ip = new boolean[] {};
@@ -101,7 +101,7 @@ public class IPTest {
 	assertTrue(ip instanceof IPv6);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expected = NullPointerException.class)
     public void fromStringTestNull() {
 	IP.fromString(null);
     }

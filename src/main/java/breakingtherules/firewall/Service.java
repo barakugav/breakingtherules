@@ -62,6 +62,8 @@ public class Service implements Attribute {
      */
     private static final Map<String, Integer> PROTOCOL_CODES;
 
+    private static final String ANY = "Any";
+
     static {
 	ANY_SERVICE = new Service(ANY_PROTOCOL, MIN_PORT, MAX_PORT);
 	PROTOCOL_NAMES = new String[256];
@@ -303,7 +305,7 @@ public class Service implements Attribute {
 	}
 
 	// If Any Service
-	if (service.equals("Any") || service.equals("Any Any")) {
+	if (service.equals(ANY) || service.equals("Any Any")) {
 	    m_protocolCode = ANY_PROTOCOL;
 	    m_portRangeStart = MIN_PORT;
 	    m_portRangeEnd = MAX_PORT;
@@ -311,10 +313,12 @@ public class Service implements Attribute {
 	}
 
 	// If Any port, specific protocol
-	if (service.length() > "Any".length() && service.substring(0, "Any".length()).equals("Any")) {
+	if (service.length() > ANY.length() && service.substring(0, ANY.length()).equals(ANY)) {
 	    m_portRangeStart = MIN_PORT;
 	    m_portRangeEnd = MAX_PORT;
-	    String protString = service.substring("Any ".length());
+	    String protString = service.substring(ANY.length() + 1); // +1 for
+								     // the
+								     // space
 	    if (protString.matches("[a-zA-Z]+")) {
 		m_protocolCode = protocolCode(protString);
 		return;
@@ -338,7 +342,7 @@ public class Service implements Attribute {
 	case 1:
 	    // only one port number
 	    String portStr = service.substring(separatorIndex + 1);
-	    if (portStr.equals("Any")) {
+	    if (portStr.equals(ANY)) {
 		m_portRangeStart = MIN_PORT;
 		m_portRangeEnd = MAX_PORT;
 	    } else {
@@ -352,7 +356,7 @@ public class Service implements Attribute {
 	case 2:
 	    // start port
 	    String portRangeStartStr = service.substring(separatorIndex + 1, portSeparatorIndex);
-	    if (portRangeStartStr.equals("Any")) {
+	    if (portRangeStartStr.equals(ANY)) {
 		m_portRangeStart = MIN_PORT;
 	    } else {
 		int port = Integer.parseInt(portRangeStartStr);
@@ -363,7 +367,7 @@ public class Service implements Attribute {
 
 	    // end port
 	    String portRangeEndStr = service.substring(portSeparatorIndex + 1);
-	    if (portRangeEndStr.equals("Any")) {
+	    if (portRangeEndStr.equals(ANY)) {
 		m_portRangeEnd = MAX_PORT;
 	    } else {
 		int port = Integer.parseInt(portRangeEndStr);
@@ -385,7 +389,7 @@ public class Service implements Attribute {
 	    throw new IllegalArgumentException("No protocol");
 	}
 
-	if (service.equals("Any") || service.equals("Port") || service.equals("Ports"))
+	if (service.equals(ANY) || service.equals("Port") || service.equals("Ports"))
 	    m_protocolCode = ANY_PROTOCOL;
 	else
 	    m_protocolCode = protocolCode(service);
@@ -463,12 +467,7 @@ public class Service implements Attribute {
      *         range comparing
      */
     private boolean containsPort(Service other) {
-	if (m_portRangeStart > other.m_portRangeStart) {
-	    return false;
-	} else if (m_portRangeEnd < other.m_portRangeEnd) {
-	    return false;
-	}
-	return true;
+	return m_portRangeStart <= other.m_portRangeStart && other.m_portRangeEnd <= m_portRangeEnd;
     }
 
     /*
@@ -497,14 +496,8 @@ public class Service implements Attribute {
 	}
 
 	Service other = (Service) o;
-	if (m_portRangeStart != other.m_portRangeStart) {
-	    return false;
-	} else if (m_portRangeEnd != other.m_portRangeEnd) {
-	    return false;
-	} else if (m_protocolCode != other.m_protocolCode) {
-	    return false;
-	}
-	return true;
+	return m_portRangeStart == other.m_portRangeStart && m_portRangeEnd == other.m_portRangeEnd
+		&& m_protocolCode == other.m_protocolCode;
     }
 
     /*
@@ -516,12 +509,12 @@ public class Service implements Attribute {
     public String toString() {
 	if (m_protocolCode == ANY_PROTOCOL && m_portRangeStart == MIN_PORT && m_portRangeEnd == MAX_PORT) {
 	    // All ports, all protocols
-	    return "Any";
+	    return ANY;
 	}
 
 	if (m_portRangeStart == MIN_PORT && m_portRangeEnd == MAX_PORT) {
 	    // All ports, one protocol
-	    return "Any " + protocolName(m_protocolCode);
+	    return ANY + ' ' + protocolName(m_protocolCode);
 	}
 
 	if (m_protocolCode == ANY_PROTOCOL) {
@@ -529,30 +522,15 @@ public class Service implements Attribute {
 	    if (m_portRangeStart == m_portRangeEnd) {
 		return "Port " + Integer.toString(m_portRangeStart);
 	    } else {
-		return "Ports " + m_portRangeStart + "-" + m_portRangeEnd;
+		return "Ports " + m_portRangeStart + '-' + m_portRangeEnd;
 	    }
 	}
 
 	// Some ports, one protocol
 	if (m_portRangeStart == m_portRangeEnd) {
-	    return protocolName(m_protocolCode) + " " + Integer.toString(m_portRangeStart);
+	    return protocolName(m_protocolCode) + ' ' + Integer.toString(m_portRangeStart);
 	} else {
-	    return protocolName(m_protocolCode) + " " + m_portRangeStart + "-" + m_portRangeEnd;
-	}
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see java.lang.Object#clone()
-     */
-    @Override
-    public Object clone() {
-	try {
-	    return super.clone();
-	} catch (CloneNotSupportedException e) {
-	    // this shouldn't happen, since we are Cloneable
-	    throw new InternalError(e);
+	    return protocolName(m_protocolCode) + ' ' + m_portRangeStart + '-' + m_portRangeEnd;
 	}
     }
 
@@ -599,7 +577,7 @@ public class Service implements Attribute {
      */
     public static String protocolName(int protocolCode) {
 	if (protocolCode == ANY_PROTOCOL)
-	    return "Any";
+	    return ANY;
 	if (protocolCode < 0 || protocolCode > 255)
 	    throw new IllegalArgumentException("Protocol code should be in range [0, 255]: " + protocolCode);
 	return PROTOCOL_NAMES[protocolCode];

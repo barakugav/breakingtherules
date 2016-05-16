@@ -1,5 +1,7 @@
 package breakingtherules.firewall;
 
+import java.util.Objects;
+
 /**
  * The IPAttribute class represents an attribute with an IP
  */
@@ -17,10 +19,7 @@ public abstract class IPAttribute implements Attribute, Comparable<IPAttribute> 
      *            the IP of this attribute
      */
     public IPAttribute(IP ip) {
-	if (ip == null) {
-	    throw new IllegalArgumentException("Tried to create source with null ip arg");
-	}
-	m_ip = ip;
+	m_ip = Objects.requireNonNull(ip);
     }
 
     /*
@@ -93,21 +92,6 @@ public abstract class IPAttribute implements Attribute, Comparable<IPAttribute> 
 	return m_ip.compareTo(o.m_ip);
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see java.lang.Object#clone()
-     */
-    @Override
-    public Object clone() {
-	try {
-	    return super.clone();
-	} catch (CloneNotSupportedException e) {
-	    // this shouldn't happen, since we are Cloneable
-	    throw new InternalError(e);
-	}
-    }
-
     /**
      * Get the IP of this attribute
      * 
@@ -116,7 +100,7 @@ public abstract class IPAttribute implements Attribute, Comparable<IPAttribute> 
     public IP getIp() {
 	return m_ip;
     }
-    
+
     public static IPAttribute mutate(IPAttribute attribute, IP ip) {
 	return attribute.mutate(ip);
     }
@@ -128,7 +112,5 @@ public abstract class IPAttribute implements Attribute, Comparable<IPAttribute> 
      *            new IP
      */
     protected abstract IPAttribute mutate(IP ip);
-    
-    
 
 }
