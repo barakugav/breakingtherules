@@ -13,6 +13,9 @@ import breakingtherules.dao.HitsDao;
  */
 public class Filter extends AttributesContainer {
 
+    /**
+     * Filter that allow any hit.
+     */
     public static final Filter ANY_FILTER;
 
     static {
@@ -24,7 +27,7 @@ public class Filter extends AttributesContainer {
     }
 
     /**
-     * Constructor
+     * Construct new filter from list of attributes
      * 
      * Creates filter based on given attributes
      * 
@@ -35,6 +38,12 @@ public class Filter extends AttributesContainer {
 	super(attributes);
     }
 
+    /**
+     * Construct new filter from other attribute container
+     * 
+     * @param c
+     *            other container
+     */
     public Filter(final AttributesContainer c) {
 	super(c);
     }

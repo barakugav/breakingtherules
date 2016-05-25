@@ -24,7 +24,6 @@ import breakingtherules.firewall.Attribute;
 import breakingtherules.firewall.Hit;
 import breakingtherules.firewall.IP;
 import breakingtherules.firewall.IPAttribute;
-import breakingtherules.utilities.ArraysUtilities;
 import breakingtherules.utilities.LinesIterator;
 import breakingtherules.utilities.TextPrinter;
 import breakingtherules.utilities.Utility;
@@ -722,7 +721,7 @@ public class CSVScrambler implements Runnable {
     private static Hit mutateHit(final Hit hit, final int ipAttId, Node tree) {
 	IP ip = ((IPAttribute) hit.getAttribute(ipAttId)).getIp();
 
-	final List<Boolean> prefix = new ArrayList<>(32);
+	final List<Boolean> prefix = new ArrayList<>(ip.getMaxLength());
 	while (!tree.ip.equals(ip)) {
 	    if (tree.left != null && tree.left.ip.contains(ip)) {
 		prefix.add(false);
@@ -732,7 +731,7 @@ public class CSVScrambler implements Runnable {
 		tree = tree.right;
 	    }
 	}
-	return mutateHit(hit, ipAttId, ArraysUtilities.toArrayBoolean(prefix));
+	return mutateHit(hit, ipAttId, prefix);
     }
 
     /**
@@ -746,11 +745,11 @@ public class CSVScrambler implements Runnable {
      *            boolean array of right and left decisions until the hit's node
      * @return new hit with new IP
      */
-    private static Hit mutateHit(final Hit hit, final int ipAttId, final boolean[] prefix) {
+    private static Hit mutateHit(final Hit hit, final int ipAttId, final List<Boolean> prefix) {
 	final IPAttribute attribute = (IPAttribute) hit.getAttribute(ipAttId);
 	final IP currentIp = attribute.getIp();
 	final IP newIp = IP.fromBooleans(prefix, currentIp.getClass());
-	return Hit.mutate(hit, attribute.createMutation(newIp));
+	return hit.createMutation(attribute.createMutation(newIp));
     }
 
     /**
@@ -776,6 +775,9 @@ public class CSVScrambler implements Runnable {
 
 	/**
 	 * Construct new Node
+	 * 
+	 * @param ip
+	 *            ip of the node
 	 */
 	public Node(final IP ip) {
 	    this.ip = ip;

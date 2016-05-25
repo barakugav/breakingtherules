@@ -1,7 +1,5 @@
 package breakingtherules.tests.utilities;
 
-import static breakingtherules.tests.JUnitUtilities.deepAssertEquals;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -14,9 +12,10 @@ import java.util.Random;
 
 import org.junit.Test;
 
+import breakingtherules.tests.TestBase;
 import breakingtherules.utilities.Utility;
 
-public class UtilityTest {
+public class UtilityTest extends TestBase {
 
     private static final Random rand = new Random();
 
@@ -25,7 +24,7 @@ public class UtilityTest {
 	System.out.println("# UtilityTest putTest");
 	List<Integer> list = getEmptyList();
 	int index = 5;
-	Integer value = 5;
+	Integer value = Integer.valueOf(5);
 	Utility.put(list, index, value);
 	assertEquals(index + 1, list.size());
 	assertEquals(value, list.get(index));
@@ -37,14 +36,14 @@ public class UtilityTest {
     @Test(expected = NullPointerException.class)
     public void putTestNull() {
 	System.out.println("# UtilityTest putTestNull");
-	Utility.put(null, 0, 0);
+	Utility.put(null, 0, Integer.valueOf(0));
     }
 
     @Test(expected = IndexOutOfBoundsException.class)
     public void putTestNegativeIndex() {
 	System.out.println("# UtilityTest putTestNegativeIndex");
 	List<Integer> list = getEmptyList();
-	Utility.put(list, -1, 0);
+	Utility.put(list, -1, Integer.valueOf(0));
     }
 
     @Test
@@ -87,13 +86,13 @@ public class UtilityTest {
     public void ensureUniquenessTest() {
 	System.out.println("# UtilityTest ensureUniquenessTest");
 	ArrayList<Integer> list = getEmptyList();
-	list.add(0);
-	list.add(1);
-	list.add(1);
-	list.add(2);
-	list.add(3);
-	list.add(4);
-	list.add(4);
+	list.add(Integer.valueOf(0));
+	list.add(Integer.valueOf(1));
+	list.add(Integer.valueOf(1));
+	list.add(Integer.valueOf(2));
+	list.add(Integer.valueOf(3));
+	list.add(Integer.valueOf(4));
+	list.add(Integer.valueOf(4));
 
 	@SuppressWarnings("unchecked")
 	List<Integer> expected = (ArrayList<Integer>) list.clone();
@@ -110,12 +109,12 @@ public class UtilityTest {
     public void ensureUniquenessNullElementsTest() {
 	System.out.println("# UtilityTest ensureUniquenessNullElementsTest");
 	ArrayList<Integer> list = getEmptyList();
-	list.add(0);
-	list.add(1);
-	list.add(1);
+	list.add(Integer.valueOf(0));
+	list.add(Integer.valueOf(1));
+	list.add(Integer.valueOf(1));
 	list.add(null);
-	list.add(3);
-	list.add(4);
+	list.add(Integer.valueOf(3));
+	list.add(Integer.valueOf(4));
 	list.add(null);
 
 	@SuppressWarnings("unchecked")
@@ -135,7 +134,7 @@ public class UtilityTest {
 		if (o2 == null) {
 		    return -1;
 		}
-		return Integer.compare(o1, o2);
+		return o1.compareTo(o2);
 	    }
 	};
 	actual.sort(c);
@@ -492,7 +491,7 @@ public class UtilityTest {
 	String sequence = "ad";
 	int[] expected = new int[] { 6, 2 };
 	int[] actual = Utility.positionOf(text, sequence);
-	deepAssertEquals(expected, actual);
+	assertEquals(expected, actual);
     }
 
     @Test
@@ -503,7 +502,7 @@ public class UtilityTest {
 	String sequence2 = "44";
 	int[] expected = new int[] { 6, 2 };
 	int[] actual = Utility.positionOf(text, sequence1, sequence2);
-	deepAssertEquals(expected, actual);
+	assertEquals(expected, actual);
     }
 
     @Test
@@ -514,7 +513,7 @@ public class UtilityTest {
 	String sequence2 = "33";
 	int[] expected = new int[] { -1, -1 };
 	int[] actual = Utility.positionOf(text, sequence1, sequence2);
-	deepAssertEquals(expected, actual);
+	assertEquals(expected, actual);
     }
 
     @Test(expected = NullPointerException.class)
@@ -542,7 +541,7 @@ public class UtilityTest {
 	String sequence = "ads";
 	int[] expected = new int[] { 11, 3 };
 	int[] actual = Utility.lastPositionOf(text, sequence);
-	deepAssertEquals(expected, actual);
+	assertEquals(expected, actual);
     }
 
     @Test
@@ -553,7 +552,7 @@ public class UtilityTest {
 	String sequence2 = "44";
 	int[] expected = new int[] { 16, 2 };
 	int[] actual = Utility.lastPositionOf(text, sequence1, sequence2);
-	deepAssertEquals(expected, actual);
+	assertEquals(expected, actual);
     }
 
     @Test
@@ -564,7 +563,7 @@ public class UtilityTest {
 	String sequence2 = "33";
 	int[] expected = new int[] { -1, -1 };
 	int[] actual = Utility.lastPositionOf(text, sequence1, sequence2);
-	deepAssertEquals(expected, actual);
+	assertEquals(expected, actual);
     }
 
     @Test(expected = NullPointerException.class)
@@ -604,7 +603,7 @@ public class UtilityTest {
 	}
 	List<Integer> list = getEmptyList();
 	while (list.size() < size) {
-	    list.add(rand.nextInt());
+	    list.add(Integer.valueOf(rand.nextInt()));
 	}
 	return list;
     }

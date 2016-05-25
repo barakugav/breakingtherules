@@ -25,6 +25,9 @@ public class Utility {
      * the list wasn't grown naturally by <code>List.add(E e)</code>. The list
      * will be appended by nulls up to the desire index if needed
      * 
+     * @param <T>
+     *            type of list elements
+     * 
      * @param list
      *            the list
      * @param index
@@ -32,7 +35,7 @@ public class Utility {
      * @param value
      *            new value in the list
      */
-    public static <T> void put(final List<T> list, final int index, T value) {
+    public static <T> void put(final List<? super T> list, final int index, T value) {
 	if (index < 0) {
 	    throw new IndexOutOfBoundsException("index must be positive " + index);
 	}
@@ -45,6 +48,9 @@ public class Utility {
     /**
      * Get a sub list of a list by offset and size
      * 
+     * @param <T>
+     *            type of list elements
+     * 
      * @param list
      *            the list
      * @param offset
@@ -56,7 +62,7 @@ public class Utility {
      * @throws IllegalArgumentException
      *             if list is null, offset < 0, size < 0
      */
-    public static <T> List<T> subList(final List<T> list, final int offset, final int size) {
+    public static <T> List<T> subList(final List<? extends T> list, final int offset, final int size) {
 	if (offset < 0 || size < 0) {
 	    throw new IllegalArgumentException("offset and size should be positive (" + offset + ", " + size + ")");
 	}
@@ -70,8 +76,11 @@ public class Utility {
     }
 
     public static <T> Set<T> ensureUniqueness(final Iterable<T> iterable) {
-	final int estimatedSize = iterable instanceof Collection<?> ? (int) (((Collection<?>) iterable).size()) : 16;
-	final Set<T> uniqeSet = new HashSet<>(estimatedSize);
+	if (iterable instanceof Collection<?>) {
+	    return new HashSet<>((Collection<T>) iterable);
+	}
+
+	final Set<T> uniqeSet = new HashSet<>();
 	for (final T t : iterable) {
 	    uniqeSet.add(t);
 	}
@@ -188,9 +197,13 @@ public class Utility {
 	if (builder.length() != 0) {
 	    final char lastChar = builder.charAt(builder.length() - 1);
 	    final char spacer = tab ? TAB : SPACE;
-	    builder.append((lastChar != SPACE && lastChar != TAB) ? spacer : "");
+	    builder.append((lastChar != SPACE && lastChar != TAB) ? "" + spacer : "");
 	}
 	builder.append(word);
+    }
+
+    public static String format(final int expected, final int actual) {
+	return format(Integer.valueOf(expected), Integer.valueOf(actual));
     }
 
     /**
@@ -204,6 +217,10 @@ public class Utility {
      */
     public static String format(final Object expected, final Object actual) {
 	return "expected <" + toString(expected) + "> actual <" + toString(actual) + ">";
+    }
+
+    public static String format(final int lower, final int upper, final int actual) {
+	return format(Integer.valueOf(lower), Integer.valueOf(upper), Integer.valueOf(actual));
     }
 
     public static String format(final Number lower, final Number upper, final Number actual) {

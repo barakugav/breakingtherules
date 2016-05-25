@@ -1,6 +1,7 @@
 package breakingtherules.firewall;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import breakingtherules.utilities.Utility;
@@ -8,7 +9,7 @@ import breakingtherules.utilities.Utility;
 /**
  * IP on protocol IPv6
  */
-public class IPv6 extends IP {
+public final class IPv6 extends IP {
 
     /**
      * IP address
@@ -28,7 +29,7 @@ public class IPv6 extends IP {
 
     private static final int ADDRESS_ARRAY_SIZE = MAX_LENGTH / Integer.SIZE; // 4
     private static final int BLOCK_MASK = (1 << BLOCK_SIZE) - 1; // 65536
-    private static final int OFFSET_IN_BLOCK_MASK = (1 << 6) - 1; // 63
+    private static final int OFFSET_IN_BLOCK_MASK = (1 << 5) - 1; // 31
 
     private IPv6(final int[] address, final int prefixLength) {
 	super(prefixLength);
@@ -42,7 +43,7 @@ public class IPv6 extends IP {
      */
     @Override
     public IPv6 getParent() {
-	final int p = m_prefixLength;
+	final int p = prefixLength;
 	if (p == 0) {
 	    throw new IllegalStateException("no parent");
 	}
@@ -62,7 +63,7 @@ public class IPv6 extends IP {
      */
     @Override
     public IPv6[] getChildren() {
-	final int p = m_prefixLength + 1;
+	final int p = prefixLength + 1;
 	if (p > MAX_LENGTH) {
 	    throw new IllegalStateException("no children");
 	}
@@ -70,7 +71,7 @@ public class IPv6 extends IP {
 	// Set helper variable
 	int[][] childrenAddresses = new int[][] { m_address.clone(), m_address.clone() };
 	final int helper = 1 << (Integer.SIZE - (p & OFFSET_IN_BLOCK_MASK));
-	final int blockNum = m_prefixLength * BLOCK_NUMBER / MAX_LENGTH;
+	final int blockNum = prefixLength * BLOCK_NUMBER / MAX_LENGTH;
 	// TODO - this code probably contains bugs, but is not used yet.
 	childrenAddresses[0][blockNum] &= ~helper;
 	childrenAddresses[1][blockNum] |= helper;
@@ -83,34 +84,13 @@ public class IPv6 extends IP {
     }
 
     @Override
-    public String toString() {
-	final int p = m_prefixLength;
-	if (p == 0) {
-	    return ANY;
-	}
-
-	final int[] a = getAddress();
-	final StringBuilder builder = new StringBuilder(Integer.toString(a[0]));
-	for (int i = 1; i < a.length; i++) {
-	    builder.append(BLOCKS_SEPARATOR);
-	    builder.append(a[i]);
-	}
-	final int prefix = m_prefixLength;
-	if (prefix != MAX_LENGTH) {
-	    builder.append("/");
-	    builder.append(prefix);
-	}
-	return builder.toString();
-    }
-
-    @Override
     public boolean isBrother(final IP other) {
 	if (!(other instanceof IPv6)) {
 	    return false;
 	}
 	final IPv6 o = (IPv6) other;
 
-	final int p = m_prefixLength, op = o.m_prefixLength;
+	final int p = prefixLength, op = o.prefixLength;
 	if (p != op) {
 	    return false; // Different sub network sizes
 	}
@@ -145,77 +125,14 @@ public class IPv6 extends IP {
     }
 
     @Override
-    public int compareTo(final IP other) {
-	if (other == null) {
-	    return -1;
-	}
-	// Assume AnyIP < IPv4 < IPv6
-	if (!(other instanceof IPv6)) {
-	    return 1;
-	}
-	final IPv6 o = (IPv6) other;
-
-	final int[] thisAddress = m_address;
-	final int[] otherAddress = o.m_address;
-	for (int i = 0; i < thisAddress.length; i++) {
-	    final int diff = thisAddress[i] - otherAddress[i];
-	    if (diff != 0) {
-		return diff;
-	    }
-	}
-
-	return m_prefixLength - other.m_prefixLength;
-    }
-
-    @Override
-    public boolean equals(final Object o) {
-	if (o == this) {
-	    return true;
-	} else if (!(o instanceof IPv6)) {
-	    return false;
-	}
-
-	final IPv6 other = (IPv6) o;
-	final int[] thisAddress = m_address;
-	final int[] otherAddress = other.m_address;
-	if (m_prefixLength != other.m_prefixLength) {
-	    return false;
-	} else if (thisAddress.length != otherAddress.length) {
-	    return false;
-	}
-	for (int i = 0; i < thisAddress.length; i++) {
-	    if (thisAddress[i] != otherAddress[i]) {
-		return false;
-	    }
-	}
-	return true;
-    }
-
-    @Override
-    public int hashCode() {
-	// Look for cached hash first
-	int h = hash;
-	final int[] a = m_address;
-	if (h != 0 || a.length == 0) {
-	    return h;
-	}
-
-	h = 1;
-	for (int i = a.length; i-- > 0;) {
-	    h = h * 31 + a[i];
-	}
-	return hash = h;
-    }
-
-    @Override
     public boolean contains(final IP other) {
 	if (!(other instanceof IPv6)) {
 	    return false;
 	}
 	final IPv6 o = (IPv6) other;
 
-	final int p = m_prefixLength;
-	if (p > other.m_prefixLength) {
+	final int p = prefixLength;
+	if (p > other.prefixLength) {
 	    return false;
 	}
 	if (p == 0) {
@@ -250,12 +167,104 @@ public class IPv6 extends IP {
 
     @Override
     public int getSubnetBitsNum() {
-	return MAX_LENGTH - m_prefixLength;
+	return MAX_LENGTH - prefixLength;
+    }
+
+    @Override
+    public int getMaxLength() {
+	return MAX_LENGTH;
     }
 
     @Override
     public boolean hasChildren() {
-	return m_prefixLength < MAX_LENGTH;
+	return prefixLength < MAX_LENGTH;
+    }
+
+    @Override
+    public boolean equals(final Object o) {
+	if (o == this) {
+	    return true;
+	} else if (!(o instanceof IPv6)) {
+	    return false;
+	}
+
+	final IPv6 other = (IPv6) o;
+	final int[] thisAddress = m_address;
+	final int[] otherAddress = other.m_address;
+	if (prefixLength != other.prefixLength) {
+	    return false;
+	} else if (thisAddress.length != otherAddress.length) {
+	    return false;
+	}
+	for (int i = 0; i < thisAddress.length; i++) {
+	    if (thisAddress[i] != otherAddress[i]) {
+		return false;
+	    }
+	}
+	return true;
+    }
+
+    @Override
+    public int hashCode() {
+	// Look for cached hash first
+	int h = hash;
+	final int[] a = m_address;
+	if (h != 0 || a.length == 0) {
+	    return h;
+	}
+
+	h = 1;
+	for (int i = a.length; i-- > 0;) {
+	    h = h * 31 + a[i];
+	}
+	return hash = h;
+    }
+
+    @Override
+    public String toString() {
+	final int p = prefixLength;
+	if (p == 0) {
+	    return ANY;
+	}
+
+	final int[] a = getAddress();
+	final StringBuilder builder = new StringBuilder(Integer.toString(a[0]));
+	for (int i = 1; i < a.length; i++) {
+	    builder.append(BLOCKS_SEPARATOR);
+	    builder.append(a[i]);
+	}
+	final int prefix = prefixLength;
+	if (prefix != MAX_LENGTH) {
+	    builder.append("/");
+	    builder.append(prefix);
+	}
+	return builder.toString();
+    }
+
+    @Override
+    public int compareTo(final IP other) {
+	if (other == null) {
+	    return -1;
+	}
+	// Assume AnyIP < IPv4 < IPv6
+	if (!(other instanceof IPv6)) {
+	    return 1;
+	}
+	final IPv6 o = (IPv6) other;
+
+	final int[] thisAddress = m_address;
+	final int[] otherAddress = o.m_address;
+	for (int i = 0; i < thisAddress.length; i++) {
+	    final int a1 = thisAddress[i];
+	    final int a2 = otherAddress[i];
+	    // unsigned compare
+	    final int diff = a1 == a2 ? 0 : (a1 + Integer.MIN_VALUE) < (a2 + Integer.MIN_VALUE) ? -1 : 1;
+	    if (diff != 0) {
+		return diff;
+	    }
+	}
+
+	return prefixLength - other.prefixLength;
     }
 
     public static IPv6 create(int[] address) {
@@ -293,9 +302,11 @@ public class IPv6 extends IP {
     }
 
     public static IPv6 create(String ip) {
+	// TODO - better implementation like IPv4.create(String) using
+	// Utility.breakToWords(String).
 	int prefix;
 
-	List<Integer> address = new ArrayList<>();
+	final List<Integer> address = new ArrayList<>();
 	try {
 	    int separatorIndex = ip.indexOf(BLOCKS_SEPARATOR);
 
@@ -303,7 +314,7 @@ public class IPv6 extends IP {
 	    while (separatorIndex >= 0) {
 		String stNum = ip.substring(0, separatorIndex);
 		int intNum = Integer.parseInt(stNum);
-		address.add(intNum);
+		address.add(Integer.valueOf(intNum));
 		ip = ip.substring(separatorIndex + 1);
 		separatorIndex = ip.indexOf(BLOCKS_SEPARATOR);
 	    }
@@ -312,15 +323,15 @@ public class IPv6 extends IP {
 	    separatorIndex = ip.indexOf('/');
 	    if (separatorIndex < 0) {
 		// No const prefix specification
-		address.add(Integer.parseInt(ip));
+		address.add(Integer.valueOf(Integer.parseInt(ip)));
 		prefix = MAX_LENGTH;
 	    } else {
 		// Has const prefix specification
 		String stNum = ip.substring(0, separatorIndex);
 		ip = ip.substring(separatorIndex + 1);
 
-		int intNum = Integer.parseInt(stNum);
-		address.add(intNum);
+		final int intNum = Integer.parseInt(stNum);
+		address.add(Integer.valueOf(intNum));
 
 		// Read const prefix length
 		if (ip.length() > 0) {
@@ -354,7 +365,7 @@ public class IPv6 extends IP {
 	// Copy blocks values to m_address
 	int[] addressTemp = new int[numberOfBlocks];
 	for (int i = 0; i < address.size(); i++) {
-	    addressTemp[i] = address.get(i);
+	    addressTemp[i] = address.get(i).intValue();
 	}
 
 	final int[] a = new int[ADDRESS_ARRAY_SIZE];
@@ -371,23 +382,24 @@ public class IPv6 extends IP {
 	// Reset prefix
 	if (prefix != MAX_LENGTH) {
 	    for (int blockNum = ADDRESS_ARRAY_SIZE; blockNum-- > 0 && prefix < ((blockNum + 1) << 5);) {
-		a[blockNum] &= prefix <= (blockNum << 5) ? 0 : ~((1 << (Integer.SIZE - (prefix & OFFSET_IN_BLOCK_MASK))) - 1);
+		a[blockNum] &= prefix <= (blockNum << 5) ? 0
+			: ~((1 << (Integer.SIZE - (prefix & OFFSET_IN_BLOCK_MASK))) - 1);
 	    }
 	}
 
 	return new IPv6(a, prefix);
     }
 
-    public static IPv6 create(boolean[] ip) {
-	if (ip.length != MAX_LENGTH) {
-	    throw new IllegalArgumentException("IPv6 length: " + Utility.format(MAX_LENGTH, ip.length));
+    public static IPv6 create(final List<Boolean> ip) {
+	if (ip.size() != MAX_LENGTH) {
+	    throw new IllegalArgumentException("IPv6 length: " + Utility.format(MAX_LENGTH, ip.size()));
 	}
-	int index = 0;
+	final Iterator<Boolean> it = ip.iterator();
 	final int[] address = new int[ADDRESS_ARRAY_SIZE];
 	for (int blockNum = 0; blockNum < BLOCK_NUMBER; blockNum++) {
 	    int blockValue = 0;
 	    for (int bitNum = 0; bitNum < BLOCK_SIZE; bitNum++) {
-		boolean bitValue = ip[index++];
+		boolean bitValue = it.next().booleanValue();
 		blockValue <<= 1;
 		blockValue += bitValue ? 1 : 0;
 	    }

@@ -1,7 +1,5 @@
 package breakingtherules.tests.firewall;
 
-import static breakingtherules.tests.JUnitUtilities.deepAssertEquals;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
@@ -13,8 +11,9 @@ import org.junit.Test;
 
 import breakingtherules.firewall.IPv4;
 import breakingtherules.firewall.IPv6;
+import breakingtherules.tests.TestBase;
 
-public class IPv6Test {
+public class IPv6Test extends TestBase {
 
     private static final Random rand = new Random();
 
@@ -135,7 +134,7 @@ public class IPv6Test {
 	System.out.println("# IPv6Test getAddressTestWithBasicConstructor");
 	int[] address = FirewallTestsUtility.getRandomAddressIPv6();
 	IPv6 ip = IPv6.create(address);
-	deepAssertEquals(address, ip.getAddress());
+	assertEquals(address, ip.getAddress());
     }
 
     @Test
@@ -184,25 +183,25 @@ public class IPv6Test {
 	    IPv6 parent = ip.getParent();
 	    assertNotNull("Prefix length " + prefixLength, parent);
 	    // expected address is always
-	    assertEquals("Prefix length " + prefixLength, prefixLength, parent.getConstPrefixLength());
+	    assertEquals("Prefix length " + prefixLength, prefixLength, parent.prefixLength);
 	    ip = parent;
 	}
 	for (int prefixLength = 80; prefixLength-- > 48;) {
 	    assertTrue("Prefix length " + prefixLength, ip.hasParent());
 	    IPv6 parent = ip.getParent();
 	    assertNotNull("Prefix length " + prefixLength, parent);
-	    assertEquals("Prefix length " + prefixLength, prefixLength, parent.getConstPrefixLength());
-	    deepAssertEquals("Prefix length " + prefixLength, expected[prefixLength - 48], parent.getAddress());
+	    assertEquals("Prefix length " + prefixLength, prefixLength, parent.prefixLength);
+	    assertEquals("Prefix length " + prefixLength, expected[prefixLength - 48], parent.getAddress());
 	    ip = parent;
 	}
 	for (int prefixLength = 48; prefixLength-- > 0;) {
 	    assertTrue("Prefix length " + prefixLength, ip.hasParent());
 	    IPv6 parent = ip.getParent();
 	    assertNotNull("Prefix length " + prefixLength, parent);
-	    assertEquals("Prefix length " + prefixLength, prefixLength, parent.getConstPrefixLength());
+	    assertEquals("Prefix length " + prefixLength, prefixLength, parent.prefixLength);
 	    // expected address is always expected[0] because all 48 highest
 	    // bits are 0
-	    deepAssertEquals("Prefix length " + prefixLength, expected[0], parent.getAddress());
+	    assertEquals("Prefix length " + prefixLength, expected[0], parent.getAddress());
 	    ip = parent;
 	}
 	assertFalse("Prefix length 0", ip.hasParent());
@@ -212,7 +211,7 @@ public class IPv6Test {
     public void getPrefixLengthTestBasicConstructor() {
 	System.out.println("# IPv6Test getPrefixLengthTestBasicConstructor");
 	IPv6 ip = IPv6.create(FirewallTestsUtility.getRandomAddressIPv6());
-	assertEquals(128, ip.getConstPrefixLength());
+	assertEquals(128, ip.prefixLength);
     }
 
     @Test
@@ -220,7 +219,7 @@ public class IPv6Test {
 	System.out.println("# IPv6Test getPrefixLengthTestConstructorWithPrefixLength");
 	int prefixLength = FirewallTestsUtility.getRandomPrefixLengthIPv6();
 	IPv6 ip = IPv6.create(FirewallTestsUtility.getRandomAddressIPv6(), prefixLength);
-	assertEquals(prefixLength, ip.getConstPrefixLength());
+	assertEquals(prefixLength, ip.prefixLength);
     }
 
     @Test(expected = IllegalStateException.class)
@@ -242,7 +241,7 @@ public class IPv6Test {
     public void getChildrenTest() {
 	System.out.println("# IPv6Test getChildrenTest");
 	IPv6 ip = IPv6.create(FirewallTestsUtility.getRandomAddressIPv6(), rand.nextInt(28) + 100);
-	assertEquals(ip.hasChildren(), ip.getConstPrefixLength() != IPv6.MAX_LENGTH);
+	assertEquals(ip.hasChildren(), ip.prefixLength != IPv6.MAX_LENGTH);
     }
 
     @Test

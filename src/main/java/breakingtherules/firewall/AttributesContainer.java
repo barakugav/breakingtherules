@@ -31,6 +31,19 @@ abstract class AttributesContainer implements Iterable<Attribute> {
 	m_attributes = toArray(attributes);
     }
 
+    /**
+     * Construct new attributes container with attributes array.
+     * <p>
+     * This constructor should be used carefully: the constructor doesn't checks
+     * if the attributes are valid or if they are in the right order in the
+     * array.
+     * <p>
+     * This constructor is meant to be used by subclasses to create a mutation
+     * copy of their own.
+     * 
+     * @param attributes
+     *            the attributes array of the container
+     */
     protected AttributesContainer(final Attribute[] attributes) {
 	m_attributes = Objects.requireNonNull(attributes);
     }

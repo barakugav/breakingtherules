@@ -367,7 +367,7 @@ public class InformationAlgorithm implements SuggestionsAlgorithm {
 	    nodeA = currentLayer.get(length - 1);
 	    nodeB = currentLayer.get(length);
 	    ipB = nodeB.ip;
-	    if (nodeA.ip.isBrother(ipB)) {
+	    if (!nodeA.ip.isBrother(ipB)) {
 		parent = new IPNode();
 		parent.ip = ipB.getParent();
 		parent.size = nodeB.size;
@@ -421,13 +421,19 @@ public class InformationAlgorithm implements SuggestionsAlgorithm {
 
 	// Init list with approximate size depends on nodes list size
 	final ArrayList<IPNode> uniqueNodes = new ArrayList<>((int) (allNodes.size() * UNIQUE_LIST_FACTOR));
-	IPNode lastNode = null;
-	for (IPNode node : allNodes) {
-	    if (lastNode == null || !lastNode.ip.equals(node.ip)) {
-		lastNode = node;
-		uniqueNodes.add(node);
-	    } else {
-		lastNode.size++;
+	final Iterator<IPNode> it = allNodes.iterator();
+	if (it.hasNext()) {
+	    IPNode lastNode = it.next();
+	    uniqueNodes.add(lastNode);
+
+	    while (it.hasNext()) {
+		final IPNode node = it.next();
+		if (lastNode.ip.equals(node.ip)) {
+		    lastNode.size++;
+		} else {
+		    uniqueNodes.add(node);
+		    lastNode = node;
+		}
 	    }
 	}
 	uniqueNodes.trimToSize();
@@ -501,19 +507,26 @@ public class InformationAlgorithm implements SuggestionsAlgorithm {
 	public String toString() {
 	    final StringBuilder builder = new StringBuilder();
 	    builder.append(ip);
-	    builder.append(' ');
+	    builder.append(" size=");
 	    builder.append(size);
-	    builder.append(' ');
+	    builder.append(" compressSize=");
 	    builder.append(compressSize);
 	    builder.append(" nets=");
 	    if (bestSubnets == null) {
 		builder.append("null");
 	    } else {
 		builder.append('[');
+		final Iterator<SubnetSuggestion> it = bestSubnets.iterator();
 		final String spacer = ", ";
-		for (final SubnetSuggestion node : bestSubnets) {
-		    builder.append(node.ip);
-		    builder.append(spacer);
+
+		if (it.hasNext()) { // Have at least one elements
+		    do {
+			final SubnetSuggestion node = it.next();
+			builder.append(node.ip);
+			if (!it.hasNext())
+			    break;
+			builder.append(spacer);
+		    } while (true);
 		}
 		builder.append(']');
 	    }
@@ -540,7 +553,7 @@ public class InformationAlgorithm implements SuggestionsAlgorithm {
 
 	@Override
 	public String toString() {
-	    return ip.toString() + " " + size + " " + score;
+	    return ip.toString() + " size=" + size + " score=" + score;
 	}
     }
 

@@ -10,8 +10,9 @@ import org.junit.Test;
 import breakingtherules.dao.csv.CSVParseException;
 import breakingtherules.dao.csv.CSVParser;
 import breakingtherules.firewall.Hit;
+import breakingtherules.tests.TestBase;
 
-public class CSVParserTest {
+public class CSVParserTest extends TestBase {
 
     private static final int JOB_ID = 0;
     private static final List<Integer> COLOMNS_TYPES = CSVParser.DEFAULT_COLUMNS_TYPES;

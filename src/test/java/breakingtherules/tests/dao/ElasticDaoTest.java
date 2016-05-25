@@ -1,6 +1,5 @@
 package breakingtherules.tests.dao;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -21,8 +20,9 @@ import breakingtherules.firewall.Hit;
 import breakingtherules.firewall.Rule;
 import breakingtherules.firewall.Service;
 import breakingtherules.firewall.Source;
+import breakingtherules.tests.TestBase;
 
-public class ElasticDaoTest {
+public class ElasticDaoTest extends TestBase {
 
     private static HitsElasticDao hitsDao;
 

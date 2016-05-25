@@ -1,13 +1,14 @@
 package breakingtherules.firewall;
 
 import java.util.Comparator;
-import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
- * Attribute of a hit
+ * The Attribute interface represent an attribute of a hit.
+ * 
+ * @see Hit
  */
 public interface Attribute {
 
@@ -46,16 +47,51 @@ public interface Attribute {
     @JsonProperty("str")
     public String toString();
 
+    /**
+     * Number of attributes.
+     * <p>
+     * Used by {@link AttributesContainer}.
+     */
     public static final int TYPES_COUNT = 3;
 
+    /**
+     * Type id of unknown attribute.
+     */
     public static final int UNKOWN_ATTRIBUTE_ID = -1;
+
+    /**
+     * Type id of source attribute.
+     */
     public static final int SOURCE_TYPE_ID = 0;
+
+    /**
+     * Type id of destination attribute.
+     */
     public static final int DESTINATION_TYPE_ID = 1;
+
+    /**
+     * Type id of service attribute.
+     */
     public static final int SERVICE_TYPE_ID = 2;
 
+    /**
+     * Name of unknown attribute.
+     */
     public static final String UNKOWN_ATTRIBUTE = null;
+
+    /**
+     * Name of destination attribute.
+     */
     public static final String DESTINATION_TYPE = "Destination";
+
+    /**
+     * Name of source attribute.
+     */
     public static final String SOURCE_TYPE = "Source";
+
+    /**
+     * Name of service attribute.
+     */
     public static final String SERVICE_TYPE = "Service";
 
     /**
@@ -63,21 +99,17 @@ public interface Attribute {
      */
     public static Comparator<Attribute> ATTRIBUTES_COMPARATOR = new Comparator<Attribute>() {
 
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see java.util.Comparator#compare(java.lang.Object, java.lang.Object)
+	 */
 	@Override
 	public int compare(final Attribute o1, final Attribute o2) {
 	    return o1.getTypeId() - o2.getTypeId();
 	}
-    };
 
-    /**
-     * Sort attributes by their type id
-     * 
-     * @param attributes
-     *            the attributes to sort
-     */
-    public static void sort(final List<Attribute> attributes) {
-	attributes.sort(ATTRIBUTES_COMPARATOR);
-    }
+    };
 
     /**
      * Convert a type string to type id
@@ -120,7 +152,7 @@ public interface Attribute {
 	case SERVICE_TYPE_ID:
 	    return new Service(value);
 	default:
-	    return null;
+	    throw new IllegalArgumentException("Unkown type id: " + typeId);
 	}
     }
 

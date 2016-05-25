@@ -1,18 +1,20 @@
 package breakingtherules.tests.firewall;
 
-import static breakingtherules.tests.JUnitUtilities.deepAssertEquals;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import org.junit.Test;
 
 import breakingtherules.firewall.IP;
 import breakingtherules.firewall.IPv4;
 import breakingtherules.firewall.IPv6;
+import breakingtherules.tests.TestBase;
 import breakingtherules.utilities.ArraysUtilities;
 
-public class IPTest {
+public class IPTest extends TestBase {
 
     // Most methods and functionality is tested in IPv4Test and IPv6Test
 
@@ -44,10 +46,10 @@ public class IPTest {
 	    addressBol = ArraysUtilities.merge(addressBol, ArraysUtilities.intToBooleans(block, blockSize));
 	}
 
-	IP ip = IP.fromBooleans(addressBol, IPv4.class);
+	IP ip = IP.fromBooleans(toBooleanList(addressBol), IPv4.class);
 	assertNotNull(ip);
 	assertTrue(ip instanceof IPv4);
-	deepAssertEquals(address, ip.getAddress());
+	assertEquals(address, ip.getAddress());
 
     }
 
@@ -61,10 +63,10 @@ public class IPTest {
 	    addressBol = ArraysUtilities.merge(addressBol, ArraysUtilities.intToBooleans(block, blockSize));
 	}
 
-	IP ip = IP.fromBooleans(addressBol, IPv6.class);
+	IP ip = IP.fromBooleans(toBooleanList(addressBol), IPv6.class);
 	assertNotNull(ip);
 	assertTrue(ip instanceof IPv6);
-	deepAssertEquals(address, ip.getAddress());
+	assertEquals(address, ip.getAddress());
     }
 
     @Test(expected = NullPointerException.class)
@@ -77,14 +79,14 @@ public class IPTest {
     public void fromBooleansTestNullClass() {
 	System.out.println("# IPTest fromBooleansTestNullClass");
 	boolean[] ip = new boolean[] {};
-	IP.fromBooleans(ip, null);
+	IP.fromBooleans(toBooleanList(ip), null);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void fromBooleansTestUnkownClass() {
 	System.out.println("# IPTest fromBooleansTestUnkownClass");
 	boolean[] ip = new boolean[] {};
-	IP.fromBooleans(ip, getClass());
+	IP.fromBooleans(toBooleanList(ip), getClass());
     }
 
     @Test
@@ -119,6 +121,14 @@ public class IPTest {
 	IP ip1 = FirewallTestsUtility.getRandomIP();
 	IP ip2 = FirewallTestsUtility.getRandomIP();
 	assertEquals(ip1.equals(ip2), ip1.hashCode() == ip2.hashCode());
+    }
+
+    private static List<Boolean> toBooleanList(boolean[] a) {
+	List<Boolean> l = new ArrayList<>(a.length);
+	for (boolean b : a) {
+	    l.add(Boolean.valueOf(b));
+	}
+	return l;
     }
 
 }

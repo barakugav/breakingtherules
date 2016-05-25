@@ -102,7 +102,7 @@ public class Rule extends Filter {
      */
     @Override
     public boolean equals(final Object o) {
-	return o instanceof Rule && super.equals(o) && m_id == ((Rule) o).m_id;
+	return o instanceof Rule && super.equals(o);
     }
 
     /*

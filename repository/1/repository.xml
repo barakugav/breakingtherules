@@ -6,5 +6,5 @@
 	<hit id="5" source="15.5.4.58" destination="201.0.0.1" service="TCP 246"></hit>
 	<hit id="6" source="29.11.4.23" destination="8.0.0.4" service="TCP 4888"></hit>
 
-	<rule id="1" source="Any" destination="Any" service="Any TCP"></rule>
+	<original-rule id="1" source="Any" destination="Any" service="Any TCP"></original-rule>
 </Repository>

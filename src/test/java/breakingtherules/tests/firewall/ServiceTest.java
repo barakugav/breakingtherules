@@ -1,6 +1,5 @@
 package breakingtherules.tests.firewall;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
@@ -10,8 +9,9 @@ import org.junit.Test;
 import breakingtherules.firewall.Destination;
 import breakingtherules.firewall.Service;
 import breakingtherules.firewall.Source;
+import breakingtherules.tests.TestBase;
 
-public class ServiceTest {
+public class ServiceTest extends TestBase {
 
     @Test
     public void constructorTestOnePort() {

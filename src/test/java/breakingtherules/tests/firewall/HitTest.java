@@ -1,7 +1,5 @@
 package breakingtherules.tests.firewall;
 
-import static org.junit.Assert.assertEquals;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -9,8 +7,9 @@ import org.junit.Test;
 
 import breakingtherules.firewall.Attribute;
 import breakingtherules.firewall.Hit;
+import breakingtherules.tests.TestBase;
 
-public class HitTest {
+public class HitTest extends TestBase {
 
     @Test
     public void constructorTest() {
@@ -68,11 +67,12 @@ public class HitTest {
 	List<Attribute> actual = hit.getAttributes();
 
 	// Sort lists for comparison
-	Attribute.sort(expected);
+	expected.sort(Attribute.ATTRIBUTES_COMPARATOR);
 	// Clone actual list by creating new list with the elements. This is
 	// needed to be done because the hit.getAttributes() return unmodifiable
 	// list(so sort operation is not supported).
-	Attribute.sort(new ArrayList<>(actual));
+	actual = new ArrayList<>(actual);
+	actual.sort(Attribute.ATTRIBUTES_COMPARATOR);
 
 	assertEquals(expected, actual);
     }

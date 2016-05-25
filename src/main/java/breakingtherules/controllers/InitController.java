@@ -31,6 +31,7 @@ public class InitController {
      *            The id of the new job to handle
      * @return true if succeeded, else - false
      * @throws IOException
+     *             if any I/O error occurs
      * @throws NoCurrentJobException
      *             if job wan't set yet
      */

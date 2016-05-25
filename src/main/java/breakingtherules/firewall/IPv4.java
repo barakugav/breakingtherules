@@ -4,7 +4,7 @@ import java.util.List;
 
 import breakingtherules.utilities.Utility;
 
-public class IPv4 extends IP {
+public final class IPv4 extends IP {
 
     private final int m_address;
 
@@ -41,21 +41,11 @@ public class IPv4 extends IP {
     /*
      * (non-Javadoc)
      * 
-     * @see breakingtherules.firewall.IP#getConstPrefixLength()
-     */
-    @Override
-    public int getConstPrefixLength() {
-	return m_prefixLength;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
      * @see breakingtherules.firewall.IP#getSubnetBitsNum()
      */
     @Override
     public int getSubnetBitsNum() {
-	return MAX_LENGTH - m_prefixLength;
+	return MAX_LENGTH - prefixLength;
     }
 
     /*
@@ -65,7 +55,7 @@ public class IPv4 extends IP {
      */
     @Override
     public boolean hasChildren() {
-	return m_prefixLength < MAX_LENGTH;
+	return prefixLength < MAX_LENGTH;
     }
 
     /*
@@ -75,7 +65,7 @@ public class IPv4 extends IP {
      */
     @Override
     public IPv4 getParent() {
-	final int p = m_prefixLength;
+	final int p = prefixLength;
 	if (p == 0) {
 	    throw new IllegalStateException("No parent");
 	}
@@ -90,8 +80,8 @@ public class IPv4 extends IP {
      * @see breakingtherules.firewall.IP#getChildren()
      */
     @Override
-    public IP[] getChildren() {
-	final int p = m_prefixLength + 1;
+    public IPv4[] getChildren() {
+	final int p = prefixLength + 1;
 	if (p > MAX_LENGTH) {
 	    throw new IllegalStateException("No children");
 	}
@@ -112,8 +102,8 @@ public class IPv4 extends IP {
 	}
 	final IPv4 o = (IPv4) other;
 
-	final int p = m_prefixLength;
-	return p <= o.m_prefixLength && (p == 0 || ((m_address ^ o.m_address) & ~((1 << (MAX_LENGTH - p)) - 1)) == 0);
+	final int p = prefixLength;
+	return p <= o.prefixLength && (p == 0 || ((m_address ^ o.m_address) & ~((1 << (MAX_LENGTH - p)) - 1)) == 0);
     }
 
     /*
@@ -123,7 +113,7 @@ public class IPv4 extends IP {
      */
     @Override
     public boolean getLastBit() {
-	return (m_address & (1 << (MAX_LENGTH - m_prefixLength))) != 0;
+	return (m_address & (1 << (MAX_LENGTH - prefixLength))) != 0;
     }
 
     /*
@@ -151,16 +141,26 @@ public class IPv4 extends IP {
 	}
 	final IPv4 o = (IPv4) other;
 
-	final int p = m_prefixLength;
-	if (p != other.m_prefixLength) {
+	final int p = prefixLength;
+	if (p != other.prefixLength) {
 	    return false;
 	}
 	if (p == 0) {
 	    return true;
 	}
 
-	final int shiftSize = MAX_LENGTH - p + 1;
-	return (m_address >> shiftSize) == (o.m_address >> shiftSize);
+	final int mask = ~(1 << (MAX_LENGTH - p));
+	return (m_address & mask) == (o.m_address & mask);
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see breakingtherules.firewall.IP#getMaxLength()
+     */
+    @Override
+    public int getMaxLength() {
+	return MAX_LENGTH;
     }
 
     /*
@@ -177,7 +177,7 @@ public class IPv4 extends IP {
 	}
 
 	final IPv4 other = (IPv4) o;
-	return m_prefixLength == other.m_prefixLength && m_address == other.m_address;
+	return prefixLength == other.prefixLength && m_address == other.m_address;
     }
 
     /*
@@ -187,7 +187,7 @@ public class IPv4 extends IP {
      */
     @Override
     public int hashCode() {
-	return m_prefixLength ^ m_address;
+	return prefixLength ^ m_address;
     }
 
     /*
@@ -197,18 +197,18 @@ public class IPv4 extends IP {
      */
     @Override
     public String toString() {
-	final int p = m_prefixLength;
+	final int p = prefixLength;
 	if (p == 0) {
 	    return ANY;
 	}
 
-	final int[] aArr = getAddress();
+	final int[] a = getAddress();
 	final StringBuilder st = new StringBuilder();
-	for (int i = 0; i < aArr.length - 1; i++) {
-	    st.append(aArr[i]);
+	for (int i = 0; i < a.length - 1; i++) {
+	    st.append(a[i]);
 	    st.append(BLOCKS_SEPARATOR);
 	}
-	st.append(aArr[aArr.length - 1]);
+	st.append(a[a.length - 1]);
 
 	if (p != MAX_LENGTH) {
 	    st.append(PREFIX_LENGTH_SEPARATOR);
@@ -225,17 +225,18 @@ public class IPv4 extends IP {
      */
     @Override
     public int compareTo(final IP other) {
-	if (other == null) {
-	    return -1;
-	}
 	// Assume AnyIP < IPv4 < IPv6
 	if (!(other instanceof IPv4)) {
 	    return other instanceof IPv6 ? -1 : 1;
 	}
 
 	final IPv4 o = (IPv4) other;
-	final int diff = m_address - o.m_address;
-	return diff != 0 ? diff : m_prefixLength - other.m_prefixLength;
+	final int a1 = m_address;
+	final int a2 = o.m_address;
+
+	// compare as unsigned
+	return a1 == a2 ? prefixLength - other.prefixLength
+		: ((a1 + Integer.MIN_VALUE) < (a2 + Integer.MIN_VALUE)) ? -1 : 1;
     }
 
     public static IPv4 create(final String ip) {
@@ -310,38 +311,40 @@ public class IPv4 extends IP {
 	return new IPv4(address, prefix);
     }
 
-    public static IPv4 create(final int[] ip) {
-	return create(ip, MAX_LENGTH);
+    public static IPv4 create(final int... address) {
+	return create(address, MAX_LENGTH);
     }
 
-    public static IPv4 create(final int[] ip, final int prefix) {
-	if (ip.length != BLOCK_NUMBER) {
-	    throw new IllegalArgumentException("IPv4 blocks number: " + Utility.format(BLOCK_NUMBER, ip.length));
+    public static IPv4 create(final int[] address, final int prefix) {
+	if (address.length != BLOCK_NUMBER) {
+	    throw new IllegalArgumentException("IPv4 blocks number: " + Utility.format(BLOCK_NUMBER, address.length));
 	}
 	if (!(0 <= prefix && prefix <= MAX_LENGTH)) {
 	    throw new IllegalArgumentException("IPv4 prefix length: " + Utility.format(0, MAX_LENGTH, prefix));
 	}
 
-	int address = 0;
-	for (int i = 0; i < ip.length; i++) {
-	    address = (address << BLOCK_SIZE) + ip[i];
+	int a = 0;
+	for (int i = 0; i < address.length; i++) {
+	    a = (a << BLOCK_SIZE) + address[i];
 	}
 
 	// Reset suffix
-	address &= prefix != 0 ? ~((1 << (MAX_LENGTH - prefix)) - 1) : 0;
-	return new IPv4(address, prefix);
+	a &= prefix != 0 ? ~((1 << (MAX_LENGTH - prefix)) - 1) : 0;
+	return new IPv4(a, prefix);
     }
 
-    public static IPv4 create(final boolean[] ip) {
-	if (ip.length != MAX_LENGTH) {
-	    throw new IllegalArgumentException("IPv4 length: " + Utility.format(MAX_LENGTH, ip.length));
+    public static IPv4 create(final List<Boolean> address) {
+	if (address.size() != MAX_LENGTH) {
+	    throw new IllegalArgumentException("IPv4 length: " + Utility.format(MAX_LENGTH, address.size()));
 	}
-	int address = 0;
-	for (int bitNum = 0; bitNum < ip.length; bitNum++) {
-	    address <<= 1;
-	    address += ip[bitNum] ? 1 : 0;
+	int a = 0;
+	for (boolean bit : address) {
+	    a <<= 1;
+	    if (bit) {
+		a += 1;
+	    }
 	}
-	return new IPv4(address, MAX_LENGTH);
+	return new IPv4(a, MAX_LENGTH);
     }
 
 }

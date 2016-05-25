@@ -28,12 +28,12 @@ public class Config {
 	return ds;
     }
 
-    // @Bean
+    @Bean
     public HitsDao hitsXmlDao() {
 	return new HitsXmlDao();
     }
 
-    @Bean(destroyMethod = "cleanup")
+    // @Bean(destroyMethod = "cleanup")
     public HitsDao hitsElasticDao() {
 	return new HitsElasticDao();
     }

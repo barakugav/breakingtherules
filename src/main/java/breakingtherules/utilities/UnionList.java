@@ -191,7 +191,7 @@ public class UnionList<E> implements Iterable<E> {
 	    final Node<E> c = cursor;
 	    if (c == null)
 		throw new NoSuchElementException();
-	    E data = c.data;
+	    final E data = c.data;
 	    cursor = c.next;
 	    return data;
 	}

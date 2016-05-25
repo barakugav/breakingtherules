@@ -1,5 +1,7 @@
 package breakingtherules.firewall;
 
+import java.util.List;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 /**
@@ -10,7 +12,7 @@ public abstract class IP implements Comparable<IP> {
     /**
      * Length of the constant prefix
      */
-    protected final int m_prefixLength;
+    public final int prefixLength;
 
     /**
      * String representation of any IP
@@ -29,7 +31,7 @@ public abstract class IP implements Comparable<IP> {
      *            length of constant prefix
      */
     protected IP(final int prefixLength) {
-	m_prefixLength = prefixLength;
+	this.prefixLength = prefixLength;
     }
 
     /**
@@ -38,15 +40,6 @@ public abstract class IP implements Comparable<IP> {
      * @return address of the IP
      */
     public abstract int[] getAddress();
-
-    /**
-     * Get the length of the constant prefix of the IP
-     * 
-     * @return length of the constant prefix of the IP
-     */
-    public int getConstPrefixLength() {
-	return m_prefixLength;
-    }
 
     /**
      * Get the size of the sub network of this IP
@@ -62,7 +55,7 @@ public abstract class IP implements Comparable<IP> {
      * @return true if this IP has parent, else - false
      */
     public boolean hasParent() {
-	return m_prefixLength > 0;
+	return prefixLength > 0;
     }
 
     /**
@@ -136,7 +129,7 @@ public abstract class IP implements Comparable<IP> {
      *            class of the requested IP - IPv4, IPv6 or AnyIP
      * @return IP object based on the boolean bits
      */
-    public static IP fromBooleans(final boolean[] ip, final Class<?> clazz) {
+    public static IP fromBooleans(final List<Boolean> ip, final Class<?> clazz) {
 	if (clazz.equals(IPv4.class)) {
 	    return IPv4.create(ip);
 	} else if (clazz.equals(IPv6.class)) {
@@ -190,6 +183,13 @@ public abstract class IP implements Comparable<IP> {
     public abstract boolean isBrother(IP other);
 
     /**
+     * Get the max possible prefix length of this IP.
+     * 
+     * @return max possible prefix length
+     */
+    public abstract int getMaxLength();
+
+    /**
      * Get IP that represents 'Any' IP (contains) all others
      * 
      * @return instance of 'Any' IP
@@ -241,6 +241,11 @@ public abstract class IP implements Comparable<IP> {
 	    return false;
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see breakingtherules.firewall.IP#getChildren()
+	 */
 	@Override
 	public IP[] getChildren() {
 	    return null;
@@ -345,6 +350,16 @@ public abstract class IP implements Comparable<IP> {
 	 */
 	@Override
 	public int getSubnetBitsNum() {
+	    return 0;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see breakingtherules.firewall.IP#getMaxLength()
+	 */
+	@Override
+	public int getMaxLength() {
 	    return 0;
 	}
 

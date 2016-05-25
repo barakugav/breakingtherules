@@ -62,6 +62,7 @@ public interface HitsDao {
      * @return The number of hits that are in the job, pass the rules but not
      *         the filter
      * @throws IOException
+     *             if failed to read from memory
      */
     public int getHitsNumber(int jobId, List<Rule> rules, Filter filter) throws IOException;
 

@@ -3,9 +3,10 @@ package breakingtherules.tests.services;
 import java.util.List;
 
 import breakingtherules.services.CSVScrambler.CSVScramblerRunner;
+import breakingtherules.tests.TestBase;
 import breakingtherules.utilities.Utility;
 
-public class CSVScramblerTest {
+public class CSVScramblerTest extends TestBase {
 
     public static void main(String[] args) {
 

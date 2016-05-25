@@ -17,13 +17,14 @@ import breakingtherules.firewall.Hit;
 import breakingtherules.firewall.Rule;
 import breakingtherules.services.algorithm.InformationAlgorithm;
 import breakingtherules.services.algorithm.Suggestion;
+import breakingtherules.tests.TestBase;
 
-public class InformationAlgorithmTest {
+public class InformationAlgorithmTest extends TestBase {
 
     private static final int RULE_WEIGHT = 25;
     private static final int JOB_ID = 4;
     private static final String ATTRIBUTE = Attribute.DESTINATION_TYPE;
-    private static final boolean PRINT_RESULTS = true;
+    private static final boolean PRINT_RESULTS = false;
 
     @Test
     public void getSuggestionTest() {

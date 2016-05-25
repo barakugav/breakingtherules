@@ -11,8 +11,9 @@ import breakingtherules.firewall.IPv4;
 import breakingtherules.firewall.IPv6;
 import breakingtherules.firewall.Service;
 import breakingtherules.firewall.Source;
+import breakingtherules.tests.TestBase;
 
-class FirewallTestsUtility {
+class FirewallTestsUtility extends TestBase {
 
     private static final Random rand = new Random();
 

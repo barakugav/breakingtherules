@@ -20,9 +20,10 @@ public class Destination extends IPAttribute {
      * 
      * @param ip
      *            IP of the destination
-     * @throws IllegalArgumentException
+     * @throws NullPointerException
+     *             if ip is null
      */
-    public Destination(final IP ip) throws IllegalArgumentException {
+    public Destination(final IP ip) throws NullPointerException {
 	super(ip);
     }
 

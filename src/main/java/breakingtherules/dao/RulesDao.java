@@ -15,6 +15,7 @@ public interface RulesDao {
      *            The id of the job that is in question
      * @return The original rule of the given job
      * @throws IOException
+     *             if any I/O error occurs
      */
     public Rule getOriginalRule(int jobId) throws IOException;
 

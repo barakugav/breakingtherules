@@ -32,6 +32,7 @@ public class HitsController {
      * @throws IOException
      *             if failed
      * @throws NoCurrentJobException
+     *             if job wasn't initialize
      */
     @RequestMapping(value = "/hits", method = RequestMethod.GET)
     public ListDto<Hit> hits(int startIndex, int endIndex) throws NoCurrentJobException, IOException {

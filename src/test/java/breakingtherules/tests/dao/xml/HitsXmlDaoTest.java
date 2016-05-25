@@ -18,8 +18,9 @@ import breakingtherules.dao.xml.HitsXmlDao;
 import breakingtherules.dao.xml.UtilityXmlDao;
 import breakingtherules.firewall.Filter;
 import breakingtherules.firewall.Rule;
+import breakingtherules.tests.TestBase;
 
-public class HitsXmlDaoTest {
+public class HitsXmlDaoTest extends TestBase {
 
     @Test
     public void getHitsByPathTest() {

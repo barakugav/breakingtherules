@@ -3,7 +3,6 @@ package breakingtherules.firewall;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
@@ -480,7 +479,7 @@ public class Service implements Attribute {
      */
     @Override
     public int hashCode() {
-	return Objects.hash(m_protocolCode, m_portRangeStart, m_portRangeEnd);
+	return (((m_protocolCode << 8) ^ m_portRangeEnd) << 8) ^ m_portRangeStart;
     }
 
     /*

@@ -169,6 +169,7 @@ public class Job {
      * @param ruleId
      *            the rule to delete
      * @throws IOException
+     *             if any I/O error occurs
      */
     public void deleteRule(int ruleId) throws IOException {
 	for (Rule r : m_rules) {
@@ -247,6 +248,7 @@ public class Job {
      * @param filter
      *            new filter of this job
      * @throws IOException
+     *             if any I/O error occurs
      */
     public void setFilter(Filter filter) throws IOException {
 	checkJobState();
@@ -277,6 +279,7 @@ public class Job {
      * Takes the current filter and adds it as a new rule
      * 
      * @throws IOException
+     *             if any I/O error occurs
      */
     public void addCurrentFilterToRules() throws IOException {
 	checkJobState();
