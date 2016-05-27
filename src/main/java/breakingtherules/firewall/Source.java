@@ -8,11 +8,7 @@ public class Source extends IPAttribute {
     /**
      * Source attribute that represent 'Any' source (contains all others)
      */
-    public static final Source ANY_SOURCE;
-
-    static {
-	ANY_SOURCE = new Source(IP.getAnyIP());
-    }
+    public static final Source ANY_SOURCE = new AnySource();
 
     /**
      * Constructor
@@ -75,6 +71,29 @@ public class Source extends IPAttribute {
     @Override
     public Source createMutation(final IP ip) {
 	return new Source(ip);
+    }
+
+    private static class AnySource extends Source {
+
+	private AnySource() {
+	    super(IP.ANY_IP);
+	}
+
+	@Override
+	public boolean contains(final Attribute other) {
+	    return other instanceof Source;
+	}
+
+	@Override
+	public boolean equals(Object o) {
+	    return o instanceof AnySource || super.equals(o);
+	}
+
+	@Override
+	public String toString() {
+	    return "Any";
+	}
+
     }
 
 }

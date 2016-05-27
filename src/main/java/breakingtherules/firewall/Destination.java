@@ -9,11 +9,7 @@ public class Destination extends IPAttribute {
      * Destination attribute that represent 'Any' destination (contains all
      * others)
      */
-    public static final Destination ANY_DESTINATION;
-
-    static {
-	ANY_DESTINATION = new Destination(IP.getAnyIP());
-    }
+    public static final Destination ANY_DESTINATION = new AnyDestination();
 
     /**
      * Constructor
@@ -78,6 +74,29 @@ public class Destination extends IPAttribute {
     @Override
     public Destination createMutation(final IP ip) {
 	return new Destination(ip);
+    }
+
+    private static class AnyDestination extends Destination {
+
+	public AnyDestination() {
+	    super(IP.ANY_IP);
+	}
+
+	@Override
+	public boolean contains(Attribute other) {
+	    return other instanceof Destination;
+	}
+
+	@Override
+	public boolean equals(Object o) {
+	    return o instanceof AnyDestination || super.equals(o);
+	}
+
+	@Override
+	public String toString() {
+	    return "Any";
+	}
+
     }
 
 }

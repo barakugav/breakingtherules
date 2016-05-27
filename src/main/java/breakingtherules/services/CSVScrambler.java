@@ -724,10 +724,10 @@ public class CSVScrambler implements Runnable {
 	final List<Boolean> prefix = new ArrayList<>(ip.getMaxLength());
 	while (!tree.ip.equals(ip)) {
 	    if (tree.left != null && tree.left.ip.contains(ip)) {
-		prefix.add(false);
+		prefix.add(Boolean.FALSE);
 		tree = tree.left;
 	    } else {
-		prefix.add(true);
+		prefix.add(Boolean.TRUE);
 		tree = tree.right;
 	    }
 	}

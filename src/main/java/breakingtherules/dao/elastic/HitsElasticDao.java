@@ -169,9 +169,9 @@ public class HitsElasticDao implements HitsDao {
 
     @Override
     public int getHitsNumber(final int jobId, final List<Rule> rules, final Filter filter) throws IOException {
-	final Integer cachedSize = m_totalHitsCache.get(new Triple<>(jobId, rules, filter));
+	final Integer cachedSize = m_totalHitsCache.get(new Triple<>(Integer.valueOf(jobId), rules, filter));
 	if (cachedSize != null) {
-	    return cachedSize;
+	    return cachedSize.intValue();
 	} else {
 	    return getHits(jobId, rules, filter).getSize();
 	}
@@ -180,22 +180,29 @@ public class HitsElasticDao implements HitsDao {
     @Override
     public ListDto<Hit> getHits(final int jobId, final List<Rule> rules, final Filter filter) throws IOException {
 	final List<Hit> hits = getHits(jobId, rules, filter, true, 0, 0);
-	m_totalHitsCache.put(new Triple<>(jobId, rules, filter), hits.size());
+
+	// Create new list of the rules to clone the list - so modifications on
+	// the original list will not change the list saved in the cache
+	m_totalHitsCache.put(new Triple<>(Integer.valueOf(jobId), new ArrayList<>(rules), filter),
+		Integer.valueOf(hits.size()));
 	return new ListDto<>(hits, 0, hits.size(), hits.size());
     }
 
     @Override
     public ListDto<Hit> getHits(final int jobId, final List<Rule> rules, final Filter filter, final int startIndex,
 	    final int endIndex) throws IOException {
-	final Integer total = m_totalHitsCache.get(new Triple<>(jobId, rules, filter));
+	final Integer total = m_totalHitsCache.get(new Triple<>(Integer.valueOf(jobId), rules, filter));
 	if (total == null) {
 	    // getHits(int, List<Rule>, Filter) save to cache
 	    final ListDto<Hit> allHits = getHits(jobId, rules, filter);
+	    final int size = allHits.getSize();
+
 	    final List<Hit> hits = Utility.subList(allHits.getData(), startIndex, endIndex - startIndex);
-	    return new ListDto<>(hits, startIndex, endIndex, allHits.getData().size());
+	    return new ListDto<>(hits, Math.min(startIndex, size), Math.min(endIndex, size), allHits.getData().size());
 	} else {
 	    final List<Hit> hits = getHits(jobId, rules, filter, false, startIndex, endIndex);
-	    return new ListDto<>(hits, startIndex, endIndex, total);
+	    final int size = hits.size();
+	    return new ListDto<>(hits, Math.min(startIndex, size), Math.min(endIndex, size), total.intValue());
 	}
     }
 
@@ -316,7 +323,7 @@ public class HitsElasticDao implements HitsDao {
     private static Hit toFirewallHit(final SearchHit searchHit) {
 	final Map<String, Object> fields = searchHit.getSource();
 
-	final int hitId = (int) fields.get(ElasticDaoConfig.FIELD_ID);
+	final int hitId = ((Integer) fields.get(ElasticDaoConfig.FIELD_ID)).intValue();
 	final List<Attribute> attrs = new ArrayList<>();
 
 	final Object allAtributes = fields.get(ElasticDaoConfig.FIELD_ATTRIBUTES);
@@ -330,7 +337,7 @@ public class HitsElasticDao implements HitsDao {
 		return null;
 	    }
 	    final Map<?, ?> attributeHash = (Map<?, ?>) attribute;
-	    final int attrTypeID = (int) attributeHash.get(ElasticDaoConfig.FIELD_ATTR_TYPEID);
+	    final int attrTypeID = ((Integer) attributeHash.get(ElasticDaoConfig.FIELD_ATTR_TYPEID)).intValue();
 	    final String attrValue = (String) attributeHash.get(ElasticDaoConfig.FIELD_ATTR_VALUE);
 	    attrs.add(Attribute.createFromString(attrTypeID, attrValue));
 	}

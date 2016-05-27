@@ -38,7 +38,7 @@ public class Service implements Attribute {
     /**
      * Service that represents 'Any' service (contains all others)
      */
-    public static final Service ANY_SERVICE;
+    public static final Service ANY_SERVICE = new AnyService();
 
     /**
      * The minimum legal port number
@@ -64,7 +64,6 @@ public class Service implements Attribute {
     private static final String ANY = "Any";
 
     static {
-	ANY_SERVICE = new Service(ANY_PROTOCOL, MIN_PORT, MAX_PORT);
 	PROTOCOL_NAMES = new String[256];
 	PROTOCOL_NAMES[0] = "HOPORT";
 	PROTOCOL_NAMES[1] = "ICMP";
@@ -468,7 +467,7 @@ public class Service implements Attribute {
      * @return true if this service contains the other service by only port
      *         range comparing
      */
-    private boolean containsPort(Service other) {
+    protected boolean containsPort(Service other) {
 	return m_portRangeStart <= other.m_portRangeStart && other.m_portRangeEnd <= m_portRangeEnd;
     }
 
@@ -583,6 +582,29 @@ public class Service implements Attribute {
 	    throw new IllegalArgumentException("Protocol code should be in range [0, 255]: " + protocolCode);
 	}
 	return PROTOCOL_NAMES[protocolCode];
+    }
+
+    private static class AnyService extends Service {
+
+	private AnyService() {
+	    super(ANY_PROTOCOL, MIN_PORT, MAX_PORT);
+	}
+
+	@Override
+	public boolean contains(Attribute other) {
+	    return other instanceof Service;
+	}
+
+	@Override
+	protected boolean containsPort(Service other) {
+	    return true;
+	}
+
+	@Override
+	public String toString() {
+	    return ANY;
+	}
+
     }
 
 }

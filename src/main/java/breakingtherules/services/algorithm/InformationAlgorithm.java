@@ -58,7 +58,7 @@ public class InformationAlgorithm implements SuggestionsAlgorithm {
     /**
      * Default value for the ruleWeight parameter
      */
-    private static final double DEFAULT_RULE_WIEGHT = 3000;
+    private static final double DEFAULT_RULE_WIEGHT = 5;
 
     /**
      * An estimation to the percentage of nodes in the next layer (out of the
@@ -224,9 +224,6 @@ public class InformationAlgorithm implements SuggestionsAlgorithm {
 	// Creates lowest layer nodes from hits
 	List<IPNode> nodes = toIPNodeList(hits, attTypeId);
 
-	if (nodes == null) {
-	    throw new IllegalArgumentException("Nodes list can't be null");
-	}
 	if (nodes.size() == 0) {
 	    return new ArrayList<>();
 	}
@@ -412,8 +409,8 @@ public class InformationAlgorithm implements SuggestionsAlgorithm {
 	    }
 	    ipNode.ip = att.getIp();
 	    ipNode.compressSize = m_ruleWeight;
-	    ipNode.bestSubnets = new UnionList<>(ipNode.toSuggestion());
 	    ipNode.size = 1;
+	    ipNode.bestSubnets = new UnionList<>(ipNode.toSuggestion());
 	    allNodes.add(ipNode);
 	}
 

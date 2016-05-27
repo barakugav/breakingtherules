@@ -14,6 +14,7 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 import breakingtherules.dao.HitsDao;
+import breakingtherules.dao.UtilityDao;
 import breakingtherules.dto.ListDto;
 import breakingtherules.firewall.Attribute;
 import breakingtherules.firewall.Destination;
@@ -88,7 +89,7 @@ public class HitsXmlDao implements HitsDao {
 	final List<Hit> matchedHits = new ArrayList<>();
 
 	for (final Hit hit : allHits) {
-	    if (isMatch(rules, filter, hit)) {
+	    if (UtilityDao.isMatch(hit, rules, filter)) {
 		matchedHits.add(hit);
 	    }
 	}
@@ -255,29 +256,6 @@ public class HitsXmlDao implements HitsDao {
 	for (final Attribute attribute : hit) {
 	    node.setAttribute(attribute.getType().toLowerCase(), attribute.toString());
 	}
-    }
-
-    /**
-     * Check if a hit is match to a list of rules and a filter
-     * 
-     * @param rules
-     *            list of rules to check on the hit
-     * @param filter
-     *            filter to check on the hit
-     * @param hit
-     *            the hit that being checked
-     * @return true if hit match all rules and filter, else - false
-     */
-    private static boolean isMatch(final List<Rule> rules, final Filter filter, final Hit hit) {
-	if (!filter.isMatch(hit)) {
-	    return false;
-	}
-	for (final Rule rule : rules) {
-	    if (rule.isMatch(hit)) {
-		return false;
-	    }
-	}
-	return true;
     }
 
 }

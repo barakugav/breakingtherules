@@ -16,15 +16,7 @@ public class Filter extends AttributesContainer {
     /**
      * Filter that allow any hit.
      */
-    public static final Filter ANY_FILTER;
-
-    static {
-	final List<Attribute> attributes = new ArrayList<>();
-	attributes.add(Source.ANY_SOURCE);
-	attributes.add(Destination.ANY_DESTINATION);
-	attributes.add(Service.ANY_SERVICE);
-	ANY_FILTER = new Filter(attributes);
-    }
+    public static final Filter ANY_FILTER = new AnyFilter();
 
     /**
      * Construct new filter from list of attributes
@@ -75,6 +67,38 @@ public class Filter extends AttributesContainer {
     @Override
     public boolean equals(final Object o) {
 	return o instanceof Filter && super.equals(o);
+    }
+
+    private static class AnyFilter extends Filter {
+
+	private static final List<Attribute> anyAttributes;
+
+	static {
+	    anyAttributes = new ArrayList<>();
+	    anyAttributes.add(Source.ANY_SOURCE);
+	    anyAttributes.add(Destination.ANY_DESTINATION);
+	    anyAttributes.add(Service.ANY_SERVICE);
+	}
+
+	private AnyFilter() {
+	    super(anyAttributes);
+	}
+
+	@Override
+	public boolean isMatch(Hit hit) {
+	    return true;
+	}
+
+	@Override
+	public boolean equals(Object o) {
+	    return o instanceof AnyFilter || super.equals(o);
+	}
+
+	@Override
+	public String toString() {
+	    return "Any";
+	}
+
     }
 
 }

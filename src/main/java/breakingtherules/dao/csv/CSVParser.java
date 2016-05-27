@@ -14,9 +14,12 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
 
+import breakingtherules.dao.UtilityDao;
 import breakingtherules.firewall.Attribute;
 import breakingtherules.firewall.Destination;
+import breakingtherules.firewall.Filter;
 import breakingtherules.firewall.Hit;
+import breakingtherules.firewall.Rule;
 import breakingtherules.firewall.Service;
 import breakingtherules.firewall.Source;
 import breakingtherules.utilities.Utility;
@@ -27,16 +30,23 @@ import breakingtherules.utilities.Utility;
 public class CSVParser {
 
     private int m_idCounter;
-
+    private final int sourceIndex;
+    private final int destinationIndex;
+    private final int serviceProtocolIndex;
+    private final int servicePortIndex;
     private final List<Integer> m_columnsTypes;
 
     /**
      * IDs for attributes used by this parser
      */
-    public static final int SOURCE = 0;
-    public static final int DESTINATION = 1;
-    public static final int SERVICE_PROTOCOL = 2;
-    public static final int SERVICE_PORT = 3;
+    private static final int SOURCE_VAL = 0;
+    private static final int DESTINATION_VAL = 1;
+    private static final int SERVICE_PROTOCOL_VAL = 2;
+    private static final int SERVICE_PORT_VAL = 3;
+    public static final Integer SOURCE = Integer.valueOf(SOURCE_VAL);
+    public static final Integer DESTINATION = Integer.valueOf(DESTINATION_VAL);
+    public static final Integer SERVICE_PROTOCOL = Integer.valueOf(SERVICE_PROTOCOL_VAL);
+    public static final Integer SERVICE_PORT = Integer.valueOf(SERVICE_PORT_VAL);
 
     /**
      * Default columns types
@@ -54,26 +64,36 @@ public class CSVParser {
 
     public CSVParser(final List<Integer> columnsTypes) {
 	m_idCounter = 1;
+
 	// Create unmodifiable clone of the input list
 	m_columnsTypes = Collections.unmodifiableList(new ArrayList<>(columnsTypes));
+
+	sourceIndex = columnsTypes.indexOf(SOURCE);
+	destinationIndex = columnsTypes.indexOf(DESTINATION);
+	serviceProtocolIndex = columnsTypes.indexOf(SERVICE_PROTOCOL);
+	servicePortIndex = columnsTypes.indexOf(SERVICE_PORT);
     }
 
     public Hit fromCSV(final String line) throws CSVParseException {
 	final List<String> words = Utility.breakToWords(line);
 	final List<Attribute> attributes = new ArrayList<>();
 
-	if (m_columnsTypes.contains(SOURCE)) {
-	    final String source = words.get(m_columnsTypes.indexOf(SOURCE));
-	    attributes.add(fromCSVSource(source));
-	}
-	if (m_columnsTypes.contains(DESTINATION)) {
-	    final String destination = words.get(m_columnsTypes.indexOf(DESTINATION));
-	    attributes.add(fromCSVDestination(destination));
-	}
-	if (m_columnsTypes.contains(SERVICE_PROTOCOL) && m_columnsTypes.contains(SERVICE_PORT)) {
-	    final String protocol = words.get(m_columnsTypes.indexOf(SERVICE_PROTOCOL));
-	    final String port = words.get(m_columnsTypes.indexOf(SERVICE_PORT));
-	    attributes.add(fromCSVService(port, protocol));
+	try {
+	    if (sourceIndex >= 0) {
+		final String source = words.get(sourceIndex);
+		attributes.add(fromCSVSource(source));
+	    }
+	    if (destinationIndex >= 0) {
+		final String destination = words.get(destinationIndex);
+		attributes.add(fromCSVDestination(destination));
+	    }
+	    if (serviceProtocolIndex >= 0 && servicePortIndex >= 0) {
+		final String protocol = words.get(serviceProtocolIndex);
+		final String port = words.get(servicePortIndex);
+		attributes.add(fromCSVService(port, protocol));
+	    }
+	} catch (IndexOutOfBoundsException e) {
+	    throw new CSVParseException("hit line didn't have enough attributes", e);
 	}
 
 	return new Hit(m_idCounter++, attributes);
@@ -84,19 +104,19 @@ public class CSVParser {
 	for (final int colomnsType : m_columnsTypes) {
 	    String colomnValue = "";
 	    switch (colomnsType) {
-	    case SOURCE:
+	    case SOURCE_VAL:
 		final Source source = (Source) hit.getAttribute(Attribute.SOURCE_TYPE_ID);
 		colomnValue = toCSVSource(source);
 		break;
-	    case DESTINATION:
+	    case DESTINATION_VAL:
 		final Destination destination = (Destination) hit.getAttribute(Attribute.DESTINATION_TYPE_ID);
 		colomnValue = toCSVDestination(destination);
 		break;
-	    case SERVICE_PROTOCOL:
+	    case SERVICE_PROTOCOL_VAL:
 		Service service = (Service) hit.getAttribute(Attribute.SERVICE_TYPE_ID);
 		colomnValue = toCSVServiceProtocol(service);
 		break;
-	    case SERVICE_PORT:
+	    case SERVICE_PORT_VAL:
 		service = (Service) hit.getAttribute(Attribute.SERVICE_TYPE_ID);
 		colomnValue = toCSVServicePort(service);
 		break;
@@ -210,6 +230,45 @@ public class CSVParser {
 	    }
 	} catch (final CSVParseException e) {
 	    throw new CSVParseException("In line " + lineNumber + ": ", e);
+	}
+
+	return hits;
+    }
+
+    static List<Hit> fromCSV(final List<Integer> columnsTypes, final String fileName, List<Rule> rules, Filter filter,
+	    int endIndex) throws CSVParseException, IOException {
+	if (columnsTypes.contains(SERVICE_PORT) ^ columnsTypes.contains(SERVICE_PROTOCOL)) {
+	    throw new IllegalArgumentException("Choose service port and service protocol or neither of them");
+	}
+
+	final CSVParser parser = new CSVParser(columnsTypes);
+	final List<Hit> hits = new ArrayList<>();
+	int lineNumber = 1;
+
+	BufferedReader reader = null;
+	try {
+	    reader = new BufferedReader(new FileReader(fileName));
+	    for (String line; (line = reader.readLine()) != null;) {
+		if (line.isEmpty()) {
+		    continue;
+		}
+		final Hit hit = parser.fromCSV(line);
+		if (UtilityDao.isMatch(hit, rules, filter)) {
+		    hits.add(hit);
+
+		    if (endIndex >= 0 && hits.size() >= endIndex) {
+			// Break if reached end index
+			break;
+		    }
+		}
+		lineNumber++;
+	    }
+	} catch (final CSVParseException e) {
+	    throw new CSVParseException("In line " + lineNumber + ": ", e);
+	} finally {
+	    if (reader != null) {
+		reader.close();
+	    }
 	}
 
 	return hits;

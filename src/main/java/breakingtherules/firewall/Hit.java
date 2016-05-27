@@ -92,16 +92,6 @@ public class Hit extends AttributesContainer {
     /*
      * (non-Javadoc)
      * 
-     * @see breakingtherules.firewall.AttributesContainer#hashCode()
-     */
-    @Override
-    public int hashCode() {
-	return super.hashCode();
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
      * @see breakingtherules.firewall.AttributesContainer#toString()
      */
     @Override

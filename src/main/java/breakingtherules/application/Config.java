@@ -8,6 +8,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 
 import breakingtherules.dao.HitsDao;
+import breakingtherules.dao.csv.HitsCSVDao;
 import breakingtherules.dao.elastic.HitsElasticDao;
 import breakingtherules.dao.xml.HitsXmlDao;
 import breakingtherules.services.algorithm.InformationAlgorithm;
@@ -31,6 +32,11 @@ public class Config {
     @Bean
     public HitsDao hitsXmlDao() {
 	return new HitsXmlDao();
+    }
+
+    // @Bean
+    public HitsDao hitsCSVDao() {
+	return new HitsCSVDao();
     }
 
     // @Bean(destroyMethod = "cleanup")

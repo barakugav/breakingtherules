@@ -72,7 +72,7 @@ public class ArraysUtilities {
 	final boolean[] arr = new boolean[list.size()];
 	int i = 0;
 	for (final Iterator<Boolean> it = list.iterator(); it.hasNext();) {
-	    arr[i++] = it.next();
+	    arr[i++] = it.next().booleanValue();
 	}
 	return arr;
     }

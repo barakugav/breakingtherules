@@ -88,8 +88,7 @@ abstract class AttributesContainer implements Iterable<Attribute> {
      * @return the wanted attribute
      */
     public Attribute getAttribute(final int typeId) {
-	Attribute[] attributes = m_attributes;
-	return (0 <= typeId && typeId < attributes.length) ? attributes[typeId] : null;
+	return (0 <= typeId && typeId < Attribute.TYPES_COUNT) ? m_attributes[typeId] : null;
     }
 
     /*
@@ -121,7 +120,7 @@ abstract class AttributesContainer implements Iterable<Attribute> {
 	for (int i = 0; i < Attribute.TYPES_COUNT; i++) {
 	    final Attribute thisAttr = thisAttributes[i];
 	    final Attribute otherAttr = otherAttributes[i];
-	    if (!Objects.equals(thisAttr, otherAttr)) {
+	    if (thisAttr != null ? !thisAttr.equals(otherAttr) : otherAttr != null) {
 		return false;
 	    }
 	}

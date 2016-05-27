@@ -9,6 +9,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
  */
 public abstract class IP implements Comparable<IP> {
 
+    public static final IP ANY_IP = new AnyIP();
+
     /**
      * Length of the constant prefix
      */
@@ -103,7 +105,7 @@ public abstract class IP implements Comparable<IP> {
      */
     public static IP fromString(final String ip) {
 	if (ip.equals("Any")) {
-	    return getAnyIP();
+	    return ANY_IP;
 	}
 
 	// IPv4 format
@@ -188,16 +190,6 @@ public abstract class IP implements Comparable<IP> {
      * @return max possible prefix length
      */
     public abstract int getMaxLength();
-
-    /**
-     * Get IP that represents 'Any' IP (contains) all others
-     * 
-     * @return instance of 'Any' IP
-     */
-    @JsonIgnore
-    public static IP getAnyIP() {
-	return AnyIP.instance;
-    }
 
     /**
      * The AnyIP class represents 'Any' IP (contains all others). This class is
