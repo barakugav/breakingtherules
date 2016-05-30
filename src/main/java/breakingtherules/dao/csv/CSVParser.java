@@ -7,12 +7,9 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
-import java.util.NoSuchElementException;
 
 import breakingtherules.dao.UtilityDao;
 import breakingtherules.firewall.Attribute;
@@ -169,48 +166,6 @@ public class CSVParser {
 	    throw new IOException("File read is not permitted!");
 	}
 
-	final BufferedReader reader = new BufferedReader(new FileReader(repoFile));
-	try {
-	    return fromCSV(columnsTypes, new Iterator<String>() {
-
-		private String line = reader.readLine();
-
-		@Override
-		public boolean hasNext() {
-		    return line != null;
-		}
-
-		@Override
-		public String next() {
-		    String l = line;
-		    if (l == null)
-			throw new NoSuchElementException();
-		    try {
-			line = reader.readLine();
-		    } catch (final IOException e) {
-			throw new UncheckedIOException(e);
-		    }
-		    return l;
-		}
-	    });
-	} finally {
-	    reader.close();
-	}
-    }
-
-    /**
-     * Create it list from string lines iterator
-     * 
-     * @param columnsTypes
-     *            configuration of columns types
-     * @param lines
-     *            string lines iterator
-     * @return hits built from the lines
-     * @throws CSVParseException
-     *             if fails to parse lines
-     */
-    public static List<Hit> fromCSV(final List<Integer> columnsTypes, final Iterator<String> lines)
-	    throws CSVParseException {
 	if (columnsTypes.contains(SERVICE_PORT) ^ columnsTypes.contains(SERVICE_PROTOCOL)) {
 	    throw new IllegalArgumentException("Choose service port and service protocol or neither of them");
 	}
@@ -219,9 +174,10 @@ public class CSVParser {
 	final List<Hit> hits = new ArrayList<>();
 	int lineNumber = 1;
 
+	BufferedReader reader = null;
 	try {
-	    while (lines.hasNext()) {
-		final String line = lines.next();
+	    reader = new BufferedReader(new FileReader(repoFile));
+	    for (String line; (line = reader.readLine()) != null;) {
 		if (line.isEmpty()) {
 		    continue;
 		}
@@ -230,6 +186,10 @@ public class CSVParser {
 	    }
 	} catch (final CSVParseException e) {
 	    throw new CSVParseException("In line " + lineNumber + ": ", e);
+	} finally {
+	    if (reader != null) {
+		reader.close();
+	    }
 	}
 
 	return hits;

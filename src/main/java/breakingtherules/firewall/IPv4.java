@@ -2,7 +2,9 @@ package breakingtherules.firewall;
 
 import java.util.List;
 
+import breakingtherules.firewall.IPv4.IPv4Cache.IPv4CacheKey;
 import breakingtherules.utilities.Utility;
+import breakingtherules.utilities.WeakCache;
 
 public final class IPv4 extends IP {
 
@@ -71,7 +73,7 @@ public final class IPv4 extends IP {
 	}
 
 	final int mask = ~(1 << (MAX_LENGTH - p));
-	return new IPv4(m_address & mask, p - 1);
+	return createInternal(m_address & mask, p - 1);
     }
 
     /*
@@ -87,7 +89,7 @@ public final class IPv4 extends IP {
 	}
 	final int a = m_address;
 	final int mask = 1 << (MAX_LENGTH - p);
-	return new IPv4[] { new IPv4(a & ~mask, p), new IPv4(a | mask, p) };
+	return new IPv4[] { createInternal(a & ~mask, p), createInternal(a | mask, p) };
     }
 
     /*
@@ -308,7 +310,7 @@ public final class IPv4 extends IP {
 	// Reset suffix
 	address &= prefix != 0 ? ~((1 << (MAX_LENGTH - prefix)) - 1) : 0;
 
-	return new IPv4(address, prefix);
+	return createInternal(address, prefix);
     }
 
     public static IPv4 create(final int... address) {
@@ -330,7 +332,7 @@ public final class IPv4 extends IP {
 
 	// Reset suffix
 	a &= prefix != 0 ? ~((1 << (MAX_LENGTH - prefix)) - 1) : 0;
-	return new IPv4(a, prefix);
+	return createInternal(a, prefix);
     }
 
     public static IPv4 create(final List<Boolean> address) {
@@ -344,7 +346,52 @@ public final class IPv4 extends IP {
 		a += 1;
 	    }
 	}
-	return new IPv4(a, MAX_LENGTH);
+	return createInternal(a, MAX_LENGTH);
+    }
+
+    private static IPv4 createInternal(final int address, final int prefix) {
+	final IPv4CacheKey cacheKey = new IPv4CacheKey(address, prefix);
+	IPv4 ip = IPv4Cache.cache.get(cacheKey);
+	if (ip == null) {
+	    ip = new IPv4(address, prefix);
+	    IPv4Cache.cache.put(cacheKey, ip);
+	}
+	return ip;
+    }
+
+    static final class IPv4Cache {
+
+	static final WeakCache<IPv4CacheKey, IPv4> cache;
+
+	static {
+	    cache = new WeakCache<>();
+	}
+
+	static final class IPv4CacheKey {
+
+	    final int address;
+	    final int prefix;
+
+	    IPv4CacheKey(int a, int p) {
+		address = a;
+		prefix = p;
+	    }
+
+	    @Override
+	    public int hashCode() {
+		return address ^ prefix;
+	    }
+
+	    @Override
+	    public boolean equals(Object o) {
+		if (!(o instanceof IPv4CacheKey))
+		    return false;
+		IPv4CacheKey other = (IPv4CacheKey) o;
+		return address == other.address && prefix == other.prefix;
+	    }
+
+	}
+
     }
 
 }

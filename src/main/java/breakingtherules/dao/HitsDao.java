@@ -1,6 +1,7 @@
 package breakingtherules.dao;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 import breakingtherules.dto.ListDto;
@@ -12,6 +13,19 @@ import breakingtherules.firewall.Rule;
  * Component that supply hits from repository
  */
 public interface HitsDao {
+
+    /**
+     * Get all hits of the job
+     * 
+     * @param jobId
+     *            id of the job
+     * @return list of all hits from jog
+     * @throws IOException
+     *             if any I/O errors occurs
+     */
+    default ListDto<Hit> getHits(int jobId) throws IOException {
+	return getHits(jobId, new ArrayList<>(), Filter.ANY_FILTER);
+    }
 
     /**
      * Get hits from repository that match all rules and filter

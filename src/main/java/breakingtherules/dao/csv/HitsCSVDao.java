@@ -23,6 +23,19 @@ public class HitsCSVDao implements HitsDao {
     }
 
     @Override
+    public ListDto<Hit> getHits(int jobId) throws IOException {
+	try {
+	    List<Hit> hits = CSVParser.fromCSV(CSVParser.DEFAULT_COLUMNS_TYPES, jobId);
+	    int size = hits.size();
+	    m_totalHitsCache.put(new Triple<>(Integer.valueOf(jobId), new ArrayList<>(), Filter.ANY_FILTER),
+		    Integer.valueOf(size));
+	    return new ListDto<>(hits, 0, size, size);
+	} catch (CSVParseException e) {
+	    throw new IOException(e);
+	}
+    }
+
+    @Override
     public ListDto<Hit> getHits(int jobId, List<Rule> rules, Filter filter) throws IOException {
 	try {
 	    List<Hit> hits = CSVParser.fromCSV(CSVParser.DEFAULT_COLUMNS_TYPES, CSVDaoConfig.getHitsFile(jobId), rules,
