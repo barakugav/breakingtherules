@@ -170,7 +170,7 @@ public class RulesXmlDao implements RulesDao {
 	final int newId = Integer.parseInt(id);
 	final Source newSource = new Source(source);
 	final Destination newDestination = new Destination(destination);
-	final Service newService = new Service(service);
+	final Service newService = Service.create(service);
 
 	// Create attributes vector
 	final List<Attribute> attributes = new ArrayList<>();

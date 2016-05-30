@@ -7,33 +7,22 @@ import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import breakingtherules.utilities.Utility;
+import breakingtherules.utilities.WeakCache;
 
-/**
- * Service attribute
- * 
- * Has a protocol member and port number
- */
 public class Service implements Attribute {
 
-    /**
-     * Code of this service protocol
-     */
     private final int m_protocolCode;
 
-    /**
-     * Start of the ports range
-     */
-    private final int m_portRangeStart;
+    private final int m_portsRange;
 
-    /**
-     * End of the ports range
-     */
-    private final int m_portRangeEnd;
+    private static final int MIN_PROTOCOL = 0;
+
+    private static final int MAX_PROTOCOL = 255;
 
     /**
      * Service of protocol 'Any protocol'
      */
-    public static final int ANY_PROTOCOL = -1;
+    public static final int ANY_PROTOCOL = MAX_PROTOCOL + 1;
 
     /**
      * Service that represents 'Any' service (contains all others)
@@ -49,6 +38,8 @@ public class Service implements Attribute {
      * The maximum legal port number
      */
     private static final int MAX_PORT = (1 << 16) - 1;
+
+    private static final int PORT_MASK = (1 << 16) - 1;
 
     /**
      * All names of the protocol. Name for protocol with code x is in
@@ -227,174 +218,9 @@ public class Service implements Attribute {
 	PROTOCOL_CODES = Collections.unmodifiableMap(map);
     }
 
-    /**
-     * Construct new service with protocol and specific number
-     * 
-     * @param protocol
-     *            protocol of the service
-     * @param port
-     *            port number of the service
-     */
-    public Service(final String protocol, final int port) {
-	this(protocolCode(protocol), port, port);
-    }
-
-    /**
-     * Construct new service with protocol and port range
-     * 
-     * @param protocol
-     *            protocol of the service
-     * @param portRangeStart
-     *            start of the port range of the service
-     * @param portRangeEnd
-     *            end of the port range of the service
-     */
-    public Service(final String protocol, final int portRangeStart, final int portRangeEnd) {
-	this(protocolCode(protocol), portRangeStart, portRangeEnd);
-    }
-
-    /**
-     * Construct new service by protocol code and specific port
-     * 
-     * @param protocol
-     *            protocol code of the service
-     * @param port
-     *            port number of the service
-     */
-    public Service(final int protocol, final int port) {
-	this(protocol, port, port);
-    }
-
-    /**
-     * Constructor
-     * 
-     * @param protocol
-     *            protocol code of the service
-     * @param portRangeStart
-     *            start of the port range of the service
-     * @param portRangeEnd
-     *            end of the port range of the service
-     */
-    public Service(final int protocol, final int portRangeStart, final int portRangeEnd) {
-	if (protocol != ANY_PROTOCOL && (protocol < 0 || protocol > 255)) {
-	    throw new IllegalArgumentException("protocol should be in range [-1, 255]: " + protocol);
-	} else if (portRangeStart < MIN_PORT || portRangeStart > MAX_PORT) {
-	    throw new IllegalArgumentException("Port not in range: " + portRangeStart + ". should be in range ["
-		    + MIN_PORT + ", " + MAX_PORT + "]");
-	} else if (portRangeEnd < MIN_PORT || portRangeEnd > MAX_PORT) {
-	    throw new IllegalArgumentException(
-		    "Port not in range: " + portRangeEnd + ". should be in range [" + MIN_PORT + ", " + MAX_PORT + "]");
-	} else if (portRangeStart > portRangeEnd) {
-	    throw new IllegalArgumentException("portRangeStart > portRangeEnd");
-	}
-	m_protocolCode = protocol;
-	m_portRangeStart = portRangeStart;
-	m_portRangeEnd = portRangeEnd;
-    }
-
-    /**
-     * Constructor of String service (parse)
-     * 
-     * @param service
-     *            String service in format ('port' 'service type')
-     */
-    public Service(String service) {
-	if (service == null) {
-	    throw new IllegalArgumentException("Null args");
-	}
-
-	// If Any Service
-	if (service.equals(ANY) || service.equals("Any Any")) {
-	    m_protocolCode = ANY_PROTOCOL;
-	    m_portRangeStart = MIN_PORT;
-	    m_portRangeEnd = MAX_PORT;
-	    return;
-	}
-
-	// If Any port, specific protocol
-	if (service.length() > ANY.length() && service.substring(0, ANY.length()).equals(ANY)) {
-	    m_portRangeStart = MIN_PORT;
-	    m_portRangeEnd = MAX_PORT;
-	    String protString = service.substring(ANY.length() + 1); // +1 for
-								     // the
-								     // space
-	    if (protString.matches("[a-zA-Z]+")) {
-		m_protocolCode = protocolCode(protString);
-		return;
-	    }
-	    throw new IllegalArgumentException("Bad protocol name in 'any port' option.");
-	}
-
-	// Service is in the format "[Protocol] [Port(s)]"
-
-	// Find separators
-	final int numOfSeparators = Utility.countOccurrencesOf(service, ' ') + Utility.countOccurrencesOf(service, '-');
-	final int separatorIndex = service.indexOf(' ');
-	final int portSeparatorIndex = service.indexOf('-');
-
-	switch (numOfSeparators) {
-
-	case 0:
-	    throw new IllegalArgumentException("Unknown format, missing port or protocol");
-	case 1:
-	    // only one port number
-	    final String portStr = service.substring(separatorIndex + 1);
-	    if (portStr.equals(ANY)) {
-		m_portRangeStart = MIN_PORT;
-		m_portRangeEnd = MAX_PORT;
-	    } else {
-		final int port = Integer.parseInt(portStr);
-		if (port != ANY_PROTOCOL && (port < MIN_PORT || port > MAX_PORT)) {
-		    throw new IllegalArgumentException("Service port: " + Utility.format(MIN_PORT, MAX_PORT, port));
-		}
-		m_portRangeStart = m_portRangeEnd = port;
-	    }
-	    service = service.substring(0, separatorIndex);
-	    break;
-	case 2:
-	    // start port
-	    final String portRangeStartStr = service.substring(separatorIndex + 1, portSeparatorIndex);
-	    if (portRangeStartStr.equals(ANY)) {
-		m_portRangeStart = MIN_PORT;
-	    } else {
-		final int port = Integer.parseInt(portRangeStartStr);
-		if (port != ANY_PROTOCOL && (port < MIN_PORT || port > MAX_PORT)) {
-		    throw new IllegalArgumentException("Service port: " + Utility.format(MIN_PORT, MAX_PORT, port));
-		}
-		m_portRangeStart = port;
-	    }
-
-	    // end port
-	    String portRangeEndStr = service.substring(portSeparatorIndex + 1);
-	    if (portRangeEndStr.equals(ANY)) {
-		m_portRangeEnd = MAX_PORT;
-	    } else {
-		final int port = Integer.parseInt(portRangeEndStr);
-		if (port != ANY_PROTOCOL && (port < MIN_PORT || port > MAX_PORT)) {
-		    throw new IllegalArgumentException("Service port: " + Utility.format(MIN_PORT, MAX_PORT, port));
-		}
-		m_portRangeEnd = port;
-	    }
-
-	    service = service.substring(0, separatorIndex);
-	    break;
-	default:
-	    throw new IllegalArgumentException("Unknow format: too many words");
-
-	}
-
-	if (m_portRangeStart > m_portRangeEnd) {
-	    throw new IllegalArgumentException("portRangeStart > portRangeEnd");
-	} else if (service.isEmpty()) {
-	    throw new IllegalArgumentException("No protocol");
-	}
-
-	if (service.equals(ANY) || service.equals("Port") || service.equals("Ports")) {
-	    m_protocolCode = ANY_PROTOCOL;
-
-	} else {
-	    m_protocolCode = protocolCode(service);
-	}
+    private Service(final int protocolCode, final int portsRange) {
+	m_protocolCode = protocolCode;
+	m_portsRange = portsRange;
     }
 
     /**
@@ -422,7 +248,7 @@ public class Service implements Attribute {
      * @return start of the port range of the service
      */
     public int getPortRangeStart() {
-	return m_portRangeStart;
+	return m_portsRange & PORT_MASK;
     }
 
     /**
@@ -431,7 +257,7 @@ public class Service implements Attribute {
      * @return start of the port range of the service
      */
     public int getPortRangeEnd() {
-	return m_portRangeEnd;
+	return (m_portsRange >> 16) & PORT_MASK;
     }
 
     /*
@@ -468,7 +294,7 @@ public class Service implements Attribute {
      *         range comparing
      */
     protected boolean containsPort(Service other) {
-	return m_portRangeStart <= other.m_portRangeStart && other.m_portRangeEnd <= m_portRangeEnd;
+	return getPortRangeStart() <= other.getPortRangeStart() && other.getPortRangeEnd() <= getPortRangeEnd();
     }
 
     /*
@@ -478,7 +304,7 @@ public class Service implements Attribute {
      */
     @Override
     public int hashCode() {
-	return (((m_protocolCode << 8) ^ m_portRangeEnd) << 8) ^ m_portRangeStart;
+	return m_portsRange ^ m_protocolCode;
     }
 
     /*
@@ -495,8 +321,7 @@ public class Service implements Attribute {
 	}
 
 	Service other = (Service) o;
-	return m_portRangeStart == other.m_portRangeStart && m_portRangeEnd == other.m_portRangeEnd
-		&& m_protocolCode == other.m_protocolCode;
+	return m_portsRange == other.m_portsRange && m_protocolCode == other.m_protocolCode;
     }
 
     /*
@@ -506,30 +331,32 @@ public class Service implements Attribute {
      */
     @Override
     public String toString() {
-	if (m_protocolCode == ANY_PROTOCOL && m_portRangeStart == MIN_PORT && m_portRangeEnd == MAX_PORT) {
+	final int portRangeStart = getPortRangeStart();
+	final int portRangeEnd = getPortRangeEnd();
+	if (m_protocolCode == ANY_PROTOCOL && portRangeStart == MIN_PORT && portRangeEnd == MAX_PORT) {
 	    // All ports, all protocols
 	    return ANY;
 	}
 
-	if (m_portRangeStart == MIN_PORT && m_portRangeEnd == MAX_PORT) {
+	if (portRangeStart == MIN_PORT && portRangeEnd == MAX_PORT) {
 	    // All ports, one protocol
 	    return ANY + ' ' + protocolName(m_protocolCode);
 	}
 
 	if (m_protocolCode == ANY_PROTOCOL) {
 	    // Some ports, any protocol
-	    if (m_portRangeStart == m_portRangeEnd) {
-		return "Port " + Integer.toString(m_portRangeStart);
+	    if (portRangeStart == portRangeEnd) {
+		return "Port " + Integer.toString(portRangeStart);
 	    } else {
-		return "Ports " + m_portRangeStart + '-' + m_portRangeEnd;
+		return "Ports " + portRangeStart + '-' + portRangeEnd;
 	    }
 	}
 
 	// Some ports, one protocol
-	if (m_portRangeStart == m_portRangeEnd) {
-	    return protocolName(m_protocolCode) + ' ' + Integer.toString(m_portRangeStart);
+	if (portRangeStart == portRangeEnd) {
+	    return protocolName(m_protocolCode) + ' ' + Integer.toString(portRangeStart);
 	} else {
-	    return protocolName(m_protocolCode) + ' ' + m_portRangeStart + '-' + m_portRangeEnd;
+	    return protocolName(m_protocolCode) + ' ' + portRangeStart + '-' + portRangeEnd;
 	}
     }
 
@@ -578,16 +405,183 @@ public class Service implements Attribute {
 	if (protocolCode == ANY_PROTOCOL) {
 	    return ANY;
 	}
-	if (protocolCode < 0 || protocolCode > 255) {
-	    throw new IllegalArgumentException("Protocol code should be in range [0, 255]: " + protocolCode);
+	if (protocolCode < MIN_PROTOCOL || protocolCode > MAX_PROTOCOL) {
+	    throw new IllegalArgumentException(
+		    "Protocol code:" + Utility.format(MIN_PROTOCOL, MAX_PROTOCOL, protocolCode));
 	}
 	return PROTOCOL_NAMES[protocolCode];
+    }
+
+    public static Service create(final String protocol, final int port) {
+	return create(protocolCode(protocol), port, port);
+    }
+
+    public static Service create(final String protocol, final int portRangeStart, final int portRangeEnd) {
+	return create(protocolCode(protocol), portRangeStart, portRangeEnd);
+    }
+
+    public static Service create(final int protocol, final int port) {
+	return create(protocol, port, port);
+    }
+
+    public static Service create(final int protocol, final int portRangeStart, final int portRangeEnd) {
+	if (protocol != ANY_PROTOCOL && (protocol < 0 || protocol > 255)) {
+	    throw new IllegalArgumentException("protocol should be in range [-1, 255]: " + protocol);
+	} else if (portRangeStart < MIN_PORT || portRangeStart > MAX_PORT) {
+	    throw new IllegalArgumentException("Port not in range: " + portRangeStart + ". should be in range ["
+		    + MIN_PORT + ", " + MAX_PORT + "]");
+	} else if (portRangeEnd < MIN_PORT || portRangeEnd > MAX_PORT) {
+	    throw new IllegalArgumentException(
+		    "Port not in range: " + portRangeEnd + ". should be in range [" + MIN_PORT + ", " + MAX_PORT + "]");
+	} else if (portRangeStart > portRangeEnd) {
+	    throw new IllegalArgumentException("portRangeStart > portRangeEnd");
+	}
+	return createInternal(protocol, (portRangeEnd << 16) | portRangeStart);
+    }
+
+    public static Service create(String service) {
+	if (service == null) {
+	    throw new IllegalArgumentException("Null args");
+	}
+
+	// If Any Service
+	if (service.equals(ANY) || service.equals("Any Any")) {
+	    return createInternal(ANY_PROTOCOL, (MAX_PORT << 16) | MIN_PORT);
+	}
+
+	// If Any port, specific protocol
+	if (service.length() > ANY.length() && service.substring(0, ANY.length()).equals(ANY)) {
+	    int portRangeStart = MIN_PORT;
+	    int portRangeEnd = MAX_PORT;
+	    String protString = service.substring(ANY.length() + 1); // +1 for
+								     // the
+								     // space
+	    if (protString.matches("[a-zA-Z]+")) {
+		return createInternal(protocolCode(protString), (portRangeEnd << 16) | portRangeStart);
+	    }
+	    throw new IllegalArgumentException("Bad protocol name in 'any port' option.");
+	}
+
+	// Service is in the format "[Protocol] [Port(s)]"
+
+	// Find separators
+	final int numOfSeparators = Utility.countOccurrencesOf(service, ' ') + Utility.countOccurrencesOf(service, '-');
+	final int separatorIndex = service.indexOf(' ');
+	final int portSeparatorIndex = service.indexOf('-');
+
+	int portRangeStart;
+	int portRangeEnd;
+
+	switch (numOfSeparators) {
+	case 0:
+	    throw new IllegalArgumentException("Unknown format, missing port or protocol");
+	case 1:
+	    // only one port number
+	    final String portStr = service.substring(separatorIndex + 1);
+	    if (portStr.equals(ANY)) {
+		portRangeStart = MIN_PORT;
+		portRangeEnd = MAX_PORT;
+	    } else {
+		final int port = Integer.parseInt(portStr);
+		if (port != ANY_PROTOCOL && (port < MIN_PORT || port > MAX_PORT)) {
+		    throw new IllegalArgumentException("Service port: " + Utility.format(MIN_PORT, MAX_PORT, port));
+		}
+		portRangeStart = portRangeEnd = port;
+	    }
+	    service = service.substring(0, separatorIndex);
+	    break;
+	case 2:
+	    // start port
+	    final String portRangeStartStr = service.substring(separatorIndex + 1, portSeparatorIndex);
+	    if (portRangeStartStr.equals(ANY)) {
+		portRangeStart = MIN_PORT;
+	    } else {
+		final int port = Integer.parseInt(portRangeStartStr);
+		if (port != ANY_PROTOCOL && (port < MIN_PORT || port > MAX_PORT)) {
+		    throw new IllegalArgumentException("Service port: " + Utility.format(MIN_PORT, MAX_PORT, port));
+		}
+		portRangeStart = port;
+	    }
+
+	    // end port
+	    String portRangeEndStr = service.substring(portSeparatorIndex + 1);
+	    if (portRangeEndStr.equals(ANY)) {
+		portRangeEnd = MAX_PORT;
+	    } else {
+		final int port = Integer.parseInt(portRangeEndStr);
+		if (port != ANY_PROTOCOL && (port < MIN_PORT || port > MAX_PORT)) {
+		    throw new IllegalArgumentException("Service port: " + Utility.format(MIN_PORT, MAX_PORT, port));
+		}
+		portRangeEnd = port;
+	    }
+
+	    service = service.substring(0, separatorIndex);
+	    break;
+	default:
+	    throw new IllegalArgumentException("Unknow format: too many words");
+
+	}
+
+	if (portRangeStart > portRangeEnd) {
+	    throw new IllegalArgumentException("portRangeStart > portRangeEnd");
+	} else if (service.isEmpty()) {
+	    throw new IllegalArgumentException("No protocol");
+	}
+
+	int protocolCode;
+	if (service.equals(ANY) || service.equals("Port") || service.equals("Ports")) {
+	    protocolCode = ANY_PROTOCOL;
+	} else {
+	    protocolCode = protocolCode(service);
+	}
+
+	return createInternal(protocolCode, (portRangeEnd << 16) | portRangeStart);
+    }
+
+    private static Service createInternal(final int protocolCode, final int portsRange) {
+	final WeakCache<Integer, Service> cache = ServiceCache.cache[protocolCode];
+
+	// We don't use the static constructor Integer.valueOf(int)
+	// intentionally here. The Integer.valueOf(int) method can help
+	// performance in general cases because it will use the cached Integers
+	// that are in range [-128, 127] and will not create new objects. The
+	// chance that the portsRange will be in that range is negligible, so we
+	// prefer to use the straight up constructor to avoid unnecessary
+	// (probably) range checks.
+	final Integer portsRangeInteger = new Integer(portsRange);
+
+	Service service = cache.get(portsRangeInteger);
+	if (service == null) {
+	    service = new Service(protocolCode, portsRange);
+	    cache.put(portsRangeInteger, service);
+	}
+	return service;
+    }
+
+    private static class ServiceCache {
+
+	static final WeakCache<Integer, Service>[] cache;
+
+	static {
+	    /**
+	     * Used dummy variable to suppress only warnings of cache creation
+	     * and not to the whole ServiceCache class (which is necessary if we
+	     * don't use temporary variable).
+	     */
+	    @SuppressWarnings({ "unchecked", "unused" })
+	    Object dummy = cache = new WeakCache[257]; // 256 and 1 for 'any
+						       // protocol'
+
+	    for (int i = cache.length; i-- != 0;)
+		cache[i] = new WeakCache<>();
+	}
+
     }
 
     private static class AnyService extends Service {
 
 	private AnyService() {
-	    super(ANY_PROTOCOL, MIN_PORT, MAX_PORT);
+	    super(ANY_PROTOCOL, (MAX_PORT << 16) | MIN_PORT);
 	}
 
 	@Override

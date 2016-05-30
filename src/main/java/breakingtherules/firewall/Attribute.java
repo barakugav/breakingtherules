@@ -150,7 +150,7 @@ public interface Attribute {
 	case DESTINATION_TYPE_ID:
 	    return new Destination(value);
 	case SERVICE_TYPE_ID:
-	    return new Service(value);
+	    return Service.create(value);
 	default:
 	    throw new IllegalArgumentException("Unkown type id: " + typeId);
 	}

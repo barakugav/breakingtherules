@@ -78,7 +78,7 @@ public class SourceTest extends TestBase {
 	Destination des = new Destination(ip);
 	assertFalse(source.contains(des));
 
-	Service service = new Service("TCP", 80);
+	Service service = Service.create("TCP", 80);
 	assertFalse(source.contains(service));
     }
 

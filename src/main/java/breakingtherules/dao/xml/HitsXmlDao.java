@@ -237,7 +237,7 @@ public class HitsXmlDao implements HitsDao {
 	    final int intID = Integer.parseInt(idStr);
 	    final Source sourceObj = new Source(sourceStr);
 	    final Destination destinationObj = new Destination(destinationStr);
-	    final Service serviceObj = new Service(serviceStr);
+	    final Service serviceObj = Service.create(serviceStr);
 
 	    // Create attributes list
 	    final List<Attribute> attributes = new ArrayList<>();

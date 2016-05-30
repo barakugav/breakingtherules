@@ -79,7 +79,7 @@ public class DestinationTest extends TestBase {
 	Source source = new Source(ip);
 	assertFalse(des.contains(source));
 
-	Service service = new Service("TCP", 80);
+	Service service = Service.create("TCP", 80);
 	assertFalse(des.contains(service));
     }
 

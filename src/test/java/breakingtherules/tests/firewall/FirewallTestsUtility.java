@@ -71,7 +71,7 @@ class FirewallTestsUtility extends TestBase {
 	    portRangeEnd = rand.nextInt(1 << 16);
 	} while (portRangeStart > portRangeEnd);
 
-	return new Service(protocol, portRangeStart, portRangeEnd);
+	return Service.create(protocol, portRangeStart, portRangeEnd);
     }
 
     static int getRandomPort() {

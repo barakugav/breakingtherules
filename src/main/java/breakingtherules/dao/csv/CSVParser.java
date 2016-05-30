@@ -356,7 +356,7 @@ public class CSVParser {
 	}
 
 	try {
-	    return new Service(protocolStr, portNum);
+	    return Service.create(protocolStr, portNum);
 	} catch (final IllegalArgumentException e) {
 	    throw new CSVParseException("Unable to parse service: ", e);
 	}

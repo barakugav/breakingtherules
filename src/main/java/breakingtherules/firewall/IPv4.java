@@ -379,7 +379,7 @@ public final class IPv4 extends IP {
 	     * don't use temporary variable).
 	     */
 	    @SuppressWarnings({ "unchecked", "unused" })
-	    final WeakCache<Integer, IPv4>[] dummy = cache = new WeakCache[MAX_LENGTH + 1];
+	    Object dummy = cache = new WeakCache[MAX_LENGTH + 1];
 
 	    for (int i = cache.length; i-- != 0;)
 		cache[i] = new WeakCache<>();
