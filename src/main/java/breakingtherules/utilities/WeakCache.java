@@ -66,7 +66,7 @@ public class WeakCache<K, V> {
 	if (key == null)
 	    return null;
 	final int hash = hash(key);
-	cleanTable();
+	cleanCache();
 	for (Entry p = table[hash & mask]; p != null; p = p.next)
 	    if (hash == p.hash && key.equals(p.key))
 		return (V) p.get();
@@ -79,7 +79,7 @@ public class WeakCache<K, V> {
 	final int hash = hash(key);
 	final Entry e = new Entry(key, value, queue, hash);
 	final int i = hash & mask;
-	cleanTable();
+	cleanCache();
 	Entry p = table[i];
 	if (p == null) {
 	    // No entries in table cell, put entry as first
@@ -87,8 +87,8 @@ public class WeakCache<K, V> {
 	} else {
 	    // Some entries are in the table cell. First check for key
 	    // duplication, then put entry at the end of the entries list
-	    Entry prev;
-	    for (p = (prev = p).next; p != null; p = (prev = p).next)
+	    Entry prev = null;
+	    for (; p != null; p = (prev = p).next)
 		if (hash == p.hash && key.equals(p.key))
 		    if (p.get() != null)
 			throw new IllegalArgumentException("key is already in the cache");
@@ -96,48 +96,12 @@ public class WeakCache<K, V> {
 	}
 
 	// Increase size and grow if needed
-	size++;
-	grow();
+	if (++size >= threshold)
+	    grow();
 
     }
 
-    public int size() {
-	cleanTable();
-	return size;
-    }
-
-    private void grow() {
-	if (size >= threshold) {
-	    // resize
-	    final int newCapacity = table.length << 1;
-	    final Entry[] newTable = new Entry[newCapacity];
-	    mask = newCapacity - 1;
-
-	    // transfer
-	    for (int oldIndex = 0; oldIndex < table.length; oldIndex++) {
-		Entry entry = table[oldIndex];
-		table[oldIndex] = null;
-		while (entry != null) {
-		    final Entry next = entry.next;
-		    final int newIndex = entry.hash & mask;
-		    if (entry.get() == null) {
-			entry.next = null; // Help GC
-			entry.key = null; // Help GC
-			size--;
-		    } else {
-			entry.next = newTable[newIndex];
-			newTable[newIndex] = entry;
-		    }
-		    entry = next;
-		}
-	    }
-
-	    table = newTable;
-	    threshold = (int) (newCapacity * loadFactor);
-	}
-    }
-
-    public void cleanTable() {
+    public void cleanCache() {
 	for (Entry e; (e = (Entry) queue.poll()) != null;) {
 	    synchronized (queue) {
 		final int i = e.hash & mask;
@@ -170,9 +134,43 @@ public class WeakCache<K, V> {
 	}
     }
 
+    public int size() {
+	cleanCache();
+	return size;
+    }
+
+    private void grow() {
+	// resize
+	final int newCapacity = table.length << 1;
+	final Entry[] newTable = new Entry[newCapacity];
+	mask = newCapacity - 1;
+
+	// transfer
+	for (int oldIndex = 0; oldIndex < table.length; oldIndex++) {
+	    Entry entry = table[oldIndex];
+	    table[oldIndex] = null;
+	    while (entry != null) {
+		final Entry next = entry.next;
+		final int newIndex = entry.hash & mask;
+		if (entry.get() == null) {
+		    entry.next = null; // Help GC
+		    entry.key = null; // Help GC
+		    size--;
+		} else {
+		    entry.next = newTable[newIndex];
+		    newTable[newIndex] = entry;
+		}
+		entry = next;
+	    }
+	}
+
+	table = newTable;
+	threshold = (int) (newCapacity * loadFactor);
+    }
+
     @Override
     public String toString() {
-	cleanTable();
+	cleanCache();
 
 	StringBuilder builder = new StringBuilder();
 	builder.append("size=");

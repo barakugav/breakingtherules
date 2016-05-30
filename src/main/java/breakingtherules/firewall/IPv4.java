@@ -2,7 +2,6 @@ package breakingtherules.firewall;
 
 import java.util.List;
 
-import breakingtherules.firewall.IPv4.IPv4Cache.IPv4CacheKey;
 import breakingtherules.utilities.Utility;
 import breakingtherules.utilities.WeakCache;
 
@@ -350,46 +349,40 @@ public final class IPv4 extends IP {
     }
 
     private static IPv4 createInternal(final int address, final int prefix) {
-	final IPv4CacheKey cacheKey = new IPv4CacheKey(address, prefix);
-	IPv4 ip = IPv4Cache.cache.get(cacheKey);
+	final WeakCache<Integer, IPv4> cache = IPv4Cache.cache[prefix];
+
+	// We don't use the static constructor Integer.valueOf(int)
+	// intentionally here. The Integer.valueOf(int) method can help
+	// performance in general cases because it will use the cached Integers
+	// that are in range [-128, 127] and will not create new objects. The
+	// chance that the address will be in that range is negligible, so we
+	// prefer to use the straight up constructor to avoid unnecessary
+	// (probably) range checks.
+	final Integer addressInteger = new Integer(address);
+
+	IPv4 ip = cache.get(addressInteger);
 	if (ip == null) {
 	    ip = new IPv4(address, prefix);
-	    IPv4Cache.cache.put(cacheKey, ip);
+	    cache.put(addressInteger, ip);
 	}
 	return ip;
     }
 
-    static final class IPv4Cache {
+    private static final class IPv4Cache {
 
-	static final WeakCache<IPv4CacheKey, IPv4> cache;
+	static final WeakCache<Integer, IPv4>[] cache;
 
 	static {
-	    cache = new WeakCache<>();
-	}
+	    /**
+	     * Used dummy variable to suppress only warnings of cache creation
+	     * and not to the whole IPv4Cache class (which is necessary if we
+	     * don't use temporary variable).
+	     */
+	    @SuppressWarnings({ "unchecked", "unused" })
+	    final WeakCache<Integer, IPv4>[] dummy = cache = new WeakCache[MAX_LENGTH + 1];
 
-	static final class IPv4CacheKey {
-
-	    final int address;
-	    final int prefix;
-
-	    IPv4CacheKey(int a, int p) {
-		address = a;
-		prefix = p;
-	    }
-
-	    @Override
-	    public int hashCode() {
-		return address ^ prefix;
-	    }
-
-	    @Override
-	    public boolean equals(Object o) {
-		if (!(o instanceof IPv4CacheKey))
-		    return false;
-		IPv4CacheKey other = (IPv4CacheKey) o;
-		return address == other.address && prefix == other.prefix;
-	    }
-
+	    for (int i = cache.length; i-- != 0;)
+		cache[i] = new WeakCache<>();
 	}
 
     }
