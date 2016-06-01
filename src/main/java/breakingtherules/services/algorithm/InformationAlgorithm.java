@@ -6,12 +6,18 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
+import breakingtherules.dao.HitsDao;
 import breakingtherules.firewall.Attribute;
 import breakingtherules.firewall.Destination;
+import breakingtherules.firewall.Filter;
 import breakingtherules.firewall.Hit;
 import breakingtherules.firewall.IP;
 import breakingtherules.firewall.IPAttribute;
+import breakingtherules.firewall.IPv4;
+import breakingtherules.firewall.Rule;
+import breakingtherules.firewall.Service;
 import breakingtherules.firewall.Source;
 import breakingtherules.utilities.UnionList;
 import breakingtherules.utilities.Utility;
@@ -50,15 +56,15 @@ public class InformationAlgorithm implements SuggestionsAlgorithm {
      */
     private final SimpleAlgorithm m_simpleAlgorithm;
 
-    /**
-     * Number of suggestions that returned in each suggestions request
-     */
-    private static final int NUMBER_OF_SUGGESTIONS = 10;
+    // /**
+    // * Number of suggestions that returned in each suggestions request
+    // */
+    // private static final int NUMBER_OF_SUGGESTIONS = 10;
 
     /**
      * Default value for the ruleWeight parameter
      */
-    private static final double DEFAULT_RULE_WIEGHT = 5;
+    private static final double DEFAULT_RULE_WIEGHT = 1000;
 
     /**
      * An estimation to the percentage of nodes in the next layer (out of the
@@ -130,29 +136,37 @@ public class InformationAlgorithm implements SuggestionsAlgorithm {
 	m_ruleWeight = weight;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * breakingtherules.services.algorithm.SuggestionsAlgorithm#getSuggestions(
-     * java.lang.Iterable, java.lang.String)
-     */
     @Override
-    public List<Suggestion> getSuggestions(Iterable<Hit> hits, final String attType) {
-	hits = Utility.ensureUniqueness(hits);
+    public List<Suggestion> getSuggestions(HitsDao dao, int jobId, List<Rule> rules, Filter filter, String attType,
+	    int amount) throws Exception {
 	final int attTypeId = Attribute.typeStrToTypeId(attType);
 	if (attTypeId == Attribute.UNKOWN_ATTRIBUTE_ID) {
 	    throw new IllegalArgumentException("Unkown attribute: " + attType);
 	}
+	if (attTypeId != Attribute.DESTINATION_TYPE_ID && attTypeId != Attribute.SOURCE_TYPE_ID) {
+	    return m_simpleAlgorithm.getSuggestions(dao, jobId, rules, filter, attType, amount);
+	}
 
+	Set<Hit> hits = dao.getUnique(jobId, rules, filter);
+	List<Suggestion> suggestions;
 	switch (attTypeId) {
 	case Attribute.DESTINATION_TYPE_ID:
-	    return getSuggestionsDestination(hits);
+	    suggestions = getSuggestionsDestination(hits, amount);
+	    break;
 	case Attribute.SOURCE_TYPE_ID:
-	    return getSuggestionsSource(hits);
+	    suggestions = getSuggestionsSource(hits, amount);
+	    break;
 	default:
-	    return m_simpleAlgorithm.getSuggestions(hits, attType);
+	    throw new InternalError("Attribute type wasn't destination not source after checking it was one of them.");
 	}
+
+	// Clean cache
+	IPv4.refreshCache();
+	Source.refreshCache();
+	Destination.refreshCache();
+	Service.refreshCache();
+
+	return suggestions;
     }
 
     /**
@@ -166,13 +180,13 @@ public class InformationAlgorithm implements SuggestionsAlgorithm {
      * @throws IllegalArgumentException
      *             if one of the hits doesn't contains destination attribute
      */
-    private List<Suggestion> getSuggestionsDestination(final Iterable<Hit> hits) {
+    private List<Suggestion> getSuggestionsDestination(final Iterable<Hit> hits, int amount) {
 	// Calculate suggestions
 	List<SubnetSuggestion> subnets = getIPSuggestions(hits, Attribute.DESTINATION_TYPE_ID);
 
 	final List<Suggestion> suggestions = new ArrayList<>(subnets.size());
 	for (final SubnetSuggestion subnet : subnets) {
-	    suggestions.add(new Suggestion(new Destination(subnet.ip), subnet.size, subnet.score));
+	    suggestions.add(new Suggestion(Destination.create(subnet.ip), subnet.size, subnet.score));
 	}
 	subnets = null; // Free memory
 
@@ -180,7 +194,7 @@ public class InformationAlgorithm implements SuggestionsAlgorithm {
 	suggestions.sort(SUGGESTION_SIZE_COMPARATOR);
 	Collections.reverse(suggestions);
 
-	return Utility.subList(suggestions, 0, NUMBER_OF_SUGGESTIONS);
+	return Utility.subList(suggestions, 0, amount);
     }
 
     /**
@@ -194,13 +208,13 @@ public class InformationAlgorithm implements SuggestionsAlgorithm {
      * @throws IllegalArgumentException
      *             if one of the hits doesn't contains the source attribute
      */
-    private List<Suggestion> getSuggestionsSource(final Iterable<Hit> hits) {
+    private List<Suggestion> getSuggestionsSource(final Iterable<Hit> hits, int amount) {
 	// Calculate suggestions
 	List<SubnetSuggestion> subnets = getIPSuggestions(hits, Attribute.SOURCE_TYPE_ID);
 
 	final List<Suggestion> suggestions = new ArrayList<>(subnets.size());
 	for (final SubnetSuggestion subnet : subnets) {
-	    suggestions.add(new Suggestion(new Source(subnet.ip), subnet.size, subnet.score));
+	    suggestions.add(new Suggestion(Source.create(subnet.ip), subnet.size, subnet.score));
 	}
 	subnets = null; // Free memory
 
@@ -208,7 +222,7 @@ public class InformationAlgorithm implements SuggestionsAlgorithm {
 	suggestions.sort(SUGGESTION_SIZE_COMPARATOR);
 	Collections.reverse(suggestions);
 
-	return Utility.subList(suggestions, 0, NUMBER_OF_SUGGESTIONS);
+	return Utility.subList(suggestions, 0, amount);
     }
 
     /**

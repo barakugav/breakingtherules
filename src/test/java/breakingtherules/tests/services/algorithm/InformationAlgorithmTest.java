@@ -13,7 +13,6 @@ import breakingtherules.dao.xml.RulesXmlDao;
 import breakingtherules.dto.ListDto;
 import breakingtherules.firewall.Attribute;
 import breakingtherules.firewall.Filter;
-import breakingtherules.firewall.Hit;
 import breakingtherules.firewall.Rule;
 import breakingtherules.services.algorithm.InformationAlgorithm;
 import breakingtherules.services.algorithm.Suggestion;
@@ -23,6 +22,7 @@ public class InformationAlgorithmTest extends TestBase {
 
     private static final int RULE_WEIGHT = 25;
     private static final int JOB_ID = 4;
+    private static final int NUMBER_OF_SUGGESTIONS = 10;
     private static final String ATTRIBUTE = Attribute.DESTINATION_TYPE;
     private static final boolean PRINT_RESULTS = false;
 
@@ -35,12 +35,11 @@ public class InformationAlgorithmTest extends TestBase {
 	    Filter filter = Filter.ANY_FILTER;
 	    ListDto<Rule> rulesDto = rulesDao.getRules(JOB_ID);
 	    List<Rule> rules = rulesDto.getData();
-	    ListDto<Hit> hitsDto = hitsDao.getHits(JOB_ID, rules, filter);
-	    List<Hit> hits = hitsDto.getData();
 
 	    InformationAlgorithm algorithm = new InformationAlgorithm();
 	    algorithm.setRuleWeight(RULE_WEIGHT);
-	    List<Suggestion> suggestions = algorithm.getSuggestions(hits, ATTRIBUTE);
+	    List<Suggestion> suggestions = algorithm.getSuggestions(hitsDao, JOB_ID, rules, filter, ATTRIBUTE,
+		    NUMBER_OF_SUGGESTIONS);
 
 	    if (PRINT_RESULTS) {
 		System.out.println("\nResults:");

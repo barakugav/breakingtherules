@@ -1,5 +1,9 @@
 package breakingtherules.firewall;
 
+import java.util.Objects;
+
+import breakingtherules.utilities.WeakCache;
+
 /**
  * Source attribute, represent a source IP of a hit
  */
@@ -16,18 +20,8 @@ public class Source extends IPAttribute {
      * @param ip
      *            IP of the source
      */
-    public Source(final IP ip) {
+    private Source(final IP ip) {
 	super(ip);
-    }
-
-    /**
-     * Constructor with String IP
-     * 
-     * @param ip
-     *            String IP of the source
-     */
-    public Source(final String ip) {
-	this(IP.fromString(ip));
     }
 
     /**
@@ -70,7 +64,51 @@ public class Source extends IPAttribute {
 
     @Override
     public Source createMutation(final IP ip) {
-	return new Source(ip);
+	return Source.create(ip);
+    }
+
+    public static void refreshCache() {
+	for (WeakCache<Integer, Source> cache : SourceCache.IPv4cache)
+	    cache.cleanCache();
+    }
+
+    public static Source create(final IP ip) {
+	return createInternal(Objects.requireNonNull(ip));
+    }
+
+    public static Source create(final String ip) {
+	return createInternal(IP.fromString(ip));
+    }
+
+    private static Source createInternal(final IP ip) {
+	Source source;
+	if (ip instanceof IPv4) {
+	    WeakCache<Integer, Source> cache = SourceCache.IPv4cache[ip.prefixLength];
+
+	    Integer addressInteger = new Integer(((IPv4) ip).address());
+	    source = cache.get(addressInteger);
+	    if (source == null) {
+		source = new Source(ip);
+		cache.add(addressInteger, source);
+	    }
+	} else {
+	    source = new Source(ip);
+	}
+	return source;
+    }
+
+    private static class SourceCache {
+
+	static final WeakCache<Integer, Source>[] IPv4cache;
+
+	static {
+	    @SuppressWarnings({ "unchecked", "unused" })
+	    Object dummy = IPv4cache = new WeakCache[IPv4.MAX_LENGTH + 1];
+
+	    for (int i = IPv4cache.length; i-- != 0;)
+		IPv4cache[i] = new WeakCache<>();
+	}
+
     }
 
     private static class AnySource extends Source {

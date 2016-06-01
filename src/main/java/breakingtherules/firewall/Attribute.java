@@ -10,7 +10,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  * 
  * @see Hit
  */
-public interface Attribute {
+public abstract class Attribute {
 
     /**
      * Checks if this attribute contain another
@@ -19,14 +19,14 @@ public interface Attribute {
      *            another attribute to compare to
      * @return true if this attribute contains other, else - false
      */
-    public boolean contains(Attribute other);
+    public abstract boolean contains(Attribute other);
 
     /**
      * Get the type of the attribute
      * 
      * @return the attribute's type
      */
-    public String getType();
+    public abstract String getType();
 
     /**
      * Get the id of the attribute's type
@@ -34,7 +34,7 @@ public interface Attribute {
      * @return the attribute's type id
      */
     @JsonIgnore
-    public int getTypeId();
+    public abstract int getTypeId();
 
     /*
      * (non-Javadoc)
@@ -45,7 +45,7 @@ public interface Attribute {
      */
     @Override
     @JsonProperty("str")
-    public String toString();
+    public abstract String toString();
 
     /**
      * Number of attributes.
@@ -146,9 +146,9 @@ public interface Attribute {
     public static Attribute createFromString(final int typeId, final String value) {
 	switch (typeId) {
 	case SOURCE_TYPE_ID:
-	    return new Source(value);
+	    return Source.create(value);
 	case DESTINATION_TYPE_ID:
-	    return new Destination(value);
+	    return Destination.create(value);
 	case SERVICE_TYPE_ID:
 	    return Service.create(value);
 	default:

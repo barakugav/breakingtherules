@@ -1,31 +1,19 @@
 package breakingtherules.dao;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import breakingtherules.dto.ListDto;
 import breakingtherules.firewall.Filter;
 import breakingtherules.firewall.Hit;
 import breakingtherules.firewall.Rule;
+import breakingtherules.utilities.Utility;
 
 /**
  * Component that supply hits from repository
  */
 public interface HitsDao {
-
-    /**
-     * Get all hits of the job
-     * 
-     * @param jobId
-     *            id of the job
-     * @return list of all hits from jog
-     * @throws IOException
-     *             if any I/O errors occurs
-     */
-    default ListDto<Hit> getHits(int jobId) throws IOException {
-	return getHits(jobId, new ArrayList<>(), Filter.ANY_FILTER);
-    }
 
     /**
      * Get hits from repository that match all rules and filter
@@ -62,6 +50,15 @@ public interface HitsDao {
      */
     public ListDto<Hit> getHits(int jobId, List<Rule> rules, Filter filter, int startIndex, int endIndex)
 	    throws IOException;
+
+    default Set<Hit> getUnique(int jobId, List<Rule> rules, Filter filter) throws Exception {
+	return Utility.ensureUniqueness(getHits(jobId, rules, filter));
+    }
+
+    default Set<Hit> getUnique(int jobId, List<Rule> rules, Filter filter, int startIndex, int endIndex)
+	    throws Exception {
+	return Utility.ensureUniqueness(getHits(jobId, rules, filter, startIndex, endIndex));
+    }
 
     /**
      * Get the number of hits in the job, that pass all the rules and are under

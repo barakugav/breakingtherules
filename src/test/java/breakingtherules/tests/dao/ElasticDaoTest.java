@@ -64,8 +64,8 @@ public class ElasticDaoTest extends TestBase {
 	List<Attribute> attributes = new ArrayList<>();
 	int id = numOfHits;
 	numOfHits++;
-	attributes.add(new Source("128.76.2.9"));
-	attributes.add(new Destination("128.76.2.9"));
+	attributes.add(Source.create("128.76.2.9"));
+	attributes.add(Destination.create("128.76.2.9"));
 	attributes.add(Service.create("TCP 80"));
 	System.out.println(numOfHits);
 	return new Hit(id, attributes);

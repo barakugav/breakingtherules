@@ -168,8 +168,8 @@ public class RulesXmlDao implements RulesDao {
 
 	// Convert strings to attributes
 	final int newId = Integer.parseInt(id);
-	final Source newSource = new Source(source);
-	final Destination newDestination = new Destination(destination);
+	final Source newSource = Source.create(source);
+	final Destination newDestination = Destination.create(destination);
 	final Service newService = Service.create(service);
 
 	// Create attributes vector

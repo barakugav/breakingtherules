@@ -51,44 +51,46 @@ public class WeakCacheTest {
 
 	Integer key1 = Integer.valueOf(1);
 	Object val1 = new Object();
-	cache.put(key1, val1);
+	cache.add(key1, val1);
 	assertEquals(1, cache.size());
 
 	Integer key2 = Integer.valueOf(2);
 	Object val2 = new Object();
-	cache.put(key2, val2);
+	cache.add(key2, val2);
 	assertEquals(2, cache.size());
     }
 
     @Test
-    public void putTest() {
+    public void addTest() {
 	WeakCache<Integer, Object> cache = new WeakCache<>();
 	Integer one = Integer.valueOf(1);
 	Object key = new Object();
-	cache.put(one, key);
+	cache.add(one, key);
 	assertEquals(key, cache.get(one));
     }
 
-    @Test(expected = NullPointerException.class)
-    public void putTestNullKey() {
+    @Test
+    public void addTestNullKey() {
 	WeakCache<Integer, Object> cache = new WeakCache<>();
-	cache.put(null, new Object());
+	Object val = new Object();
+	cache.add(null, val);
+	assertEquals(val, cache.get(null));
     }
 
     @Test(expected = NullPointerException.class)
-    public void putTestNullValue() {
+    public void addTestNullValue() {
 	WeakCache<Integer, Object> cache = new WeakCache<>();
-	cache.put(Integer.valueOf(1), null);
+	cache.add(Integer.valueOf(1), null);
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void putTestNoUniqeKey() {
+    public void addTestNoUniqeKey() {
 	WeakCache<Integer, Object> cache = new WeakCache<>();
 	Integer key = Integer.valueOf(1);
 	Object val1 = new Object();
 	Object val2 = new Object();
-	cache.put(key, val1);
-	cache.put(key, val2);
+	cache.add(key, val1);
+	cache.add(key, val2);
     }
 
     @Test
@@ -97,7 +99,7 @@ public class WeakCacheTest {
 	for (int i = 0; i < 25; i++) {
 	    Integer key = Integer.valueOf(i);
 	    Object expected = new Object();
-	    cache.put(key, expected);
+	    cache.add(key, expected);
 	    Object actual = cache.get(key);
 	    assertEquals(expected, actual);
 	}
@@ -109,7 +111,7 @@ public class WeakCacheTest {
 	    m.put(Integer.valueOf(rand.nextInt()), new Object());
 	}
 	for (Entry<Integer, Object> entry : m.entrySet()) {
-	    cache.put(entry.getKey(), entry.getValue());
+	    cache.add(entry.getKey(), entry.getValue());
 	}
 	for (Entry<Integer, Object> entry : m.entrySet()) {
 	    Object cachedObject = cache.get(entry.getKey());
@@ -119,6 +121,7 @@ public class WeakCacheTest {
 
     @Test
     public void cleanCacheTest() {
+	final String GC_NOT_WORKING_MSSG = "GC didn't act (This test is inconsistent and can't be change as far as we now) try run this test alone";
 	WeakCache<Integer, Object> cache = new WeakCache<>();
 	Integer key1 = Integer.valueOf(0);
 	Integer key2 = Integer.valueOf(1);
@@ -126,35 +129,34 @@ public class WeakCacheTest {
 	Object val1 = new Object();
 	Object val2 = new Object();
 	Object val3 = new Object();
-	cache.put(key1, val1);
-	cache.put(key2, val2);
-	cache.put(key3, val3);
+	cache.add(key1, val1);
+	cache.add(key2, val2);
+	cache.add(key3, val3);
 	assertEquals(3, cache.size());
 	assertEquals(val1, cache.get(key1));
 	assertEquals(val2, cache.get(key2));
 	assertEquals(val3, cache.get(key3));
 	val1 = null;
 	forceGC();
-	assertEquals(2, cache.size());
+	assertEquals("Cache didn't clean, or " + GC_NOT_WORKING_MSSG + ".", 2, cache.size());
 	assertEquals(null, cache.get(key1));
 	assertEquals(val2, cache.get(key2));
 	assertEquals(val3, cache.get(key3));
 	val3 = null;
 	forceGC();
-	assertEquals(1, cache.size());
+	assertEquals("Cache didn't clean, or " + GC_NOT_WORKING_MSSG + ".", 1, cache.size());
 	assertEquals(null, cache.get(key1));
 	assertEquals(val2, cache.get(key2));
 	assertEquals(null, cache.get(key3));
 	val2 = null;
 	forceGC();
-	assertEquals(0, cache.size());
+	assertEquals("Cache didn't clean, or " + GC_NOT_WORKING_MSSG + ".", 0, cache.size());
 	assertEquals(null, cache.get(key1));
 	assertEquals(null, cache.get(key2));
 	assertEquals(null, cache.get(key3));
     }
 
     private static void forceGC() {
-	// Force GC 100 times
 	for (int i = 100; i-- != 0;) {
 	    Object o = new Object();
 	    WeakReference<Object> ref = new WeakReference<>(o);

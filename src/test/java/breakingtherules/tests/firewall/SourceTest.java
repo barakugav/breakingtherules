@@ -18,35 +18,35 @@ public class SourceTest extends TestBase {
     public void constructorTest() {
 	System.out.println("# SourceTest constructorTest");
 	IP ip = FirewallTestsUtility.getRandomIP();
-	new Source(ip);
+	Source.create(ip);
     }
 
     @Test(expected = NullPointerException.class)
     public void constructorTestNullIP() {
 	System.out.println("# SourceTest constructorTestNullIP");
 	IP ip = null;
-	new Source(ip);
+	Source.create(ip);
     }
 
     @Test
     public void constructorStringTest() {
 	System.out.println("# SourceTest constructorStringTest");
 	String ip = "2.12.45.7/21";
-	new Source(ip);
+	Source.create(ip);
     }
 
     @Test(expected = NullPointerException.class)
     public void constructorStringTestNullIP() {
 	System.out.println("# SourceTest constructorStringTestNullIP");
 	String ip = null;
-	new Source(ip);
+	Source.create(ip);
     }
 
     @Test
     public void getIPTest() {
 	System.out.println("# SourceTest getIPTest");
 	IP ip = FirewallTestsUtility.getRandomIP();
-	Source source = new Source(ip);
+	Source source = Source.create(ip);
 	assertEquals(ip, source.getIp());
     }
 
@@ -54,8 +54,8 @@ public class SourceTest extends TestBase {
     public void containsTestContainsItsef() {
 	System.out.println("# SourceTest containsTestContainsItsef");
 	IP ip = FirewallTestsUtility.getRandomIP();
-	Source source1 = new Source(ip);
-	Source source2 = new Source(ip);
+	Source source1 = Source.create(ip);
+	Source source2 = Source.create(ip);
 	assertTrue(source1.contains(source2));
 	assertTrue(source2.contains(source1));
     }
@@ -64,7 +64,7 @@ public class SourceTest extends TestBase {
     public void containsTestNotContainsNull() {
 	System.out.println("# SourceTest containsTestNotContainsNull");
 	IP ip = FirewallTestsUtility.getRandomIP();
-	Source source1 = new Source(ip);
+	Source source1 = Source.create(ip);
 	Source source2 = null;
 	assertFalse(source1.contains(source2));
     }
@@ -73,9 +73,9 @@ public class SourceTest extends TestBase {
     public void containsTestNotContainsOtherAttributes() {
 	System.out.println("# SourceTest containsTestNotContainsOtherAttributes");
 	IP ip = FirewallTestsUtility.getRandomIP();
-	Source source = new Source(ip);
+	Source source = Source.create(ip);
 
-	Destination des = new Destination(ip);
+	Destination des = Destination.create(ip);
 	assertFalse(source.contains(des));
 
 	Service service = Service.create("TCP", 80);
@@ -87,8 +87,8 @@ public class SourceTest extends TestBase {
 	System.out.println("# SourceTest containsTestOtherDestination");
 	IP ip1 = FirewallTestsUtility.getRandomIP();
 	IP ip2 = FirewallTestsUtility.getRandomIP();
-	Source source1 = new Source(ip1);
-	Source source2 = new Source(ip2);
+	Source source1 = Source.create(ip1);
+	Source source2 = Source.create(ip2);
 	assertEquals(ip1.contains(ip2), source1.contains(source2));
     }
 
@@ -96,8 +96,8 @@ public class SourceTest extends TestBase {
     public void equalsTestTrue() {
 	System.out.println("# SourceTest equalsTestTrue");
 	Source s1, s2;
-	s1 = new Source("2.12.45.7/21");
-	s2 = new Source("2.12.45.7/21");
+	s1 = Source.create("2.12.45.7/21");
+	s2 = Source.create("2.12.45.7/21");
 	assertEquals(s1, s2);
     }
 
@@ -105,8 +105,8 @@ public class SourceTest extends TestBase {
     public void equalsTestFalse() {
 	System.out.println("# SourceTest equalsTestFalse");
 	Source s1, s2;
-	s1 = new Source("2.12.45.7/21");
-	s2 = new Source("2.13.45.7/21");
+	s1 = Source.create("2.12.45.7/21");
+	s2 = Source.create("2.13.45.7/21");
 	assertNotEquals(s1, s2);
     }
 
@@ -114,7 +114,7 @@ public class SourceTest extends TestBase {
     public void toStringTest() {
 	System.out.println("# SourceTest toStringTest");
 	IP ip = FirewallTestsUtility.getRandomIP();
-	Source des = new Source(ip);
+	Source des = Source.create(ip);
 	assertTrue(ip.toString().equals(des.toString()));
     }
 

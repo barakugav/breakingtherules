@@ -5,7 +5,7 @@ import java.util.Objects;
 /**
  * The IPAttribute class represents an attribute with an IP
  */
-public abstract class IPAttribute implements Attribute, Comparable<IPAttribute> {
+public abstract class IPAttribute extends Attribute implements Comparable<IPAttribute> {
 
     /**
      * IP of this attribute

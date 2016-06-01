@@ -1,13 +1,17 @@
 package breakingtherules.services.algorithm;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import breakingtherules.dao.HitsDao;
 import breakingtherules.firewall.Attribute;
+import breakingtherules.firewall.Filter;
 import breakingtherules.firewall.Hit;
+import breakingtherules.firewall.Rule;
 import breakingtherules.utilities.Utility;
 
 /**
@@ -17,20 +21,9 @@ import breakingtherules.utilities.Utility;
  */
 public class SimpleAlgorithm implements SuggestionsAlgorithm {
 
-    /**
-     * Number of suggestions that returned in each suggestions request
-     */
-    private static final int NUMBER_OF_SUGGESTIONS = 10;
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * breakingtherules.services.algorithm.SuggestionsAlgorithm#getSuggestions(
-     * java.util.List, java.lang.String)
-     */
     @Override
-    public List<Suggestion> getSuggestions(final Iterable<Hit> hits, final String attType) {
+    public List<Suggestion> getSuggestions(HitsDao dao, int jobId, List<Rule> rules, Filter filter, String attType,
+	    int amount) throws IOException {
 	// Every possible single attribute becomes a suggestion.
 	Map<Attribute, Suggestion> allSuggestionsMap = new HashMap<>();
 
@@ -42,7 +35,7 @@ public class SimpleAlgorithm implements SuggestionsAlgorithm {
 
 	// Create a suggestion for every attribute, count the number of hits
 	// that apply to it
-	for (final Hit hit : hits) {
+	for (final Hit hit : dao.getHits(jobId, rules, filter)) {
 	    numberOfHits++;
 	    final Attribute att = hit.getAttribute(attId);
 	    if (att == null) {
@@ -70,7 +63,7 @@ public class SimpleAlgorithm implements SuggestionsAlgorithm {
 				       // compareTo sort.
 	Collections.reverse(allSuggestionsList);
 
-	return Utility.subList(allSuggestionsList, 0, NUMBER_OF_SUGGESTIONS);
+	return Utility.subList(allSuggestionsList, 0, amount);
     }
 
 }

@@ -8,6 +8,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -159,78 +160,8 @@ public class CSVParser {
      */
     public static List<Hit> fromCSV(final List<Integer> columnsTypes, final String filePath)
 	    throws IOException, CSVParseException {
-	final File repoFile = new File(filePath);
-	if (!repoFile.exists()) {
-	    throw new FileNotFoundException("File not found: " + filePath);
-	} else if (!repoFile.canRead()) {
-	    throw new IOException("File read is not permitted!");
-	}
-
-	if (columnsTypes.contains(SERVICE_PORT) ^ columnsTypes.contains(SERVICE_PROTOCOL)) {
-	    throw new IllegalArgumentException("Choose service port and service protocol or neither of them");
-	}
-
-	final CSVParser parser = new CSVParser(columnsTypes);
 	final List<Hit> hits = new ArrayList<>();
-	int lineNumber = 1;
-
-	BufferedReader reader = null;
-	try {
-	    reader = new BufferedReader(new FileReader(repoFile));
-	    for (String line; (line = reader.readLine()) != null;) {
-		if (line.isEmpty()) {
-		    continue;
-		}
-		hits.add(parser.fromCSV(line));
-		lineNumber++;
-	    }
-	} catch (final CSVParseException e) {
-	    throw new CSVParseException("In line " + lineNumber + ": ", e);
-	} finally {
-	    if (reader != null) {
-		reader.close();
-	    }
-	}
-
-	return hits;
-    }
-
-    static List<Hit> fromCSV(final List<Integer> columnsTypes, final String fileName, List<Rule> rules, Filter filter,
-	    int endIndex) throws CSVParseException, IOException {
-	if (columnsTypes.contains(SERVICE_PORT) ^ columnsTypes.contains(SERVICE_PROTOCOL)) {
-	    throw new IllegalArgumentException("Choose service port and service protocol or neither of them");
-	}
-
-	final CSVParser parser = new CSVParser(columnsTypes);
-	final List<Hit> hits = new ArrayList<>();
-	int lineNumber = 1;
-
-	BufferedReader reader = null;
-	try {
-	    reader = new BufferedReader(new FileReader(fileName));
-	    for (String line; (line = reader.readLine()) != null;) {
-		if (line.isEmpty()) {
-		    continue;
-		}
-		final Hit hit = parser.fromCSV(line);
-		if (UtilityDao.isMatch(hit, rules, filter)) {
-		    hits.add(hit);
-
-		    if (endIndex >= 0 && hits.size() >= endIndex) {
-			// Break if reached end index
-			break;
-		    }
-		}
-		lineNumber++;
-	    }
-	} catch (final CSVParseException e) {
-	    throw new CSVParseException("In line " + lineNumber + ": ", e);
-	} finally {
-	    if (reader != null) {
-		reader.close();
-	    }
-	}
-
+	fromCSV(columnsTypes, filePath, new ArrayList<>(0), Filter.ANY_FILTER, 0, -1, hits);
 	return hits;
     }
 
@@ -292,6 +223,62 @@ public class CSVParser {
 	}
     }
 
+    static void fromCSV(final List<Integer> columnsTypes, final String filePath, final List<Rule> rules,
+	    final Filter filter, final int fromIndex, final int endIndex, final Collection<? super Hit> destination)
+		    throws IOException, CSVParseException {
+	final File repoFile = new File(filePath);
+	if (!repoFile.exists()) {
+	    throw new FileNotFoundException("File not found: " + filePath);
+	} else if (!repoFile.canRead()) {
+	    throw new IOException("File read is not permitted!");
+	}
+
+	if (columnsTypes.contains(SERVICE_PORT) ^ columnsTypes.contains(SERVICE_PROTOCOL)) {
+	    throw new IllegalArgumentException("Choose service port and service protocol or neither of them");
+	}
+
+	final CSVParser parser = new CSVParser(columnsTypes);
+	int lineNumber = 1;
+
+	BufferedReader reader = null;
+	try {
+	    reader = new BufferedReader(new FileReader(repoFile));
+
+	    // Skip until 'fromIndex'
+	    for (String line; lineNumber++ <= fromIndex && (line = reader.readLine()) != null;)
+		if (line.isEmpty())
+		    lineNumber--;
+
+	    for (String line; (line = reader.readLine()) != null;) {
+		if (line.isEmpty()) {
+		    continue;
+		}
+		Hit hit = parser.fromCSV(line);
+		if (UtilityDao.isMatch(hit, rules, filter)) {
+		    destination.add(hit);
+		    if (endIndex >= 0 && destination.size() >= endIndex) {
+			// Break if reached end index
+			break;
+		    }
+		}
+		lineNumber++;
+	    }
+	} catch (final CSVParseException e) {
+	    throw new CSVParseException("In line " + lineNumber + ": ", e);
+	} finally {
+	    if (reader != null) {
+		reader.close();
+	    }
+	}
+    }
+
+    static List<Hit> fromCSV(List<Integer> columnsTypes, String fileName, List<Rule> rules, Filter filter, int endIndex)
+	    throws CSVParseException, IOException {
+	ArrayList<Hit> hits = new ArrayList<>();
+	fromCSV(columnsTypes, fileName, rules, filter, 0, endIndex, hits);
+	return hits;
+    }
+
     /**
      * Parse CSV string to source
      * 
@@ -303,7 +290,7 @@ public class CSVParser {
      */
     private static Source fromCSVSource(final String source) throws CSVParseException {
 	try {
-	    return new Source(source);
+	    return Source.create(source);
 	} catch (final IllegalArgumentException e) {
 	    throw new CSVParseException("Unable to parse source: ", e);
 	}
@@ -320,7 +307,7 @@ public class CSVParser {
      */
     private static Destination fromCSVDestination(final String destination) throws CSVParseException {
 	try {
-	    return new Destination(destination);
+	    return Destination.create(destination);
 	} catch (final IllegalArgumentException e) {
 	    throw new CSVParseException("Unable to parse destination: ", e);
 	}

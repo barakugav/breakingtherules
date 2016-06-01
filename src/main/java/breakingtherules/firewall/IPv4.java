@@ -5,9 +5,9 @@ import java.util.List;
 import breakingtherules.utilities.Utility;
 import breakingtherules.utilities.WeakCache;
 
-public final class IPv4 extends IP {
+public class IPv4 extends IP {
 
-    private final int m_address;
+    protected final int m_address;
 
     public static final int BLOCK_NUMBER = 1 << 2; // 4
     public static final int BLOCK_SIZE = 1 << 3; // 8
@@ -17,7 +17,7 @@ public final class IPv4 extends IP {
 
     private static final int BLOCK_MASK = (1 << BLOCK_SIZE) - 1; // 255
 
-    private IPv4(final int address, final int prefixLength) {
+    protected IPv4(final int address, final int prefixLength) {
 	super(prefixLength);
 	m_address = address;
     }
@@ -37,6 +37,11 @@ public final class IPv4 extends IP {
 	    a >>= BLOCK_SIZE;
 	}
 	return aArr;
+    }
+
+    // TODO - better name
+    public int address() {
+	return m_address;
     }
 
     /*
@@ -240,6 +245,11 @@ public final class IPv4 extends IP {
 		: ((a1 + Integer.MIN_VALUE) < (a2 + Integer.MIN_VALUE)) ? -1 : 1;
     }
 
+    public static void refreshCache() {
+	for (WeakCache<Integer, IPv4> cache : IPv4Cache.cache)
+	    cache.cleanCache();
+    }
+
     public static IPv4 create(final String ip) {
 	int address = 0;
 	int prefix;
@@ -363,7 +373,7 @@ public final class IPv4 extends IP {
 	IPv4 ip = cache.get(addressInteger);
 	if (ip == null) {
 	    ip = new IPv4(address, prefix);
-	    cache.put(addressInteger, ip);
+	    cache.add(addressInteger, ip);
 	}
 	return ip;
     }

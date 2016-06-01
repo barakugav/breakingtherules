@@ -9,7 +9,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import breakingtherules.utilities.Utility;
 import breakingtherules.utilities.WeakCache;
 
-public class Service implements Attribute {
+public class Service extends Attribute {
 
     private final int m_protocolCode;
 
@@ -412,6 +412,11 @@ public class Service implements Attribute {
 	return PROTOCOL_NAMES[protocolCode];
     }
 
+    public static void refreshCache() {
+	for (WeakCache<Integer, Service> cache : ServiceCache.cache)
+	    cache.cleanCache();
+    }
+
     public static Service create(final String protocol, final int port) {
 	return create(protocolCode(protocol), port, port);
     }
@@ -553,7 +558,7 @@ public class Service implements Attribute {
 	Service service = cache.get(portsRangeInteger);
 	if (service == null) {
 	    service = new Service(protocolCode, portsRange);
-	    cache.put(portsRangeInteger, service);
+	    cache.add(portsRangeInteger, service);
 	}
 	return service;
     }

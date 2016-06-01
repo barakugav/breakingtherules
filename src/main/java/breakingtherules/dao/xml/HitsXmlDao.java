@@ -235,8 +235,8 @@ public class HitsXmlDao implements HitsDao {
 	// Convert strings to attributes
 	try {
 	    final int intID = Integer.parseInt(idStr);
-	    final Source sourceObj = new Source(sourceStr);
-	    final Destination destinationObj = new Destination(destinationStr);
+	    final Source sourceObj = Source.create(sourceStr);
+	    final Destination destinationObj = Destination.create(destinationStr);
 	    final Service serviceObj = Service.create(serviceStr);
 
 	    // Create attributes list

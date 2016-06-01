@@ -1,5 +1,9 @@
 package breakingtherules.firewall;
 
+import java.util.Objects;
+
+import breakingtherules.utilities.WeakCache;
+
 /**
  * Destination attribute
  */
@@ -16,21 +20,9 @@ public class Destination extends IPAttribute {
      * 
      * @param ip
      *            IP of the destination
-     * @throws NullPointerException
-     *             if ip is null
      */
-    public Destination(final IP ip) throws NullPointerException {
+    private Destination(final IP ip) {
 	super(ip);
-    }
-
-    /**
-     * Constructor from string IP
-     * 
-     * @param ip
-     *            string IP of the destination
-     */
-    public Destination(final String ip) {
-	this(IP.fromString(ip));
     }
 
     /*
@@ -73,7 +65,50 @@ public class Destination extends IPAttribute {
 
     @Override
     public Destination createMutation(final IP ip) {
-	return new Destination(ip);
+	return Destination.create(ip);
+    }
+
+    public static void refreshCache() {
+	for (WeakCache<Integer, Destination> cache : DestinationCache.IPv4cache)
+	    cache.cleanCache();
+    }
+
+    public static Destination create(IP ip) {
+	return createInternal(Objects.requireNonNull(ip));
+    }
+
+    public static Destination create(String ip) {
+	return createInternal(IP.fromString(ip));
+    }
+
+    private static Destination createInternal(IP ip) {
+	Destination destination;
+	if (ip instanceof IPv4) {
+	    WeakCache<Integer, Destination> cache = DestinationCache.IPv4cache[ip.prefixLength];
+	    Integer addressInteger = new Integer(((IPv4) ip).address());
+	    destination = cache.get(addressInteger);
+	    if (destination == null) {
+		destination = new Destination(ip);
+		cache.add(addressInteger, destination);
+	    }
+	} else {
+	    destination = new Destination(ip);
+	}
+	return destination;
+    }
+
+    private static class DestinationCache {
+
+	static final WeakCache<Integer, Destination>[] IPv4cache;
+
+	static {
+	    @SuppressWarnings({ "unchecked", "unused" })
+	    Object dummy = IPv4cache = new WeakCache[IPv4.MAX_LENGTH + 1];
+
+	    for (int i = IPv4cache.length; i-- != 0;)
+		IPv4cache[i] = new WeakCache<>();
+	}
+
     }
 
     private static class AnyDestination extends Destination {

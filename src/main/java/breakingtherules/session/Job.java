@@ -225,17 +225,17 @@ public class Job {
      *            type
      * 
      * @return Current job's suggestions.
-     * @throws IOException
-     *             if DAO failed to load the job's hits
+     * @throws Exception
+     *             if any error occurs
      */
-    public List<SuggestionsDto> getSuggestions(int amount) throws IOException {
+    public List<SuggestionsDto> getSuggestions(int amount) throws Exception {
 	checkJobState();
 
 	List<SuggestionsDto> suggestionsDtos = new ArrayList<>();
 	List<String> allAttributesType = getAllAttributeTypes();
-	List<Hit> hits = getHitsAll().getData();
 	for (String attType : allAttributesType) {
-	    List<Suggestion> suggestions = m_algorithm.getSuggestions(hits, attType);
+	    List<Suggestion> suggestions = m_algorithm.getSuggestions(m_hitsDao, m_id, m_rules, m_filter, attType,
+		    amount);
 	    SuggestionsDto attSuggestions = new SuggestionsDto(suggestions, attType);
 	    suggestionsDtos.add(attSuggestions);
 	}

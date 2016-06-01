@@ -50,11 +50,11 @@ class FirewallTestsUtility extends TestBase {
     }
 
     static Source getRandomSource() {
-	return new Source(FirewallTestsUtility.getRandomIP());
+	return Source.create(FirewallTestsUtility.getRandomIP());
     }
 
     static Destination getRandomDestination() {
-	return new Destination(FirewallTestsUtility.getRandomIP());
+	return Destination.create(FirewallTestsUtility.getRandomIP());
     }
 
     static Service getRandomService() {

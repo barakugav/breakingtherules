@@ -3,8 +3,10 @@ package breakingtherules.dao.csv;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import breakingtherules.dao.HitsDao;
 import breakingtherules.dto.ListDto;
@@ -20,19 +22,6 @@ public class HitsCSVDao implements HitsDao {
 
     public HitsCSVDao() {
 	m_totalHitsCache = new HashMap<>();
-    }
-
-    @Override
-    public ListDto<Hit> getHits(int jobId) throws IOException {
-	try {
-	    List<Hit> hits = CSVParser.fromCSV(CSVParser.DEFAULT_COLUMNS_TYPES, jobId);
-	    int size = hits.size();
-	    m_totalHitsCache.put(new Triple<>(Integer.valueOf(jobId), new ArrayList<>(), Filter.ANY_FILTER),
-		    Integer.valueOf(size));
-	    return new ListDto<>(hits, 0, size, size);
-	} catch (CSVParseException e) {
-	    throw new IOException(e);
-	}
     }
 
     @Override
@@ -84,6 +73,32 @@ public class HitsCSVDao implements HitsDao {
 	} catch (CSVParseException e) {
 	    throw new IOException(e);
 	}
+    }
+
+    @Override
+    public Set<Hit> getUnique(int jobId, List<Rule> rules, Filter filter) throws CSVParseException, IOException {
+	Set<Hit> hits = new HashSet<>();
+	CSVParser.fromCSV(CSVParser.DEFAULT_COLUMNS_TYPES, CSVDaoConfig.getHitsFile(jobId), rules, filter, 0, -1, hits);
+	return hits;
+    }
+
+    @Override
+    public Set<Hit> getUnique(int jobId, List<Rule> rules, Filter filter, int startIndex, int endIndex)
+	    throws IOException, CSVParseException {
+	if (endIndex < 0) {
+	    throw new IllegalArgumentException("endIndex is negative: " + endIndex);
+	}
+	if (startIndex < 0) {
+	    throw new IllegalArgumentException("startIndex is negative: " + startIndex);
+	}
+	if (startIndex > endIndex) {
+	    throw new IllegalArgumentException("startIndex > endIndex");
+	}
+
+	Set<Hit> hits = new HashSet<>();
+	CSVParser.fromCSV(CSVParser.DEFAULT_COLUMNS_TYPES, CSVDaoConfig.getHitsFile(jobId), rules, filter, startIndex,
+		endIndex, hits);
+	return hits;
     }
 
     @Override
