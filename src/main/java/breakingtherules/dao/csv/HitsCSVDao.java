@@ -16,6 +16,9 @@ import breakingtherules.firewall.Rule;
 import breakingtherules.utilities.Triple;
 import breakingtherules.utilities.Utility;
 
+// TODO why does reading the hits happen four different times?
+// TODO why does the GUI show 0 total hits?
+
 public class HitsCSVDao implements HitsDao {
 
     private Map<Triple<Integer, List<Rule>, Filter>, Integer> m_totalHitsCache;

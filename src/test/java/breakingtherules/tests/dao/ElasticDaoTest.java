@@ -62,13 +62,12 @@ public class ElasticDaoTest extends TestBase {
 
     private static Hit createHit() {
 	List<Attribute> attributes = new ArrayList<>();
-	int id = numOfHits;
 	numOfHits++;
 	attributes.add(Source.create("128.76.2.9"));
 	attributes.add(Destination.create("128.76.2.9"));
 	attributes.add(Service.create("TCP 80"));
 	System.out.println(numOfHits);
-	return new Hit(id, attributes);
+	return new Hit(attributes);
     }
 
     @Test

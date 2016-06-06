@@ -10,7 +10,6 @@ class XmlDaoConfig extends DaoConfig {
 
     static final String REPOSITORY = "Repository";
     static final String HIT = "hit";
-    static final String ID = "id";
 
     static String getHitsFile(final int id) {
 	return getRepoRoot(id) + HITS_FILE;

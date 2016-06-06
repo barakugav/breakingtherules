@@ -33,9 +33,9 @@ public class RulesController {
     }
 
     @RequestMapping(value = "/rule", method = RequestMethod.DELETE)
-    public void deleteRule(@RequestParam("id") int ruleId)
+    public void deleteRule(@RequestParam("index") int ruleIndex)
 	    throws IllegalArgumentException, NoCurrentJobException, IOException {
-	m_job.deleteRule(ruleId);
+	m_job.deleteRule(ruleIndex);
     }
 
 }

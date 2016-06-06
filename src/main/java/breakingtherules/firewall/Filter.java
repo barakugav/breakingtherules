@@ -69,6 +69,15 @@ public class Filter extends AttributesContainer {
 	return o instanceof Filter && super.equals(o);
     }
 
+    @Override
+    public int hashCode() {
+	int hash = 17;
+	for (Attribute att : this) {
+	    hash = 31 * hash + (att != null ? att.hashCode() : 0);
+	}
+	return hash;
+    }
+
     private static class AnyFilter extends Filter {
 
 	private static final List<Attribute> anyAttributes;

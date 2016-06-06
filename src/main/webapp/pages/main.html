@@ -42,12 +42,12 @@
 				<th ng-repeat="att in mainCtrl.attributes">{{ att | capitalize }}</th>
 				<th></th>
 			</tr>
-			<tr ng-repeat="rule in progCtrl.rules | orderBy:'-id' ">
-				<td> {{ rule.id }} </td>
+			<tr ng-repeat="rule in progCtrl.rules">
+				<td> {{ $index }} </td>
 				<td ng-repeat="attribute in rule.attributes"> {{ attribute.str }} </td>
 				<td>
 					<button class="btn btn-danger" 
-						ng-click="progCtrl.deleteRule(rule.id)">
+						ng-click="progCtrl.deleteRule($index)">
 						Delete Rule
 					</button>
 				</td>
@@ -95,7 +95,7 @@
 					<th ng-repeat="att in mainCtrl.attributes">{{ att | capitalize }}</th>
 				</tr>
 				<tr ng-repeat="hit in hitsCtrl.allHits">
-					<td> {{ hit.id }} </td>
+					<td></td>
 					<td ng-repeat="attribute in hit.attributes"> {{ attribute.str }} </td>
 				</tr>
 			</table>

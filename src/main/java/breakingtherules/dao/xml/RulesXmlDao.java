@@ -161,13 +161,11 @@ public class RulesXmlDao implements RulesDao {
      */
     private static Rule createRule(final Element ruleElm) {
 	// Read attributes from element
-	final String id = ruleElm.getAttribute("id");
 	final String source = ruleElm.getAttribute("source");
 	final String destination = ruleElm.getAttribute("destination");
 	final String service = ruleElm.getAttribute("service");
 
 	// Convert strings to attributes
-	final int newId = Integer.parseInt(id);
 	final Source newSource = Source.create(source);
 	final Destination newDestination = Destination.create(destination);
 	final Service newService = Service.create(service);
@@ -178,7 +176,7 @@ public class RulesXmlDao implements RulesDao {
 	attributes.add(newDestination);
 	attributes.add(newService);
 
-	return new Rule(newId, attributes);
+	return new Rule(attributes);
     }
 
 }

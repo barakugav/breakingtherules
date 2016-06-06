@@ -27,7 +27,6 @@ import breakingtherules.utilities.Utility;
  */
 public class CSVParser {
 
-    private int m_idCounter;
     private final int sourceIndex;
     private final int destinationIndex;
     private final int serviceProtocolIndex;
@@ -61,7 +60,6 @@ public class CSVParser {
     }
 
     public CSVParser(final List<Integer> columnsTypes) {
-	m_idCounter = 1;
 
 	// Create unmodifiable clone of the input list
 	m_columnsTypes = Collections.unmodifiableList(new ArrayList<>(columnsTypes));
@@ -94,7 +92,7 @@ public class CSVParser {
 	    throw new CSVParseException("hit line didn't have enough attributes", e);
 	}
 
-	return new Hit(m_idCounter++, attributes);
+	return new Hit(attributes);
     }
 
     public String toCSV(final Hit hit) throws CSVParseException {

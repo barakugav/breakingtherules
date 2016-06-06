@@ -68,7 +68,7 @@ var events = {
 	}]);
 
 	app.factory('StatusMonitor', ['BtrData', function (BtrData) {
-		var status;
+		var status = {};
 		var curPromise;
 
 		function update() {
@@ -156,8 +156,8 @@ var events = {
 			return 100 - progCtrl.getCoveredPercentage();
 		}
 
-		progCtrl.deleteRule = function (id) {
-			BtrData.deleteRuleById(id).then(function () {
+		progCtrl.deleteRule = function (index) {
+			BtrData.deleteRuleByIndex(index).then(function () {
 				Notify.info('Rule deleted. Updating statistics...');
 				progCtrl.updateRules();
 				$rootScope.$emit(events.RULES_CHANGED);

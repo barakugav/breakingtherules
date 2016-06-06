@@ -47,8 +47,8 @@
 			return $http.get('/status');
 		}
 
-		function deleteRuleById(id) {
-			return $http.delete('/rule?id=' + id);
+		function deleteRuleByIndex(index) {
+			return $http.delete('/rule?index=' + index);
 		}
 
 		return {
@@ -60,7 +60,7 @@
 			getHits: getHits,
 			getFilter: getFilter,
 			getStatus: getStatus,
-			deleteRuleById: deleteRuleById
+			deleteRuleByIndex: deleteRuleByIndex
 		};
 	}]);
 

@@ -125,7 +125,7 @@ public class Job {
 	m_filter = Filter.ANY_FILTER;
 	m_totalHitsCount = m_hitsDao.getHitsNumber(id, new ArrayList<Rule>(), Filter.ANY_FILTER);
 	m_coveredHitsCount = 0;
-	m_filteredHitsCount = 0;
+	m_filteredHitsCount = m_totalHitsCount - m_coveredHitsCount;
 
 	List<Rule> rules = m_rulesDao.getRules(id).getData();
 	for (Rule rule : rules) {
@@ -178,28 +178,17 @@ public class Job {
     /**
      * Delete a rule from the job, by its id
      * 
-     * @param ruleId
-     *            the rule to delete
+     * @param ruleIndex
+     *            the index of the rule to delete, counting from 0, out of all the created rules 
      * @throws IOException
      *             if any I/O error occurs
      */
-    public void deleteRule(int ruleId) throws IOException {
-	int searchedRuleIndex = -1;
-	for (ListIterator<StatisticedRule> it = m_rules.listIterator(); it.hasNext();) {
-	    if (it.next().m_rule.getId() == ruleId) {
-		searchedRuleIndex = it.previousIndex();
-		break;
-	    }
-	}
-	if (searchedRuleIndex < 0) {
-	    // No found
-	    return;
-	}
+    public void deleteRule(int ruleIndex) throws IOException {
 
 	// Remove all rules up to searched rule
-	List<Rule> removedRules = new ArrayList<>(m_rules.size() - searchedRuleIndex - 1);
+	List<Rule> removedRules = new ArrayList<>(m_rules.size() - ruleIndex - 1);
 	for (ListIterator<StatisticedRule> it = m_rules.listIterator(m_rules.size()); it
-		.previousIndex() < searchedRuleIndex;) {
+		.previousIndex() < ruleIndex;) {
 	    StatisticedRule removedRule = it.previous();
 	    m_coveredHitsCount -= removedRule.m_coveredHits;
 	    removedRules.add(removedRule.m_rule);
@@ -209,11 +198,11 @@ public class Job {
 	Collections.reverse(removedRules);
 
 	// Remove searched rule
-	StatisticedRule searchedRule = m_rules.get(searchedRuleIndex);
-	m_coveredHitsCount -= searchedRule.m_coveredHits;
-	m_rules.remove(searchedRuleIndex);
+	StatisticedRule searchedRule = m_rules.get(ruleIndex);
+	m_rules.remove(ruleIndex);
 
 	// Update
+	m_coveredHitsCount -= searchedRule.m_coveredHits;
 	m_filteredHitsCount = m_hitsDao.getHitsNumber(m_id, getRules(), m_filter);
 
 	// Add again removed rules
@@ -319,13 +308,7 @@ public class Job {
     public void addCurrentFilterToRules() throws IOException {
 	checkJobState();
 
-	int lastIndex = 0;
-	if (m_rules.isEmpty()) {
-	    lastIndex = m_originalRule.getId();
-	} else {
-	    lastIndex = m_rules.get(m_rules.size() - 1).m_rule.getId();
-	}
-	Rule newRule = new Rule(lastIndex + 1, m_filter);
+	Rule newRule = new Rule(m_filter);
 	addRule(new StatisticedRule(newRule, m_filteredHitsCount));
     }
 

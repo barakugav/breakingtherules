@@ -123,7 +123,7 @@ public class WeakCacheTest {
     public void cleanCacheTest() {
 	final String POSSIBLE_GC_NOT_WORKING_MSSG = "Cache didn't clean, "
 		+ "or GC didn't act (This test is inconsistent and can't be "
-		+ "change as far as we now) try run this test alone.";
+		+ "changed as far as we know) try running this test alone.";
 	WeakCache<Integer, Object> cache = new WeakCache<>();
 	Integer key1 = Integer.valueOf(0);
 	Integer key2 = Integer.valueOf(1);

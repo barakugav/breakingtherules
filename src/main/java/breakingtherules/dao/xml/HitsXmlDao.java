@@ -157,7 +157,6 @@ public class HitsXmlDao implements HitsDao {
 	    final Document doc = builder.newDocument();
 
 	    final Element repoElm = doc.createElement(XmlDaoConfig.REPOSITORY);
-	    hits.sort(Hit.IDS_COMPARATOR);
 	    for (final Hit hit : hits) {
 		final Element elm = doc.createElement(XmlDaoConfig.HIT);
 		createElement(elm, hit);
@@ -217,14 +216,11 @@ public class HitsXmlDao implements HitsDao {
      */
     private static Hit createHit(final Element hitElm) throws XMLParseException {
 	// Read attributes from element
-	final String idStr = hitElm.getAttribute(XmlDaoConfig.ID);
 	final String sourceStr = hitElm.getAttribute(Attribute.SOURCE_TYPE.toLowerCase());
 	final String destinationStr = hitElm.getAttribute(Attribute.DESTINATION_TYPE.toLowerCase());
 	final String serviceStr = hitElm.getAttribute(Attribute.SERVICE_TYPE.toLowerCase());
 
-	if (idStr == null || idStr.isEmpty()) {
-	    throw new XMLParseException("Id does not exist");
-	} else if (sourceStr == null || sourceStr.isEmpty()) {
+	if (sourceStr == null || sourceStr.isEmpty()) {
 	    throw new XMLParseException("Source does not exist");
 	} else if (destinationStr == null || destinationStr.isEmpty()) {
 	    throw new XMLParseException("Destination does not exist");
@@ -234,7 +230,6 @@ public class HitsXmlDao implements HitsDao {
 
 	// Convert strings to attributes
 	try {
-	    final int intID = Integer.parseInt(idStr);
 	    final Source sourceObj = Source.create(sourceStr);
 	    final Destination destinationObj = Destination.create(destinationStr);
 	    final Service serviceObj = Service.create(serviceStr);
@@ -244,7 +239,7 @@ public class HitsXmlDao implements HitsDao {
 	    attributes.add(sourceObj);
 	    attributes.add(destinationObj);
 	    attributes.add(serviceObj);
-	    return new Hit(intID, attributes);
+	    return new Hit(attributes);
 
 	} catch (final Exception e) {
 	    throw new XMLParseException(e);
@@ -252,7 +247,6 @@ public class HitsXmlDao implements HitsDao {
     }
 
     private static void createElement(final Element node, final Hit hit) {
-	node.setAttribute(XmlDaoConfig.ID, Integer.toString(hit.getId()));
 	for (final Attribute attribute : hit) {
 	    node.setAttribute(attribute.getType().toLowerCase(), attribute.toString());
 	}

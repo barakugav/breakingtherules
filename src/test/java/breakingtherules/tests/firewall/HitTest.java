@@ -14,42 +14,23 @@ public class HitTest extends TestBase {
     @Test
     public void constructorTest() {
 	System.out.println("# HitTest constructorTest");
-	int id = FirewallTestsUtility.getRandomID();
 	List<Attribute> attributes = FirewallTestsUtility.getRandomAttributes();
-	new Hit(id, attributes);
+	new Hit(attributes);
     }
 
     @Test(expected = NullPointerException.class)
     public void constructorTestNullAttributes() {
 	System.out.println("# HitTest constructorTestNullAttributes");
-	int id = FirewallTestsUtility.getRandomID();
 	List<Attribute> attributes = null;
-	new Hit(id, attributes);
+	new Hit(attributes);
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void constructorTestNegativeId() {
-	System.out.println("# HitTest constructorTestNegativeId");
-	int id = -FirewallTestsUtility.getRandomID();
-	List<Attribute> attributes = FirewallTestsUtility.getRandomAttributes();
-	new Hit(id, attributes);
-    }
-
-    @Test
-    public void getIdTest() {
-	System.out.println("# HitTest getIdTest");
-	int id = FirewallTestsUtility.getRandomID();
-	List<Attribute> attributes = FirewallTestsUtility.getRandomAttributes();
-	Hit hit = new Hit(id, attributes);
-	assertEquals(id, hit.getId());
-    }
 
     @Test
     public void getAttributeTest() {
 	System.out.println("# HitTest getAttributeTest");
-	int id = FirewallTestsUtility.getRandomID();
 	List<Attribute> attributes = FirewallTestsUtility.getRandomAttributes();
-	Hit hit = new Hit(id, attributes);
+	Hit hit = new Hit(attributes);
 
 	for (Attribute expected : attributes) {
 	    String type = expected.getType();
@@ -61,9 +42,8 @@ public class HitTest extends TestBase {
     @Test
     public void getAttributesTest() {
 	System.out.println("# HitTest getAttributesTest");
-	int id = FirewallTestsUtility.getRandomID();
 	List<Attribute> expected = FirewallTestsUtility.getRandomAttributes();
-	Hit hit = new Hit(id, expected);
+	Hit hit = new Hit(expected);
 	List<Attribute> actual = hit.getAttributes();
 
 	// Sort lists for comparison

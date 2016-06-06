@@ -29,9 +29,6 @@ import org.elasticsearch.node.Node;
 import org.elasticsearch.node.NodeBuilder;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
-import org.elasticsearch.search.sort.SortBuilder;
-import org.elasticsearch.search.sort.SortBuilders;
-import org.elasticsearch.search.sort.SortOrder;
 
 import breakingtherules.dao.HitsDao;
 import breakingtherules.dto.ListDto;
@@ -134,7 +131,6 @@ public class HitsElasticDao implements HitsDao {
 	    try {
 		final XContentBuilder hitJson = XContentFactory.jsonBuilder();
 		hitJson.startObject();
-		hitJson.field(ElasticDaoConfig.FIELD_ID, hit.getId());
 		hitJson.field(ElasticDaoConfig.FIELD_JOB_ID, jobId);
 		hitJson.startArray(ElasticDaoConfig.FIELD_ATTRIBUTES);
 		for (final Attribute attr : hit) {
@@ -148,7 +144,6 @@ public class HitsElasticDao implements HitsDao {
 		final IndexRequestBuilder indexRequest = m_elasticClient.prepareIndex(ElasticDaoConfig.INDEX_NAME,
 			ElasticDaoConfig.TYPE_HIT);
 		indexRequest.setSource(hitJson);
-		indexRequest.setId(elasticHitId(jobId, hit.getId()));
 		bulkRequest.add(indexRequest);
 
 		hitJson.close();
@@ -242,13 +237,11 @@ public class HitsElasticDao implements HitsDao {
     private List<Hit> getHits(final int jobId, final List<Rule> rules, final Filter filter, final boolean all,
 	    int startIndex, final int endIndex) {
 	final QueryBuilder query = QueryBuilders.termQuery(ElasticDaoConfig.FIELD_JOB_ID, jobId);
-	final SortBuilder sort = SortBuilders.fieldSort(ElasticDaoConfig.FIELD_ID).order(SortOrder.ASC);
 
 	final SearchRequestBuilder srchRequest = m_elasticClient.prepareSearch(ElasticDaoConfig.INDEX_NAME);
 	srchRequest.setSearchType(SearchType.QUERY_AND_FETCH);
 	srchRequest.setScroll(new TimeValue(ElasticDaoConfig.TIME_PER_SCROLL));
 	srchRequest.setQuery(query);
-	srchRequest.addSort(sort);
 	srchRequest.setSize(ElasticDaoConfig.HITS_PER_SCROLL);
 
 	SearchResponse scrollResp = srchRequest.execute().actionGet();
@@ -323,14 +316,9 @@ public class HitsElasticDao implements HitsDao {
 	return true;
     }
 
-    private static String elasticHitId(final int jobId, final int hitId) {
-	return jobId + "x" + hitId;
-    }
-
     private static Hit toFirewallHit(final SearchHit searchHit) {
 	final Map<String, Object> fields = searchHit.getSource();
 
-	final int hitId = ((Integer) fields.get(ElasticDaoConfig.FIELD_ID)).intValue();
 	final List<Attribute> attrs = new ArrayList<>();
 
 	final Object allAtributes = fields.get(ElasticDaoConfig.FIELD_ATTRIBUTES);
@@ -348,7 +336,7 @@ public class HitsElasticDao implements HitsDao {
 	    final String attrValue = (String) attributeHash.get(ElasticDaoConfig.FIELD_ATTR_VALUE);
 	    attrs.add(Attribute.createFromString(attrTypeID, attrValue));
 	}
-	return new Hit(hitId, attrs);
+	return new Hit(attrs);
     }
 
 }
