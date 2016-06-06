@@ -56,15 +56,10 @@ public class InformationAlgorithm implements SuggestionsAlgorithm {
      */
     private final SimpleAlgorithm m_simpleAlgorithm;
 
-    // /**
-    // * Number of suggestions that returned in each suggestions request
-    // */
-    // private static final int NUMBER_OF_SUGGESTIONS = 10;
-
     /**
      * Default value for the ruleWeight parameter
      */
-    private static final double DEFAULT_RULE_WIEGHT = 1000;
+    private static final double DEFAULT_RULE_WIEGHT = 500;
 
     /**
      * An estimation to the percentage of nodes in the next layer (out of the
@@ -291,8 +286,14 @@ public class InformationAlgorithm implements SuggestionsAlgorithm {
 	// If this value is high, less rules will be created.
 	//
 	int size, length, index;
-	final int sizeTotal;
+	int sizeTotal;
 	final double ruleWeight = m_ruleWeight;
+
+	// Calculate total size
+	sizeTotal = 0;
+	for (IPNode node : nodes) {
+	    sizeTotal += node.size;
+	}
 
 	// Sort the IPs, ensuring the assumption that if for a node there is a
 	// brother, it will be next to it. This assumption will stay for next
@@ -300,10 +301,6 @@ public class InformationAlgorithm implements SuggestionsAlgorithm {
 	currentLayer = nodes;
 	nodes = null; // Free memory
 	currentLayer.sort(IP_COMPARATOR);
-
-	// Total size of elements (calculated out of loop for performance
-	// improvements, and because it is constant value)
-	sizeTotal = currentLayer.size();
 
 	// Run until there are only one element in the list (all nodes are sub
 	// children of the node)
@@ -335,7 +332,7 @@ public class InformationAlgorithm implements SuggestionsAlgorithm {
 
 		    // union = size * (log(subnetwork size) +
 		    // log(1/probability)) + ruleWeight
-		    union = size * (ipParentA.getSubnetBitsNum() + Utility.log2(1 / probability)) + ruleWeight;
+		    union = size * (ipParentA.getSubnetBitsNum() - Utility.log2(probability)) + ruleWeight;
 
 		    // separated = (nodeA optimal) + (nodeB optimal)
 		    separated = nodeA.compressSize + nodeB.compressSize;
@@ -369,6 +366,7 @@ public class InformationAlgorithm implements SuggestionsAlgorithm {
 
 		// Add the finished parent node to next layer list
 		nextLayer.add(parent);
+
 		index++;
 	    }
 
@@ -412,7 +410,7 @@ public class InformationAlgorithm implements SuggestionsAlgorithm {
     private List<IPNode> toIPNodeList(final Iterable<Hit> hits, final int ipAttTypeId) {
 	// If hits are collection, init with size, else init with default size
 	final int aproxNodesNumber = hits instanceof Collection<?> ? ((Collection<?>) hits).size() : 10;
-	final List<IPNode> allNodes = new ArrayList<>(aproxNodesNumber);
+	final ArrayList<IPNode> allNodes = new ArrayList<>(aproxNodesNumber);
 
 	for (final Iterator<Hit> it = hits.iterator(); it.hasNext();) {
 	    final Hit hit = it.next();
@@ -427,6 +425,7 @@ public class InformationAlgorithm implements SuggestionsAlgorithm {
 	    ipNode.bestSubnets = new UnionList<>(ipNode.toSuggestion());
 	    allNodes.add(ipNode);
 	}
+	allNodes.trimToSize();
 
 	allNodes.sort(IP_COMPARATOR);
 
@@ -445,6 +444,7 @@ public class InformationAlgorithm implements SuggestionsAlgorithm {
 		    uniqueNodes.add(node);
 		    lastNode = node;
 		}
+		lastNode.bestSubnets = new UnionList<>(lastNode.toSuggestion());
 	    }
 	}
 	uniqueNodes.trimToSize();
@@ -461,7 +461,7 @@ public class InformationAlgorithm implements SuggestionsAlgorithm {
     @SuppressWarnings("unused")
     private static void configCheck() {
 	if (Double.isNaN(DEFAULT_RULE_WIEGHT)) {
-	    throw new InternalError("DEFAULT_RULE_WEIGHT is Nan");
+	    throw new InternalError("DEFAULT_RULE_WEIGHT is NaN");
 	}
 	if (!(0 < DEFAULT_RULE_WIEGHT)) {
 	    throw new InternalError("DEFAULT_RULE_WIEGHT(" + DEFAULT_RULE_WIEGHT + ") should be > 0");

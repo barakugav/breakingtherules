@@ -5,9 +5,9 @@ import java.util.List;
 import breakingtherules.utilities.Utility;
 import breakingtherules.utilities.WeakCache;
 
-public class IPv4 extends IP {
+public final class IPv4 extends IP {
 
-    protected final int m_address;
+    private final int m_address;
 
     public static final int BLOCK_NUMBER = 1 << 2; // 4
     public static final int BLOCK_SIZE = 1 << 3; // 8
@@ -17,7 +17,7 @@ public class IPv4 extends IP {
 
     private static final int BLOCK_MASK = (1 << BLOCK_SIZE) - 1; // 255
 
-    protected IPv4(final int address, final int prefixLength) {
+    private IPv4(final int address, final int prefixLength) {
 	super(prefixLength);
 	m_address = address;
     }
@@ -39,8 +39,7 @@ public class IPv4 extends IP {
 	return aArr;
     }
 
-    // TODO - better name
-    public int address() {
+    public int addressBits() {
 	return m_address;
     }
 
@@ -193,7 +192,9 @@ public class IPv4 extends IP {
      */
     @Override
     public int hashCode() {
-	return prefixLength ^ m_address;
+	// Reverse result because a lot of IP's lowers bits are zeros (lowers
+	// bits are usually used by hash tables)
+	return Integer.reverse(prefixLength ^ m_address);
     }
 
     /*
@@ -254,7 +255,7 @@ public class IPv4 extends IP {
 	int address = 0;
 	int prefix;
 
-	List<String> blocks = Utility.breakToWords(ip, "" + BLOCKS_SEPARATOR);
+	List<String> blocks = Utility.breakToWords(ip, String.valueOf(BLOCKS_SEPARATOR));
 	if (blocks.size() != BLOCK_NUMBER) {
 	    throw new IllegalArgumentException("IPv4 blocks number: " + Utility.format(BLOCK_NUMBER, blocks.size()));
 	}
@@ -368,7 +369,9 @@ public class IPv4 extends IP {
 	// chance that the address will be in that range is negligible, so we
 	// prefer to use the straight up constructor to avoid unnecessary
 	// (probably) range checks.
-	final Integer addressInteger = new Integer(address);
+	// Reverse address bits for better hash codes performance. (In many IPs,
+	// the lower bits are always zeros)
+	final Integer addressInteger = new Integer(Integer.reverse(address));
 
 	IPv4 ip = cache.get(addressInteger);
 	if (ip == null) {

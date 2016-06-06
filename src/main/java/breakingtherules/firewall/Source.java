@@ -85,7 +85,7 @@ public class Source extends IPAttribute {
 	if (ip instanceof IPv4) {
 	    WeakCache<Integer, Source> cache = SourceCache.IPv4cache[ip.prefixLength];
 
-	    Integer addressInteger = new Integer(((IPv4) ip).address());
+	    Integer addressInteger = new Integer(((IPv4) ip).addressBits());
 	    source = cache.get(addressInteger);
 	    if (source == null) {
 		source = new Source(ip);

@@ -16,11 +16,6 @@ public final class IPv6 extends IP {
      */
     private final int[] m_address;
 
-    /**
-     * Cache for the IP's hash
-     */
-    private int hash;
-
     public static final int BLOCK_NUMBER = 1 << 3; // 8
     public static final int BLOCK_SIZE = 1 << 4; // 16
     public static final int MAX_BLOCK_VALUE = (1 << BLOCK_SIZE) - 1; // 65536
@@ -189,11 +184,13 @@ public final class IPv6 extends IP {
 	}
 
 	final IPv6 other = (IPv6) o;
-	final int[] thisAddress = m_address;
-	final int[] otherAddress = other.m_address;
 	if (prefixLength != other.prefixLength) {
 	    return false;
-	} else if (thisAddress.length != otherAddress.length) {
+	}
+	final int[] thisAddress = m_address;
+	final int[] otherAddress = other.m_address;
+
+	if (thisAddress.length != otherAddress.length) {
 	    return false;
 	}
 	for (int i = 0; i < thisAddress.length; i++) {
@@ -206,18 +203,10 @@ public final class IPv6 extends IP {
 
     @Override
     public int hashCode() {
-	// Look for cached hash first
-	int h = hash;
-	final int[] a = m_address;
-	if (h != 0 || a.length == 0) {
-	    return h;
-	}
-
-	h = 1;
-	for (int i = a.length; i-- > 0;) {
-	    h = h * 31 + a[i];
-	}
-	return hash = h;
+	int h = 1;
+	for (int blockVal : m_address)
+	    h = h * 31 + blockVal;
+	return h;
     }
 
     @Override

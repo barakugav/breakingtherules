@@ -29,12 +29,12 @@ public class Config {
 	return ds;
     }
 
-    @Bean
+    // @Bean
     public HitsDao hitsXmlDao() {
 	return new HitsXmlDao();
     }
 
-    // @Bean
+    @Bean
     public HitsDao hitsCSVDao() {
 	return new HitsCSVDao();
     }

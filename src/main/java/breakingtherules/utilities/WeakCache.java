@@ -25,8 +25,8 @@ import java.util.WeakHashMap;
  * reference to the keys, to the elements as well(as they are the same) and
  * therefore the elements will never be cleaned from cache and memory by the GC.
  * <p>
- * Null elements are not allowed, because there will be not way to determine
- * when to remove it from cache.
+ * Null elements are not allowed, because there will be no way to determine when
+ * to remove them from cache.
  * <p>
  * The cache will resize itself (grow and shrink) according to the number of
  * elements in it and the {@link #loadFactor}.
@@ -49,10 +49,28 @@ public class WeakCache<K, E> {
      * table there are a bin (linked list of entries) that contains all entries
      * that felt to that cell.
      * 
-     * When one of the elements doesn't get held anymore by external strong
-     * reference, the entry push itself to a queue (WeakReference support this
-     * behavior). The queue of the 'dead' elements get scanned in the beginning
-     * of every public method and the 'dead' entry get removed from the table.
+     * The number of expected elements in each bins, if using the default load
+     * factor (0.75) and the hash codes of the keys are random (in theory) is
+     * very low. The probability for the length of the bins are as the
+     * following: (taken from HashMap documentation)
+     * 
+     * 0:    0.60653066
+     * 1:    0.30326533
+     * 2:    0.07581633
+     * 3:    0.01263606
+     * 4:    0.00157952
+     * 5:    0.00015795
+     * 6:    0.00001316
+     * 7:    0.00000094
+     * 8:    0.00000006
+     * more: less than 1 in ten million
+     * 
+     * The 'weak' behavior of the elements is obtained by the following
+     * mechanism: When one of the elements doesn't get held anymore by external
+     * strong reference, the entry push itself to a queue (WeakReference support
+     * this behavior). The queue of the 'dead' elements get scanned in the
+     * beginning of every public method and the 'dead' entry get removed from
+     * the table.
      */
 
     /**
@@ -183,7 +201,7 @@ public class WeakCache<K, E> {
      * factor.
      * 
      * @param initCapacity
-     *            the initialize capacity of the cache
+     *            the initialize capacity of the cache, can be zero
      * @throws IllegalArgumentException
      *             if init capacity is negative
      */
@@ -196,12 +214,12 @@ public class WeakCache<K, E> {
      * parameter.
      * 
      * @param initCapacity
-     *            the initialize capacity of the cache
+     *            the initialize capacity of the cache, can be zero
      * @param loadFactor
      *            the load factor of the cache, see {@link #loadFactor}
      * @throws IllegalArgumentException
-     *             if init capacity is negative, load factor is negative or load
-     *             factor is NaN.
+     *             if init capacity is negative, load factor is negative, 0 or
+     *             NaN.
      */
     public WeakCache(final int initCapacity, final float loadFactor) {
 	if (initCapacity < 0)
@@ -301,11 +319,98 @@ public class WeakCache<K, E> {
     }
 
     /**
+     * Remove a cashed element by it's key.
+     * 
+     * @param key
+     *            the element's key
+     */
+    public void remove(final K key) {
+	// Compute hash
+	final Object k = maskNull(key);
+	final int hash = hash(k);
+
+	// Clean cache, delayed as possible, so GC have more time to act.
+	cleanCache();
+
+	// Compute index in table, MUST happen after clearCache() because shrink
+	// may be caused and may change the mask.
+	final int index = hash & mask;
+
+	// Check if element is first in his list
+	Entry p = table[index];
+	if (p == null)
+	    return;
+	if (hash == p.hash && k.equals(p.key)) {
+	    // Element is first in this list, remove and shrink
+	    table[index] = p.next;
+	    shrink();
+	    return;
+	}
+
+	// Element is not first in his list, search it
+	Entry prev;
+	for (p = (prev = p).next; p != null; p = (prev = p).next) {
+	    if (hash == p.hash && k.equals(p.key)) {
+		// Element found, remove and shrink
+		prev.next = p.next;
+		p.next = null; // Help GC
+		p.key = null; // Help GC
+		shrink();
+		return;
+	    }
+	}
+    }
+
+    /**
+     * Get the number of cached elements.
+     * <p>
+     * Used mostly for testing.
+     * 
+     * @return number of cached elements.
+     */
+    public int size() {
+	cleanCache();
+	return size;
+    }
+
+    /**
+     * Clear the entire cache from all elements.
+     */
+    public void clear() {
+	// Clear dead elements queue
+	while (queue.poll() != null) {
+	}
+
+	// Clear table
+	final Entry[] tab = table;
+	for (int index = tab.length; index-- != 0;) {
+	    for (Entry entry = tab[index]; entry != null;) {
+		final Entry next = entry.next;
+		entry.clear();
+		entry.next = null; // Help GC
+		entry.key = null; // Help GC
+		entry = next;
+	    }
+	}
+
+	// Reset size
+	size = 0;
+
+	// Shrink to minimum capacity
+	if (tab.length > MINIMUM_SHRINK_CAPACITY)
+	    resize(MINIMUM_SHRINK_CAPACITY); // Update thresholds and mask
+
+	// Clear dead elements queue if some already added
+	while (queue.poll() != null) {
+	}
+    }
+
+    /**
      * Clean the cache from dead references.
      * <p>
      * This method doesn't HAVE to be called by the cache user to keep the cache
      * clean. If the user doesn't call this method, no errors will occurs
-     * because it - this method is frequency called by the internal
+     * because of it. This method is frequency called by the internal
      * implementation of the cache, but it is visible to the user so he can free
      * memory if he knows a lot of the elements are already dead reference.
      */
@@ -350,18 +455,6 @@ public class WeakCache<K, E> {
 		entry.next = null; // Help GC
 	    }
 	}
-    }
-
-    /**
-     * Get the number of cached elements.
-     * <p>
-     * Used mostly for testing.
-     * 
-     * @return number of cached elements.
-     */
-    public int size() {
-	cleanCache();
-	return size;
     }
 
     /**
@@ -424,10 +517,10 @@ public class WeakCache<K, E> {
 	final Entry[] oldTable = table;
 	final Entry[] newTable = table = new Entry[newCapacity];
 
-	// Update thresholds caches and mask
+	// Update thresholds and mask
 	growThreshold = (int) (newCapacity * loadFactor);
 	shrinkThreshold = growThreshold >> 2;
-	final int m = mask = newCapacity - 1;
+	final int newMask = mask = newCapacity - 1;
 
 	// transfer all elements to newTable
 	for (int oldIndex = oldTable.length; oldIndex-- != 0;) {
@@ -448,7 +541,7 @@ public class WeakCache<K, E> {
 
 		} else {
 		    // Element is still alive, transfer him to new table
-		    final int newIndex = entry.hash & m;
+		    final int newIndex = entry.hash & newMask;
 		    entry.next = newTable[newIndex];
 		    newTable[newIndex] = entry;
 		}
@@ -512,8 +605,9 @@ public class WeakCache<K, E> {
      * <a href="https://github.com/OpenHFT/Koloboke">Koloboke</a>.
      * 
      * @param o
-     *            an object
-     * @return a hash value obtained by mixing the bits of {@code o} hash code.
+     *            non null object
+     * @return a hash value obtained by mixing the bits of the object's hash
+     *         code.
      */
     private static int hash(final Object o) {
 	final int h = o.hashCode() * PHI;
@@ -523,7 +617,7 @@ public class WeakCache<K, E> {
     /**
      * Mask object by replacing null will non null object.
      * <p>
-     * Used to mask null keys
+     * Used to mask null keys.
      * 
      * @param o
      *            masked object
@@ -534,13 +628,13 @@ public class WeakCache<K, E> {
     }
 
     /**
-     * Entry of cached one element in the #{@link WeakCache}.
+     * Entry of cached element in the {@link WeakCache}.
      * <p>
-     * The entry are save as a one way linked list in each table cell, and last
-     * entry at the list {@link #next} field is null.
+     * The entries are save as a bin (one way linked list) in each table cell,
+     * and last entry at the list {@link #next} field is null.
      * <p>
      * The key is saved as a field and the element itself is saved via the super
-     * class {@link WeakReference}. When there is no more Strong reference to
+     * class {@link WeakReference}. When there is no more strong references to
      * the element the {@link WeakCache} will remove the entry from the table.
      *
      */
@@ -625,7 +719,7 @@ public class WeakCache<K, E> {
 	 * default load factor.
 	 * 
 	 * @param initCapacity
-	 *            the initialize capacity of the cache
+	 *            the initialize capacity of the cache, can be zero
 	 * @throws IllegalArgumentException
 	 *             if init capacity is negative
 	 */
@@ -638,12 +732,12 @@ public class WeakCache<K, E> {
 	 * load factor parameter.
 	 * 
 	 * @param initCapacity
-	 *            the initialize capacity of the cache
+	 *            the initialize capacity of the cache, can be zero
 	 * @param loadFactor
 	 *            the load factor of the cache, see {@link #loadFactor}
 	 * @throws IllegalArgumentException
-	 *             if init capacity is negative, load factor is negative or
-	 *             load factor is NaN.
+	 *             if init capacity is negative, load factor is negative, 0
+	 *             or NaN.
 	 */
 	public SynchronizedWeakCache(final int initCapacity, final float loadFactor) {
 	    super(initCapacity, loadFactor);
@@ -666,11 +760,11 @@ public class WeakCache<K, E> {
 	}
 
 	/**
-	 * Synchronized version of {@link WeakCache#cleanCache()}
+	 * Synchronized version of {@link WeakCache#remove(Object)}
 	 */
 	@Override
-	public synchronized void cleanCache() {
-	    super.cleanCache();
+	public synchronized void remove(final K key) {
+	    super.remove(key);
 	}
 
 	/**
@@ -679,6 +773,22 @@ public class WeakCache<K, E> {
 	@Override
 	public synchronized int size() {
 	    return super.size();
+	}
+
+	/**
+	 * Synchronized version of {@link WeakCache#clear()}
+	 */
+	@Override
+	public synchronized void clear() {
+	    super.clear();
+	}
+
+	/**
+	 * Synchronized version of {@link WeakCache#cleanCache()}
+	 */
+	@Override
+	public synchronized void cleanCache() {
+	    super.cleanCache();
 	}
 
 	/**

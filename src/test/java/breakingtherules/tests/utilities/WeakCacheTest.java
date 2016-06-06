@@ -121,7 +121,9 @@ public class WeakCacheTest {
 
     @Test
     public void cleanCacheTest() {
-	final String GC_NOT_WORKING_MSSG = "GC didn't act (This test is inconsistent and can't be change as far as we now) try run this test alone";
+	final String POSSIBLE_GC_NOT_WORKING_MSSG = "Cache didn't clean, "
+		+ "or GC didn't act (This test is inconsistent and can't be "
+		+ "change as far as we now) try run this test alone.";
 	WeakCache<Integer, Object> cache = new WeakCache<>();
 	Integer key1 = Integer.valueOf(0);
 	Integer key2 = Integer.valueOf(1);
@@ -138,26 +140,26 @@ public class WeakCacheTest {
 	assertEquals(val3, cache.get(key3));
 	val1 = null;
 	forceGC();
-	assertEquals("Cache didn't clean, or " + GC_NOT_WORKING_MSSG + ".", 2, cache.size());
+	assertEquals(POSSIBLE_GC_NOT_WORKING_MSSG, 2, cache.size());
 	assertEquals(null, cache.get(key1));
 	assertEquals(val2, cache.get(key2));
 	assertEquals(val3, cache.get(key3));
 	val3 = null;
 	forceGC();
-	assertEquals("Cache didn't clean, or " + GC_NOT_WORKING_MSSG + ".", 1, cache.size());
+	assertEquals(POSSIBLE_GC_NOT_WORKING_MSSG, 1, cache.size());
 	assertEquals(null, cache.get(key1));
 	assertEquals(val2, cache.get(key2));
 	assertEquals(null, cache.get(key3));
 	val2 = null;
 	forceGC();
-	assertEquals("Cache didn't clean, or " + GC_NOT_WORKING_MSSG + ".", 0, cache.size());
+	assertEquals(POSSIBLE_GC_NOT_WORKING_MSSG, 0, cache.size());
 	assertEquals(null, cache.get(key1));
 	assertEquals(null, cache.get(key2));
 	assertEquals(null, cache.get(key3));
     }
 
     private static void forceGC() {
-	for (int i = 100; i-- != 0;) {
+	for (int i = 250; i-- != 0;) {
 	    Object o = new Object();
 	    WeakReference<Object> ref = new WeakReference<>(o);
 	    o = null;

@@ -85,7 +85,7 @@ public class Destination extends IPAttribute {
 	Destination destination;
 	if (ip instanceof IPv4) {
 	    WeakCache<Integer, Destination> cache = DestinationCache.IPv4cache[ip.prefixLength];
-	    Integer addressInteger = new Integer(((IPv4) ip).address());
+	    Integer addressInteger = new Integer(((IPv4) ip).addressBits());
 	    destination = cache.get(addressInteger);
 	    if (destination == null) {
 		destination = new Destination(ip);

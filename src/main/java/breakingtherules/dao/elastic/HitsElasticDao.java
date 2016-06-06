@@ -14,6 +14,7 @@ import org.elasticsearch.action.delete.DeleteRequestBuilder;
 import org.elasticsearch.action.index.IndexRequestBuilder;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.action.search.SearchScrollRequestBuilder;
 import org.elasticsearch.action.search.SearchType;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.common.settings.Settings;
@@ -243,10 +244,13 @@ public class HitsElasticDao implements HitsDao {
 	final QueryBuilder query = QueryBuilders.termQuery(ElasticDaoConfig.FIELD_JOB_ID, jobId);
 	final SortBuilder sort = SortBuilders.fieldSort(ElasticDaoConfig.FIELD_ID).order(SortOrder.ASC);
 
-	// TODO - make this code readable
-	final SearchRequestBuilder srchRequest = m_elasticClient.prepareSearch(ElasticDaoConfig.INDEX_NAME)
-		.setSearchType(SearchType.QUERY_AND_FETCH).setScroll(new TimeValue(ElasticDaoConfig.TIME_PER_SCROLL))
-		.setQuery(query).addSort(sort).setSize(ElasticDaoConfig.HITS_PER_SCROLL);
+	final SearchRequestBuilder srchRequest = m_elasticClient.prepareSearch(ElasticDaoConfig.INDEX_NAME);
+	srchRequest.setSearchType(SearchType.QUERY_AND_FETCH);
+	srchRequest.setScroll(new TimeValue(ElasticDaoConfig.TIME_PER_SCROLL));
+	srchRequest.setQuery(query);
+	srchRequest.addSort(sort);
+	srchRequest.setSize(ElasticDaoConfig.HITS_PER_SCROLL);
+
 	SearchResponse scrollResp = srchRequest.execute().actionGet();
 
 	final List<Hit> relevantHits = new ArrayList<>();
@@ -277,10 +281,13 @@ public class HitsElasticDao implements HitsDao {
 		break;
 	    }
 
-	    // TODO - make this code readable
-	    // Get next batch
-	    scrollResp = m_elasticClient.prepareSearchScroll(scrollResp.getScrollId())
-		    .setScroll(new TimeValue(ElasticDaoConfig.TIME_PER_SCROLL)).execute().actionGet();
+	    // Get next batch - create new search request and then execute it
+	    String oldScroller = scrollResp.getScrollId();
+	    SearchScrollRequestBuilder srchScrollRequest;
+	    srchScrollRequest = m_elasticClient.prepareSearchScroll(oldScroller);
+	    srchScrollRequest.setScroll(new TimeValue(ElasticDaoConfig.TIME_PER_SCROLL));
+
+	    scrollResp = srchScrollRequest.execute().actionGet();
 	    // Break condition: No hits are returned
 	    if (scrollResp.getHits().getHits().length == 0) {
 		break;

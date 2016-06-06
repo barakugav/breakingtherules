@@ -262,6 +262,8 @@ public class CSVParser {
 		    }
 		}
 		lineNumber++;
+		if (lineNumber % 500_000 == 0)
+		    System.out.println(lineNumber);
 	    }
 	} catch (final CSVParseException e) {
 	    throw new CSVParseException("In line " + lineNumber + ": ", e);

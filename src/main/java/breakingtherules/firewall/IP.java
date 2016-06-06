@@ -14,7 +14,7 @@ public abstract class IP implements Comparable<IP> {
     /**
      * Length of the constant prefix
      */
-    public final int prefixLength;
+    final int prefixLength;
 
     /**
      * String representation of any IP
@@ -51,6 +51,10 @@ public abstract class IP implements Comparable<IP> {
     @JsonIgnore
     public abstract int getSubnetBitsNum();
 
+    public int getPrefixLength() {
+	return prefixLength;
+    }
+    
     /**
      * Checks if this IP has parent - more general IP
      * 
