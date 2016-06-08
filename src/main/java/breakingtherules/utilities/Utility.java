@@ -2,10 +2,7 @@ package breakingtherules.utilities;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 /**
  * The Utility class provide a set of static helper methods. All method are
@@ -73,18 +70,6 @@ public class Utility {
 	// Clone sub list because List.SubList(...) save a reference to the
 	// original list and therefore, the whole list is always kept in memory.
 	return new ArrayList<>(list.subList(offset, Math.min(list.size(), offset + size)));
-    }
-
-    public static <T> Set<T> ensureUniqueness(final Iterable<T> iterable) {
-	if (iterable instanceof Collection<?>) {
-	    return new HashSet<>((Collection<T>) iterable);
-	}
-
-	final Set<T> uniqeSet = new HashSet<>();
-	for (final T t : iterable) {
-	    uniqeSet.add(t);
-	}
-	return uniqeSet;
     }
 
     public static int countOccurrencesOf(final String st, final char... chars) {
@@ -242,6 +227,10 @@ public class Utility {
 	return str;
     }
 
+    public static String toStringArray(final Object... os) {
+	return Arrays.deepToString(os);
+    }
+
     /**
      * Checks if two objects are equals
      * 
@@ -255,6 +244,8 @@ public class Utility {
 	return Arrays.deepEquals(new Object[] { o1 }, new Object[] { o2 });
     }
 
+    private static final double LOG2 = StrictMath.log(2);
+
     /**
      * Log 2 of a number
      * 
@@ -263,7 +254,7 @@ public class Utility {
      * @return log of base 2 of the number
      */
     public static double log2(final double num) {
-	return StrictMath.log(num) / StrictMath.log(2);
+	return StrictMath.log(num) / LOG2;
     }
 
     /**

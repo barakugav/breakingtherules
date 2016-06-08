@@ -1,22 +1,16 @@
 package breakingtherules.utilities;
 
 import java.lang.ref.ReferenceQueue;
-import java.lang.ref.WeakReference;
-import java.util.WeakHashMap;
+import java.lang.ref.SoftReference;
 import java.util.function.Supplier;
 
 /**
  * Cache that provides search of cached element by key and adding element by
- * key. Elements are stored by weak reference.
+ * key. Elements are stored by soft reference.
  * <p>
- * When there are no more strong references to an element, it will be
- * automatically removed from the cache, so cached elements are only elements
- * that are held by other references too.
- * <p>
- * This class is similar to {@link WeakHashMap} but has one big difference: In
- * {@link WeakHashMap} the keys are held by weak references and the values are
- * held by strong references, in the WeakCache it's the other way around - keys
- * are held by strong references and elements are held by weak reference.
+ * When there is some memory demand and no more strong references to an element,
+ * it will be automatically removed from the cache, so cached elements are
+ * mostly elements that are held by other references too.
  * <p>
  * This class has the same performance as hash map and it depends strongly on
  * the keys {@link Object#hashCode()} method.
@@ -34,9 +28,8 @@ import java.util.function.Supplier;
  * 
  * @author Barak Ugav
  * @author Yishai Gronich
- * @see WeakReference
- * @see WeakHashMap
- * @see SoftCache
+ * @see SoftReference
+ * @see WeakCache
  * 
  * @param <K>
  *            type of key of the cache
@@ -44,12 +37,12 @@ import java.util.function.Supplier;
  *            type of cached elements
  * 
  */
-public class WeakCache<K, E> implements Cache<K, E> {
+public class SoftCache<K, E> implements Cache<K, E> {
 
     /*
      * Implementation notes.
      * 
-     * The WeakCache is implemented by a bucket hash table. In each cell in the
+     * The SoftCache is implemented by a bucket hash table. In each cell in the
      * table there is a bin (linked list of entries) that contains all entries
      * that fell to that cell.
      * 
@@ -69,12 +62,13 @@ public class WeakCache<K, E> implements Cache<K, E> {
      * 8:    0.00000006
      * more: less than 1 in ten million
      * 
-     * The 'weak' behavior of the elements is obtained by the following
+     * The 'soft' behavior of the elements is obtained by the following
      * mechanism: When one of the elements doesn't get held anymore by external
-     * strong reference, the entry push itself to a queue (WeakReference support
-     * this behavior). The queue of the 'dead' elements get scanned in the
-     * beginning of every public method and the 'dead' entry get removed from
-     * the table.
+     * strong reference and there is a demand for memory (as described in the
+     * SoftReference documentations), the entry push itself to a queue
+     * (SoftReference support this behavior). The queue of the 'dead' elements
+     * get scanned in the beginning of every public method and the 'dead' entry
+     * get removed from the table.
      */
 
     /**
@@ -160,15 +154,15 @@ public class WeakCache<K, E> implements Cache<K, E> {
     private static final Object NULL = new Object();
 
     /**
-     * Construct new WeakCache with default init capacity and default load
+     * Construct new SoftCache with default init capacity and default load
      * factor.
      */
-    public WeakCache() {
+    public SoftCache() {
 	this(Hashs.DEFAULT_INIT_CAPACITY, Hashs.DEFAULT_LOAD_FACTOR);
     }
 
     /**
-     * Construct new WeakCache with init capacity parameter and default load
+     * Construct new SoftCache with init capacity parameter and default load
      * factor.
      * 
      * @param initCapacity
@@ -176,12 +170,12 @@ public class WeakCache<K, E> implements Cache<K, E> {
      * @throws IllegalArgumentException
      *             if init capacity is negative
      */
-    public WeakCache(final int initCapacity) {
+    public SoftCache(final int initCapacity) {
 	this(initCapacity, Hashs.DEFAULT_LOAD_FACTOR);
     }
 
     /**
-     * Construct new WeakCache with init capacity parameter and load factor
+     * Construct new SoftCache with init capacity parameter and load factor
      * parameter.
      * 
      * @param initCapacity
@@ -192,7 +186,7 @@ public class WeakCache<K, E> implements Cache<K, E> {
      *             if init capacity is negative, load factor is negative, 0 or
      *             NaN.
      */
-    public WeakCache(final int initCapacity, final float loadFactor) {
+    public SoftCache(final int initCapacity, final float loadFactor) {
 	if (initCapacity < 0)
 	    throw new IllegalArgumentException("initCapacity < 0: " + initCapacity);
 	if (loadFactor <= 0 || Float.isNaN(loadFactor))
@@ -257,16 +251,16 @@ public class WeakCache<K, E> implements Cache<K, E> {
      * @param element
      *            the element
      * @throws NullPointerException
-     *             if element is null. Null elements are not allowed in weak
+     *             if element is null. Null elements are not allowed in soft
      *             cache because the cache will not be able to determinate when
-     *             to remove them, see {@link WeakReference}.
+     *             to remove them, see {@link SoftReference}.
      * @throws IllegalArgumentException
      *             if an element with the same key is already in the cache.
      */
     @Override
     public E add(final K key, final E element) {
 	if (element == null)
-	    throw new NullPointerException("Nulls elements are not allowed in weak cache");
+	    throw new NullPointerException("Nulls elements are not allowed in soft cache");
 
 	// Compute hash
 	final Object k = maskNull(key);
@@ -285,7 +279,7 @@ public class WeakCache<K, E> implements Cache<K, E> {
 	    if (hash == p.hash && k.equals(p.key)) {
 		@SuppressWarnings("unchecked")
 		final E existing = (E) p.get();
-		if (existing != null)
+		if (p.get() != null)
 		    return existing;
 		/*
 		 * If the program reached this part of the code, that mean that
@@ -312,20 +306,17 @@ public class WeakCache<K, E> implements Cache<K, E> {
 	// Compute hash
 	final Object k = maskNull(key);
 	final int hash = Hashs.hash(k);
+	final int index = hash & mask;
 
 	// Clean cache, delayed as possible, so GC have more time to act.
 	cleanCache();
-
-	// Compute index in table, MUST happen after clearCache() because shrink
-	// may be caused and may change the mask.
-	final int index = hash & mask;
 
 	// Search entry
 	final Entry firstEntry = table[index];
 	for (Entry p = firstEntry; p != null; p = p.next) {
 	    if (hash == p.hash && k.equals(p.key)) {
 		@SuppressWarnings("unchecked")
-		E elm = (E) p.get();
+		final E elm = (E) p.get();
 		if (elm != null)
 		    return elm;
 	    }
@@ -503,7 +494,7 @@ public class WeakCache<K, E> implements Cache<K, E> {
 	    for (Entry entry = tab[i]; entry != null; entry = entry.next) {
 		final Object element = entry.get();
 		if (element == null)
-		    // If element is already dead reference, ignore him
+		    // If element is already dead reference, ignore it
 		    continue;
 		builder.append(element);
 		builder.append(separator);
@@ -617,17 +608,18 @@ public class WeakCache<K, E> implements Cache<K, E> {
     }
 
     /**
-     * Entry of cached element in the {@link WeakCache}.
+     * Entry of cached element in the {@link SoftCache}.
      * <p>
-     * The entries are save as a bin (one way linked list) in each table cell,
+     * The entries are stored as a bin (one way linked list) in each table cell,
      * and last entry at the list {@link #next} field is null.
      * <p>
      * The key is saved as a field and the element itself is saved via the super
-     * class {@link WeakReference}. When there is no more strong references to
-     * the element the {@link WeakCache} will remove the entry from the table.
+     * class {@link SoftReference}. When there is demand for memory and no more
+     * strong references to the element the {@link SoftCache} will remove the
+     * entry from the table.
      *
      */
-    private static class Entry extends WeakReference<Object> {
+    private static class Entry extends SoftReference<Object> {
 
 	/**
 	 * The entry key.

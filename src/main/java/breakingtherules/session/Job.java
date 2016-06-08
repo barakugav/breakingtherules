@@ -22,7 +22,6 @@ import breakingtherules.firewall.Hit;
 import breakingtherules.firewall.Rule;
 import breakingtherules.services.algorithm.Suggestion;
 import breakingtherules.services.algorithm.SuggestionsAlgorithm;
-import breakingtherules.utilities.Utility;
 
 @Component
 @Scope(value = "session", proxyMode = ScopedProxyMode.TARGET_CLASS)
@@ -179,16 +178,20 @@ public class Job {
      * Delete a rule from the job, by its id
      * 
      * @param ruleIndex
-     *            the index of the rule to delete, counting from 0, out of all the created rules 
+     *            the index of the rule to delete, counting from 0, out of all
+     *            the created rules
+     * @throws IndexOutOfBoundsException
+     *             if index of rule is out of bounds
      * @throws IOException
      *             if any I/O error occurs
      */
     public void deleteRule(int ruleIndex) throws IOException {
+	if (ruleIndex < 0 || ruleIndex >= m_rules.size())
+	    throw new IndexOutOfBoundsException("rule index=" + ruleIndex + ", numer of rules=" + m_rules.size());
 
 	// Remove all rules up to searched rule
 	List<Rule> removedRules = new ArrayList<>(m_rules.size() - ruleIndex - 1);
-	for (ListIterator<StatisticedRule> it = m_rules.listIterator(m_rules.size()); it
-		.previousIndex() < ruleIndex;) {
+	for (ListIterator<StatisticedRule> it = m_rules.listIterator(m_rules.size()); it.previousIndex() < ruleIndex;) {
 	    StatisticedRule removedRule = it.previous();
 	    m_coveredHitsCount -= removedRule.m_coveredHits;
 	    removedRules.add(removedRule.m_rule);
@@ -201,7 +204,7 @@ public class Job {
 	StatisticedRule searchedRule = m_rules.get(ruleIndex);
 	m_rules.remove(ruleIndex);
 
-	// Update
+	// Update filtered hits count
 	m_coveredHitsCount -= searchedRule.m_coveredHits;
 	m_filteredHitsCount = m_hitsDao.getHitsNumber(m_id, getRules(), m_filter);
 
@@ -231,18 +234,6 @@ public class Job {
     }
 
     /**
-     * Get all hits that match the filter and the rules
-     * 
-     * @return DTO object that hold list of all hits
-     * @throws IOException
-     *             if DAO failed to load data
-     */
-    public ListDto<Hit> getHitsAll() throws IOException {
-	checkJobState();
-	return m_hitsDao.getHits(m_id, getRules(), m_filter);
-    }
-
-    /**
      * Get all the suggestions computed by the algorithm.
      * 
      * @param amount
@@ -253,18 +244,18 @@ public class Job {
      * @throws Exception
      *             if any error occurs
      */
-    public List<SuggestionsDto> getSuggestions(int amount) throws Exception {
+    public List<SuggestionsDto> getSuggestions(final int amount) throws Exception {
 	checkJobState();
 
 	List<SuggestionsDto> suggestionsDtos = new ArrayList<>();
 	List<String> allAttributesType = getAllAttributeTypes();
 	for (String attType : allAttributesType) {
-	    List<Suggestion> suggestions = m_algorithm.getSuggestions(m_hitsDao, m_id, getRules(), m_filter, attType,
-		    amount);
+	    List<Suggestion> suggestions = m_algorithm.getSuggestions(m_hitsDao, m_id, getRules(), m_filter, amount,
+		    attType);
 	    SuggestionsDto attSuggestions = new SuggestionsDto(suggestions, attType);
 	    suggestionsDtos.add(attSuggestions);
 	}
-	return Utility.subList(suggestionsDtos, 0, amount);
+	return suggestionsDtos;
     }
 
     /**

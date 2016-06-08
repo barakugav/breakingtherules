@@ -8,7 +8,6 @@ import static org.junit.Assert.fail;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 
 import org.junit.Test;
 
@@ -18,8 +17,6 @@ import breakingtherules.firewall.IPv6;
 import breakingtherules.tests.TestBase;
 
 public class IPv4Test extends TestBase {
-
-    private static final Random rand = new Random();
 
     @Test
     public void constructorTestBasic() {
@@ -95,7 +92,7 @@ public class IPv4Test extends TestBase {
     }
 
     @Test
-    public void constructorFromStringTestPrefixLength10() {
+    public void constructorFromStringTestPrefixLength() {
 	int prefix = 10;
 	String ipStr = "255.2.4.46";
 	int[] address = new int[] { 255, 0, 0, 0 };
@@ -299,7 +296,7 @@ public class IPv4Test extends TestBase {
     }
 
     @Test(expected = IllegalStateException.class)
-    public void getParentTest0Prefix() {
+    public void getParentTestPrefix0() {
 	IPv4 ip = IPv4.create(FirewallTestsUtility.getRandomAddressIPv4(), 0);
 	assertFalse(ip.hasParent());
 	ip.getParent();
@@ -312,18 +309,18 @@ public class IPv4Test extends TestBase {
 	    int prefix = rand.nextInt(11) + 22;
 	    int[] address = FirewallTestsUtility.getRandomAddressIPv4();
 	    IPv4 ip = IPv4.create(address, prefix);
-	    assertEquals(ip.hasChildren(), ip.getPrefixLength() != IPv4.MAX_LENGTH);
+	    assertEquals(ip.getPrefixLength() != IPv4.MAX_LENGTH, ip.hasChildren());
 	}
 
 	for (int i = 0; i < repeat; i++) {
-	    int prefix = 32;
+	    int prefix = IPv4.MAX_LENGTH;
 	    int[] address = FirewallTestsUtility.getRandomAddressIPv4();
 	    IPv4 ip = IPv4.create(address, prefix);
 	    assertFalse(ip.hasChildren());
 	}
 
 	for (int i = 0; i < repeat; i++) {
-	    for (int prefix = 0; prefix < 32; prefix++) {
+	    for (int prefix = 0; prefix < IPv4.MAX_LENGTH; prefix++) {
 		int[] address = FirewallTestsUtility.getRandomAddressIPv4();
 		IPv4 ip = IPv4.create(address, prefix);
 		assertTrue(ip.hasChildren());
@@ -415,8 +412,8 @@ public class IPv4Test extends TestBase {
 		fail("Failed to get children when prefix = " + prefix + " (" + e.getMessage() + ")");
 	    }
 	    assertEquals("prefix=" + prefix + ", number of children", 2, children.length);
-	    assertEquals("prefix=" + prefix + ", child 0", children[0].getAddress(), expected[prefix + 1][0]);
-	    assertEquals("prefix=" + prefix + ", child 1", children[1].getAddress(), expected[prefix + 1][1]);
+	    assertEquals("prefix=" + prefix + ", child 0", expected[prefix + 1][0], children[0].getAddress());
+	    assertEquals("prefix=" + prefix + ", child 1", expected[prefix + 1][1], children[1].getAddress());
 	    assertEquals("prefix=" + prefix + ", child 0 prefix length", prefix + 1, children[0].getPrefixLength());
 	    assertEquals("prefix=" + prefix + ", child 1 prefix length", prefix + 1, children[1].getPrefixLength());
 	    assertTrue("prefix=" + prefix + ", child 0 doesn't have parent", children[0].hasParent());
@@ -444,7 +441,6 @@ public class IPv4Test extends TestBase {
 
     @Test
     public void containsTestNotContainsNull() {
-	System.out.println("# IPv4Test containsTestNotContainsNull");
 	int[] address = FirewallTestsUtility.getRandomAddressIPv4();
 	int prefixLength = FirewallTestsUtility.getRandomPrefixLengthIPv4();
 	IPv4 ip1 = IPv4.create(address, prefixLength);
@@ -454,7 +450,6 @@ public class IPv4Test extends TestBase {
 
     @Test
     public void containsTestContainsItselfNoPrefixLength() {
-	System.out.println("# IPv4Test containsTestContainsItselfNoPrefixLength");
 	IPv4 ip1 = IPv4.create(new int[] { 0, 160, 40, 0 });
 	IPv4 ip2 = IPv4.create(new int[] { 0, 160, 40, 0 });
 	assertTrue(ip1.contains(ip2));
@@ -463,7 +458,6 @@ public class IPv4Test extends TestBase {
 
     @Test
     public void containsTestZeroPrefixLengthContainsAll() {
-	System.out.println("# IPv4Test containsTestZeroPrefixLengthContainsAll");
 	IPv4 ip1 = IPv4.create(new int[] { 0, 0, 0, 0 }, 0);
 	IPv4 ip2 = IPv4.create(FirewallTestsUtility.getRandomAddressIPv4());
 	assertTrue(ip1.contains(ip2));
@@ -472,7 +466,6 @@ public class IPv4Test extends TestBase {
 
     @Test
     public void containsTestPrefixLength8() {
-	System.out.println("# IPv4Test containsTestPrefixLength8");
 	IPv4 ip1 = IPv4.create(new int[] { 145, 0, 0, 0 }, 8);
 	IPv4 ip2 = IPv4.create(new int[] { 145, 55, 0, 0 });
 	assertTrue(ip1.contains(ip2));
@@ -490,7 +483,6 @@ public class IPv4Test extends TestBase {
 
     @Test
     public void containsTestPrefixLength15() {
-	System.out.println("# IPv4Test containsTestPrefixLength15");
 	IPv4 ip1 = IPv4.create(new int[] { 16, 216, 0, 0 }, 15);
 	IPv4 ip2 = IPv4.create(new int[] { 16, 217, 11, 7 });
 	assertTrue(ip1.contains(ip2));
@@ -511,7 +503,6 @@ public class IPv4Test extends TestBase {
 
     @Test
     public void containsTestPrefixLength21() {
-	System.out.println("# IPv4Test containsTestPrefixLength21");
 	IPv4 ip1 = IPv4.create(new int[] { 0, 160, 40, 0 }, 21);
 	IPv4 ip2 = IPv4.create(new int[] { 0, 160, 47, 7 });
 	assertTrue(ip1.contains(ip2));
@@ -532,7 +523,6 @@ public class IPv4Test extends TestBase {
 
     @Test
     public void containsTestPrefixLength27() {
-	System.out.println("# IPv4Test containsTestPrefixLength27");
 	IPv4 ip1 = IPv4.create(new int[] { 41, 99, 243, 160 }, 27);
 	IPv4 ip2 = IPv4.create(new int[] { 41, 99, 243, 160 }, 32);
 	assertTrue(ip1.contains(ip2));
@@ -553,7 +543,6 @@ public class IPv4Test extends TestBase {
 
     @Test
     public void containsTestFullIpNotContainsOthers() {
-	System.out.println("# IPv4Test containsTestFullIpNotContainsOthers");
 	IPv4 ip1 = IPv4.create(new int[] { 0, 160, 40, 0 });
 	IPv4 ip2 = IPv4.create(FirewallTestsUtility.getRandomAddressIPv4());
 	if (ip1.equals(ip2)) {
@@ -566,7 +555,6 @@ public class IPv4Test extends TestBase {
 
     @Test
     public void containsTestNotContainsIPv6() {
-	System.out.println("# IPv4Test containsTestNotContainsIPv6");
 	IPv4 ip4 = IPv4.create(FirewallTestsUtility.getRandomAddressIPv4(),
 		FirewallTestsUtility.getRandomPrefixLengthIPv4());
 	IPv6 ip6 = FirewallTestsUtility.getRandomIPv6();
@@ -600,7 +588,6 @@ public class IPv4Test extends TestBase {
 
     @Test
     public void equalsTestItselfTwoIpwithConstructorWithPrefixLength() {
-	System.out.println("# IPv4Test equalsTestItselfTwoIpwithConstructorWithPrefixLength");
 	int[] address = FirewallTestsUtility.getRandomAddressIPv4();
 	int prefix = FirewallTestsUtility.getRandomPrefixLengthIPv4();
 	IPv4 ip1 = IPv4.create(address, prefix);
@@ -611,7 +598,6 @@ public class IPv4Test extends TestBase {
 
     @Test
     public void equalsTestNotEqualsItselfTwoDifferentPrefixLength() {
-	System.out.println("# IPv4Test equalsTestNotEqualsItselfTwoDifferentPrefixLength");
 	int[] address = FirewallTestsUtility.getRandomAddressIPv4();
 	int prefix1 = FirewallTestsUtility.getRandomPrefixLengthIPv4();
 	int prefix2;

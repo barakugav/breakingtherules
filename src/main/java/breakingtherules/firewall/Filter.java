@@ -69,28 +69,10 @@ public class Filter extends AttributesContainer {
 	return o instanceof Filter && super.equals(o);
     }
 
-    @Override
-    public int hashCode() {
-	int hash = 17;
-	for (Attribute att : this) {
-	    hash = 31 * hash + (att != null ? att.hashCode() : 0);
-	}
-	return hash;
-    }
-
     private static class AnyFilter extends Filter {
 
-	private static final List<Attribute> anyAttributes;
-
-	static {
-	    anyAttributes = new ArrayList<>();
-	    anyAttributes.add(Source.ANY_SOURCE);
-	    anyAttributes.add(Destination.ANY_DESTINATION);
-	    anyAttributes.add(Service.ANY_SERVICE);
-	}
-
 	private AnyFilter() {
-	    super(anyAttributes);
+	    super(getAnyFilterAttributes());
 	}
 
 	@Override
@@ -103,9 +85,12 @@ public class Filter extends AttributesContainer {
 	    return o instanceof AnyFilter || super.equals(o);
 	}
 
-	@Override
-	public String toString() {
-	    return "Any";
+	private static List<Attribute> getAnyFilterAttributes() {
+	    List<Attribute> anyAttributes = new ArrayList<>();
+	    anyAttributes.add(Source.ANY_SOURCE);
+	    anyAttributes.add(Destination.ANY_DESTINATION);
+	    anyAttributes.add(Service.ANY_SERVICE);
+	    return anyAttributes;
 	}
 
     }

@@ -8,7 +8,7 @@ import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import breakingtherules.utilities.ArraysUtilities.ArrayIterator;
+import breakingtherules.utilities.ArrayIterator;
 import breakingtherules.utilities.Utility;
 
 /**
@@ -19,7 +19,7 @@ abstract class AttributesContainer implements Iterable<Attribute> {
     /**
      * The attributes this container contains
      */
-    protected final Attribute[] m_attributes;
+    final Attribute[] m_attributes;
 
     /**
      * Constructor
@@ -44,7 +44,7 @@ abstract class AttributesContainer implements Iterable<Attribute> {
      * @param attributes
      *            the attributes array of the container
      */
-    protected AttributesContainer(final Attribute[] attributes) {
+    AttributesContainer(final Attribute[] attributes) {
 	m_attributes = Objects.requireNonNull(attributes);
     }
 
@@ -115,16 +115,7 @@ abstract class AttributesContainer implements Iterable<Attribute> {
 	}
 
 	final AttributesContainer other = (AttributesContainer) o;
-	final Attribute[] thisAttributes = m_attributes;
-	final Attribute[] otherAttributes = other.m_attributes;
-	for (int i = 0; i < Attribute.TYPES_COUNT; i++) {
-	    final Attribute thisAttr = thisAttributes[i];
-	    final Attribute otherAttr = otherAttributes[i];
-	    if (thisAttr != null ? !thisAttr.equals(otherAttr) : otherAttr != null) {
-		return false;
-	    }
-	}
-	return true;
+	return Arrays.equals(m_attributes, other.m_attributes);
     }
 
     /*
@@ -134,11 +125,7 @@ abstract class AttributesContainer implements Iterable<Attribute> {
      */
     @Override
     public int hashCode() {
-	int h = 1;
-	for (final Attribute attribute : m_attributes) {
-	    h = h * 31 + (attribute == null ? 0 : attribute.hashCode());
-	}
-	return h;
+	return Arrays.hashCode(m_attributes);
     }
 
     /*

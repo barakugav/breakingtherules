@@ -1,16 +1,16 @@
 package breakingtherules.services.algorithm;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import breakingtherules.dao.HitsDao;
+import breakingtherules.dao.UniqueHit;
 import breakingtherules.firewall.Attribute;
 import breakingtherules.firewall.Filter;
-import breakingtherules.firewall.Hit;
 import breakingtherules.firewall.Rule;
 import breakingtherules.utilities.Utility;
 
@@ -22,48 +22,80 @@ import breakingtherules.utilities.Utility;
 public class SimpleAlgorithm implements SuggestionsAlgorithm {
 
     @Override
-    public List<Suggestion> getSuggestions(HitsDao dao, int jobId, List<Rule> rules, Filter filter, String attType,
-	    int amount) throws IOException {
-	// Every possible single attribute becomes a suggestion.
-	Map<Attribute, Suggestion> allSuggestionsMap = new HashMap<>();
-
-	int numberOfHits = 0;
-	final int attId = Attribute.typeStrToTypeId(attType);
-	if (attId == Attribute.UNKOWN_ATTRIBUTE_ID) {
+    public List<Suggestion> getSuggestions(final HitsDao dao, final int jobId, final List<Rule> rules,
+	    final Filter filter, final int amount, final String attType) throws Exception {
+	final int attTypeId = Attribute.typeStrToTypeId(attType);
+	if (attTypeId == Attribute.UNKOWN_ATTRIBUTE_ID) {
 	    throw new IllegalArgumentException("Unknown attribute: " + attType);
 	}
+	return getSuggestions(dao.getUnique(jobId, rules, filter), amount, attTypeId);
+    }
 
-	// Create a suggestion for every attribute, count the number of hits
-	// that apply to it
-	for (final Hit hit : dao.getHits(jobId, rules, filter)) {
-	    numberOfHits++;
-	    final Attribute att = hit.getAttribute(attId);
-	    if (att == null) {
-		// No attribute
-		continue;
-	    }
+    List<Suggestion> getSuggestions(final Set<UniqueHit> hits, final int amount, final int attTypeId) {
 
-	    Suggestion suggestion = allSuggestionsMap.get(att);
-	    if (suggestion == null) {
-		suggestion = new Suggestion(att);
-		allSuggestionsMap.put(att, suggestion);
-	    }
-	    suggestion.join();
+	SimpleAlgorithmRunner runner = new SimpleAlgorithmRunner(hits, amount, attTypeId);
+	runner.run();
+	return runner.result;
+    }
+
+    static class SimpleAlgorithmRunner implements SuggestionsAlgorithmRunner {
+
+	private final Set<UniqueHit> hits;
+	private final int amount;
+	private final int attTypeId;
+	private List<Suggestion> result;
+
+	SimpleAlgorithmRunner(final Set<UniqueHit> hits, final int amount, final int attTypeId) {
+	    this.hits = hits;
+	    this.amount = amount;
+	    this.attTypeId = attTypeId;
 	}
 
-	// Calculate scores
-	List<Suggestion> allSuggestionsList = new ArrayList<>(allSuggestionsMap.values());
-	for (final Suggestion suggestion : allSuggestionsList) {
-	    suggestion.setScore(suggestion.getSize() / (double) numberOfHits);
+	@Override
+	public void run() {
+	    // Every possible single attribute becomes a suggestion.
+	    Map<Attribute, Suggestion> allSuggestionsMap = new HashMap<>();
+
+	    // Create a suggestion for every attribute, count the number of hits
+	    // that apply to it
+	    int numberOfHits = 0;
+	    for (final UniqueHit hit : hits) {
+		numberOfHits++;
+		final Attribute att = hit.getAttribute(attTypeId);
+		if (att == null) {
+		    // No attribute
+		    continue;
+		}
+
+		Suggestion suggestion = allSuggestionsMap.get(att);
+		if (suggestion == null) {
+		    suggestion = new Suggestion(att);
+		    allSuggestionsMap.put(att, suggestion);
+		}
+		suggestion.join(hit.getAmount());
+	    }
+
+	    // Calculate scores
+	    List<Suggestion> allSuggestionsList = new ArrayList<>(allSuggestionsMap.values());
+	    for (final Suggestion suggestion : allSuggestionsList) {
+		suggestion.setScore(suggestion.getSize() / (double) numberOfHits);
+	    }
+	    allSuggestionsMap = null; // Free memory
+
+	    // Sort by score
+	    allSuggestionsList.sort(null); // Sort with null comparator for
+					   // regular
+					   // compareTo sort.
+	    Collections.reverse(allSuggestionsList);
+
+	    result = Utility.subList(allSuggestionsList, 0, amount);
 	}
-	allSuggestionsMap = null; // Free memory
 
-	// Sort by score
-	allSuggestionsList.sort(null); // Sort with null comparator for regular
-				       // compareTo sort.
-	Collections.reverse(allSuggestionsList);
+	@Override
+	public List<Suggestion> getResults() {
+	    return result;
+	}
 
-	return Utility.subList(allSuggestionsList, 0, amount);
     }
 
 }

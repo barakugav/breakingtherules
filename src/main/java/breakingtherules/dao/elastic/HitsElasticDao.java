@@ -37,6 +37,7 @@ import breakingtherules.firewall.Filter;
 import breakingtherules.firewall.Hit;
 import breakingtherules.firewall.Rule;
 import breakingtherules.utilities.Triple;
+import breakingtherules.utilities.Triple.UnmodifiableTriple;
 import breakingtherules.utilities.Utility;
 
 public class HitsElasticDao implements HitsDao {
@@ -50,7 +51,7 @@ public class HitsElasticDao implements HitsDao {
      * Filter. This prevents reading ALL of the job's hits to determine the
      * number of relevant hits. Useful for getHits with startIndex and endIndex
      */
-    private final Map<Triple<Integer, List<Rule>, Filter>, Integer> m_totalHitsCache;
+    private final Map<UnmodifiableTriple<Integer, List<Rule>, Filter>, Integer> m_totalHitsCache;
 
     public HitsElasticDao() {
 	final NodeBuilder nodeBuilder = NodeBuilder.nodeBuilder();
@@ -179,8 +180,8 @@ public class HitsElasticDao implements HitsDao {
 
 	// Create new list of the rules to clone the list - so modifications on
 	// the original list will not change the list saved in the cache
-	m_totalHitsCache.put(new Triple<>(Integer.valueOf(jobId), new ArrayList<>(rules), filter),
-		Integer.valueOf(hits.size()));
+	m_totalHitsCache.put(new UnmodifiableTriple<>(Integer.valueOf(jobId),
+		Collections.unmodifiableList(new ArrayList<>(rules)), filter), Integer.valueOf(hits.size()));
 	return new ListDto<>(hits, 0, hits.size(), hits.size());
     }
 

@@ -22,16 +22,26 @@ public interface SuggestionsAlgorithm {
      *            current rules
      * @param filter
      *            current filter
-     * @param attType
-     *            requested suggestion type
      * @param amount
      *            number of requested suggestion
+     * @param attType
+     *            requested suggestion type
      * @return suggestions list of suggestion of the desire attribute relevant
      *         to the hits provided by the DAO.
      * @throws Exception
      *             if any errors occurs
      */
-    public List<Suggestion> getSuggestions(HitsDao dao, int jobId, List<Rule> rules, Filter filter, String attType,
-	    int amount) throws Exception;
+    public List<Suggestion> getSuggestions(HitsDao dao, int jobId, List<Rule> rules, Filter filter, int amount,
+	    String attType) throws Exception;
+
+    default List<Suggestion>[] getSuggestions(HitsDao dao, int jobId, List<Rule> rules, Filter filter, int amount,
+	    String[] attTypes) throws Exception {
+	@SuppressWarnings("unchecked")
+	List<Suggestion>[] suggestions = new List[attTypes.length];
+	for (int i = 0; i < attTypes.length; i++) {
+	    suggestions[i] = getSuggestions(dao, jobId, rules, filter, amount, attTypes[i]);
+	}
+	return suggestions;
+    }
 
 }

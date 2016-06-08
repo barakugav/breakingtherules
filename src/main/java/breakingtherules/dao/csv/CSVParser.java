@@ -237,6 +237,7 @@ public class CSVParser {
 
 	final CSVParser parser = new CSVParser(columnsTypes);
 	int lineNumber = 1;
+	int readHits = 0;
 
 	BufferedReader reader = null;
 	try {
@@ -254,13 +255,15 @@ public class CSVParser {
 		Hit hit = parser.fromCSV(line);
 		if (UtilityDao.isMatch(hit, rules, filter)) {
 		    destination.add(hit);
-		    if (endIndex >= 0 && destination.size() >= endIndex) {
+		    if (endIndex >= 0 && ++readHits >= endIndex) {
 			// Break if reached end index
 			break;
 		    }
 		}
 		lineNumber++;
-		if (lineNumber % 500_000 == 0)
+		
+		// TODO - to remove
+		if (lineNumber % 1_000_000 == 0)
 		    System.out.println(lineNumber);
 	    }
 	} catch (final CSVParseException e) {

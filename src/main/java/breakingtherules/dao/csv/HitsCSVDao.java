@@ -1,30 +1,35 @@
 package breakingtherules.dao.csv;
 
 import java.io.IOException;
+import java.util.AbstractSet;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import breakingtherules.dao.HitsDao;
+import breakingtherules.dao.UniqueHit;
+import breakingtherules.dao.UtilityDao;
 import breakingtherules.dto.ListDto;
 import breakingtherules.firewall.Filter;
 import breakingtherules.firewall.Hit;
 import breakingtherules.firewall.Rule;
 import breakingtherules.utilities.Triple;
+import breakingtherules.utilities.Triple.UnmodifiableTriple;
 import breakingtherules.utilities.Utility;
-
-// TODO why does reading the hits happen four different times?
-// TODO why does the GUI show 0 total hits?
 
 public class HitsCSVDao implements HitsDao {
 
-    private Map<Triple<Integer, List<Rule>, Filter>, Integer> m_totalHitsCache;
+    private final Map<UnmodifiableTriple<Integer, List<Rule>, Filter>, Integer> m_totalHitsCache;
+    private final Map<String, Set<UniqueHit>> cacheHits;
 
     public HitsCSVDao() {
 	m_totalHitsCache = new HashMap<>();
+	cacheHits = new HashMap<>();
     }
 
     @Override
@@ -36,8 +41,8 @@ public class HitsCSVDao implements HitsDao {
 
 	    // Create new list of the rules to clone the list - so modifications
 	    // on the original list will not change the list saved in the cache
-	    m_totalHitsCache.put(new Triple<>(Integer.valueOf(jobId), new ArrayList<>(rules), filter),
-		    Integer.valueOf(size));
+	    m_totalHitsCache.put(new UnmodifiableTriple<>(Integer.valueOf(jobId),
+		    Collections.unmodifiableList(new ArrayList<>(rules)), filter), Integer.valueOf(size));
 	    return new ListDto<>(hits, 0, size, size);
 	} catch (CSVParseException e) {
 	    throw new IOException(e);
@@ -58,20 +63,12 @@ public class HitsCSVDao implements HitsDao {
 		throw new IllegalArgumentException("startIndex > endIndex");
 	    }
 
-	    Integer cachedSize = m_totalHitsCache.get(new Triple<>(Integer.valueOf(jobId), rules, filter));
-	    if (cachedSize != null) {
-		final List<Hit> hits = CSVParser.fromCSV(CSVParser.DEFAULT_COLUMNS_TYPES,
-			CSVDaoConfig.getHitsFile(jobId), rules, filter, endIndex);
-		final int size = hits.size();
-		final List<Hit> subList = Utility.subList(hits, startIndex, endIndex - startIndex);
-		return new ListDto<>(subList, Math.min(startIndex, size), Math.min(endIndex, size),
-			cachedSize.intValue());
-	    } else {
-		final ListDto<Hit> hits = getHits(jobId, rules, filter);
-		final int size = hits.getSize();
-		final List<Hit> subList = Utility.subList(hits.getData(), startIndex, endIndex - startIndex);
-		return new ListDto<>(subList, Math.min(startIndex, size), Math.min(endIndex, size), size);
-	    }
+	    int numberOfHits = getHitsNumber(jobId, rules, filter);
+	    final List<Hit> hits = CSVParser.fromCSV(CSVParser.DEFAULT_COLUMNS_TYPES, CSVDaoConfig.getHitsFile(jobId),
+		    rules, filter, endIndex);
+	    final int size = hits.size();
+	    final List<Hit> subList = Utility.subList(hits, startIndex, endIndex - startIndex);
+	    return new ListDto<>(subList, Math.min(startIndex, size), Math.min(endIndex, size), numberOfHits);
 
 	} catch (CSVParseException e) {
 	    throw new IOException(e);
@@ -79,29 +76,17 @@ public class HitsCSVDao implements HitsDao {
     }
 
     @Override
-    public Set<Hit> getUnique(int jobId, List<Rule> rules, Filter filter) throws CSVParseException, IOException {
-	Set<Hit> hits = new HashSet<>();
-	CSVParser.fromCSV(CSVParser.DEFAULT_COLUMNS_TYPES, CSVDaoConfig.getHitsFile(jobId), rules, filter, 0, -1, hits);
-	return hits;
-    }
+    public Set<UniqueHit> getUnique(int jobId, List<Rule> rules, Filter filter) throws CSVParseException, IOException {
+	Set<UniqueHit> uniqueHits = getHitsInternal(CSVDaoConfig.getHitsFile(jobId));
 
-    @Override
-    public Set<Hit> getUnique(int jobId, List<Rule> rules, Filter filter, int startIndex, int endIndex)
-	    throws IOException, CSVParseException {
-	if (endIndex < 0) {
-	    throw new IllegalArgumentException("endIndex is negative: " + endIndex);
-	}
-	if (startIndex < 0) {
-	    throw new IllegalArgumentException("startIndex is negative: " + startIndex);
-	}
-	if (startIndex > endIndex) {
-	    throw new IllegalArgumentException("startIndex > endIndex");
-	}
+	if (rules.isEmpty() && Filter.ANY_FILTER.equals(filter))
+	    return uniqueHits;
 
-	Set<Hit> hits = new HashSet<>();
-	CSVParser.fromCSV(CSVParser.DEFAULT_COLUMNS_TYPES, CSVDaoConfig.getHitsFile(jobId), rules, filter, startIndex,
-		endIndex, hits);
-	return hits;
+	Set<UniqueHit> filteredHits = new HashSet<>();
+	for (UniqueHit hit : uniqueHits)
+	    if (UtilityDao.isMatch(hit, rules, filter))
+		filteredHits.add(hit);
+	return filteredHits;
     }
 
     @Override
@@ -110,8 +95,64 @@ public class HitsCSVDao implements HitsDao {
 	if (cachedSize != null) {
 	    return cachedSize.intValue();
 	} else {
-	    return getHits(jobId, rules, filter).getSize();
+	    try {
+		Set<UniqueHit> uniqueHits = getHitsInternal(CSVDaoConfig.getHitsFile(jobId));
+		int hitsNumber = 0;
+		for (UniqueHit hit : uniqueHits) {
+		    if (UtilityDao.isMatch(hit, rules, filter)) {
+			hitsNumber += hit.getAmount();
+		    }
+		}
+		m_totalHitsCache.put(
+			new UnmodifiableTriple<>(Integer.valueOf(jobId),
+				Collections.unmodifiableList(new ArrayList<>(rules)), filter),
+			Integer.valueOf(hitsNumber));
+		return hitsNumber;
+	    } catch (CSVParseException e) {
+		throw new IOException(e);
+	    }
 	}
+
+    }
+
+    private Set<UniqueHit> getHitsInternal(String fileName) throws CSVParseException, IOException {
+	Set<UniqueHit> uniqueHits = cacheHits.get(fileName);
+	if (uniqueHits == null) {
+	    Map<Hit, Integer> hitsCount = new HashMap<>();
+	    CSVParser.fromCSV(CSVParser.DEFAULT_COLUMNS_TYPES, fileName, Collections.emptyList(), Filter.ANY_FILTER, 0,
+		    -1, new AbstractSet<Hit>() {
+
+			@Override
+			public boolean add(Hit hit) {
+			    Integer count = hitsCount.get(hit);
+			    count = Integer.valueOf(count == null ? 1 : count.intValue() + 1);
+			    hitsCount.put(hit, count);
+			    return true;
+			}
+
+			@Override
+			public Iterator<Hit> iterator() {
+			    return null;
+			}
+
+			@Override
+			public int size() {
+			    return 0;
+			}
+		    });
+	    uniqueHits = new HashSet<>();
+	    for (Iterator<Map.Entry<Hit, Integer>> it = hitsCount.entrySet().iterator(); it.hasNext();) {
+		Map.Entry<Hit, Integer> entry = it.next();
+		Hit hit = entry.getKey();
+		int amount = entry.getValue().intValue();
+		uniqueHits.add(new UniqueHit(hit.getAttributes(), amount));
+		it.remove();
+	    }
+	    // Don't let anyone change the cache
+	    uniqueHits = Collections.unmodifiableSet(uniqueHits);
+	    cacheHits.put(fileName, uniqueHits);
+	}
+	return uniqueHits;
     }
 
 }

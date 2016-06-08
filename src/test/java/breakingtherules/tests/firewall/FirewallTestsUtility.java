@@ -2,7 +2,6 @@ package breakingtherules.tests.firewall;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 
 import breakingtherules.firewall.Attribute;
 import breakingtherules.firewall.Destination;
@@ -15,7 +14,52 @@ import breakingtherules.tests.TestBase;
 
 class FirewallTestsUtility extends TestBase {
 
-    private static final Random rand = new Random();
+    /**
+     * Merge a set of boolean arrays to one
+     * 
+     * @param arrays
+     *            some boolean arrays
+     * @return new boolean array that is a merge of all others
+     */
+    public static boolean[] merge(final boolean[]... arrays) {
+	int length = 0;
+	for (final boolean[] array : arrays) {
+	    length += array.length;
+	}
+
+	final boolean[] result = new boolean[length];
+	int offset = 0;
+	for (final boolean[] array : arrays) {
+	    System.arraycopy(array, 0, result, offset, array.length);
+	    offset += array.length;
+	}
+
+	return result;
+    }
+
+    /**
+     * Convert an <code>int</code> number to a booleans array that represents
+     * the number by bits
+     * 
+     * @param num
+     *            the number to convert
+     * @param length
+     *            requested boolean array length
+     * @return boolean array that represents the number
+     */
+    public static boolean[] intToBooleans(int num, final int length) {
+	if (length < 0) {
+	    throw new IllegalArgumentException("length can't be negaive " + length);
+	}
+
+	final boolean[] result = new boolean[length];
+	for (int i = 0; i < length; i++) {
+	    result[result.length - i - 1] = (num & 1) == 1;
+	    num >>= 1;
+	}
+
+	return result;
+    }
 
     static IP getRandomIP() {
 	int ipID = rand.nextInt(2) * 2 + 4; // 4 or 6

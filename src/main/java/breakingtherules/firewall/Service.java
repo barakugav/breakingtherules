@@ -6,8 +6,10 @@ import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import breakingtherules.utilities.Cache;
+import breakingtherules.utilities.Caches;
+import breakingtherules.utilities.SoftCache;
 import breakingtherules.utilities.Utility;
-import breakingtherules.utilities.WeakCache;
 
 public class Service extends Attribute {
 
@@ -412,11 +414,6 @@ public class Service extends Attribute {
 	return PROTOCOL_NAMES[protocolCode];
     }
 
-    public static void refreshCache() {
-	for (WeakCache<Integer, Service> cache : ServiceCache.cache)
-	    cache.cleanCache();
-    }
-
     public static Service create(final String protocol, final int port) {
 	return create(protocolCode(protocol), port, port);
     }
@@ -544,7 +541,7 @@ public class Service extends Attribute {
     }
 
     private static Service createInternal(final int protocolCode, final int portsRange) {
-	final WeakCache<Integer, Service> cache = ServiceCache.cache[protocolCode];
+	final Cache<Integer, Service> cache = ServiceCache.cache[protocolCode];
 
 	// We don't use the static constructor Integer.valueOf(int)
 	// intentionally here. The Integer.valueOf(int) method can help
@@ -557,15 +554,14 @@ public class Service extends Attribute {
 
 	Service service = cache.get(portsRangeInteger);
 	if (service == null) {
-	    service = new Service(protocolCode, portsRange);
-	    cache.add(portsRangeInteger, service);
+	    service = cache.add(portsRangeInteger, new Service(protocolCode, portsRange));
 	}
 	return service;
     }
 
     private static class ServiceCache {
 
-	static final WeakCache<Integer, Service>[] cache;
+	static final Cache<Integer, Service>[] cache;
 
 	static {
 	    /**
@@ -574,11 +570,11 @@ public class Service extends Attribute {
 	     * don't use temporary variable).
 	     */
 	    @SuppressWarnings({ "unchecked", "unused" })
-	    Object dummy = cache = new WeakCache[257]; // 256 and 1 for 'any
-						       // protocol'
+	    Object dummy = cache = new Cache[257]; // 256 and 1 for 'any
+						   // protocol'
 
 	    for (int i = cache.length; i-- != 0;)
-		cache[i] = new WeakCache<>();
+		cache[i] = Caches.synchronizedCache(new SoftCache<>());
 	}
 
     }

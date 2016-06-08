@@ -1,11 +1,15 @@
 package breakingtherules.tests;
 
+import java.util.Random;
+
 import org.junit.Assert;
 
 import breakingtherules.utilities.Utility;
 
 public class TestBase {
-
+    
+    protected static final Random rand = new Random();
+    
     public static void assertEquals(byte expected, byte actual) {
 	assertEquals(null, Byte.valueOf(expected), Byte.valueOf(actual));
     }

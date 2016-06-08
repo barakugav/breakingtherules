@@ -12,7 +12,6 @@ import breakingtherules.firewall.IP;
 import breakingtherules.firewall.IPv4;
 import breakingtherules.firewall.IPv6;
 import breakingtherules.tests.TestBase;
-import breakingtherules.utilities.ArraysUtilities;
 
 public class IPTest extends TestBase {
 
@@ -20,7 +19,6 @@ public class IPTest extends TestBase {
 
     @Test
     public void getBitTestFirstBlock() {
-	System.out.println("# IPTest getBitTestFirstBlock");
 	IP ip = IPv4.create(new int[] { 0b00010000, 0, 0, 0 });
 	assertEquals(false, ip.getBit(3));
 	assertEquals(true, ip.getBit(4));
@@ -29,7 +27,6 @@ public class IPTest extends TestBase {
 
     @Test
     public void getBitTest3Block() {
-	System.out.println("# IPTest getBitTest3Block");
 	IP ip = IPv4.create(new int[] { 0, 0, 0b00010000, 0 });
 	assertEquals(false, ip.getBit(19));
 	assertEquals(true, ip.getBit(20));
@@ -38,12 +35,11 @@ public class IPTest extends TestBase {
 
     @Test
     public void fromBooleansTestIPv4() {
-	System.out.println("# IPTest fromBooleansTestIPv4");
 	final int blockSize = 8;
 	int[] address = new int[] { 0, 128, 4, 11 };
 	boolean[] addressBol = new boolean[0];
 	for (int block : address) {
-	    addressBol = ArraysUtilities.merge(addressBol, ArraysUtilities.intToBooleans(block, blockSize));
+	    addressBol = FirewallTestsUtility.merge(addressBol, FirewallTestsUtility.intToBooleans(block, blockSize));
 	}
 
 	IP ip = IP.fromBooleans(toBooleanList(addressBol), IPv4.class);
@@ -55,12 +51,11 @@ public class IPTest extends TestBase {
 
     @Test
     public void fromBooleansTestIPv6() {
-	System.out.println("# IPTest fromBooleansTestIPv6");
 	final int blockSize = 16;
 	int[] address = new int[] { 0, 45, 8794, 64, 54, 165, 1, 41 };
 	boolean[] addressBol = new boolean[0];
 	for (int block : address) {
-	    addressBol = ArraysUtilities.merge(addressBol, ArraysUtilities.intToBooleans(block, blockSize));
+	    addressBol = FirewallTestsUtility.merge(addressBol, FirewallTestsUtility.intToBooleans(block, blockSize));
 	}
 
 	IP ip = IP.fromBooleans(toBooleanList(addressBol), IPv6.class);
@@ -71,34 +66,29 @@ public class IPTest extends TestBase {
 
     @Test(expected = NullPointerException.class)
     public void fromBooleansTestNullIp() {
-	System.out.println("# IPTest fromBooleansTestNullIp");
 	IP.fromBooleans(null, IPv4.class);
     }
 
     @Test(expected = NullPointerException.class)
     public void fromBooleansTestNullClass() {
-	System.out.println("# IPTest fromBooleansTestNullClass");
 	boolean[] ip = new boolean[] {};
 	IP.fromBooleans(toBooleanList(ip), null);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void fromBooleansTestUnkownClass() {
-	System.out.println("# IPTest fromBooleansTestUnkownClass");
 	boolean[] ip = new boolean[] {};
 	IP.fromBooleans(toBooleanList(ip), getClass());
     }
 
     @Test
     public void fromStringTestIPv4() {
-	System.out.println("# IPTest fromStringTestIPv4");
 	IP ip = IP.fromString("255.0.28.0/24");
 	assertTrue(ip instanceof IPv4);
     }
 
     @Test
     public void fromStringTestIPv6() {
-	System.out.println("# IPTest fromStringTestIPv6");
 	IP ip = IP.fromString("255:0:24:51:24567:55555:0:0/32");
 	assertTrue(ip instanceof IPv6);
     }
@@ -110,14 +100,12 @@ public class IPTest extends TestBase {
 
     @Test
     public void hashCodeTestEqualsToItself() {
-	System.out.println("# IPTest hashCodeTestEqualsToItself");
 	IP ip = FirewallTestsUtility.getRandomIP();
 	assertEquals(ip.hashCode(), ip.hashCode());
     }
 
     @Test
     public void hashCodeTestNoEqualsToOther() {
-	System.out.println("# IPTest hashCodeTestNoEqualsToOther");
 	IP ip1 = FirewallTestsUtility.getRandomIP();
 	IP ip2 = FirewallTestsUtility.getRandomIP();
 	assertEquals(ip1.equals(ip2), ip1.hashCode() == ip2.hashCode());

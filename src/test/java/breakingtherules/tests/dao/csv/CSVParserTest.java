@@ -16,11 +16,10 @@ public class CSVParserTest extends TestBase {
 
     private static final int JOB_ID = 0;
     private static final List<Integer> COLOMNS_TYPES = CSVParser.DEFAULT_COLUMNS_TYPES;
-    private static final boolean PRINT = true;
+    private static final boolean PRINT = false;
 
     @Test
     public void parseTest() {
-	System.out.println("# CSVParserTest parseTest");
 	try {
 	    List<Hit> hits = CSVParser.fromCSV(COLOMNS_TYPES, JOB_ID);
 	    if (PRINT) {

@@ -30,7 +30,6 @@ public class ElasticDaoTest extends TestBase {
 
     private static boolean jobInitialized = false;
 
-    private static int numOfHits = 0;
 
     @BeforeClass
     public static void initDaoAndJob() throws Exception {
@@ -62,11 +61,9 @@ public class ElasticDaoTest extends TestBase {
 
     private static Hit createHit() {
 	List<Attribute> attributes = new ArrayList<>();
-	numOfHits++;
 	attributes.add(Source.create("128.76.2.9"));
 	attributes.add(Destination.create("128.76.2.9"));
 	attributes.add(Service.create("TCP 80"));
-	System.out.println(numOfHits);
 	return new Hit(attributes);
     }
 

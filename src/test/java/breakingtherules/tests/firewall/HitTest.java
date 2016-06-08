@@ -13,14 +13,12 @@ public class HitTest extends TestBase {
 
     @Test
     public void constructorTest() {
-	System.out.println("# HitTest constructorTest");
 	List<Attribute> attributes = FirewallTestsUtility.getRandomAttributes();
 	new Hit(attributes);
     }
 
     @Test(expected = NullPointerException.class)
     public void constructorTestNullAttributes() {
-	System.out.println("# HitTest constructorTestNullAttributes");
 	List<Attribute> attributes = null;
 	new Hit(attributes);
     }
@@ -28,7 +26,6 @@ public class HitTest extends TestBase {
 
     @Test
     public void getAttributeTest() {
-	System.out.println("# HitTest getAttributeTest");
 	List<Attribute> attributes = FirewallTestsUtility.getRandomAttributes();
 	Hit hit = new Hit(attributes);
 
@@ -41,7 +38,6 @@ public class HitTest extends TestBase {
 
     @Test
     public void getAttributesTest() {
-	System.out.println("# HitTest getAttributesTest");
 	List<Attribute> expected = FirewallTestsUtility.getRandomAttributes();
 	Hit hit = new Hit(expected);
 	List<Attribute> actual = hit.getAttributes();

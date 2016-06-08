@@ -2,12 +2,14 @@ package breakingtherules.firewall;
 
 import java.util.List;
 
+import breakingtherules.utilities.Cache;
+import breakingtherules.utilities.Caches;
+import breakingtherules.utilities.SoftCache;
 import breakingtherules.utilities.Utility;
-import breakingtherules.utilities.WeakCache;
 
 public final class IPv4 extends IP {
 
-    private final int m_address;
+    final int m_address;
 
     public static final int BLOCK_NUMBER = 1 << 2; // 4
     public static final int BLOCK_SIZE = 1 << 3; // 8
@@ -246,11 +248,6 @@ public final class IPv4 extends IP {
 		: ((a1 + Integer.MIN_VALUE) < (a2 + Integer.MIN_VALUE)) ? -1 : 1;
     }
 
-    public static void refreshCache() {
-	for (WeakCache<Integer, IPv4> cache : IPv4Cache.cache)
-	    cache.cleanCache();
-    }
-
     public static IPv4 create(final String ip) {
 	int address = 0;
 	int prefix;
@@ -360,7 +357,8 @@ public final class IPv4 extends IP {
     }
 
     private static IPv4 createInternal(final int address, final int prefix) {
-	final WeakCache<Integer, IPv4> cache = IPv4Cache.cache[prefix];
+
+	final Cache<Integer, IPv4> cache = IPv4Cache.cache[prefix];
 
 	// We don't use the static constructor Integer.valueOf(int)
 	// intentionally here. The Integer.valueOf(int) method can help
@@ -375,15 +373,14 @@ public final class IPv4 extends IP {
 
 	IPv4 ip = cache.get(addressInteger);
 	if (ip == null) {
-	    ip = new IPv4(address, prefix);
-	    cache.add(addressInteger, ip);
+	    ip = cache.add(addressInteger, new IPv4(address, prefix));
 	}
 	return ip;
     }
 
     private static final class IPv4Cache {
 
-	static final WeakCache<Integer, IPv4>[] cache;
+	static final Cache<Integer, IPv4>[] cache;
 
 	static {
 	    /**
@@ -392,10 +389,10 @@ public final class IPv4 extends IP {
 	     * don't use temporary variable).
 	     */
 	    @SuppressWarnings({ "unchecked", "unused" })
-	    Object dummy = cache = new WeakCache[MAX_LENGTH + 1];
+	    Object dummy = cache = new Cache[MAX_LENGTH + 1];
 
 	    for (int i = cache.length; i-- != 0;)
-		cache[i] = new WeakCache<>();
+		cache[i] = Caches.synchronizedCache(new SoftCache<>());
 	}
 
     }

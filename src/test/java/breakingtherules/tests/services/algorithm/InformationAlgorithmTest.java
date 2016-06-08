@@ -28,7 +28,6 @@ public class InformationAlgorithmTest extends TestBase {
 
     @Test
     public void getSuggestionTest() {
-	System.out.println("# InformationAlgorithmTest getSuggestionTest");
 	try {
 	    RulesDao rulesDao = new RulesXmlDao();
 	    HitsDao hitsDao = new HitsXmlDao();
@@ -38,8 +37,8 @@ public class InformationAlgorithmTest extends TestBase {
 
 	    InformationAlgorithm algorithm = new InformationAlgorithm();
 	    algorithm.setRuleWeight(RULE_WEIGHT);
-	    List<Suggestion> suggestions = algorithm.getSuggestions(hitsDao, JOB_ID, rules, filter, ATTRIBUTE,
-		    NUMBER_OF_SUGGESTIONS);
+	    List<Suggestion> suggestions = algorithm.getSuggestions(hitsDao, JOB_ID, rules, filter,
+		    NUMBER_OF_SUGGESTIONS, ATTRIBUTE);
 
 	    if (PRINT_RESULTS) {
 		System.out.println("\nResults:");

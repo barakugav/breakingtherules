@@ -19,12 +19,12 @@ public abstract class IP implements Comparable<IP> {
     /**
      * String representation of any IP
      */
-    protected static final String ANY = "Any";
+    static final String ANY = "Any";
 
     /**
      * The prefix length separator
      */
-    protected static final char PREFIX_LENGTH_SEPARATOR = '/';
+    static final char PREFIX_LENGTH_SEPARATOR = '/';
 
     /**
      * Construct new IP
@@ -32,7 +32,7 @@ public abstract class IP implements Comparable<IP> {
      * @param prefixLength
      *            length of constant prefix
      */
-    protected IP(final int prefixLength) {
+    IP(final int prefixLength) {
 	this.prefixLength = prefixLength;
     }
 
@@ -54,7 +54,7 @@ public abstract class IP implements Comparable<IP> {
     public int getPrefixLength() {
 	return prefixLength;
     }
-    
+
     /**
      * Checks if this IP has parent - more general IP
      * 

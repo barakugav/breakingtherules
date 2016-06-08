@@ -24,7 +24,6 @@ public class HitsXmlDaoTest extends TestBase {
 
     @Test
     public void getHitsByPathTest() {
-	System.out.println("# HitsXmlDaoTest getHitsByPathTest");
 	RepositoryDocument doc = new RepositoryDocument();
 
 	int numberOfHits = 10;
@@ -46,7 +45,7 @@ public class HitsXmlDaoTest extends TestBase {
 	    fail("Failed to read from file: " + e.getMessage());
 	}
 
-	doc.finalize();
+	doc.destroy();
     }
 
     private static class RepositoryDocument {
@@ -87,8 +86,7 @@ public class HitsXmlDaoTest extends TestBase {
 	    }
 	}
 
-	@Override
-	public void finalize() {
+	public void destroy() {
 	    File file = new File(m_path);
 	    file.delete();
 	}

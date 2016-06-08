@@ -6,9 +6,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.List;
-import java.util.Random;
 
 import org.junit.Test;
 
@@ -17,11 +15,8 @@ import breakingtherules.utilities.Utility;
 
 public class UtilityTest extends TestBase {
 
-    private static final Random rand = new Random();
-
     @Test
     public void putTest() {
-	System.out.println("# UtilityTest putTest");
 	List<Integer> list = getEmptyList();
 	int index = 5;
 	Integer value = Integer.valueOf(5);
@@ -35,20 +30,17 @@ public class UtilityTest extends TestBase {
 
     @Test(expected = NullPointerException.class)
     public void putTestNull() {
-	System.out.println("# UtilityTest putTestNull");
 	Utility.put(null, 0, Integer.valueOf(0));
     }
 
     @Test(expected = IndexOutOfBoundsException.class)
     public void putTestNegativeIndex() {
-	System.out.println("# UtilityTest putTestNegativeIndex");
 	List<Integer> list = getEmptyList();
 	Utility.put(list, -1, Integer.valueOf(0));
     }
 
     @Test
     public void subListTest() {
-	System.out.println("# UtilityTest subListTest");
 	List<Integer> list = getRandomList(10);
 	int offset = 5;
 	int size = 3;
@@ -59,98 +51,27 @@ public class UtilityTest extends TestBase {
 
     @Test(expected = NullPointerException.class)
     public void subListNullTest() {
-	System.out.println("# UtilityTest subListNullTest");
 	Utility.subList(null, 0, 0);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void subListNegativeOffsetTest() {
-	System.out.println("# UtilityTest subListNegativeOffsetTest");
 	Utility.subList(getEmptyList(), -1, 0);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void subListNegativeSizeTest() {
-	System.out.println("# UtilityTest subListNegativeSizeTest");
 	Utility.subList(getEmptyList(), 0, -1);
     }
 
     @Test
     public void subListOffsetGreaterThanListSizeTest() {
-	System.out.println("# UtilityTest subListOffsetGreaterThanListSizeTest");
 	List<Integer> list = Utility.subList(getRandomList(10), 15, 15);
 	assertEquals(getEmptyList(), list);
     }
 
     @Test
-    public void ensureUniquenessTest() {
-	System.out.println("# UtilityTest ensureUniquenessTest");
-	ArrayList<Integer> list = getEmptyList();
-	list.add(Integer.valueOf(0));
-	list.add(Integer.valueOf(1));
-	list.add(Integer.valueOf(1));
-	list.add(Integer.valueOf(2));
-	list.add(Integer.valueOf(3));
-	list.add(Integer.valueOf(4));
-	list.add(Integer.valueOf(4));
-
-	@SuppressWarnings("unchecked")
-	List<Integer> expected = (ArrayList<Integer>) list.clone();
-	expected.remove(2);
-	expected.remove(5);
-	List<Integer> actual = new ArrayList<>(Utility.ensureUniqueness(list));
-
-	actual.sort(null);
-	expected.sort(null);
-	assertEquals(expected, actual);
-    }
-
-    @Test
-    public void ensureUniquenessNullElementsTest() {
-	System.out.println("# UtilityTest ensureUniquenessNullElementsTest");
-	ArrayList<Integer> list = getEmptyList();
-	list.add(Integer.valueOf(0));
-	list.add(Integer.valueOf(1));
-	list.add(Integer.valueOf(1));
-	list.add(null);
-	list.add(Integer.valueOf(3));
-	list.add(Integer.valueOf(4));
-	list.add(null);
-
-	@SuppressWarnings("unchecked")
-	List<Integer> expected = (ArrayList<Integer>) list.clone();
-	expected.remove(2);
-	expected.remove(5);
-	List<Integer> actual = new ArrayList<>(Utility.ensureUniqueness(list));
-
-	// Special comparator is needed because there are some null elements
-	Comparator<Integer> c = new Comparator<Integer>() {
-
-	    @Override
-	    public int compare(Integer o1, Integer o2) {
-		if (o1 == null) {
-		    return o2 == null ? 0 : 1;
-		}
-		if (o2 == null) {
-		    return -1;
-		}
-		return o1.compareTo(o2);
-	    }
-	};
-	actual.sort(c);
-	expected.sort(c);
-	assertEquals(expected, actual);
-    }
-
-    @Test(expected = NullPointerException.class)
-    public void ensureUniquenessNullListTest() {
-	System.out.println("# UtilityTest ensureUniquenessNullListTest");
-	Utility.ensureUniqueness(null);
-    }
-
-    @Test
     public void breakToWordsTest() {
-	System.out.println("# UtilityTest breakToWordsTest");
 	String text = "Hello \t\tbig\t world";
 	List<String> expected = new ArrayList<>();
 	expected.add("Hello");
@@ -161,7 +82,6 @@ public class UtilityTest extends TestBase {
 
     @Test
     public void breakToWordsTestOnlyTabs() {
-	System.out.println("# UtilityTest breakToWordsTestOnlyTabs");
 	String text = "Hello\t\tbig\tworld,\t\tsup?";
 	List<String> expected = new ArrayList<>();
 	expected.add("Hello");
@@ -174,7 +94,6 @@ public class UtilityTest extends TestBase {
 
     @Test
     public void breakToWordsTestOnlySpaces() {
-	System.out.println("# UtilityTest breakToWordsTestOnlySpaces");
 	String text = "Hello  big world,  sup?";
 	List<String> expected = new ArrayList<>();
 	expected.add("Hello");
@@ -186,7 +105,6 @@ public class UtilityTest extends TestBase {
 
     @Test
     public void breakToWordsTestSpaceInStart() {
-	System.out.println("# UtilityTest breakToWordsTestSpaceInStart");
 	String text = "  Hello \t\tbig\t world";
 	List<String> expected = new ArrayList<>();
 	expected.add("Hello");
@@ -197,7 +115,6 @@ public class UtilityTest extends TestBase {
 
     @Test
     public void breakToWordsTestSpaceInEnd() {
-	System.out.println("# UtilityTest breakToWordsTestSpaceInEnd");
 	String text = "Hello \t\tbig\t world ";
 	List<String> expected = new ArrayList<>();
 	expected.add("Hello");
@@ -208,13 +125,11 @@ public class UtilityTest extends TestBase {
 
     @Test(expected = NullPointerException.class)
     public void breakToWordsTestNull() {
-	System.out.println("# UtilityTest breakToWordsTestNull");
 	Utility.breakToWords(null);
     }
 
     @Test
     public void breakToWordsTestCustomSeparators() {
-	System.out.println("# UtilityTest breakToWordsTestCustomSeparators");
 	String text = "qHellozqqbigqzworldz[]]";
 	List<String> expected = new ArrayList<>();
 	expected.add("Hello");
@@ -226,7 +141,6 @@ public class UtilityTest extends TestBase {
 
     @Test
     public void addWordTest() {
-	System.out.println("# UtilityTest addWordTest");
 	String text = "hello big";
 	String word = "world";
 	String expected = "hello big world";
@@ -237,7 +151,6 @@ public class UtilityTest extends TestBase {
 
     @Test
     public void addWordTestSpaceInEnd() {
-	System.out.println("# UtilityTest addWordTestSpaceInEnd");
 	String text = "hello big ";
 	String word = "world";
 	String expected = "hello big world";
@@ -248,7 +161,6 @@ public class UtilityTest extends TestBase {
 
     @Test(expected = NullPointerException.class)
     public void addWordTestNullTest() {
-	System.out.println("# UtilityTest addWordTestNullTest");
 	String text = null;
 	String word = "world";
 	Utility.addWord(text, word);
@@ -256,7 +168,6 @@ public class UtilityTest extends TestBase {
 
     @Test
     public void addWordTestNullWord() {
-	System.out.println("# UtilityTest addWordTestNullWord");
 	String text = "hello big";
 	String word = null;
 	String expected = text + " null";
@@ -266,7 +177,6 @@ public class UtilityTest extends TestBase {
 
     @Test
     public void addWordTestTab() {
-	System.out.println("# UtilityTest addWordTestTab");
 	String text = "hello big";
 	String word = "world";
 	String expected = "hello big\tworld";
@@ -277,7 +187,6 @@ public class UtilityTest extends TestBase {
 
     @Test
     public void addWordTestTabInEnd() {
-	System.out.println("# UtilityTest addWordTestTabInEnd");
 	String text = "hello big\t";
 	String word = "world";
 	String expected = "hello big\tworld";
@@ -288,7 +197,6 @@ public class UtilityTest extends TestBase {
 
     @Test
     public void toStringTest() {
-	System.out.println("# UtilityTest toStringTest");
 	Object obj = new Integer(rand.nextInt());
 	String expected = obj.toString();
 	String actual = Utility.toString(obj);
@@ -297,7 +205,6 @@ public class UtilityTest extends TestBase {
 
     @Test
     public void toStringTestNull() {
-	System.out.println("# UtilityTest toStringTestNull");
 	Object obj = null;
 	String expected = "null";
 	String actual = Utility.toString(obj);
@@ -306,7 +213,6 @@ public class UtilityTest extends TestBase {
 
     @Test
     public void toStringTestArray() {
-	System.out.println("# UtilityTest toStringTestArray");
 	int[] array = new int[] { 1, 5, 88, -42 };
 	String expected = Arrays.toString(array);
 	String actual = Utility.toString(array);
@@ -315,7 +221,6 @@ public class UtilityTest extends TestBase {
 
     @Test
     public void toStringTestObjectsArray() {
-	System.out.println("# UtilityTest toStringTestObjectsArray");
 	Object[] array = new int[][] { new int[] { 5, -4 }, new int[] { 0, 41 } };
 	String expected = Arrays.deepToString(array);
 	String actual = Utility.toString(array);
@@ -324,7 +229,6 @@ public class UtilityTest extends TestBase {
 
     @Test
     public void equalsTest() {
-	System.out.println("# UtilityTest equalsTest");
 	Object o1 = new Integer(5487);
 	Object o2 = new Integer(5487);
 	assertTrue(Utility.equals(o1, o2));
@@ -333,7 +237,6 @@ public class UtilityTest extends TestBase {
 
     @Test
     public void equalsTestBasicArray() {
-	System.out.println("# UtilityTest equalsTestBasicArray");
 	Object o1 = new int[] { 5, 7, 64, 7 };
 	Object o2 = new int[] { 5, 7, 64, 7 };
 	Object o4 = new int[] { 5, 7, 64, 7, 5 };
@@ -349,7 +252,6 @@ public class UtilityTest extends TestBase {
 
     @Test
     public void equalsTestComplexArray() {
-	System.out.println("# UtilityTest equalsTestComplexArray");
 	Object o1 = new int[][] { new int[] { 5, 4 }, new int[] { 7, 8, 9 } };
 	Object o2 = new int[][] { new int[] { 5, 4 }, new int[] { 7, 8, 9 } };
 	Object o4 = new int[][] { new int[] { 5, 4 }, new int[] { 7, 7, 9 } };
@@ -365,14 +267,12 @@ public class UtilityTest extends TestBase {
 
     @Test
     public void equalsTestItself() {
-	System.out.println("# UtilityTest equalsTestItself");
 	Object o = new Object();
 	assertTrue(Utility.equals(o, o));
     }
 
     @Test
     public void equalsTestOneNull() {
-	System.out.println("# UtilityTest equalsTestOneNull");
 	Object o = new Object();
 	assertFalse(Utility.equals(null, o));
 	assertFalse(Utility.equals(o, null));
@@ -380,13 +280,11 @@ public class UtilityTest extends TestBase {
 
     @Test
     public void equalsTestTwoNull() {
-	System.out.println("# UtilityTest equalsTestTwoNull");
 	assertTrue(Utility.equals(null, null));
     }
 
     @Test
     public void indexOfTestOneSequence() {
-	System.out.println("# UtilityTest indexOfTestOneSequence");
 	String text = "aabbccadyjsadllad";
 	String sequence = "ad";
 	int expected = 6;
@@ -396,7 +294,6 @@ public class UtilityTest extends TestBase {
 
     @Test
     public void indexOfTestMultipleSequences() {
-	System.out.println("# UtilityTest indexOfTestMultipleSequences");
 	String text = "12342544897884564488";
 	String sequence1 = "89";
 	String sequence2 = "44";
@@ -407,7 +304,6 @@ public class UtilityTest extends TestBase {
 
     @Test
     public void indexOfTestNoMatch() {
-	System.out.println("# UtilityTest indexOfTestNoMatch");
 	String text = "12342544897884564488";
 	String sequence1 = "555";
 	String sequence2 = "33";
@@ -418,7 +314,6 @@ public class UtilityTest extends TestBase {
 
     @Test(expected = NullPointerException.class)
     public void indexOfTestNullText() {
-	System.out.println("# UtilityTest indexOfTestNullText");
 	String text = null;
 	String sequence1 = "89";
 	String sequence2 = "44";
@@ -427,7 +322,6 @@ public class UtilityTest extends TestBase {
 
     @Test(expected = NullPointerException.class)
     public void indexOfTestNullSequence() {
-	System.out.println("# UtilityTest indexOfTestNullSequence");
 	String text = "12342544897884564488";
 	String sequence1 = "89";
 	String sequence2 = null;
@@ -436,7 +330,6 @@ public class UtilityTest extends TestBase {
 
     @Test
     public void lastIndexOfTestOneSequence() {
-	System.out.println("# UtilityTest lastIndexOfTestOneSequence");
 	String text = "aadsabbccadadsyjsadllad";
 	String sequence = "ads";
 	int expected = 11;
@@ -446,7 +339,6 @@ public class UtilityTest extends TestBase {
 
     @Test
     public void lastIndexOfTestMultipleSequences() {
-	System.out.println("# UtilityTest lastIndexOfTestMultipleSequences");
 	String text = "12342544897884564488";
 	String sequence1 = "89";
 	String sequence2 = "44";
@@ -457,7 +349,6 @@ public class UtilityTest extends TestBase {
 
     @Test
     public void lastIndexOfTestNoMatch() {
-	System.out.println("# UtilityTest lastIndexOfTestNoMatch");
 	String text = "12342544897884564488";
 	String sequence1 = "555";
 	String sequence2 = "33";
@@ -468,7 +359,6 @@ public class UtilityTest extends TestBase {
 
     @Test(expected = NullPointerException.class)
     public void lastIndexIfTestNullText() {
-	System.out.println("# UtilityTest lastIndexIfTestNullText");
 	String text = null;
 	String sequence1 = "89";
 	String sequence2 = "44";
@@ -477,7 +367,6 @@ public class UtilityTest extends TestBase {
 
     @Test(expected = NullPointerException.class)
     public void lastIndexOfTestNullSequence() {
-	System.out.println("# UtilityTest lastIndexOfTestNullSequence");
 	String text = "12342544897884564488";
 	String sequence1 = "89";
 	String sequence2 = null;
@@ -486,7 +375,6 @@ public class UtilityTest extends TestBase {
 
     @Test
     public void positionOfTestOneSequence() {
-	System.out.println("# UtilityTest positionOfTestOneSequence");
 	String text = "aabbccadyjsadllad";
 	String sequence = "ad";
 	int[] expected = new int[] { 6, 2 };
@@ -496,7 +384,6 @@ public class UtilityTest extends TestBase {
 
     @Test
     public void positionOfTestMultipleSequences() {
-	System.out.println("# UtilityTest positionOfTestMultipleSequences");
 	String text = "12342544897884564488";
 	String sequence1 = "897";
 	String sequence2 = "44";
@@ -507,7 +394,6 @@ public class UtilityTest extends TestBase {
 
     @Test
     public void positionOfTestNoMatch() {
-	System.out.println("# UtilityTest positionOfTestNoMatch");
 	String text = "12342544897884564488";
 	String sequence1 = "555";
 	String sequence2 = "33";
@@ -518,7 +404,6 @@ public class UtilityTest extends TestBase {
 
     @Test(expected = NullPointerException.class)
     public void positionOfTestNullText() {
-	System.out.println("# UtilityTest positionOfTestNullText");
 	String text = null;
 	String sequence1 = "89";
 	String sequence2 = "44";
@@ -527,7 +412,6 @@ public class UtilityTest extends TestBase {
 
     @Test(expected = NullPointerException.class)
     public void positionOfTestNullSequence() {
-	System.out.println("# UtilityTest positionOfTestNullSequence");
 	String text = "12342544897884564488";
 	String sequence1 = "89";
 	String sequence2 = null;
@@ -536,7 +420,6 @@ public class UtilityTest extends TestBase {
 
     @Test
     public void lastPositionOfTestOneSequence() {
-	System.out.println("# UtilityTest lastPositionOfTestOneSequence");
 	String text = "aadsabbccadadsyjsadllad";
 	String sequence = "ads";
 	int[] expected = new int[] { 11, 3 };
@@ -546,7 +429,6 @@ public class UtilityTest extends TestBase {
 
     @Test
     public void lastPositionOfTestMultipleSequences() {
-	System.out.println("# UtilityTest lastPositionOfTestMultipleSequences");
 	String text = "12342544897884564488";
 	String sequence1 = "897";
 	String sequence2 = "44";
@@ -557,7 +439,6 @@ public class UtilityTest extends TestBase {
 
     @Test
     public void lastPositionOfTestNoMatch() {
-	System.out.println("# UtilityTest lastPositionOfTestNoMatch");
 	String text = "12342544897884564488";
 	String sequence1 = "555";
 	String sequence2 = "33";
@@ -568,7 +449,6 @@ public class UtilityTest extends TestBase {
 
     @Test(expected = NullPointerException.class)
     public void lastPositionOfTestNullText() {
-	System.out.println("# UtilityTest lastPositionOfTestNullText");
 	String text = null;
 	String sequence1 = "89";
 	String sequence2 = "44";
@@ -577,7 +457,6 @@ public class UtilityTest extends TestBase {
 
     @Test(expected = NullPointerException.class)
     public void lastPositionOfTestNullSequence() {
-	System.out.println("# UtilityTest lastPositionOfTestNullSequence");
 	String text = "12342544897884564488";
 	String sequence1 = "89";
 	String sequence2 = null;
@@ -586,7 +465,6 @@ public class UtilityTest extends TestBase {
 
     @Test
     public void log2Test() {
-	System.out.println("# UtilityTest log2Test");
 	double num = rand.nextDouble() * 100 + 2; // Random in range [2, 102]
 	double allowedDelta = 0.00001; // Delta is allowed because double
 				       // comparison isn't accurate

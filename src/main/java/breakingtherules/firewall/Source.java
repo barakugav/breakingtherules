@@ -2,7 +2,10 @@ package breakingtherules.firewall;
 
 import java.util.Objects;
 
-import breakingtherules.utilities.WeakCache;
+import breakingtherules.firewall.IPv6.IPv6Cache.IPv6CacheKey;
+import breakingtherules.utilities.Cache;
+import breakingtherules.utilities.Caches;
+import breakingtherules.utilities.SoftCache;
 
 /**
  * Source attribute, represent a source IP of a hit
@@ -67,11 +70,6 @@ public class Source extends IPAttribute {
 	return Source.create(ip);
     }
 
-    public static void refreshCache() {
-	for (WeakCache<Integer, Source> cache : SourceCache.IPv4cache)
-	    cache.cleanCache();
-    }
-
     public static Source create(final IP ip) {
 	return createInternal(Objects.requireNonNull(ip));
     }
@@ -83,14 +81,21 @@ public class Source extends IPAttribute {
     private static Source createInternal(final IP ip) {
 	Source source;
 	if (ip instanceof IPv4) {
-	    WeakCache<Integer, Source> cache = SourceCache.IPv4cache[ip.prefixLength];
-
-	    Integer addressInteger = new Integer(((IPv4) ip).addressBits());
+	    final Cache<Integer, Source> cache = SourceCache.IPv4Cache[ip.prefixLength];
+	    final Integer addressInteger = new Integer(((IPv4) ip).m_address);
 	    source = cache.get(addressInteger);
 	    if (source == null) {
-		source = new Source(ip);
-		cache.add(addressInteger, source);
+		source = cache.add(addressInteger, new Source(ip));
 	    }
+
+	} else if (ip instanceof IPv6) {
+	    final Cache<IPv6CacheKey, Source> cache = SourceCache.IPv6Cache[ip.prefixLength];
+	    final IPv6CacheKey key = new IPv6CacheKey(((IPv6) ip).m_address);
+	    source = cache.get(key);
+	    if (source == null) {
+		source = cache.add(key, new Source(ip));
+	    }
+
 	} else {
 	    source = new Source(ip);
 	}
@@ -99,14 +104,22 @@ public class Source extends IPAttribute {
 
     private static class SourceCache {
 
-	static final WeakCache<Integer, Source>[] IPv4cache;
+	static final Cache<Integer, Source>[] IPv4Cache;
+
+	static final Cache<IPv6CacheKey, Source>[] IPv6Cache;
 
 	static {
 	    @SuppressWarnings({ "unchecked", "unused" })
-	    Object dummy = IPv4cache = new WeakCache[IPv4.MAX_LENGTH + 1];
+	    Object dummy1 = IPv4Cache = new Cache[IPv4.MAX_LENGTH + 1];
 
-	    for (int i = IPv4cache.length; i-- != 0;)
-		IPv4cache[i] = new WeakCache<>();
+	    @SuppressWarnings({ "unchecked", "unused" })
+	    Object dummy2 = IPv6Cache = new Cache[IPv6.MAX_LENGTH + 1];
+
+	    for (int i = IPv4Cache.length; i-- != 0;)
+		IPv4Cache[i] = Caches.synchronizedCache(new SoftCache<>());
+
+	    for (int i = IPv6Cache.length; i-- != 0;)
+		IPv6Cache[i] = Caches.synchronizedCache(new SoftCache<>());
 	}
 
     }

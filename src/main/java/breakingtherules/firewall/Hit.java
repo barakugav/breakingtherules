@@ -45,16 +45,6 @@ public class Hit extends AttributesContainer {
 	return o instanceof Hit && super.equals(o);
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see breakingtherules.firewall.AttributesContainer#toString()
-     */
-    @Override
-    public String toString() {
-	return "Hit: " + super.toString();
-    }
-
     /**
      * Create a mutation of this hit by changing one of the attributes.
      * 

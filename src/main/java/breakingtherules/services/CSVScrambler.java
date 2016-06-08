@@ -1,7 +1,9 @@
 package breakingtherules.services;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -24,7 +26,6 @@ import breakingtherules.firewall.Attribute;
 import breakingtherules.firewall.Hit;
 import breakingtherules.firewall.IP;
 import breakingtherules.firewall.IPAttribute;
-import breakingtherules.utilities.LinesIterator;
 import breakingtherules.utilities.TextPrinter;
 import breakingtherules.utilities.Utility;
 
@@ -574,10 +575,12 @@ public class CSVScrambler implements Runnable {
 	final Map<IP, Node> existingNodes = new HashMap<>();
 	final CSVParser parser = new CSVParser(columnsTypes);
 
-	LinesIterator it = null;
+	int lineNumber = 0;
+	BufferedReader reader = null;
 	try {
-	    for (it = new LinesIterator(inputFile); it.hasNext();) {
-		final String line = it.next();
+	    reader = new BufferedReader(new FileReader(inputFile));
+	    for (String line; (line = reader.readLine()) != null;) {
+		lineNumber++;
 		final Hit hit = parser.fromCSV(line);
 		IP ip = ((IPAttribute) hit.getAttribute(ipAttId)).getIp();
 
@@ -603,10 +606,10 @@ public class CSVScrambler implements Runnable {
 	} catch (final UncheckedIOException e) {
 	    throw e.getCause();
 	} catch (final CSVParseException e) {
-	    throw new CSVParseException("In line " + it.lineNumber() + ": ", e);
+	    throw new CSVParseException("In line " + lineNumber + ": ", e);
 	} finally {
-	    if (it != null) {
-		it.close();
+	    if (reader != null) {
+		reader.close();
 	    }
 	}
 
@@ -680,14 +683,16 @@ public class CSVScrambler implements Runnable {
 	    final int ipAttId, final Node tree) throws IOException, CSVParseException {
 	CSVParser parser = new CSVParser(columnsTypes);
 
-	LinesIterator it = null;
+	int lineNumber = 0;
+	BufferedReader reader = null;
 	Writer writer = null;
 	try {
 	    writer = new FileWriter(outputFile);
 	    String lineSeparator = System.lineSeparator();
 
-	    for (it = new LinesIterator(inputFile); it.hasNext();) {
-		String line = it.next();
+	    reader = new BufferedReader(new FileReader(inputFile));
+	    for (String line; (line = reader.readLine()) != null;) {
+		lineNumber++;
 		Hit hit = parser.fromCSV(line);
 		hit = mutateHit(hit, ipAttId, tree);
 		line = parser.toCSV(hit);
@@ -697,10 +702,10 @@ public class CSVScrambler implements Runnable {
 	} catch (final UncheckedIOException e) {
 	    throw e.getCause();
 	} catch (final CSVParseException e) {
-	    throw new CSVParseException("In line " + it.lineNumber() + ": ", e);
+	    throw new CSVParseException("In line " + lineNumber + ": ", e);
 	} finally {
-	    if (it != null) {
-		it.close();
+	    if (reader != null) {
+		reader.close();
 	    }
 	    if (writer != null) {
 		writer.close();

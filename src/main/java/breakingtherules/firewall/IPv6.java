@@ -1,9 +1,14 @@
 package breakingtherules.firewall;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
+import breakingtherules.firewall.IPv6.IPv6Cache.IPv6CacheKey;
+import breakingtherules.utilities.Cache;
+import breakingtherules.utilities.Caches;
+import breakingtherules.utilities.SoftCache;
 import breakingtherules.utilities.Utility;
 
 /**
@@ -14,7 +19,7 @@ public final class IPv6 extends IP {
     /**
      * IP address
      */
-    private final int[] m_address;
+    final int[] m_address;
 
     public static final int BLOCK_NUMBER = 1 << 3; // 8
     public static final int BLOCK_SIZE = 1 << 4; // 16
@@ -29,6 +34,22 @@ public final class IPv6 extends IP {
     private IPv6(final int[] address, final int prefixLength) {
 	super(prefixLength);
 	m_address = address;
+    }
+
+    @Override
+    public int[] getAddress() {
+	final int[] address = m_address;
+	final int[] a = new int[BLOCK_NUMBER];
+	for (int i = ADDRESS_ARRAY_SIZE; i-- > 0;) {
+	    final int value = address[i];
+	    a[i << 1] = (value >> BLOCK_SIZE) & BLOCK_MASK;
+	    a[(i << 1) + 1] = value & BLOCK_MASK;
+	}
+	return a;
+    }
+
+    public int[] getAddressBits() {
+	return m_address.clone();
     }
 
     /*
@@ -48,7 +69,7 @@ public final class IPv6 extends IP {
 	final int mask = ~(1 << (Integer.SIZE - (p & OFFSET_IN_BLOCK_MASK)));
 	parentAddress[blockNum] &= mask;
 
-	return new IPv6(parentAddress, p - 1);
+	return createInternal(parentAddress, p - 1);
     }
 
     /*
@@ -66,14 +87,13 @@ public final class IPv6 extends IP {
 	// Set helper variable
 	int[][] childrenAddresses = new int[][] { m_address.clone(), m_address.clone() };
 	final int helper = 1 << (Integer.SIZE - (p & OFFSET_IN_BLOCK_MASK));
-	final int blockNum = prefixLength * BLOCK_NUMBER / MAX_LENGTH;
-	// TODO - this code probably contains bugs, but is not used yet.
+	final int blockNum = prefixLength * ADDRESS_ARRAY_SIZE / MAX_LENGTH;
 	childrenAddresses[0][blockNum] &= ~helper;
 	childrenAddresses[1][blockNum] |= helper;
 
 	IPv6[] children = new IPv6[2];
-	children[0] = new IPv6(childrenAddresses[0], p);
-	children[1] = new IPv6(childrenAddresses[1], p);
+	children[0] = createInternal(childrenAddresses[0], p);
+	children[1] = createInternal(childrenAddresses[1], p);
 
 	return children;
     }
@@ -146,18 +166,6 @@ public final class IPv6 extends IP {
 
 	return ((m_address[blockNum] ^ o.m_address[blockNum])
 		& ~((1 << (Integer.SIZE - (p & OFFSET_IN_BLOCK_MASK))) - 1)) == 0;
-    }
-
-    @Override
-    public int[] getAddress() {
-	final int[] address = m_address;
-	final int[] a = new int[BLOCK_NUMBER];
-	for (int i = ADDRESS_ARRAY_SIZE; i-- > 0;) {
-	    final int value = address[i];
-	    a[i << 1] = (value >> BLOCK_SIZE) & BLOCK_MASK;
-	    a[(i << 1) + 1] = value & BLOCK_MASK;
-	}
-	return a;
     }
 
     @Override
@@ -262,7 +270,7 @@ public final class IPv6 extends IP {
 
     public static IPv6 create(int[] address, int prefixLength) {
 	if (address.length != BLOCK_NUMBER) {
-	    throw new IllegalArgumentException("IPv6 length: " + Utility.format(MAX_LENGTH, address.length));
+	    throw new IllegalArgumentException("IPv6 length: " + Utility.format(BLOCK_NUMBER, address.length));
 	}
 	if (!(0 <= prefixLength && prefixLength <= MAX_LENGTH)) {
 	    throw new IllegalArgumentException("IPv6 prefix legnth: " + Utility.format(0, MAX_LENGTH, prefixLength));
@@ -287,7 +295,7 @@ public final class IPv6 extends IP {
 			: ~((1 << (Integer.SIZE - (prefixLength & OFFSET_IN_BLOCK_MASK))) - 1);
 	    }
 	}
-	return new IPv6(a, prefixLength);
+	return createInternal(a, prefixLength);
     }
 
     public static IPv6 create(String ip) {
@@ -376,7 +384,7 @@ public final class IPv6 extends IP {
 	    }
 	}
 
-	return new IPv6(a, prefix);
+	return createInternal(a, prefix);
     }
 
     public static IPv6 create(final List<Boolean> ip) {
@@ -395,7 +403,71 @@ public final class IPv6 extends IP {
 	    blockValue <<= (blockNum & 1) == 0 ? 16 : 0;
 	    address[blockNum >> 1] |= blockValue;
 	}
-	return new IPv6(address, MAX_LENGTH);
+	return createInternal(address, MAX_LENGTH);
+    }
+
+    private static IPv6 createInternal(final int[] address, final int prefixLength) {
+	final Cache<IPv6CacheKey, IPv6> cache = IPv6Cache.cache[prefixLength];
+	final IPv6CacheKey key = new IPv6CacheKey(address);
+	IPv6 ip = cache.get(key);
+	if (ip == null) {
+	    ip = cache.add(key, new IPv6(address, prefixLength));
+	}
+	return ip;
+    }
+
+    static class IPv6Cache {
+
+	static final Cache<IPv6CacheKey, IPv6>[] cache;
+
+	static {
+	    @SuppressWarnings({ "unchecked", "unused" })
+	    Object dummy = cache = new Cache[MAX_LENGTH + 1];
+
+	    for (int i = cache.length; i-- != 0;)
+		cache[i] = Caches.synchronizedCache(new SoftCache<>());
+	}
+
+	static class IPv6CacheKey {
+
+	    final int[] address;
+
+	    IPv6CacheKey(final int[] address) {
+		this.address = address;
+	    }
+
+	    @Override
+	    public boolean equals(final Object o) {
+		if (o == this)
+		    return true;
+		if (!(o instanceof IPv6CacheKey))
+		    return false;
+
+		final IPv6CacheKey other = (IPv6CacheKey) o;
+		final int[] thisAddress = address;
+		final int[] otherAddress = other.address;
+		for (int i = ADDRESS_ARRAY_SIZE; i-- != 0;)
+		    if (thisAddress[i] != otherAddress[i])
+			return false;
+		return true;
+	    }
+
+	    @Override
+	    public int hashCode() {
+		int hash = 17;
+		final int[] a = address;
+		for (int i = ADDRESS_ARRAY_SIZE; i-- != 0;)
+		    hash = hash * 31 + a[i];
+		return hash;
+	    }
+
+	    @Override
+	    public String toString() {
+		return Arrays.toString(address);
+	    }
+
+	}
+
     }
 
 }
