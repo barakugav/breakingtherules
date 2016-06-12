@@ -3,31 +3,36 @@ package breakingtherules.firewall;
 import java.util.Objects;
 
 /**
- * The IPAttribute class represents an attribute with an IP
+ * The IPAttribute class represents an attribute with an IP.
+ * 
+ * @author Barak Ugav
+ * @author Yishai Gronich
+ * @see IP
  */
 public abstract class IPAttribute extends Attribute implements Comparable<IPAttribute> {
 
     /**
-     * IP of this attribute
+     * IP of this attribute.
      */
     private final IP m_ip;
 
     /**
-     * Constructor
+     * Construct new IPAttribute of an IP
      * 
      * @param ip
      *            the IP of this attribute
+     * @throws NullPointerException
+     *             if the ip is null
      */
     public IPAttribute(final IP ip) {
 	m_ip = Objects.requireNonNull(ip);
     }
 
-    /*
-     * (non-Javadoc)
+    /**
+     * {@inheritDoc}
      * 
-     * @see
-     * breakingtherules.firewall.Attribute#contains(breakingtherules.firewall.
-     * Attribute)
+     * Return true only if the other attribute is an IPAttribute and this
+     * attribute's IP contains the other attribute's IP.<p>
      */
     @Override
     public boolean contains(final Attribute other) {
@@ -78,10 +83,8 @@ public abstract class IPAttribute extends Attribute implements Comparable<IPAttr
 	return m_ip.hashCode();
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see java.lang.Comparable#compareTo(java.lang.Object)
+    /**
+     * Compare the two attributes by their IPs.
      */
     @Override
     public int compareTo(final IPAttribute o) {

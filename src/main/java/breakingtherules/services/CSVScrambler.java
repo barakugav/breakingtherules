@@ -726,7 +726,7 @@ public class CSVScrambler implements Runnable {
     private static Hit mutateHit(final Hit hit, final int ipAttId, Node tree) {
 	IP ip = ((IPAttribute) hit.getAttribute(ipAttId)).getIp();
 
-	final List<Boolean> prefix = new ArrayList<>(ip.getMaxLength());
+	final List<Boolean> prefix = new ArrayList<>(ip.getSize());
 	while (!tree.ip.equals(ip)) {
 	    if (tree.left != null && tree.left.ip.contains(ip)) {
 		prefix.add(Boolean.FALSE);

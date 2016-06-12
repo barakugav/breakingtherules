@@ -57,10 +57,7 @@ public class InformationAlgorithm implements SuggestionsAlgorithm {
      */
     private boolean m_parallel;
 
-    private static class Lock {
-    }
-
-    private static final Lock numberOfUsedThreadsLock;
+    private static final Object numberOfUsedThreadsLock;
     private static int numberOfUsedThreads;
 
     private int m_maxThreads;
@@ -81,7 +78,7 @@ public class InformationAlgorithm implements SuggestionsAlgorithm {
 
     private static final double UNIQUE_LIST_FACTOR = 0.25;
 
-    private static final boolean DEFAULT_PARALLEL = true;
+    private static final boolean DEFAULT_PARALLEL = false;
 
     private static final int DEFAULT_MAX_THREADS = Integer.MAX_VALUE;
 
@@ -114,7 +111,7 @@ public class InformationAlgorithm implements SuggestionsAlgorithm {
     static {
 	configCheck();
 	numberOfUsedThreads = 0;
-	numberOfUsedThreadsLock = new Lock();
+	numberOfUsedThreadsLock = new Object();
     }
 
     /**

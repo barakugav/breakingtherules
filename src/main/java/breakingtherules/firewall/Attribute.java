@@ -6,14 +6,23 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
- * The Attribute interface represent an attribute of a hit.
+ * The Attribute interface represent an attribute of a hit or in a
+ * AttributesContainer.
+ * <p>
+ * A string invariant the {@link AttributesContainer} assume is that all
+ * attributes are <strong>immutable</strong>, so a subclass of an attribute
+ * should obey this rule.
  * 
+ * @author Barak Ugav
+ * @author Yishai Gronich
  * @see Hit
+ * @see AttributesContainer
  */
 public abstract class Attribute {
 
     /**
-     * Checks if this attribute contain another
+     * Checks if this attribute contain another.
+     * <p>
      * 
      * @param other
      *            another attribute to compare to
@@ -138,19 +147,19 @@ public abstract class Attribute {
      * @param typeId
      *            The type of the attribute, for example
      *            Attribute.DESTINATION_TYPE
-     * @param value
+     * @param str
      *            The String representing the attribute, for example "127.0.0.1"
      * @return An attribute, of the wanted class, with the given value. If the
      *         class is unknown, returns null.
      */
-    public static Attribute createFromString(final int typeId, final String value) {
+    public static Attribute createFromString(final int typeId, final String str) {
 	switch (typeId) {
 	case SOURCE_TYPE_ID:
-	    return Source.create(value);
+	    return Source.create(str);
 	case DESTINATION_TYPE_ID:
-	    return Destination.create(value);
+	    return Destination.create(str);
 	case SERVICE_TYPE_ID:
-	    return Service.create(value);
+	    return Service.createFromString(str);
 	default:
 	    throw new IllegalArgumentException("Unkown type id: " + typeId);
 	}

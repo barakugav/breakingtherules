@@ -9,6 +9,8 @@ import java.util.NoSuchElementException;
  * to initialize it with elements and to union it to other lists using the
  * method {@link #transferElementsFrom(UnionList)}.
  * 
+ * @author Barak Ugav
+ * @author Yishai Gronich
  * @param <E>
  *            type of elements the list will contain
  */
@@ -52,6 +54,8 @@ public class UnionList<E> implements Iterable<E> {
      * @param other
      *            another union list to consume elements from
      * @return the united list - this list
+     * @throws NullPointerException
+     *             if the other list is null
      */
     public UnionList<E> transferElementsFrom(final UnionList<E> other) {
 	if (last == null) {
@@ -150,6 +154,8 @@ public class UnionList<E> implements Iterable<E> {
      * The iterator store a cursor to one of the nodes and advance only forward
      * by jumping from node to another.
      * 
+     * @author Barak Ugav
+     * @author Yishai Gronich
      * @param <E>
      *            type of elements the nodes contained
      */

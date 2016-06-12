@@ -3,24 +3,37 @@ package breakingtherules.firewall;
 import java.util.List;
 
 /**
- * Hit with attributes
+ * Single firewall hit.
+ * <p>
+ * A firewall hit is a record of communication between different objects in a
+ * network. The record usually contains the address (IP) of the source of the
+ * communication the the destination. The hit can record more data, each
+ * represented as an attribute of the hit.
+ * <p>
+ * 
+ * @author Barak Ugav
+ * @author Yishai Gronich
+ * @see Source
+ * @see Destination
  */
 public class Hit extends AttributesContainer {
 
     /**
-     * Constructor
+     * Construct new Hit from a list of attributes
      * 
      * @param attributes
      *            list of this hit's attributes
+     * @throws NullPointerException
+     *             if the attribute list is null
      * @throws IllegalArgumentException
-     *             if id isn't positive or attributes is null
+     *             if the list contains two attributes of the same type
      */
     public Hit(final List<Attribute> attributes) {
 	super(attributes);
     }
 
     /**
-     * Construct new hit from id and attributes array.
+     * Construct new hit from attributes array.
      * <p>
      * This constructor should be used carefully, see
      * {@link AttributesContainer#AttributesContainer(Attribute[])}.
@@ -29,8 +42,10 @@ public class Hit extends AttributesContainer {
      *            id of the new hit
      * @param attributes
      *            array of the hits attributes
+     * @throws NullPointerException
+     *             if the attributes array is null
      */
-    protected Hit(final Attribute[] attributes) {
+    Hit(final Attribute[] attributes) {
 	super(attributes);
     }
 

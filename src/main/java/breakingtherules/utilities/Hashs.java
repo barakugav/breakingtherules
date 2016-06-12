@@ -1,7 +1,15 @@
 package breakingtherules.utilities;
 
+/**
+ * Utility class for hash tables.
+ * 
+ * @author Barak Ugav
+ * @author Yishai Gronich
+ * 
+ */
 public class Hashs {
 
+    // Suppresses default constructor, ensuring non-instantiability.
     private Hashs() {
     }
 

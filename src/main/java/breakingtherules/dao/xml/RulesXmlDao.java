@@ -4,6 +4,10 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+
 import org.springframework.stereotype.Component;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -24,6 +28,9 @@ import breakingtherules.utilities.Utility;
  */
 @Component
 public class RulesXmlDao implements RulesDao {
+
+    private static final String REPOSITORY_TAG = "Repository";
+    private static final String RULE_TAG = "rule";
 
     /**
      * Constructor
@@ -120,6 +127,23 @@ public class RulesXmlDao implements RulesDao {
 	return new ListDto<>(subRulesList, startIndex, endIndex, total);
     }
 
+    public static void writeRules(final String repoPath, final List<Rule> rules)
+	    throws ParserConfigurationException, IOException {
+	final DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+	final DocumentBuilder builder = factory.newDocumentBuilder();
+	final Document document = builder.newDocument();
+	final Element repoElm = document.createElement(REPOSITORY_TAG);
+	for (final Rule rule : rules) {
+	    final Element ruleElm = document.createElement(RULE_TAG);
+	    for (final Attribute attribute : rule) {
+		ruleElm.setAttribute(attribute.getType(), attribute.toString());
+	    }
+	    repoElm.appendChild(ruleElm);
+	}
+	document.appendChild(repoElm);
+	UtilityXmlDao.writeFile(repoPath, document);
+    }
+
     /**
      * Load all the rules from repository
      * 
@@ -135,10 +159,10 @@ public class RulesXmlDao implements RulesDao {
 	final Document repositoryDoc = UtilityXmlDao.readFile(repoPath);
 
 	// Get all rules from repository
-	final NodeList rulesList = repositoryDoc.getElementsByTagName("rule");
+	final NodeList rulesList = repositoryDoc.getElementsByTagName(RULE_TAG);
 
 	// Parse into rule objects
-	final List<Rule> rules = new ArrayList<>();
+	final ArrayList<Rule> rules = new ArrayList<>(rulesList.getLength());
 	final int length = rulesList.getLength();
 	for (int i = 0; i < length; i++) {
 	    final Node ruleNode = rulesList.item(i);
@@ -148,6 +172,7 @@ public class RulesXmlDao implements RulesDao {
 		rules.add(rule);
 	    }
 	}
+	rules.trimToSize();
 
 	return rules;
     }
@@ -161,14 +186,14 @@ public class RulesXmlDao implements RulesDao {
      */
     private static Rule createRule(final Element ruleElm) {
 	// Read attributes from element
-	final String source = ruleElm.getAttribute("source");
-	final String destination = ruleElm.getAttribute("destination");
-	final String service = ruleElm.getAttribute("service");
+	final String source = ruleElm.getAttribute(Attribute.SOURCE_TYPE);
+	final String destination = ruleElm.getAttribute(Attribute.DESTINATION_TYPE);
+	final String service = ruleElm.getAttribute(Attribute.SERVICE_TYPE);
 
 	// Convert strings to attributes
 	final Source newSource = Source.create(source);
 	final Destination newDestination = Destination.create(destination);
-	final Service newService = Service.create(service);
+	final Service newService = Service.createFromString(service);
 
 	// Create attributes vector
 	final List<Attribute> attributes = new ArrayList<>();

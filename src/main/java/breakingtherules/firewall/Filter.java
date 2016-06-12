@@ -8,10 +8,12 @@ import breakingtherules.dao.HitsDao;
 /**
  * Filter of hits, base on given attributes
  * 
+ * @author Barak Ugav
+ * @author Yishai Gronich
  * @see Hit
  * @see HitsDao
  */
-public class Filter extends AttributesContainer {
+public class Filter extends AbstractHitMatcher {
 
     /**
      * Filter that allow any hit.
@@ -21,41 +23,27 @@ public class Filter extends AttributesContainer {
     /**
      * Construct new filter from list of attributes
      * 
-     * Creates filter based on given attributes
-     * 
      * @param attributes
-     *            list of wanted attributes
+     *            list of attributes
+     * @throws NullPointerException
+     *             if the attribute list is null
+     * @throws IllegalArgumentException
+     *             if the list contains two attributes of the same type
      */
     public Filter(final List<Attribute> attributes) {
 	super(attributes);
     }
 
     /**
-     * Construct new filter from other attribute container
+     * Copy constructor
      * 
      * @param c
      *            other container
+     * @throws NullPointerException
+     *             if the other container is null
      */
     public Filter(final AttributesContainer c) {
 	super(c);
-    }
-
-    /**
-     * Checks if hit is matching the filter
-     * 
-     * @param hit
-     *            hit to compare to the filter
-     * @return true if all hit's attribute contained in the filter, else - false
-     */
-    public boolean isMatch(final Hit hit) {
-	for (final Attribute filterAttribute : this) {
-	    final int attributeType = filterAttribute.getTypeId();
-	    final Attribute hitAttribute = hit.getAttribute(attributeType);
-	    if (!filterAttribute.contains(hitAttribute)) {
-		return false;
-	    }
-	}
-	return true;
     }
 
     /*
@@ -69,22 +57,48 @@ public class Filter extends AttributesContainer {
 	return o instanceof Filter && super.equals(o);
     }
 
+    /**
+     * Filter that allow any hit.
+     * 
+     * @author Barak Ugav
+     * @author Yishai Gronich
+     *
+     */
     private static class AnyFilter extends Filter {
 
-	private AnyFilter() {
+	/**
+	 * Construct new AnyFilter. Called once.
+	 */
+	AnyFilter() {
 	    super(getAnyFilterAttributes());
 	}
 
+	/**
+	 * Match all hits.
+	 */
 	@Override
 	public boolean isMatch(Hit hit) {
 	    return true;
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see breakingtherules.firewall.Filter#equals(java.lang.Object)
+	 */
 	@Override
 	public boolean equals(Object o) {
 	    return o instanceof AnyFilter || super.equals(o);
 	}
 
+	/**
+	 * Get a list of 'Any' attributes.
+	 * <p>
+	 * Each attribute in the list should contains all other attributes of
+	 * the same type, creating 'Any' filter.
+	 * 
+	 * @return list of all 'Any' attributes
+	 */
 	private static List<Attribute> getAnyFilterAttributes() {
 	    List<Attribute> anyAttributes = new ArrayList<>();
 	    anyAttributes.add(Source.ANY_SOURCE);

@@ -5,15 +5,34 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * The Utility class provide a set of static helper methods. All method are
- * static
+ * The Utility class provide a set of static helper methods.
+ * <p>
+ * All method are static.
+ * 
+ * @author Barak Ugav
+ * @author Yishai Gronich
  */
 public class Utility {
 
-    private static final char SPACE = ' ';
-    private static final char TAB = '\t';
-    private static final String SPACE_STR = "" + SPACE;
-    private static final String TAB_STR = "" + TAB;
+    /**
+     * Space character.
+     */
+    static final char SPACE = ' ';
+
+    /**
+     * Tab character.
+     */
+    static final char TAB = '\t';
+
+    /**
+     * Space string.
+     */
+    static final String SPACE_STR = String.valueOf(SPACE);
+
+    /**
+     * Tab string.
+     */
+    static final String TAB_STR = String.valueOf(TAB);
 
     /**
      * Put a value in a list at an index even if the list is too small.
@@ -72,15 +91,20 @@ public class Utility {
 	return new ArrayList<>(list.subList(offset, Math.min(list.size(), offset + size)));
     }
 
-    public static int countOccurrencesOf(final String st, final char... chars) {
+    /**
+     * Count the number of occurrences of a character in a string.
+     * 
+     * @param st
+     *            the string.
+     * @param ch
+     *            the searched character.
+     * @return the number of occurrences of the character in the string.
+     */
+    public static int countOccurrencesOf(final String st, final char ch) {
 	int c = 0;
-	final char[] a = st.toCharArray();
-	for (int i = a.length; i-- > 0;) {
-	    for (int j = chars.length; j-- > 0;) {
-		if (a[i] == chars[j]) {
-		    c++;
-		    break;
-		}
+	for (int i = st.length(); i-- > 0;) {
+	    if (st.charAt(i) == ch) {
+		c++;
 	    }
 	}
 	return c;
@@ -187,8 +211,17 @@ public class Utility {
 	builder.append(word);
     }
 
-    public static String format(final int expected, final int actual) {
-	return format(Integer.valueOf(expected), Integer.valueOf(actual));
+    /**
+     * Generate a string message of 'expected' and 'actual' case
+     * 
+     * @param expected
+     *            the expected value
+     * @param actual
+     *            the actual value
+     * @return string message representing the expectation
+     */
+    public static String formatEqual(final int expected, final int actual) {
+	return formatEqual(Integer.valueOf(expected), Integer.valueOf(actual));
     }
 
     /**
@@ -200,15 +233,37 @@ public class Utility {
      *            the actual value
      * @return string message representing the expectation
      */
-    public static String format(final Object expected, final Object actual) {
+    public static String formatEqual(final Object expected, final Object actual) {
 	return "expected <" + toString(expected) + "> actual <" + toString(actual) + ">";
     }
 
-    public static String format(final int lower, final int upper, final int actual) {
-	return format(Integer.valueOf(lower), Integer.valueOf(upper), Integer.valueOf(actual));
+    /**
+     * Format a range message.
+     * 
+     * @param lower
+     *            lower bound of the range.
+     * @param upper
+     *            upper bound of the range.
+     * @param actual
+     *            actual value.
+     * @return string representation of the range expectation.
+     */
+    public static String formatRange(final int lower, final int upper, final int actual) {
+	return formatRange(Integer.valueOf(lower), Integer.valueOf(upper), Integer.valueOf(actual));
     }
 
-    public static String format(final Number lower, final Number upper, final Number actual) {
+    /**
+     * Format a range message.
+     * 
+     * @param lower
+     *            lower bound of the range.
+     * @param upper
+     *            upper bound of the range.
+     * @param actual
+     *            actual value.
+     * @return string representation of the range expectation.
+     */
+    public static String formatRange(final Number lower, final Number upper, final Number actual) {
 	return "expected to be in range [" + toString(lower) + ", " + toString(upper) + "], actual <" + toString(actual)
 		+ ">";
     }
@@ -227,6 +282,17 @@ public class Utility {
 	return str;
     }
 
+    /**
+     * Return a string representation of sum elements as they where in array.
+     * <p>
+     * For example:<br>
+     * input: 1,3,0,5<br>
+     * output: [1, 3, 0, 5]<br>
+     * 
+     * @param os
+     *            the input objects.
+     * @return string representation of the objects as they where in a array.
+     */
     public static String toStringArray(final Object... os) {
 	return Arrays.deepToString(os);
     }
@@ -244,6 +310,9 @@ public class Utility {
 	return Arrays.deepEquals(new Object[] { o1 }, new Object[] { o2 });
     }
 
+    /**
+     * Log of 2 in base e.
+     */
     private static final double LOG2 = StrictMath.log(2);
 
     /**

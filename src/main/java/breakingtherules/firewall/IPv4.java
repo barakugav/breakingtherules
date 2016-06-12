@@ -7,20 +7,67 @@ import breakingtherules.utilities.Caches;
 import breakingtherules.utilities.SoftCache;
 import breakingtherules.utilities.Utility;
 
+/**
+ * IP address that is represented by a 32 bits.
+ * <p>
+ * For more information, see the
+ * <a href='https://en.wikipedia.org/wiki/IPv4'>wiki</a>.
+ * 
+ * @author Barak Ugav
+ * @author Yishai Gronich
+ * @see IPv6
+ *
+ */
 public final class IPv4 extends IP {
 
+    /**
+     * 32 bits of the address.
+     */
     final int m_address;
 
-    public static final int BLOCK_NUMBER = 1 << 2; // 4
-    public static final int BLOCK_SIZE = 1 << 3; // 8
-    public static final int MAX_BLOCK_VALUE = (1 << BLOCK_SIZE) - 1; // 255
-    public static final int MAX_LENGTH = BLOCK_NUMBER * BLOCK_SIZE; // 32
-    public static final char BLOCKS_SEPARATOR = '.';
+    /**
+     * Size of the IP, number of bits used to represent it's address.
+     */
+    public static final int SIZE = 32;
 
-    private static final int BLOCK_MASK = (1 << BLOCK_SIZE) - 1; // 255
+    /**
+     * Number of blocks in the IP.
+     */
+    public static final int BLOCK_NUMBER = 4;
 
-    private IPv4(final int address, final int prefixLength) {
-	super(prefixLength);
+    /**
+     * Number of bits in each block.
+     * <p>
+     * Should be {@link #SIZE} / {@link #BLOCK_NUMBER}.
+     */
+    public static final int BLOCK_SIZE = 8;
+
+    /**
+     * The string separator used to separate between blocks in the string
+     * representation of the IP.
+     */
+    static final char BLOCKS_SEPARATOR = '.';
+
+    /**
+     * Bit mask for a block in an int.
+     */
+    private static final int BLOCK_MASK = 0xff; // 255
+
+    /**
+     * Maximum value for a block.
+     */
+    public static final int MAX_BLOCK_VALUE = 255;
+
+    /**
+     * Construct new IPv4 with the specified address and maskSize.
+     * 
+     * @param address
+     *            32 bits of the IP's address
+     * @param maskSize
+     *            the size of the subnetwork mask
+     */
+    private IPv4(final int address, final int maskSize) {
+	super(maskSize);
 	m_address = address;
     }
 
@@ -41,6 +88,11 @@ public final class IPv4 extends IP {
 	return aArr;
     }
 
+    /**
+     * Get the 32 bits representing the IP's address.
+     * 
+     * @return the address's 32 bits,
+     */
     public int addressBits() {
 	return m_address;
     }
@@ -52,17 +104,7 @@ public final class IPv4 extends IP {
      */
     @Override
     public int getSubnetBitsNum() {
-	return MAX_LENGTH - prefixLength;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see breakingtherules.firewall.IP#hasChildren()
-     */
-    @Override
-    public boolean hasChildren() {
-	return prefixLength < MAX_LENGTH;
+	return SIZE - m_maskSize;
     }
 
     /*
@@ -72,13 +114,22 @@ public final class IPv4 extends IP {
      */
     @Override
     public IPv4 getParent() {
-	final int p = prefixLength;
-	if (p == 0) {
+	final int m = m_maskSize;
+	if (m == 0) {
 	    throw new IllegalStateException("No parent");
 	}
+	final int mask = ~(1 << (SIZE - m));
+	return createInternal(m_address & mask, m - 1);
+    }
 
-	final int mask = ~(1 << (MAX_LENGTH - p));
-	return createInternal(m_address & mask, p - 1);
+    /*
+     * (non-Javadoc)
+     * 
+     * @see breakingtherules.firewall.IP#hasChildren()
+     */
+    @Override
+    public boolean hasChildren() {
+	return m_maskSize < SIZE;
     }
 
     /*
@@ -88,13 +139,13 @@ public final class IPv4 extends IP {
      */
     @Override
     public IPv4[] getChildren() {
-	final int p = prefixLength + 1;
-	if (p > MAX_LENGTH) {
+	final int m = m_maskSize + 1;
+	if (m > SIZE) {
 	    throw new IllegalStateException("No children");
 	}
 	final int a = m_address;
-	final int mask = 1 << (MAX_LENGTH - p);
-	return new IPv4[] { createInternal(a & ~mask, p), createInternal(a | mask, p) };
+	final int mask = 1 << (SIZE - m);
+	return new IPv4[] { createInternal(a & ~mask, m), createInternal(a | mask, m) };
     }
 
     /*
@@ -108,19 +159,8 @@ public final class IPv4 extends IP {
 	    return false;
 	}
 	final IPv4 o = (IPv4) other;
-
-	final int p = prefixLength;
-	return p <= o.prefixLength && (p == 0 || ((m_address ^ o.m_address) & ~((1 << (MAX_LENGTH - p)) - 1)) == 0);
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see breakingtherules.firewall.IP#getLastBit()
-     */
-    @Override
-    public boolean getLastBit() {
-	return (m_address & (1 << (MAX_LENGTH - prefixLength))) != 0;
+	final int m = m_maskSize;
+	return m <= o.m_maskSize && (m == 0 || ((m_address ^ o.m_address) & ~((1 << (SIZE - m)) - 1)) == 0);
     }
 
     /*
@@ -130,10 +170,20 @@ public final class IPv4 extends IP {
      */
     @Override
     public boolean getBit(final int bitNumber) {
-	if (bitNumber < 0 || bitNumber > MAX_LENGTH) {
-	    throw new IllegalArgumentException("Bit number should be in range [0, " + MAX_LENGTH + "]");
+	if (bitNumber < 0 || bitNumber > SIZE) {
+	    throw new IndexOutOfBoundsException("Bit number should be in range [0, " + SIZE + "]");
 	}
-	return (m_address & (1 << MAX_LENGTH - bitNumber)) != 0;
+	return (m_address & (1 << SIZE - bitNumber)) != 0;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see breakingtherules.firewall.IP#getLastBit()
+     */
+    @Override
+    public boolean getLastBit() {
+	return (m_address & (1 << (SIZE - m_maskSize))) != 0;
     }
 
     /*
@@ -148,26 +198,26 @@ public final class IPv4 extends IP {
 	}
 	final IPv4 o = (IPv4) other;
 
-	final int p = prefixLength;
-	if (p != other.prefixLength) {
+	final int m = m_maskSize;
+	if (m != other.m_maskSize) {
 	    return false;
 	}
-	if (p == 0) {
+	if (m == 0) {
 	    return true;
 	}
 
-	final int mask = ~(1 << (MAX_LENGTH - p));
+	final int mask = ~(1 << (SIZE - m));
 	return (m_address & mask) == (o.m_address & mask);
     }
 
     /*
      * (non-Javadoc)
      * 
-     * @see breakingtherules.firewall.IP#getMaxLength()
+     * @see breakingtherules.firewall.IP#getSize()
      */
     @Override
-    public int getMaxLength() {
-	return MAX_LENGTH;
+    public int getSize() {
+	return SIZE;
     }
 
     /*
@@ -184,7 +234,7 @@ public final class IPv4 extends IP {
 	}
 
 	final IPv4 other = (IPv4) o;
-	return prefixLength == other.prefixLength && m_address == other.m_address;
+	return m_address == other.m_address && m_maskSize == other.m_maskSize;
     }
 
     /*
@@ -196,7 +246,7 @@ public final class IPv4 extends IP {
     public int hashCode() {
 	// Reverse result because a lot of IP's lowers bits are zeros (lowers
 	// bits are usually used by hash tables)
-	return Integer.reverse(prefixLength ^ m_address);
+	return Integer.reverse(m_maskSize ^ m_address);
     }
 
     /*
@@ -206,8 +256,8 @@ public final class IPv4 extends IP {
      */
     @Override
     public String toString() {
-	final int p = prefixLength;
-	if (p == 0) {
+	final int m = m_maskSize;
+	if (m == 0) {
 	    return ANY;
 	}
 
@@ -219,9 +269,9 @@ public final class IPv4 extends IP {
 	}
 	st.append(a[a.length - 1]);
 
-	if (p != MAX_LENGTH) {
-	    st.append(PREFIX_LENGTH_SEPARATOR);
-	    st.append(p);
+	if (m != SIZE) {
+	    st.append(MASK_SIZE_SEPARATOR);
+	    st.append(m);
 	}
 
 	return st.toString();
@@ -244,17 +294,93 @@ public final class IPv4 extends IP {
 	final int a2 = o.m_address;
 
 	// compare as unsigned
-	return a1 == a2 ? prefixLength - other.prefixLength
+	return a1 == a2 ? m_maskSize - other.m_maskSize
 		: ((a1 + Integer.MIN_VALUE) < (a2 + Integer.MIN_VALUE)) ? -1 : 1;
     }
 
-    public static IPv4 create(final String ip) {
+    /**
+     * Create an IP from array of the address' blocks values.
+     * <p>
+     * The address array should be at the length as IPv4 number of blocks(4).
+     * <p>
+     * For example:<br>
+     * To create the IP 12.78.94.65 the array should be [12, 78, 94, 65].<br>
+     * 
+     * @param address
+     *            the address blocks
+     * @return IPv4 object with the desire address
+     * @throws NullPointerException
+     *             if the address is null
+     * @throws IllegalArgumentException
+     *             if the blocks values are out of range (0 to 255)
+     */
+    public static IPv4 create(final int[] address) {
+	return create(address, SIZE);
+    }
+
+    /**
+     * Create an IP from array of the address' blocks values.
+     * <p>
+     * The address array should be at the length as IPv4 number of blocks(4).
+     * <p>
+     * For example:<br>
+     * To create the IP 12.78.94.64/26 the array should be [12, 78, 94, 64] and
+     * the maskSize should be 16.<br>
+     * 
+     * @param address
+     *            the address blocks
+     * @param maskSize
+     *            the size of the subnetwork mask
+     * @return IPv4 object with the desire address and maskSize
+     * @throws NullPointerException
+     *             if the address is null
+     * @throws IllegalArgumentException
+     *             if the blocks values are out of range (0 to 255) or the
+     *             maskSize is out of range (0 to 32).
+     */
+    public static IPv4 create(final int[] address, final int maskSize) {
+	if (address.length != BLOCK_NUMBER) {
+	    throw new IllegalArgumentException(
+		    "IPv4 blocks number: " + Utility.formatEqual(BLOCK_NUMBER, address.length));
+	}
+	if (!(0 <= maskSize && maskSize <= SIZE)) {
+	    throw new IllegalArgumentException("IPv4 subnetwork mask: " + Utility.formatRange(0, SIZE, maskSize));
+	}
+
+	int a = 0;
+	for (int i = 0; i < address.length; i++) {
+	    a = (a << BLOCK_SIZE) + address[i];
+	}
+
+	// Reset suffix
+	a &= maskSize != 0 ? ~((1 << (SIZE - maskSize)) - 1) : 0;
+	return createInternal(a, maskSize);
+    }
+
+    /**
+     * Create an IPv4 from string.
+     * <p>
+     * The expected format is: A.B.C.D or A.B.C.D/M when A, B, C, and D are the
+     * blocks values (in range 0 to 255) and M is the subnetwork mask size (in
+     * range 0 to 32).
+     * <p>
+     * 
+     * @param ip
+     *            string of IP
+     * @return IPv4 object parsed from string
+     * @throws NullPointerException
+     *             if the string is null
+     * @throws IllegalArgumentException
+     *             if the format is illegal or the values are out of range.
+     */
+    public static IPv4 createFromString(final String ip) {
 	int address = 0;
-	int prefix;
+	int maskSize;
 
 	List<String> blocks = Utility.breakToWords(ip, String.valueOf(BLOCKS_SEPARATOR));
 	if (blocks.size() != BLOCK_NUMBER) {
-	    throw new IllegalArgumentException("IPv4 blocks number: " + Utility.format(BLOCK_NUMBER, blocks.size()));
+	    throw new IllegalArgumentException(
+		    "IPv4 blocks number: " + Utility.formatEqual(BLOCK_NUMBER, blocks.size()));
 	}
 	for (int blockNum = 0; blockNum < blocks.size() - 1; blockNum++) {
 	    final int blockVal;
@@ -264,16 +390,17 @@ public final class IPv4 extends IP {
 		throw new IllegalArgumentException("In block number " + blockNum, e);
 	    }
 	    if (!(0 <= blockVal && blockVal <= MAX_BLOCK_VALUE)) {
-		throw new IllegalArgumentException("IPv4 block value: " + Utility.format(0, MAX_BLOCK_VALUE, blockVal));
+		throw new IllegalArgumentException(
+			"IPv4 block value: " + Utility.formatRange(0, MAX_BLOCK_VALUE, blockVal));
 	    }
 	    address = (address << BLOCK_SIZE) + blockVal;
 	}
 	String lastBlock = blocks.get(BLOCK_NUMBER - 1);
 
 	// Read suffix of IP - last block
-	int separatorIndex = lastBlock.indexOf(PREFIX_LENGTH_SEPARATOR);
+	int separatorIndex = lastBlock.indexOf(MASK_SIZE_SEPARATOR);
 	if (separatorIndex < 0) {
-	    // No const prefix specification
+	    // No mask size specification
 	    final int blockVal;
 	    try {
 		blockVal = Integer.parseInt(lastBlock);
@@ -281,11 +408,12 @@ public final class IPv4 extends IP {
 		throw new IllegalArgumentException("In block last block", e);
 	    }
 	    if (!(0 <= blockVal && blockVal <= MAX_BLOCK_VALUE))
-		throw new IllegalArgumentException("IPv4 block value: " + Utility.format(0, MAX_BLOCK_VALUE, blockVal));
+		throw new IllegalArgumentException(
+			"IPv4 block value: " + Utility.formatRange(0, MAX_BLOCK_VALUE, blockVal));
 	    address = (address << BLOCK_SIZE) + blockVal;
-	    prefix = MAX_LENGTH;
+	    maskSize = SIZE;
 	} else {
-	    // Has const prefix specification
+	    // Has mask size specification
 	    String stNum = lastBlock.substring(0, separatorIndex);
 	    lastBlock = lastBlock.substring(separatorIndex + 1);
 
@@ -296,100 +424,128 @@ public final class IPv4 extends IP {
 		throw new IllegalArgumentException("In block last block", e);
 	    }
 	    if (!(0 <= blockVal && blockVal <= MAX_BLOCK_VALUE))
-		throw new IllegalArgumentException("IPv4 block value: " + Utility.format(0, MAX_BLOCK_VALUE, blockVal));
+		throw new IllegalArgumentException(
+			"IPv4 block value: " + Utility.formatRange(0, MAX_BLOCK_VALUE, blockVal));
 	    address = (address << BLOCK_SIZE) + blockVal;
 
-	    // Read const prefix length
+	    // Read subnetwork mask
 	    if (ip.length() > 0) {
 		try {
-		    prefix = Integer.parseInt(lastBlock);
+		    maskSize = Integer.parseInt(lastBlock);
 		} catch (NumberFormatException e) {
-		    throw new IllegalArgumentException("IPv4 const prefix", e);
+		    throw new IllegalArgumentException("IPv4 subnetwork mask", e);
 		}
-		if (!(0 <= prefix && prefix <= MAX_LENGTH)) {
-		    throw new IllegalArgumentException("IPv4 prefix length: " + Utility.format(0, MAX_LENGTH, prefix));
+		if (!(0 <= maskSize && maskSize <= SIZE)) {
+		    throw new IllegalArgumentException(
+			    "IPv4 subnetwork mask: " + Utility.formatRange(0, SIZE, maskSize));
 		}
 	    } else {
-		prefix = MAX_LENGTH;
+		maskSize = SIZE;
 	    }
 	}
 
 	// Reset suffix
-	address &= prefix != 0 ? ~((1 << (MAX_LENGTH - prefix)) - 1) : 0;
+	address &= maskSize != 0 ? ~((1 << (SIZE - maskSize)) - 1) : 0;
 
-	return createInternal(address, prefix);
+	return createInternal(address, maskSize);
     }
 
-    public static IPv4 create(final int... address) {
-	return create(address, MAX_LENGTH);
+    /**
+     * Create an IPv4 from 32 bits (int).
+     * 
+     * @param addressBits
+     *            the 32 bits of the address
+     * @return IPv4 object with specified address
+     */
+    public static IPv4 createFromBits(final int addressBits) {
+	return createFromBits(addressBits, SIZE);
     }
 
-    public static IPv4 create(final int[] address, final int prefix) {
-	if (address.length != BLOCK_NUMBER) {
-	    throw new IllegalArgumentException("IPv4 blocks number: " + Utility.format(BLOCK_NUMBER, address.length));
+    /**
+     * Create an IPv4 from 32 bits (int) and specified subnetwork mask size.
+     * 
+     * @param addressBits
+     *            the 32 bits of the address.
+     * @param maskSize
+     *            the size of the subnetwork mask.
+     * @return IPv4 object with the specified address and maskSize.
+     * @throws IllegalArgumentException
+     *             if the mask size is out of range (0 to 32).
+     */
+    public static IPv4 createFromBits(final int addressBits, final int maskSize) {
+	if (!(0 <= maskSize && maskSize <= SIZE)) {
+	    throw new IllegalArgumentException("IPv4 subnetwork mask: " + Utility.formatRange(0, SIZE, maskSize));
 	}
-	if (!(0 <= prefix && prefix <= MAX_LENGTH)) {
-	    throw new IllegalArgumentException("IPv4 prefix length: " + Utility.format(0, MAX_LENGTH, prefix));
-	}
-
-	int a = 0;
-	for (int i = 0; i < address.length; i++) {
-	    a = (a << BLOCK_SIZE) + address[i];
-	}
-
-	// Reset suffix
-	a &= prefix != 0 ? ~((1 << (MAX_LENGTH - prefix)) - 1) : 0;
-	return createInternal(a, prefix);
+	return createInternal(addressBits, maskSize);
     }
 
-    public static IPv4 create(final List<Boolean> address) {
-	if (address.size() != MAX_LENGTH) {
-	    throw new IllegalArgumentException("IPv4 length: " + Utility.format(MAX_LENGTH, address.size()));
+    /**
+     * Create an IPv4 from boolean bits list.
+     * 
+     * @param addressBitss
+     *            the bits list
+     * @return IPv4 with address built from the bits.
+     * @throws NullPointerException
+     *             if the bits list is null, or one of the Boolean objects in
+     *             the list is null.
+     * @throws IllegalArgumentException
+     *             if number of bits is unequal to {@value #SIZE}.
+     */
+    public static IPv4 createFromBits(final List<Boolean> addressBitss) {
+	if (addressBitss.size() != SIZE) {
+	    throw new IllegalArgumentException("IPv4 size: " + Utility.formatEqual(SIZE, addressBitss.size()));
 	}
-	int a = 0;
-	for (boolean bit : address) {
-	    a <<= 1;
-	    if (bit) {
-		a += 1;
+	int address = 0;
+	for (Boolean bit : addressBitss) {
+	    address <<= 1;
+	    if (bit.booleanValue()) {
+		address += 1;
 	    }
 	}
-	return createInternal(a, MAX_LENGTH);
+	return createInternal(address, SIZE);
     }
 
-    private static IPv4 createInternal(final int address, final int prefix) {
+    /**
+     * Create an IPv4, used internally.
+     * 
+     * @param address
+     *            the 32 bits of the address.
+     * @param maskSize
+     *            the subnetwork mask size.
+     * @return IPv4 object with the specified address and maskSize.
+     */
+    private static IPv4 createInternal(final int address, final int maskSize) {
 
-	final Cache<Integer, IPv4> cache = IPv4Cache.cache[prefix];
+	final Cache<Integer, IPv4> cache = IPv4Cache.cache[maskSize];
 
-	// We don't use the static constructor Integer.valueOf(int)
-	// intentionally here. The Integer.valueOf(int) method can help
-	// performance in general cases because it will use the cached Integers
-	// that are in range [-128, 127] and will not create new objects. The
-	// chance that the address will be in that range is negligible, so we
-	// prefer to use the straight up constructor to avoid unnecessary
-	// (probably) range checks.
-	// Reverse address bits for better hash codes performance. (In many IPs,
-	// the lower bits are always zeros)
+	// Intentionally using 'new Integer(int)' and not 'Integer.valueOf(int)'
 	final Integer addressInteger = new Integer(Integer.reverse(address));
 
 	IPv4 ip = cache.get(addressInteger);
 	if (ip == null) {
-	    ip = cache.add(addressInteger, new IPv4(address, prefix));
+	    ip = cache.add(addressInteger, new IPv4(address, maskSize));
 	}
 	return ip;
     }
 
+    /**
+     * Cache of {@link IPv4} objects.
+     * 
+     * @author Barak Ugav
+     * @author Yishai Gronich
+     *
+     */
     private static final class IPv4Cache {
 
+	/**
+	 * Array of IPv4 objects.
+	 */
 	static final Cache<Integer, IPv4>[] cache;
 
 	static {
-	    /**
-	     * Used dummy variable to suppress only warnings of cache creation
-	     * and not to the whole IPv4Cache class (which is necessary if we
-	     * don't use temporary variable).
-	     */
+	    // Used dummy to suppress warnings
 	    @SuppressWarnings({ "unchecked", "unused" })
-	    Object dummy = cache = new Cache[MAX_LENGTH + 1];
+	    Object dummy = cache = new Cache[SIZE + 1];
 
 	    for (int i = cache.length; i-- != 0;)
 		cache[i] = Caches.synchronizedCache(new SoftCache<>());

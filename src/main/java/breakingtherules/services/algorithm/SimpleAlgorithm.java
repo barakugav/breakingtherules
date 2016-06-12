@@ -84,8 +84,7 @@ public class SimpleAlgorithm implements SuggestionsAlgorithm {
 
 	    // Sort by score
 	    allSuggestionsList.sort(null); // Sort with null comparator for
-					   // regular
-					   // compareTo sort.
+					   // regular compareTo sort.
 	    Collections.reverse(allSuggestionsList);
 
 	    result = Utility.subList(allSuggestionsList, 0, amount);

@@ -1,6 +1,5 @@
 package breakingtherules.tests.firewall;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import org.junit.Test;
@@ -23,7 +22,6 @@ public class HitTest extends TestBase {
 	new Hit(attributes);
     }
 
-
     @Test
     public void getAttributeTest() {
 	List<Attribute> attributes = FirewallTestsUtility.getRandomAttributes();
@@ -44,10 +42,6 @@ public class HitTest extends TestBase {
 
 	// Sort lists for comparison
 	expected.sort(Attribute.ATTRIBUTES_COMPARATOR);
-	// Clone actual list by creating new list with the elements. This is
-	// needed to be done because the hit.getAttributes() return unmodifiable
-	// list(so sort operation is not supported).
-	actual = new ArrayList<>(actual);
 	actual.sort(Attribute.ATTRIBUTES_COMPARATOR);
 
 	assertEquals(expected, actual);

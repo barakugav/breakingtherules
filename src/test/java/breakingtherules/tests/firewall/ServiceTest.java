@@ -76,85 +76,85 @@ public class ServiceTest extends TestBase {
 	Service.create(protocol, range[0], 1 << 16);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expected = NullPointerException.class)
     public void contructorTestFromStringNullString() {
-	Service.create(null);
+	Service.createFromString(null);
     }
 
     @Test
     public void contructorTestFromStringOnePort() {
-	Service.create("TCP 80");
+	Service.createFromString("TCP 80");
     }
 
     @Test
     public void contructorTestFromStringOnePortAnyProtocol() {
-	Service.create("Port 80");
+	Service.createFromString("Port 80");
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void contructorTestFromStringOnePortNoProtocol() {
-	Service.create("80");
+	Service.createFromString("80");
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void contructorTestFromStringOnePortNoProtocolAndSpace() {
-	Service.create(" 80");
+	Service.createFromString(" 80");
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void contructorTestFromStringOnePortNegative() {
-	Service.create("TCP -1");
+	Service.createFromString("TCP -1");
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void contructorTestFromStringOnePortOver2pow16() {
-	Service.create("TCP 65536");
+	Service.createFromString("TCP 65536");
     }
 
     @Test
     public void contructorTestFromStringPortRange() {
-	Service.create("TCP 80-100");
+	Service.createFromString("TCP 80-100");
     }
 
     @Test
     public void contructorTestFromStringPortRangeAnyProtocol() {
-	Service.create("Ports 80-100");
+	Service.createFromString("Ports 80-100");
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void contructorTestFromStringPortRangeNoProtocolWithSpace() {
-	Service.create(" 80-100");
+	Service.createFromString(" 80-100");
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void contructorTestFromStringPortRangeUpperRangeUnderLowerRange() {
-	Service.create("TCP 100-80");
+	Service.createFromString("TCP 100-80");
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void contructorTestFromStringPortRangeNegative() {
-	Service.create("TCP -1-100");
+	Service.createFromString("TCP -1-100");
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void contructorTestFromStringPortRangePortOver2pow16() {
-	Service.create("TCP 80-65536");
+	Service.createFromString("TCP 80-65536");
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void contructorTestFromStringPortRangeNaN() {
-	Service.create("TCP sdw-100");
+	Service.createFromString("TCP sdw-100");
     }
 
     @Test
     public void contructorTestFromStringAnyPort() {
-	Service.create("Any TCP");
+	Service.createFromString("Any TCP");
     }
 
     @Test
     public void contructorTestFromStringAnyPortAnyProtocol() {
-	Service s1 = Service.create("Any");
-	Service s2 = Service.create("Any Any");
+	Service s1 = Service.createFromString("Any");
+	Service s2 = Service.createFromString("Any Any");
 
 	assertEquals("Should be same object", s1, s2);
     }
@@ -205,13 +205,13 @@ public class ServiceTest extends TestBase {
 
     @Test
     public void getPortRangeStartTestOnePortFromString() {
-	Service service = Service.create("TCP 50");
+	Service service = Service.createFromString("TCP 50");
 	assertEquals(50, service.getPortRangeStart());
     }
 
     @Test
     public void getPortRangeStartTestPortRangeFromString() {
-	Service service = Service.create("TCP 50-70");
+	Service service = Service.createFromString("TCP 50-70");
 	assertEquals(50, service.getPortRangeStart());
     }
 
@@ -233,13 +233,13 @@ public class ServiceTest extends TestBase {
 
     @Test
     public void getPortRangeEndTestOnePortFromString() {
-	Service service = Service.create("TCP 70");
+	Service service = Service.createFromString("TCP 70");
 	assertEquals(70, service.getPortRangeEnd());
     }
 
     @Test
     public void getPortRangeEndTestPortRangeFromString() {
-	Service service = Service.create("TCP 50-70");
+	Service service = Service.createFromString("TCP 50-70");
 	assertEquals(70, service.getPortRangeEnd());
     }
 
@@ -316,53 +316,53 @@ public class ServiceTest extends TestBase {
 
     @Test
     public void toStringTestSinglePortSingleProtocol() {
-	Service s = Service.create("TCP 80");
+	Service s = Service.createFromString("TCP 80");
 	assertEquals("TCP 80", s.toString());
     }
 
     @Test
     public void toStringTestSinglePortAnyProtocol() {
-	Service s = Service.create("Port 80");
+	Service s = Service.createFromString("Port 80");
 	assertEquals("Port 80", s.toString());
     }
 
     @Test
     public void toStringTestAnyPortSingleProtocol() {
-	Service s = Service.create("Any TCP");
+	Service s = Service.createFromString("Any TCP");
 	assertEquals("Any TCP", s.toString());
     }
 
     @Test
     public void toStringTestAnyPortAnyProtocol() {
-	Service s = Service.create("Any Any");
+	Service s = Service.createFromString("Any Any");
 	assertEquals("Any", s.toString());
     }
 
     @Test
     public void toStringTestPortRangeSingleProtocol() {
-	Service s = Service.create("TCP 80-90");
+	Service s = Service.createFromString("TCP 80-90");
 	assertEquals("TCP 80-90", s.toString());
     }
 
     @Test
     public void toStringTestPortRangeAnyProtocol() {
-	Service s = Service.create("Ports 80-90");
+	Service s = Service.createFromString("Ports 80-90");
 	assertEquals("Ports 80-90", s.toString());
     }
 
     @Test
     public void equalsTestTrue() {
 	Service s1, s2;
-	s1 = Service.create("TCP 80-205");
-	s2 = Service.create("TCP 80-205");
+	s1 = Service.createFromString("TCP 80-205");
+	s2 = Service.createFromString("TCP 80-205");
 	assertEquals(s1, s2);
     }
 
     @Test
     public void equalsTestFalse() {
 	Service s1, s2;
-	s1 = Service.create("Any TCP");
-	s2 = Service.create("Any UDP");
+	s1 = Service.createFromString("Any TCP");
+	s2 = Service.createFromString("Any UDP");
 	assertNotEquals(s1, s2);
     }
 

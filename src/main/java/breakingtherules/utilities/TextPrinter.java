@@ -6,7 +6,10 @@ import java.io.PrintStream;
  * The TextPrinter is a tool used print text by used the TextBuilder. This tool
  * provide an easy interface to print texts.
  * 
+ * @author Barak Ugav
+ * @author Yishai Gronich
  * @see TextBuilder
+ * 
  */
 public class TextPrinter {
 

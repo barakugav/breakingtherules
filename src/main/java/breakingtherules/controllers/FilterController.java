@@ -30,7 +30,7 @@ public class FilterController {
 	List<Attribute> filterAtts = new ArrayList<>();
 	filterAtts.add(Source.create(source));
 	filterAtts.add(Destination.create(destination));
-	filterAtts.add(Service.create(service));
+	filterAtts.add(Service.createFromString(service));
 	Filter newFilter = new Filter(filterAtts);
 	m_job.setFilter(newFilter);
     }

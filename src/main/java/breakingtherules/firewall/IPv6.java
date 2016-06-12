@@ -1,41 +1,92 @@
 package breakingtherules.firewall;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
-import breakingtherules.firewall.IPv6.IPv6Cache.IPv6CacheKey;
 import breakingtherules.utilities.Cache;
 import breakingtherules.utilities.Caches;
+import breakingtherules.utilities.IntArrayWrapper;
 import breakingtherules.utilities.SoftCache;
 import breakingtherules.utilities.Utility;
 
 /**
- * IP on protocol IPv6
+ * IP address that is represented by a 128 bits.
+ * <p>
+ * For more information, see the
+ * <a href='https://en.wikipedia.org/wiki/IPv6'>wiki</a>.
+ * 
+ * @author Barak Ugav
+ * @author Yishai Gronich
+ * @see IPv4
+ * 
  */
 public final class IPv6 extends IP {
 
     /**
-     * IP address
+     * 128 bits of the address.
      */
     final int[] m_address;
 
-    public static final int BLOCK_NUMBER = 1 << 3; // 8
-    public static final int BLOCK_SIZE = 1 << 4; // 16
-    public static final int MAX_BLOCK_VALUE = (1 << BLOCK_SIZE) - 1; // 65536
-    public static final int MAX_LENGTH = BLOCK_NUMBER * BLOCK_SIZE; // 128
-    public static final char BLOCKS_SEPARATOR = ':';
+    /**
+     * Size of the IP, number of bits used to represent it's address.
+     */
+    public static final int SIZE = 128;
 
-    private static final int ADDRESS_ARRAY_SIZE = MAX_LENGTH / Integer.SIZE; // 4
-    private static final int BLOCK_MASK = (1 << BLOCK_SIZE) - 1; // 65536
-    private static final int OFFSET_IN_BLOCK_MASK = (1 << 5) - 1; // 31
+    /**
+     * Number of blocks in the IP.
+     */
+    public static final int BLOCK_NUMBER = 8;
 
-    private IPv6(final int[] address, final int prefixLength) {
-	super(prefixLength);
+    /**
+     * Number of bits in each block.
+     * <p>
+     * Should be {@link #SIZE} / {@link #BLOCK_NUMBER}.
+     */
+    public static final int BLOCK_SIZE = 16;
+
+    /**
+     * The string separator used to separate between blocks in the string
+     * representation of the IP.
+     */
+    static final char BLOCKS_SEPARATOR = ':';
+
+    /**
+     * Bit mask for a block in an int.
+     */
+    private static final int BLOCK_MASK = 0xffff; // 65535
+
+    /**
+     * Maximum value for a block.
+     */
+    private static final int MAX_BLOCK_VALUE = 65535;
+
+    /**
+     * Number of ints needed to represent the address.
+     */
+    private static final int ADDRESS_ARRAY_SIZE = SIZE / Integer.SIZE; // 4
+
+    // TODO - javadoc
+    private static final int OFFSET_IN_BLOCK_MASK = 0x1f; // 31
+
+    /**
+     * Construct new IPv6 with the specified address and maskSize.
+     * 
+     * @param address
+     *            array of size 4 of ints, representing 128 bits address.
+     * @param maskSize
+     *            the size of the subnetwork mask.
+     */
+    private IPv6(final int[] address, final int maskSize) {
+	super(maskSize);
 	m_address = address;
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see breakingtherules.firewall.IP#getAddress()
+     */
     @Override
     public int[] getAddress() {
 	final int[] address = m_address;
@@ -48,8 +99,23 @@ public final class IPv6 extends IP {
 	return a;
     }
 
+    /**
+     * Get the 128 bits representing the IP's address.
+     * 
+     * @return the address's 128 bits as an array of size 4 of ints.
+     */
     public int[] getAddressBits() {
 	return m_address.clone();
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see breakingtherules.firewall.IP#getSubnetBitsNum()
+     */
+    @Override
+    public int getSubnetBitsNum() {
+	return SIZE - m_maskSize;
     }
 
     /*
@@ -59,17 +125,27 @@ public final class IPv6 extends IP {
      */
     @Override
     public IPv6 getParent() {
-	final int p = prefixLength;
-	if (p == 0) {
+	final int m = m_maskSize;
+	if (m == 0) {
 	    throw new IllegalStateException("no parent");
 	}
 
 	final int[] parentAddress = m_address.clone();
-	final int blockNum = (p - 1) / Integer.SIZE;
-	final int mask = ~(1 << (Integer.SIZE - (p & OFFSET_IN_BLOCK_MASK)));
+	final int blockNum = (m - 1) / Integer.SIZE;
+	final int mask = ~(1 << (Integer.SIZE - (m & OFFSET_IN_BLOCK_MASK)));
 	parentAddress[blockNum] &= mask;
 
-	return createInternal(parentAddress, p - 1);
+	return createInternal(parentAddress, m - 1);
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see breakingtherules.firewall.IP#hasChildren()
+     */
+    @Override
+    public boolean hasChildren() {
+	return m_maskSize < SIZE;
     }
 
     /*
@@ -79,25 +155,92 @@ public final class IPv6 extends IP {
      */
     @Override
     public IPv6[] getChildren() {
-	final int p = prefixLength + 1;
-	if (p > MAX_LENGTH) {
+	final int m = m_maskSize + 1;
+	if (m > SIZE) {
 	    throw new IllegalStateException("no children");
 	}
 
 	// Set helper variable
 	int[][] childrenAddresses = new int[][] { m_address.clone(), m_address.clone() };
-	final int helper = 1 << (Integer.SIZE - (p & OFFSET_IN_BLOCK_MASK));
-	final int blockNum = prefixLength * ADDRESS_ARRAY_SIZE / MAX_LENGTH;
+	final int helper = 1 << (Integer.SIZE - (m & OFFSET_IN_BLOCK_MASK));
+	final int blockNum = m_maskSize * ADDRESS_ARRAY_SIZE / SIZE;
 	childrenAddresses[0][blockNum] &= ~helper;
 	childrenAddresses[1][blockNum] |= helper;
 
 	IPv6[] children = new IPv6[2];
-	children[0] = createInternal(childrenAddresses[0], p);
-	children[1] = createInternal(childrenAddresses[1], p);
+	children[0] = createInternal(childrenAddresses[0], m);
+	children[1] = createInternal(childrenAddresses[1], m);
 
 	return children;
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see breakingtherules.firewall.IP#contains(breakingtherules.firewall.IP)
+     */
+    @Override
+    public boolean contains(final IP other) {
+	if (!(other instanceof IPv6)) {
+	    return false;
+	}
+	final IPv6 o = (IPv6) other;
+
+	final int m = m_maskSize;
+	if (m > other.m_maskSize) {
+	    return false;
+	}
+	if (m == 0) {
+	    return true;
+	}
+
+	int blockNum;
+	for (blockNum = 0; blockNum < m / Integer.SIZE; blockNum++) {
+	    if (m_address[blockNum] != o.m_address[blockNum]) {
+		return false;
+	    }
+	}
+	if (m == SIZE) {
+	    return true;
+	}
+
+	return ((m_address[blockNum] ^ o.m_address[blockNum])
+		& ~((1 << (Integer.SIZE - (m & OFFSET_IN_BLOCK_MASK))) - 1)) == 0;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see breakingtherules.firewall.IP#getBit(int)
+     */
+    @Override
+    public boolean getBit(final int bitNumber) {
+	if (bitNumber < 0 || bitNumber > SIZE) {
+	    throw new IndexOutOfBoundsException("Bit number should be in range [0, " + SIZE + "]");
+	}
+	final int blockNum = bitNumber == 0 ? 0 : (bitNumber - 1) / Integer.SIZE;
+	final int bitNumInBlock = bitNumber - blockNum * Integer.SIZE;
+	return (m_address[blockNum] & (1 << (Integer.SIZE - bitNumInBlock))) != 0;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see breakingtherules.firewall.IP#getLastBit()
+     */
+    @Override
+    public boolean getLastBit() {
+	final int m = m_maskSize;
+	final int blockNum = m == 0 ? 0 : (m - 1) / Integer.SIZE;
+	final int bitNumInBlock = m - blockNum * Integer.SIZE;
+	return (m_address[blockNum] & (1 << Integer.SIZE - bitNumInBlock)) != 0;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see breakingtherules.firewall.IP#isBrother(breakingtherules.firewall.IP)
+     */
     @Override
     public boolean isBrother(final IP other) {
 	if (!(other instanceof IPv6)) {
@@ -105,7 +248,7 @@ public final class IPv6 extends IP {
 	}
 	final IPv6 o = (IPv6) other;
 
-	final int p = prefixLength, op = o.prefixLength;
+	final int p = m_maskSize, op = o.m_maskSize;
 	if (p != op) {
 	    return false; // Different sub network sizes
 	}
@@ -124,65 +267,21 @@ public final class IPv6 extends IP {
 	return (aAddress[lastEqualBlock] >> shiftSize) == (bAddress[lastEqualBlock] >> shiftSize);
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see breakingtherules.firewall.IP#getSize()
+     */
     @Override
-    public boolean getBit(final int bitNumber) {
-	if (bitNumber < 0 || bitNumber > MAX_LENGTH) {
-	    throw new IllegalArgumentException("Bit number should be in range [0, " + MAX_LENGTH + "]");
-	}
-	final int blockNum = bitNumber == 0 ? 0 : (bitNumber - 1) / Integer.SIZE;
-	final int bitNumInBlock = bitNumber - blockNum * Integer.SIZE;
-	return (m_address[blockNum] & (1 << (Integer.SIZE - bitNumInBlock))) != 0;
+    public int getSize() {
+	return SIZE;
     }
 
-    @Override
-    public boolean getLastBit() {
-	return (m_address[ADDRESS_ARRAY_SIZE - 1] & 1) != 0;
-    }
-
-    @Override
-    public boolean contains(final IP other) {
-	if (!(other instanceof IPv6)) {
-	    return false;
-	}
-	final IPv6 o = (IPv6) other;
-
-	final int p = prefixLength;
-	if (p > other.prefixLength) {
-	    return false;
-	}
-	if (p == 0) {
-	    return true;
-	}
-
-	int blockNum;
-	for (blockNum = 0; blockNum < p / Integer.SIZE; blockNum++) {
-	    if (m_address[blockNum] != o.m_address[blockNum]) {
-		return false;
-	    }
-	}
-	if (p == MAX_LENGTH) {
-	    return true;
-	}
-
-	return ((m_address[blockNum] ^ o.m_address[blockNum])
-		& ~((1 << (Integer.SIZE - (p & OFFSET_IN_BLOCK_MASK))) - 1)) == 0;
-    }
-
-    @Override
-    public int getSubnetBitsNum() {
-	return MAX_LENGTH - prefixLength;
-    }
-
-    @Override
-    public int getMaxLength() {
-	return MAX_LENGTH;
-    }
-
-    @Override
-    public boolean hasChildren() {
-	return prefixLength < MAX_LENGTH;
-    }
-
+    /*
+     * (non-Javadoc)
+     * 
+     * @see java.lang.Object#equals(java.lang.Object)
+     */
     @Override
     public boolean equals(final Object o) {
 	if (o == this) {
@@ -192,7 +291,7 @@ public final class IPv6 extends IP {
 	}
 
 	final IPv6 other = (IPv6) o;
-	if (prefixLength != other.prefixLength) {
+	if (m_maskSize != other.m_maskSize) {
 	    return false;
 	}
 	final int[] thisAddress = m_address;
@@ -209,18 +308,29 @@ public final class IPv6 extends IP {
 	return true;
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see java.lang.Object#hashCode()
+     */
     @Override
     public int hashCode() {
-	int h = 1;
-	for (int blockVal : m_address)
+	int h = 31 + m_maskSize;
+	for (int blockVal : m_address) {
 	    h = h * 31 + blockVal;
+	}
 	return h;
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see java.lang.Object#toString()
+     */
     @Override
     public String toString() {
-	final int p = prefixLength;
-	if (p == 0) {
+	final int m = m_maskSize;
+	if (m == 0) {
 	    return ANY;
 	}
 
@@ -230,14 +340,18 @@ public final class IPv6 extends IP {
 	    builder.append(BLOCKS_SEPARATOR);
 	    builder.append(a[i]);
 	}
-	final int prefix = prefixLength;
-	if (prefix != MAX_LENGTH) {
+	if (m != SIZE) {
 	    builder.append("/");
-	    builder.append(prefix);
+	    builder.append(m);
 	}
 	return builder.toString();
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see java.lang.Comparable#compareTo(java.lang.Object)
+     */
     @Override
     public int compareTo(final IP other) {
 	if (other == null) {
@@ -261,26 +375,64 @@ public final class IPv6 extends IP {
 	    }
 	}
 
-	return prefixLength - other.prefixLength;
+	return m_maskSize - other.m_maskSize;
     }
 
+    /**
+     * Create an IP from array of the address' blocks.
+     * <p>
+     * The address array should be at the length as IPv6 number of blocks(8).
+     * <p>
+     * For example:<br>
+     * To create the IP 128.4.5.1.0.5789.500.21 the array should be [128, 4, 5,
+     * 1, 0, 5789, 500, 21].<br>
+     * 
+     * @param address
+     *            the address blocks.
+     * @return IPv6 object with the desire address.
+     * @throws NullPointerException
+     *             if the address is null.
+     * @throws IllegalArgumentException
+     *             if the blocks values are out of range (0 to 65535).
+     */
     public static IPv6 create(int[] address) {
-	return create(address, MAX_LENGTH);
+	return create(address, SIZE);
     }
 
-    public static IPv6 create(int[] address, int prefixLength) {
+    /**
+     * Create an IP from array of the address' blocks.
+     * <p>
+     * The address array should be at the length as IPv6 number of blocks(8).
+     * <p>
+     * For example:<br>
+     * To create the IP 128.4.5.1.0.5789.500.0/112 the array should be [128, 4,
+     * 5, 1, 0, 5789, 500, 0] and the maskSize should be 112.<br>
+     * 
+     * @param address
+     *            the address blocks.
+     * @param maskSize
+     *            the size of the subnetwork mask.
+     * @return IPv6 object with the desire address.
+     * @throws NullPointerException
+     *             if the address is null.
+     * @throws IllegalArgumentException
+     *             if the blocks values are out of range (0 to 65535) or the
+     *             maskSize is out of range (0 to 128).
+     */
+    public static IPv6 create(int[] address, int maskSize) {
 	if (address.length != BLOCK_NUMBER) {
-	    throw new IllegalArgumentException("IPv6 length: " + Utility.format(BLOCK_NUMBER, address.length));
+	    throw new IllegalArgumentException(
+		    "IPv6 block number: " + Utility.formatEqual(BLOCK_NUMBER, address.length));
 	}
-	if (!(0 <= prefixLength && prefixLength <= MAX_LENGTH)) {
-	    throw new IllegalArgumentException("IPv6 prefix legnth: " + Utility.format(0, MAX_LENGTH, prefixLength));
+	if (!(0 <= maskSize && maskSize <= SIZE)) {
+	    throw new IllegalArgumentException("IPv6 subnetwork mask size: " + Utility.formatRange(0, SIZE, maskSize));
 	}
 	final int[] a = new int[ADDRESS_ARRAY_SIZE];
 	for (int blockNum = BLOCK_NUMBER; blockNum-- > 0;) {
 	    int blockValue = address[blockNum];
 	    if (!(0 <= blockValue && blockValue <= MAX_BLOCK_VALUE)) {
 		throw new IllegalArgumentException(
-			"IPv6 block value: " + Utility.format(0, MAX_BLOCK_VALUE, blockValue));
+			"IPv6 block value: " + Utility.formatRange(0, MAX_BLOCK_VALUE, blockValue));
 	    }
 	    if ((blockNum & 1) == 0) {
 		blockValue <<= 16;
@@ -289,19 +441,34 @@ public final class IPv6 extends IP {
 	}
 
 	// Reset suffix
-	if (prefixLength != MAX_LENGTH) {
-	    for (int blockNum = ADDRESS_ARRAY_SIZE; blockNum-- > 0 && prefixLength < ((blockNum + 1) << 5);) {
-		a[blockNum] &= prefixLength <= (blockNum << 5) ? 0
-			: ~((1 << (Integer.SIZE - (prefixLength & OFFSET_IN_BLOCK_MASK))) - 1);
+	if (maskSize != SIZE) {
+	    for (int blockNum = ADDRESS_ARRAY_SIZE; blockNum-- > 0 && maskSize < ((blockNum + 1) << 5);) {
+		a[blockNum] &= maskSize <= (blockNum << 5) ? 0
+			: ~((1 << (Integer.SIZE - (maskSize & OFFSET_IN_BLOCK_MASK))) - 1);
 	    }
 	}
-	return createInternal(a, prefixLength);
+	return createInternal(a, maskSize);
     }
 
-    public static IPv6 create(String ip) {
+    /**
+     * Create an IPv6 from string.
+     * <p>
+     * The expected format is: A:B:C:D:E:F:G:H or A:B:C:D:E:F:G:H/M when A, B,
+     * C, D, E, F, G and H are the blocks value (in range 0 to 65535) and M is
+     * the subnetwork mask size (in range 0 to 128).
+     * 
+     * @param ip
+     *            string of IP.
+     * @return IPv6 object parsed from string.
+     * @throws NullPointerException
+     *             if the string is null.
+     * @throws IllegalArgumentException
+     *             if the format is illegal or the values are out of range.
+     */
+    public static IPv6 createFromString(String ip) {
 	// TODO - better implementation like IPv4.create(String) using
 	// Utility.breakToWords(String).
-	int prefix;
+	int maskSize;
 
 	final List<Integer> address = new ArrayList<>();
 	try {
@@ -319,27 +486,27 @@ public final class IPv6 extends IP {
 	    // Read suffix of IP - last block
 	    separatorIndex = ip.indexOf('/');
 	    if (separatorIndex < 0) {
-		// No const prefix specification
+		// No mask size specification
 		address.add(Integer.valueOf(Integer.parseInt(ip)));
-		prefix = MAX_LENGTH;
+		maskSize = SIZE;
 	    } else {
-		// Has const prefix specification
+		// Has mask size specification
 		String stNum = ip.substring(0, separatorIndex);
 		ip = ip.substring(separatorIndex + 1);
 
 		final int intNum = Integer.parseInt(stNum);
 		address.add(Integer.valueOf(intNum));
 
-		// Read const prefix length
+		// Read mask size
 		if (ip.length() > 0) {
-		    prefix = Integer.parseInt(ip);
-		    if (prefix < 0) {
-			throw new IllegalArgumentException("Negative prefix length");
-		    } else if (prefix > MAX_LENGTH) {
-			throw new IllegalArgumentException("Prefix length over max length");
+		    maskSize = Integer.parseInt(ip);
+		    if (maskSize < 0) {
+			throw new IllegalArgumentException("Negative mask size");
+		    } else if (maskSize > SIZE) {
+			throw new IllegalArgumentException("Mask size over SIZE");
 		    }
 		} else {
-		    prefix = MAX_LENGTH;
+		    maskSize = SIZE;
 		}
 	    }
 	} catch (NumberFormatException e) {
@@ -370,102 +537,140 @@ public final class IPv6 extends IP {
 	    int blockValue = addressTemp[blockNum];
 	    if (!(0 <= blockValue && blockValue <= MAX_BLOCK_VALUE)) {
 		throw new IllegalArgumentException(
-			"IPv6 block value: " + Utility.format(0, MAX_BLOCK_VALUE, blockValue));
+			"IPv6 block value: " + Utility.formatRange(0, MAX_BLOCK_VALUE, blockValue));
 	    }
 	    blockValue <<= (blockNum & 1) == 0 ? 16 : 0;
 	    a[blockNum >> 1] |= blockValue;
 	}
 
-	// Reset prefix
-	if (prefix != MAX_LENGTH) {
-	    for (int blockNum = ADDRESS_ARRAY_SIZE; blockNum-- > 0 && prefix < ((blockNum + 1) << 5);) {
-		a[blockNum] &= prefix <= (blockNum << 5) ? 0
-			: ~((1 << (Integer.SIZE - (prefix & OFFSET_IN_BLOCK_MASK))) - 1);
+	// Reset by mask
+	if (maskSize != SIZE) {
+	    for (int blockNum = ADDRESS_ARRAY_SIZE; blockNum-- > 0 && maskSize < ((blockNum + 1) << 5);) {
+		a[blockNum] &= maskSize <= (blockNum << 5) ? 0
+			: ~((1 << (Integer.SIZE - (maskSize & OFFSET_IN_BLOCK_MASK))) - 1);
 	    }
 	}
 
-	return createInternal(a, prefix);
+	return createInternal(a, maskSize);
     }
 
-    public static IPv6 create(final List<Boolean> ip) {
-	if (ip.size() != MAX_LENGTH) {
-	    throw new IllegalArgumentException("IPv6 length: " + Utility.format(MAX_LENGTH, ip.size()));
+    /**
+     * Create an IPv6 from 128 bits (ints array).
+     * 
+     * @param addressBits
+     *            the 128 bits of the address.
+     * @return IPv6 object with the specified address.
+     * @throws NullPointerException
+     *             if the address bits array is null.
+     * @throws IllegalArgumentException
+     *             if the size of the address array is not
+     *             {@value #ADDRESS_ARRAY_SIZE}.
+     */
+    public static IPv6 createFromBits(final int[] addressBits) {
+	return createFromBits(addressBits, SIZE);
+    }
+
+    /**
+     * Create an IPv6 from 128 bits (ints array) and specified subnetwork mask
+     * size.
+     * 
+     * @param addressBits
+     *            the 128 bits of the address.
+     * @param maskSize
+     *            the size of the subnetwork mask.
+     * @return IPv6 object with the specified address and maskSize.
+     * @throws NullPointerException
+     *             if the address bits array is null.
+     * @throws IllegalArgumentException
+     *             if the size of the address array is not
+     *             {@value #ADDRESS_ARRAY_SIZE} or if the mask size is out of
+     *             range (0 to 128).
+     */
+    public static IPv6 createFromBits(final int[] addressBits, final int maskSize) {
+	if (addressBits.length != ADDRESS_ARRAY_SIZE) {
+	    throw new IllegalArgumentException(
+		    "Address bits array: " + Utility.formatEqual(ADDRESS_ARRAY_SIZE, addressBits.length));
 	}
-	final Iterator<Boolean> it = ip.iterator();
+	if (!(0 <= maskSize && maskSize <= SIZE)) {
+	    throw new IllegalArgumentException("IPv6 subnetwork mask size: " + Utility.formatRange(0, SIZE, maskSize));
+	}
+	// Must clone addressBits to be safe that the address won't be changed
+	// in the future.
+	return createInternal(addressBits.clone(), maskSize);
+    }
+
+    /**
+     * Create an IPv6 from boolean bits list.
+     * 
+     * @param addressBits
+     *            the bits list.
+     * @return IPv6 with the address build from the bits.
+     * @throws NullPointerException
+     *             if the list is null or one of the Boolean objects in the list
+     *             is null.
+     * @throws IllegalArgumentException
+     *             if number of bits is unequal to {@value #SIZE}.
+     */
+    public static IPv6 createFromBits(final List<Boolean> addressBits) {
+	if (addressBits.size() != SIZE) {
+	    throw new IllegalArgumentException("IPv6 size: " + Utility.formatEqual(SIZE, addressBits.size()));
+	}
+	final Iterator<Boolean> it = addressBits.iterator();
 	final int[] address = new int[ADDRESS_ARRAY_SIZE];
 	for (int blockNum = 0; blockNum < BLOCK_NUMBER; blockNum++) {
 	    int blockValue = 0;
 	    for (int bitNum = 0; bitNum < BLOCK_SIZE; bitNum++) {
-		boolean bitValue = it.next().booleanValue();
 		blockValue <<= 1;
-		blockValue += bitValue ? 1 : 0;
+		if (it.next().booleanValue()) {
+		    blockValue += 1;
+		}
 	    }
 	    blockValue <<= (blockNum & 1) == 0 ? 16 : 0;
 	    address[blockNum >> 1] |= blockValue;
 	}
-	return createInternal(address, MAX_LENGTH);
+	return createInternal(address, SIZE);
     }
 
-    private static IPv6 createInternal(final int[] address, final int prefixLength) {
-	final Cache<IPv6CacheKey, IPv6> cache = IPv6Cache.cache[prefixLength];
-	final IPv6CacheKey key = new IPv6CacheKey(address);
+    /**
+     * Create an IPv6, used internally.
+     * 
+     * @param address
+     *            the 128 bits array of the address.
+     * @param maskSize
+     *            the subnetwork mask size.
+     * @return IPv6 object with the specified address and maskSize.
+     */
+    private static IPv6 createInternal(final int[] address, final int maskSize) {
+	final Cache<IntArrayWrapper, IPv6> cache = IPv6Cache.cache[maskSize];
+	final IntArrayWrapper key = new IntArrayWrapper(address);
 	IPv6 ip = cache.get(key);
 	if (ip == null) {
-	    ip = cache.add(key, new IPv6(address, prefixLength));
+	    ip = cache.add(key, new IPv6(address, maskSize));
 	}
 	return ip;
     }
 
-    static class IPv6Cache {
+    /**
+     * Cache of {@link IPv6} objects.
+     * 
+     * @author Barak Ugav
+     * @author Yishai Gronich
+     *
+     */
+    private static class IPv6Cache {
 
-	static final Cache<IPv6CacheKey, IPv6>[] cache;
+	/**
+	 * Array of IPv6 objects.
+	 */
+	static final Cache<IntArrayWrapper, IPv6>[] cache;
 
 	static {
+	    // Used dummy to suppress warnings
 	    @SuppressWarnings({ "unchecked", "unused" })
-	    Object dummy = cache = new Cache[MAX_LENGTH + 1];
+	    Object dummy = cache = new Cache[SIZE + 1];
 
 	    for (int i = cache.length; i-- != 0;)
 		cache[i] = Caches.synchronizedCache(new SoftCache<>());
-	}
-
-	static class IPv6CacheKey {
-
-	    final int[] address;
-
-	    IPv6CacheKey(final int[] address) {
-		this.address = address;
-	    }
-
-	    @Override
-	    public boolean equals(final Object o) {
-		if (o == this)
-		    return true;
-		if (!(o instanceof IPv6CacheKey))
-		    return false;
-
-		final IPv6CacheKey other = (IPv6CacheKey) o;
-		final int[] thisAddress = address;
-		final int[] otherAddress = other.address;
-		for (int i = ADDRESS_ARRAY_SIZE; i-- != 0;)
-		    if (thisAddress[i] != otherAddress[i])
-			return false;
-		return true;
-	    }
-
-	    @Override
-	    public int hashCode() {
-		int hash = 17;
-		final int[] a = address;
-		for (int i = ADDRESS_ARRAY_SIZE; i-- != 0;)
-		    hash = hash * 31 + a[i];
-		return hash;
-	    }
-
-	    @Override
-	    public String toString() {
-		return Arrays.toString(address);
-	    }
-
 	}
 
     }

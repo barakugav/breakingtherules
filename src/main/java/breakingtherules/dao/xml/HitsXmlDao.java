@@ -232,7 +232,7 @@ public class HitsXmlDao implements HitsDao {
 	try {
 	    final Source sourceObj = Source.create(sourceStr);
 	    final Destination destinationObj = Destination.create(destinationStr);
-	    final Service serviceObj = Service.create(serviceStr);
+	    final Service serviceObj = Service.createFromString(serviceStr);
 
 	    // Create attributes list
 	    final List<Attribute> attributes = new ArrayList<>();

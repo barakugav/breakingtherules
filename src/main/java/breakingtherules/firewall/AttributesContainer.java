@@ -1,7 +1,7 @@
 package breakingtherules.firewall;
 
+import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
@@ -9,10 +9,13 @@ import java.util.Objects;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import breakingtherules.utilities.ArrayIterator;
-import breakingtherules.utilities.Utility;
 
 /**
  * The AttributesContainer class is a container of attributes
+ * 
+ * @author Barak Ugav
+ * @author Yishai Gronich
+ * @see Attribute
  */
 abstract class AttributesContainer implements Iterable<Attribute> {
 
@@ -22,13 +25,30 @@ abstract class AttributesContainer implements Iterable<Attribute> {
     final Attribute[] m_attributes;
 
     /**
-     * Constructor
+     * Construct new container
      * 
      * @param attributes
      *            the attributes of this container
+     * @throws NullPointerException
+     *             if the attribute list is null
+     * @throws IllegalArgumentException
+     *             if the list contains two attributes of the same type
      */
     public AttributesContainer(final List<Attribute> attributes) {
 	m_attributes = toArray(attributes);
+    }
+
+    /**
+     * Copy constructor
+     * 
+     * @param c
+     *            other container
+     * @throws NullPointerException
+     *             if the other container is null
+     */
+    public AttributesContainer(final AttributesContainer c) {
+	// Clone is not needed because everything is final
+	m_attributes = c.m_attributes;
     }
 
     /**
@@ -43,20 +63,11 @@ abstract class AttributesContainer implements Iterable<Attribute> {
      * 
      * @param attributes
      *            the attributes array of the container
+     * @throws NullPointerException
+     *             if the attributes array is null
      */
     AttributesContainer(final Attribute[] attributes) {
 	m_attributes = Objects.requireNonNull(attributes);
-    }
-
-    /**
-     * Constructor
-     * 
-     * @param c
-     *            container with attributes to construct this container
-     */
-    public AttributesContainer(final AttributesContainer c) {
-	// Clone is not needed because everything is final
-	m_attributes = c.m_attributes;
     }
 
     /**
@@ -66,7 +77,13 @@ abstract class AttributesContainer implements Iterable<Attribute> {
      */
     @JsonProperty("attributes")
     public List<Attribute> getAttributes() {
-	return Collections.unmodifiableList(Arrays.asList(m_attributes));
+	final List<Attribute> attributeList = new ArrayList<>(m_attributes.length);
+	for (final Attribute attribute : m_attributes) {
+	    if (attribute != null) {
+		attributeList.add(attribute);
+	    }
+	}
+	return attributeList;
     }
 
     /**
@@ -98,7 +115,7 @@ abstract class AttributesContainer implements Iterable<Attribute> {
      */
     @Override
     public Iterator<Attribute> iterator() {
-	return new ArrayIterator<>(m_attributes);
+	return new ArrayIterator<>(m_attributes, true);
     }
 
     /*
@@ -135,7 +152,25 @@ abstract class AttributesContainer implements Iterable<Attribute> {
      */
     @Override
     public String toString() {
-	return Utility.toString(m_attributes);
+	final StringBuilder builder = new StringBuilder();
+	builder.append('[');
+	int index;
+	for (index = 0; index < m_attributes.length; index++) {
+	    final Attribute attribute = m_attributes[index];
+	    if (attribute != null) {
+		builder.append(attribute.toString());
+		break;
+	    }
+	}
+	for (; index < m_attributes.length; index++) {
+	    final Attribute attribute = m_attributes[index];
+	    if (attribute != null) {
+		builder.append(", ");
+		builder.append(attribute.toString());
+	    }
+	}
+	builder.append(']');
+	return builder.toString();
     }
 
     /**
@@ -150,6 +185,9 @@ abstract class AttributesContainer implements Iterable<Attribute> {
     private static Attribute[] toArray(final List<Attribute> attributesList) {
 	final Attribute[] attributesArr = new Attribute[Attribute.TYPES_COUNT];
 	for (final Attribute attribute : attributesList) {
+	    if (attribute == null) {
+		continue;
+	    }
 	    final int attId = attribute.getTypeId();
 	    if (attributesArr[attId] != null) {
 		throw new IllegalArgumentException(

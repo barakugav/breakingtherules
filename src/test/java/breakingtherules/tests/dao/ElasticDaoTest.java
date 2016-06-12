@@ -63,7 +63,7 @@ public class ElasticDaoTest extends TestBase {
 	List<Attribute> attributes = new ArrayList<>();
 	attributes.add(Source.create("128.76.2.9"));
 	attributes.add(Destination.create("128.76.2.9"));
-	attributes.add(Service.create("TCP 80"));
+	attributes.add(Service.createFromString("TCP 80"));
 	return new Hit(attributes);
     }
 

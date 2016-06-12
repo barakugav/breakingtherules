@@ -9,7 +9,6 @@ import java.util.function.Supplier;
  * 
  * @author Barak Ugav
  * @author Yishai Gronich
- *
  * @param <K>
  *            type of key of the cache
  * @param <E>
@@ -58,6 +57,18 @@ public interface Cache<K, E> {
      */
     public void clear();
 
+    /**
+     * Get an element from the cache or add one if one doesn't exists in the
+     * cache.
+     * 
+     * @param key
+     *            the element key
+     * @param supplier
+     *            a supplier of the element, which will be used only if the
+     *            element doesn't exist in the cache.
+     * @return the element that exists in the cache or the ones supplied from
+     *         the supplier if needed.
+     */
     default E getOrAdd(final K key, final Supplier<E> supplier) {
 	E elm = get(key);
 	if (elm == null) {

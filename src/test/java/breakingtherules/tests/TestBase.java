@@ -90,7 +90,7 @@ public class TestBase {
 
     private static void failNotEqual(String message, Object expected, Object actual) {
 	message = message != null ? message + ": " : "";
-	message += Utility.format(expected, actual);
+	message += Utility.formatEqual(expected, actual);
 	Assert.fail(message);
     }
 

@@ -5,6 +5,10 @@ import java.util.List;
 /**
  * The TextBuilder in a tool used to create text that doesn't go over max line
  * size and provide easy interface for indented text writing.
+ * 
+ * @author Barak Ugav
+ * @author Yishai Gronich
+ * 
  */
 public class TextBuilder {
 
@@ -12,6 +16,8 @@ public class TextBuilder {
      * String builder used by this builder
      */
     private StringBuilder m_builder;
+
+    private final String m_indent;
 
     /**
      * Max line size
@@ -28,7 +34,6 @@ public class TextBuilder {
      */
     private final String[] m_separatorSequences;
 
-    private static final String SPACE = " ";
     private static final String LINE_SEPARATOR = System.lineSeparator();
 
     /**
@@ -41,26 +46,67 @@ public class TextBuilder {
      */
     private static final int DEFAULT_TAB_SIZE = 4;
 
-    private static final String[] DEFAULT_SEPARATORS_SEQUENCES = new String[] { SPACE };
+    /**
+     * Default separators used by the builder to separate words.
+     */
+    private static final String[] DEFAULT_SEPARATORS_SEQUENCES = { Utility.SPACE_STR };
 
     /**
-     * Constructor
+     * Construct new TextBuilder with default setting.
      */
     public TextBuilder() {
 	this(DEFAULT_MAX_LINE, DEFAULT_TAB_SIZE, DEFAULT_SEPARATORS_SEQUENCES);
     }
 
-    public TextBuilder(int max) {
+    /**
+     * Construct new TextBuilder with specified max line and default indent size
+     * and separator.
+     * 
+     * @param max
+     *            max line length.
+     * @throws IllegalArgumentException
+     *             if max < 0.
+     */
+    public TextBuilder(final int max) {
 	this(max, DEFAULT_TAB_SIZE, DEFAULT_SEPARATORS_SEQUENCES);
     }
 
-    public TextBuilder(int max, int indentSize, String[] separators) {
-	if (max < 0)
+    /**
+     * Construct new TextBuilder with specified.
+     * 
+     * @param max
+     *            max line length.
+     * @param indentSize
+     *            size of the indent used by this builder.
+     * @param separators
+     *            separators used to separate words.
+     * @throws IllegalArgumentException
+     *             if max < 0 or indentSize < 0.
+     * @throws NullPointerException
+     *             if the separators array is null or one of the separators is
+     *             null.
+     */
+    public TextBuilder(final int max, final int indentSize, final String... separators) {
+	if (max < 0) {
 	    throw new IllegalArgumentException("max can't be negative: " + max);
+	}
+	if (indentSize < 0) {
+	    throw new IllegalArgumentException("indentSize < 0: " + indentSize);
+	}
+	if (separators == null) {
+	    throw new NullPointerException();
+	}
+	for (final String separator : separators) {
+	    if (separator == null) {
+		throw new NullPointerException();
+	    }
+	}
+
 	m_builder = new StringBuilder();
 	m_maxLine = max;
 	m_indentSize = indentSize;
 	m_separatorSequences = separators;
+	m_indent = indent(indentSize);
     }
 
     /**
@@ -75,7 +121,7 @@ public class TextBuilder {
 	    int lineLength = lineLength();
 	    if (lineLength != 0) {
 		// Add space if needed, or line separator if went over max line
-		m_builder.append(lineLength + word.length() + 1 <= m_maxLine ? SPACE : LINE_SEPARATOR);
+		m_builder.append(lineLength + word.length() + 1 <= m_maxLine ? Utility.SPACE_STR : LINE_SEPARATOR);
 	    }
 	    m_builder.append(word);
 	}
@@ -108,7 +154,7 @@ public class TextBuilder {
 	// Go down a row if needed
 	int lineLength = lineLength();
 	if (lineLength == 0) {
-	    m_builder.append(indent());
+	    m_builder.append(m_indent);
 	} else {
 	    m_builder.append(indentedLineSeparator());
 	}
@@ -119,7 +165,8 @@ public class TextBuilder {
 	    lineLength = lineLength(getText(), indentedLineSeparator());
 	    if (lineLength != 0) {
 		// Add space if needed, or line separator if went over max line
-		m_builder.append(lineLength + word.length() + 1 <= intentedMaxLine ? SPACE : indentedLineSeparator());
+		m_builder.append(lineLength + word.length() + 1 <= intentedMaxLine ? Utility.SPACE_STR
+			: indentedLineSeparator());
 	    }
 	    m_builder.append(word);
 	}
@@ -166,10 +213,10 @@ public class TextBuilder {
      * 
      * @return the indent's string
      */
-    private String indent() {
+    private static String indent(final int indentSize) {
 	StringBuilder tabBuilder = new StringBuilder();
-	for (int i = 0; i < m_indentSize; i++) {
-	    tabBuilder.append(SPACE);
+	for (int i = 0; i < indentSize; i++) {
+	    tabBuilder.append(Utility.SPACE_STR);
 	}
 	return tabBuilder.toString();
     }
@@ -180,7 +227,7 @@ public class TextBuilder {
      * @return indented new line string
      */
     private String indentedLineSeparator() {
-	return LINE_SEPARATOR + indent();
+	return LINE_SEPARATOR + m_indent;
     }
 
     /**

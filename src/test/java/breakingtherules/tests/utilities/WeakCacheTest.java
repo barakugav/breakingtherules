@@ -83,14 +83,14 @@ public class WeakCacheTest {
 	cache.add(Integer.valueOf(1), null);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void addTestNoUniqeKey() {
 	WeakCache<Integer, Object> cache = new WeakCache<>();
 	Integer key = Integer.valueOf(1);
 	Object val1 = new Object();
 	Object val2 = new Object();
 	cache.add(key, val1);
-	cache.add(key, val2);
+	assertEquals(val1, cache.add(key, val2));
     }
 
     @Test
