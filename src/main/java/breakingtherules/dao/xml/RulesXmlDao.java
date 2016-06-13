@@ -31,6 +31,9 @@ public class RulesXmlDao implements RulesDao {
 
     private static final String REPOSITORY_TAG = "Repository";
     private static final String RULE_TAG = "rule";
+    private static final String ORIGINAL_RULE_TAG = "original-rule";
+    
+    public static final String REPOSITORY_NAME = "repository.xml";
 
     /**
      * Constructor
@@ -50,7 +53,7 @@ public class RulesXmlDao implements RulesDao {
 	final Document repositoryDoc = UtilityXmlDao.readFile(path);
 
 	// Get all rules from repository
-	final Element ruleElem = (Element) repositoryDoc.getElementsByTagName("original-rule").item(0);
+	final Element ruleElem = (Element) repositoryDoc.getElementsByTagName(ORIGINAL_RULE_TAG).item(0);
 	final Rule rule = createRule(ruleElem);
 	return rule;
     }
@@ -127,11 +130,12 @@ public class RulesXmlDao implements RulesDao {
 	return new ListDto<>(subRulesList, startIndex, endIndex, total);
     }
 
-    public static void writeRules(final String repoPath, final List<Rule> rules)
+    public static void writeRules(final String repoPath, final List<Rule> rules, final Rule originalRule)
 	    throws ParserConfigurationException, IOException {
 	final DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 	final DocumentBuilder builder = factory.newDocumentBuilder();
 	final Document document = builder.newDocument();
+
 	final Element repoElm = document.createElement(REPOSITORY_TAG);
 	for (final Rule rule : rules) {
 	    final Element ruleElm = document.createElement(RULE_TAG);
@@ -140,6 +144,12 @@ public class RulesXmlDao implements RulesDao {
 	    }
 	    repoElm.appendChild(ruleElm);
 	}
+	final Element ruleElm = document.createElement(ORIGINAL_RULE_TAG);
+	for (final Attribute attribute : originalRule) {
+	    ruleElm.setAttribute(attribute.getType(), attribute.toString());
+	}
+	repoElm.appendChild(ruleElm);
+
 	document.appendChild(repoElm);
 	UtilityXmlDao.writeFile(repoPath, document);
     }

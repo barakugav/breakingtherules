@@ -9,7 +9,7 @@ var settings = {
 	},
 	
 	attributes: [
-		'Source', 'Destination', 'Service'
+		'source', 'destination', 'service'
 	]
 
 };
@@ -288,6 +288,7 @@ var events = {
 
 		sugCtrl.refresh = function () {
 			BtrData.getSuggestions().success(function (data) {
+				console.log(data);
 				sugCtrl.allSuggestions = settings.attributes.map(function (attrName) {
 					for (var i = 0; i < data.length; i++) {
 						if (data[i].type == attrName)

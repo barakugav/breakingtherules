@@ -3,7 +3,12 @@ package breakingtherules.controllers;
 import java.io.IOException;
 import java.util.List;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -21,6 +26,12 @@ public class RulesController {
      */
     @Autowired
     private Job m_job;
+
+    @RequestMapping(value = "/rulesFile", method = RequestMethod.GET, produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
+    public FileSystemResource rulesFile(HttpServletRequest request, HttpServletResponse response) {
+	response.setHeader("Content-Disposition", "attachment; filename=\"rulesFile.xml\"");
+	return new FileSystemResource(m_job.getRulesFilePath());
+    }
 
     @RequestMapping(value = "/rule", method = RequestMethod.GET)
     public List<Rule> rules() throws NoCurrentJobException {

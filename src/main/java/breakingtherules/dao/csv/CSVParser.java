@@ -262,9 +262,9 @@ public class CSVParser {
 		}
 		lineNumber++;
 		
-		// TODO - to remove
-		if (lineNumber % 1_000_000 == 0)
-		    System.out.println(lineNumber);
+		if (lineNumber % 1_000_000 == 0) {
+		    System.out.println("Reading hits from CSV: " +  lineNumber + " hits have been read so far.");
+		}
 	    }
 	} catch (final CSVParseException e) {
 	    throw new CSVParseException("In line " + lineNumber + ": ", e);

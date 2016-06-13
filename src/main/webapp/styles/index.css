@@ -73,7 +73,7 @@ section {
 
 /* Job Choosing
 *************************************************/
-.JobChoosebox input {
+.JobChoosebox input[type="text"] {
   width: 400px; }
 .JobChoosebox button {
   margin-top: 1rem;
@@ -94,7 +94,10 @@ section {
   list-style-image: url("../img/RightArrow.PNG"); }
 .ProgressList .CollapseToggler {
   font-size: 1.6rem;
-  margin-left: .3rem; }
+  margin-left: 1rem; }
+.ProgressList .DownloadLink {
+  margin-left: .3rem;
+  text-decoration: none; }
 
 /* Filter
 *************************************************/

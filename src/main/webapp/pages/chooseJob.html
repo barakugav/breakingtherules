@@ -3,7 +3,14 @@
 	<h1>BreakingTheRules</h1>
 	
 	<section class="JobChoosebox">
-		<h2>Choose a Job</h2>
+		<h2>Create a New Job</h2>
+		<p>To begin, upload a CSV file with hits. The column order is: source IP, destination IP, 
+			port, protocol.</p>
+		<input type="file" />
+	</section>
+
+	<section class="JobChoosebox">
+		<h2>Choose an Existing Job</h2>
 		<p>Enter the job number you would like to work on:	</p>
 		<input type="text" class="form-control" 
 			ng-model="ChJobCtrl.jobId" on-enter-key="ChJobCtrl.submit()" />

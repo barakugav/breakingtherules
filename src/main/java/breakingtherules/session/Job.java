@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.Objects;
 
+import javax.xml.parsers.ParserConfigurationException;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.context.annotation.ScopedProxyMode;
@@ -14,6 +16,7 @@ import org.springframework.stereotype.Component;
 
 import breakingtherules.dao.HitsDao;
 import breakingtherules.dao.RulesDao;
+import breakingtherules.dao.xml.RulesXmlDao;
 import breakingtherules.dto.ListDto;
 import breakingtherules.dto.SuggestionsDto;
 import breakingtherules.firewall.Attribute;
@@ -124,7 +127,7 @@ public class Job {
 	m_filter = Filter.ANY_FILTER;
 	m_totalHitsCount = m_hitsDao.getHitsNumber(id, new ArrayList<Rule>(), Filter.ANY_FILTER);
 	m_coveredHitsCount = 0;
-	m_filteredHitsCount = m_totalHitsCount - m_coveredHitsCount;
+	m_filteredHitsCount = m_totalHitsCount;
 
 	List<Rule> rules = m_rulesDao.getRules(id).getData();
 	for (Rule rule : rules) {
@@ -213,7 +216,7 @@ public class Job {
 	    addRule(removedRule);
 	}
 
-	// TODO update DAO
+	updateRulesFile();
     }
 
     /**
@@ -307,8 +310,9 @@ public class Job {
 	List<Rule> newRules = getRules();
 	newRules.add(newRule);
 
-	int newCoveredHits = m_hitsDao.getHitsNumber(m_id, newRules, Filter.ANY_FILTER);
-	int ruleCoveredHits = m_coveredHitsCount - newCoveredHits;
+	int newUncoveredHitsCount = m_hitsDao.getHitsNumber(m_id, newRules, Filter.ANY_FILTER);
+	int oldUncoveredHitsCount = m_totalHitsCount - m_coveredHitsCount;
+	int ruleCoveredHits = oldUncoveredHitsCount - newUncoveredHitsCount;
 	addRule(new StatisticedRule(newRule, ruleCoveredHits));
     }
 
@@ -316,7 +320,7 @@ public class Job {
 	m_coveredHitsCount += newRule.m_coveredHits;
 	m_rules.add(newRule);
 	m_filteredHitsCount = m_hitsDao.getHitsNumber(m_id, getRules(), m_filter);
-	// TODO update DAO
+	updateRulesFile();
     }
 
     /**
@@ -347,6 +351,22 @@ public class Job {
     public int getFilteredHitsCount() {
 	return m_filteredHitsCount;
     }
+    
+    public String getRulesFilePath() {
+	return "./repository/" + m_id + "/" + RulesXmlDao.REPOSITORY_NAME;
+    }
+
+    private void updateRulesFile() throws IOException {
+	String repositoryPath = getRulesFilePath();
+	List<Rule> rawRules = new ArrayList<Rule>();
+	for (StatisticedRule statRule : m_rules)
+	    rawRules.add(statRule.getRule());
+	try {
+	    RulesXmlDao.writeRules(repositoryPath, rawRules, m_originalRule);
+	} catch (ParserConfigurationException e) {
+	    throw new IOException("Parser configuration problems.");
+	}
+    }
 
     private void checkJobState() {
 	if (m_id == NO_CURRENT_JOB) {
@@ -364,6 +384,10 @@ public class Job {
 		throw new IllegalArgumentException("coveredHits < 0: " + coveredHits);
 	    m_rule = Objects.requireNonNull(rule);
 	    m_coveredHits = coveredHits;
+	}
+
+	public Rule getRule() {
+	    return m_rule;
 	}
 
 	@Override

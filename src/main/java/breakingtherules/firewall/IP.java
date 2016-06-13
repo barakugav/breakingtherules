@@ -222,7 +222,7 @@ public abstract class IP implements Comparable<IP> {
 	} else if (isIPv6) {
 	    return IPv6.createFromString(ip);
 	} else {
-	    throw new IllegalArgumentException("Unknown format");
+	    throw new IllegalArgumentException("Unknown format: " + ip);
 	}
     }
 

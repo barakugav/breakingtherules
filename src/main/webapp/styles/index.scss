@@ -111,7 +111,7 @@ $w-arrow: 7px;
 *************************************************/
 
 .JobChoosebox {
-	input {
+	input[type="text"] {
 		width: 400px;
 	}
 	button {
@@ -141,7 +141,11 @@ $w-arrow: 7px;
 	}
 	.CollapseToggler {
 		font-size: 1.6rem;
+		margin-left: 1rem;
+	}
+	.DownloadLink {
 		margin-left: .3rem;
+		text-decoration: none;
 	}
 }
 

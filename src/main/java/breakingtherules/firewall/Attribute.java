@@ -91,17 +91,17 @@ public abstract class Attribute {
     /**
      * Name of destination attribute.
      */
-    public static final String DESTINATION_TYPE = "Destination";
+    public static final String DESTINATION_TYPE = "destination";
 
     /**
      * Name of source attribute.
      */
-    public static final String SOURCE_TYPE = "Source";
+    public static final String SOURCE_TYPE = "source";
 
     /**
      * Name of service attribute.
      */
-    public static final String SERVICE_TYPE = "Service";
+    public static final String SERVICE_TYPE = "service";
 
     /**
      * Comparator of attributes by their type id
