@@ -13,12 +13,12 @@ public class DaoConfig {
     /**
      * Get root path to repository by a job id
      * 
-     * @param id
-     *            id of the job
+     * @param name
+     *            name of the job
      * @return string path to repository root
      */
-    public static String getRepoRoot(final int id) {
-	return REPOS_ROOT + id + "/";
+    public static String getRepoRoot(final String name) {
+	return REPOS_ROOT + name + "/";
     }
 
 }

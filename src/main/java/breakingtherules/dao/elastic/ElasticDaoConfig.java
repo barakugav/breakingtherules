@@ -7,7 +7,7 @@ class ElasticDaoConfig {
     static final String TYPE_HIT = "hit";
 
     static final String FIELD_ATTRIBUTES = "attributes";
-    static final String FIELD_JOB_ID = "jobId";
+    static final String FIELD_JOB_NAME = "jobName";
     static final String FIELD_ATTR_TYPEID = "typeId";
     static final String FIELD_ATTR_VALUE = "value";
 

@@ -14,14 +14,14 @@ import breakingtherules.tests.TestBase;
 
 public class CSVParserTest extends TestBase {
 
-    private static final int JOB_ID = 0;
+    private static final String JOB_NAME = "0";
     private static final List<Integer> COLOMNS_TYPES = CSVParser.DEFAULT_COLUMNS_TYPES;
     private static final boolean PRINT = false;
 
     @Test
     public void parseTest() {
 	try {
-	    List<Hit> hits = CSVParser.fromCSV(COLOMNS_TYPES, JOB_ID);
+	    List<Hit> hits = CSVParser.fromCSV(COLOMNS_TYPES, JOB_NAME);
 	    if (PRINT) {
 		for (Hit hit : hits) {
 		    System.out.println(hit);

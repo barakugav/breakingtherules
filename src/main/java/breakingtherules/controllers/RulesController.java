@@ -29,7 +29,7 @@ public class RulesController {
 
     @RequestMapping(value = "/rulesFile", method = RequestMethod.GET, produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
     public FileSystemResource rulesFile(HttpServletRequest request, HttpServletResponse response) {
-	response.setHeader("Content-Disposition", "attachment; filename=\"rulesFile.xml\"");
+	response.setHeader("Content-Disposition", "attachment; filename=\"rules.xml\"");
 	return new FileSystemResource(m_job.getRulesFilePath());
     }
 

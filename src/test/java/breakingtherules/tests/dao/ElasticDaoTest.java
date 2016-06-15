@@ -26,7 +26,7 @@ public class ElasticDaoTest extends TestBase {
 
     private static HitsElasticDao hitsDao;
 
-    private static final int JOB_NUMBER = 572299; // random
+    private static final String JOB_NAME = "572299"; // random
 
     private static boolean jobInitialized = false;
 
@@ -35,7 +35,7 @@ public class ElasticDaoTest extends TestBase {
     public static void initDaoAndJob() throws Exception {
 	try {
 	    hitsDao = new HitsElasticDao();
-	    if (hitsDao.doesJobExist(JOB_NUMBER)) {
+	    if (hitsDao.doesJobExist(JOB_NAME)) {
 		throw new Exception("Job number exists. Choose different job number.");
 	    }
 	    jobInitialized = true;
@@ -48,7 +48,7 @@ public class ElasticDaoTest extends TestBase {
     @AfterClass
     public static void deleteFakeJobAndCleanDao() {
 	if (jobInitialized) {
-	    hitsDao.deleteJob(JOB_NUMBER);
+	    hitsDao.deleteJob(JOB_NAME);
 	}
 	hitsDao.cleanup();
     }
@@ -71,8 +71,8 @@ public class ElasticDaoTest extends TestBase {
     public void singleHitExistsAfterAdding() throws IOException {
 	checkJob();
 	Hit newHit = createHit();
-	hitsDao.addHit(newHit, JOB_NUMBER);
-	ListDto<Hit> hits = hitsDao.getHits(JOB_NUMBER, new ArrayList<Rule>(), Filter.ANY_FILTER);
+	hitsDao.addHit(newHit, JOB_NAME);
+	ListDto<Hit> hits = hitsDao.getHits(JOB_NAME, new ArrayList<Rule>(), Filter.ANY_FILTER);
 	assertTrue(hits.getSize() > 0);
     }
 
@@ -84,8 +84,8 @@ public class ElasticDaoTest extends TestBase {
 	for (int i = 0; i < SIZE; i++) {
 	    newHits.add(createHit());
 	}
-	hitsDao.addHits(newHits, JOB_NUMBER);
-	ListDto<Hit> hits = hitsDao.getHits(JOB_NUMBER, new ArrayList<Rule>(), Filter.ANY_FILTER);
+	hitsDao.addHits(newHits, JOB_NAME);
+	ListDto<Hit> hits = hitsDao.getHits(JOB_NAME, new ArrayList<Rule>(), Filter.ANY_FILTER);
 	assertTrue(hits.getSize() >= SIZE);
     }
 
@@ -97,10 +97,10 @@ public class ElasticDaoTest extends TestBase {
 	for (int i = 0; i < SIZE; i++) {
 	    newHits.add(createHit());
 	}
-	hitsDao.addHits(newHits, JOB_NUMBER);
+	hitsDao.addHits(newHits, JOB_NAME);
 	int beginIndex = 2;
 	int endIndex = 4;
-	ListDto<Hit> hits = hitsDao.getHits(JOB_NUMBER, new ArrayList<Rule>(), Filter.ANY_FILTER, beginIndex, endIndex);
+	ListDto<Hit> hits = hitsDao.getHits(JOB_NAME, new ArrayList<Rule>(), Filter.ANY_FILTER, beginIndex, endIndex);
 	assertEquals(endIndex - beginIndex, hits.getData().size());
     }
 

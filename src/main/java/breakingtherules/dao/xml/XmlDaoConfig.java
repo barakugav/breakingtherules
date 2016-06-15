@@ -11,12 +11,12 @@ class XmlDaoConfig extends DaoConfig {
     static final String REPOSITORY = "Repository";
     static final String HIT = "hit";
 
-    static String getHitsFile(final int id) {
-	return getRepoRoot(id) + HITS_FILE;
+    static String getHitsFile(final String jobName) {
+	return getRepoRoot(jobName) + HITS_FILE;
     }
 
-    static String getRulesFile(final int id) {
-	return getRepoRoot(id) + RULES_FILE;
+    static String getRulesFile(final String jobName) {
+	return getRepoRoot(jobName) + RULES_FILE;
     }
 
 }

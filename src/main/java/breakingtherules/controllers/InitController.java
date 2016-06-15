@@ -27,8 +27,8 @@ public class InitController {
      * http://stackoverflow.com/questions/5894270/springmvc-is-not-recognizing-
      * request-body-parameters-if-using-put
      * 
-     * @param job_id
-     *            The id of the new job to handle
+     * @param jobName
+     *            The name of the new job to handle
      * @return true if succeeded, else - false
      * @throws IOException
      *             if any I/O error occurs
@@ -36,8 +36,8 @@ public class InitController {
      *             if job wan't set yet
      */
     @RequestMapping(value = "/job", method = RequestMethod.PUT)
-    public boolean init(@RequestParam(value = "job_id") int job_id) throws IOException, NoCurrentJobException {
-	m_job.setJob(job_id);
+    public boolean init(@RequestParam(value = "job_name") String jobName) throws IOException, NoCurrentJobException {
+	m_job.setJob(jobName);
 	return true;
     }
 

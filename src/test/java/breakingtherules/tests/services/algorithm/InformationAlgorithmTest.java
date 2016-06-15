@@ -21,7 +21,7 @@ import breakingtherules.tests.TestBase;
 public class InformationAlgorithmTest extends TestBase {
 
     private static final int RULE_WEIGHT = 25;
-    private static final int JOB_ID = 4;
+    private static final String JOB_NAME = "4";
     private static final int NUMBER_OF_SUGGESTIONS = 10;
     private static final String ATTRIBUTE = Attribute.DESTINATION_TYPE;
     private static final boolean PRINT_RESULTS = false;
@@ -32,12 +32,12 @@ public class InformationAlgorithmTest extends TestBase {
 	    RulesDao rulesDao = new RulesXmlDao();
 	    HitsDao hitsDao = new HitsXmlDao();
 	    Filter filter = Filter.ANY_FILTER;
-	    ListDto<Rule> rulesDto = rulesDao.getRules(JOB_ID);
+	    ListDto<Rule> rulesDto = rulesDao.getRules(JOB_NAME);
 	    List<Rule> rules = rulesDto.getData();
 
 	    InformationAlgorithm algorithm = new InformationAlgorithm();
 	    algorithm.setRuleWeight(RULE_WEIGHT);
-	    List<Suggestion> suggestions = algorithm.getSuggestions(hitsDao, JOB_ID, rules, filter,
+	    List<Suggestion> suggestions = algorithm.getSuggestions(hitsDao, JOB_NAME, rules, filter,
 		    NUMBER_OF_SUGGESTIONS, ATTRIBUTE);
 
 	    if (PRINT_RESULTS) {

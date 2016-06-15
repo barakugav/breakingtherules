@@ -126,7 +126,7 @@ var events = {
 
 	app.controller('ChooseJobController', ['BtrData', '$location', function (BtrData, $location) {
 		this.submit = function () {
-			BtrData.setJob(this.jobId).then(function () {
+			BtrData.setJob(this.jobName).then(function () {
 				$location.url('/main');
 			});
 		};

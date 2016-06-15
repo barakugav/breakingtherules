@@ -16,8 +16,8 @@ public interface SuggestionsAlgorithm {
      * 
      * @param dao
      *            hits data access object
-     * @param jobId
-     *            id of the job
+     * @param jobName
+     *            name of the job
      * @param rules
      *            current rules
      * @param filter
@@ -31,15 +31,15 @@ public interface SuggestionsAlgorithm {
      * @throws Exception
      *             if any errors occurs
      */
-    public List<Suggestion> getSuggestions(HitsDao dao, int jobId, List<Rule> rules, Filter filter, int amount,
+    public List<Suggestion> getSuggestions(HitsDao dao, String jobName, List<Rule> rules, Filter filter, int amount,
 	    String attType) throws Exception;
 
-    default List<Suggestion>[] getSuggestions(HitsDao dao, int jobId, List<Rule> rules, Filter filter, int amount,
+    default List<Suggestion>[] getSuggestions(HitsDao dao, String jobName, List<Rule> rules, Filter filter, int amount,
 	    String[] attTypes) throws Exception {
 	@SuppressWarnings("unchecked")
 	List<Suggestion>[] suggestions = new List[attTypes.length];
 	for (int i = 0; i < attTypes.length; i++) {
-	    suggestions[i] = getSuggestions(dao, jobId, rules, filter, amount, attTypes[i]);
+	    suggestions[i] = getSuggestions(dao, jobName, rules, filter, amount, attTypes[i]);
 	}
 	return suggestions;
     }

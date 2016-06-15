@@ -49,12 +49,12 @@ public class Job {
     private SuggestionsAlgorithm m_algorithm;
 
     /**
-     * Id of the job
+     * Name of the job
      * 
-     * Every job has a unique id. In the start of the session, there is no
+     * Every job has a unique name. In the start of the session, there is no
      * active job, so the id is set to NO_CURRENT_JOB in the constructor.
      */
-    private int m_id;
+    private String m_name;
 
     /**
      * The current hit filter
@@ -99,7 +99,7 @@ public class Job {
     /**
      * Id constant that represent that the id wasn't set yet
      */
-    private static final int NO_CURRENT_JOB = -1;
+    private static final String NO_CURRENT_JOB = null;
 
     /************************************************/
 
@@ -109,39 +109,39 @@ public class Job {
      * set id to {@link Job#NO_CURRENT_JOB}
      */
     public Job() {
-	m_id = NO_CURRENT_JOB;
+	m_name = NO_CURRENT_JOB;
     }
 
     /**
      * Restore all relevant parameters about the job to be worked on
      * 
-     * @param id
-     *            The id of the job that needs to be worked on.
+     * @param name
+     *            The name of the job that needs to be worked on.
      * @throws IOException
      *             if DAO failed to load data
      */
-    public void setJob(int id) throws IOException {
-	m_id = id;
-	m_originalRule = m_rulesDao.getOriginalRule(id);
+    public void setJob(String name) throws IOException {
+	m_name = name;
+	m_originalRule = m_rulesDao.getOriginalRule(name);
 	m_rules = new ArrayList<>();
 	m_filter = Filter.ANY_FILTER;
-	m_totalHitsCount = m_hitsDao.getHitsNumber(id, new ArrayList<Rule>(), Filter.ANY_FILTER);
+	m_totalHitsCount = m_hitsDao.getHitsNumber(name, new ArrayList<Rule>(), Filter.ANY_FILTER);
 	m_coveredHitsCount = 0;
 	m_filteredHitsCount = m_totalHitsCount;
 
-	List<Rule> rules = m_rulesDao.getRules(id).getData();
+	List<Rule> rules = m_rulesDao.getRules(name).getData();
 	for (Rule rule : rules) {
 	    addRule(rule);
 	}
     }
 
     /**
-     * Get the id of the job
+     * Get the name of the job
      * 
-     * @return the job's Id
+     * @return the job's name
      */
-    public int getId() {
-	return m_id;
+    public String getName() {
+	return m_name;
     }
 
     /**
@@ -209,7 +209,7 @@ public class Job {
 
 	// Update filtered hits count
 	m_coveredHitsCount -= searchedRule.m_coveredHits;
-	m_filteredHitsCount = m_hitsDao.getHitsNumber(m_id, getRules(), m_filter);
+	m_filteredHitsCount = m_hitsDao.getHitsNumber(m_name, getRules(), m_filter);
 
 	// Add again removed rules
 	for (Rule removedRule : removedRules) {
@@ -233,7 +233,7 @@ public class Job {
      */
     public ListDto<Hit> getHits(int startIndex, int endIndex) throws IOException {
 	checkJobState();
-	return m_hitsDao.getHits(m_id, getRules(), m_filter, startIndex, endIndex);
+	return m_hitsDao.getHits(m_name, getRules(), m_filter, startIndex, endIndex);
     }
 
     /**
@@ -253,7 +253,7 @@ public class Job {
 	List<SuggestionsDto> suggestionsDtos = new ArrayList<>();
 	List<String> allAttributesType = getAllAttributeTypes();
 	for (String attType : allAttributesType) {
-	    List<Suggestion> suggestions = m_algorithm.getSuggestions(m_hitsDao, m_id, getRules(), m_filter, amount,
+	    List<Suggestion> suggestions = m_algorithm.getSuggestions(m_hitsDao, m_name, getRules(), m_filter, amount,
 		    attType);
 	    SuggestionsDto attSuggestions = new SuggestionsDto(suggestions, attType);
 	    suggestionsDtos.add(attSuggestions);
@@ -272,7 +272,7 @@ public class Job {
     public void setFilter(Filter filter) throws IOException {
 	checkJobState();
 	m_filter = filter;
-	m_filteredHitsCount = m_hitsDao.getHitsNumber(m_id, getRules(), m_filter);
+	m_filteredHitsCount = m_hitsDao.getHitsNumber(m_name, getRules(), m_filter);
     }
 
     /**
@@ -310,7 +310,7 @@ public class Job {
 	List<Rule> newRules = getRules();
 	newRules.add(newRule);
 
-	int newUncoveredHitsCount = m_hitsDao.getHitsNumber(m_id, newRules, Filter.ANY_FILTER);
+	int newUncoveredHitsCount = m_hitsDao.getHitsNumber(m_name, newRules, Filter.ANY_FILTER);
 	int oldUncoveredHitsCount = m_totalHitsCount - m_coveredHitsCount;
 	int ruleCoveredHits = oldUncoveredHitsCount - newUncoveredHitsCount;
 	addRule(new StatisticedRule(newRule, ruleCoveredHits));
@@ -319,7 +319,7 @@ public class Job {
     private void addRule(StatisticedRule newRule) throws IOException {
 	m_coveredHitsCount += newRule.m_coveredHits;
 	m_rules.add(newRule);
-	m_filteredHitsCount = m_hitsDao.getHitsNumber(m_id, getRules(), m_filter);
+	m_filteredHitsCount = m_hitsDao.getHitsNumber(m_name, getRules(), m_filter);
 	updateRulesFile();
     }
 
@@ -351,9 +351,9 @@ public class Job {
     public int getFilteredHitsCount() {
 	return m_filteredHitsCount;
     }
-    
+
     public String getRulesFilePath() {
-	return "./repository/" + m_id + "/" + RulesXmlDao.REPOSITORY_NAME;
+	return "./repository/" + m_name + "/" + RulesXmlDao.REPOSITORY_NAME;
     }
 
     private void updateRulesFile() throws IOException {
@@ -369,7 +369,7 @@ public class Job {
     }
 
     private void checkJobState() {
-	if (m_id == NO_CURRENT_JOB) {
+	if (m_name == NO_CURRENT_JOB) {
 	    throw new NoCurrentJobException("Job wasn't set yet");
 	}
     }

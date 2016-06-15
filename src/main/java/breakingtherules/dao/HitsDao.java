@@ -21,7 +21,7 @@ public interface HitsDao {
     /**
      * Get hits from repository that match all rules and filter
      * 
-     * @param jobId
+     * @param jobName
      *            id of the hits' job
      * @param rules
      *            list of the current rules, act like additional filter
@@ -32,13 +32,13 @@ public interface HitsDao {
      *             if failed to read from memory
      */
     @Deprecated
-    public ListDto<Hit> getHits(int jobId, List<Rule> rules, Filter filter) throws IOException;
+    public ListDto<Hit> getHits(String jobName, List<Rule> rules, Filter filter) throws IOException;
 
     /**
      * Get all hits from repository that match all rules and filter
      * 
-     * @param jobId
-     *            id of the hits' job
+     * @param jobName
+     *            Name of the hits' job
      * @param startIndex
      *            the start index of the hits list, including this index
      * @param endIndex
@@ -52,11 +52,11 @@ public interface HitsDao {
      * @throws IOException
      *             if failed to read from memory
      */
-    public ListDto<Hit> getHits(int jobId, List<Rule> rules, Filter filter, int startIndex, int endIndex)
+    public ListDto<Hit> getHits(String jobName, List<Rule> rules, Filter filter, int startIndex, int endIndex)
 	    throws IOException;
 
-    default Set<UniqueHit> getUnique(int jobId, List<Rule> rules, Filter filter) throws Exception {
-	List<Hit> hits = getHits(jobId, rules, filter).getData();
+    default Set<UniqueHit> getUnique(String jobName, List<Rule> rules, Filter filter) throws Exception {
+	List<Hit> hits = getHits(jobName, rules, filter).getData();
 	Map<Hit, Integer> hitsCount = new HashMap<>();
 	for (Hit hit : hits) {
 	    Integer count = hitsCount.get(hit);
@@ -78,8 +78,8 @@ public interface HitsDao {
      * Get the number of hits in the job, that pass all the rules and are under
      * filter
      * 
-     * @param jobId
-     *            id of the hits' job
+     * @param jobName
+     *            Name of the hits' job
      * @param rules
      *            list of the current rules, filter out
      * @param filter
@@ -89,6 +89,6 @@ public interface HitsDao {
      * @throws IOException
      *             if failed to read from memory
      */
-    public int getHitsNumber(int jobId, List<Rule> rules, Filter filter) throws IOException;
+    public int getHitsNumber(String jobName, List<Rule> rules, Filter filter) throws IOException;
 
 }

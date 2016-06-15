@@ -130,17 +130,17 @@ public class CSVParser {
      * 
      * @param columnsTypes
      *            configuration of columns types
-     * @param jobId
-     *            id of the job
+     * @param jobName
+     *            name of the job
      * @return list of the hits
      * @throws IOException
      *             if IO errors occurs
      * @throws CSVParseException
      *             if fails to parse file
      */
-    public static List<Hit> fromCSV(final List<Integer> columnsTypes, final int jobId)
+    public static List<Hit> fromCSV(final List<Integer> columnsTypes, final String jobName)
 	    throws IOException, CSVParseException {
-	return fromCSV(columnsTypes, CSVDaoConfig.getHitsFile(jobId));
+	return fromPath(columnsTypes, CSVDaoConfig.getHitsFile(jobName));
     }
 
     /**
@@ -156,7 +156,7 @@ public class CSVParser {
      * @throws CSVParseException
      *             if fails to parse file
      */
-    public static List<Hit> fromCSV(final List<Integer> columnsTypes, final String filePath)
+    public static List<Hit> fromPath(final List<Integer> columnsTypes, final String filePath)
 	    throws IOException, CSVParseException {
 	final List<Hit> hits = new ArrayList<>();
 	fromCSV(columnsTypes, filePath, new ArrayList<>(0), Filter.ANY_FILTER, 0, -1, hits);

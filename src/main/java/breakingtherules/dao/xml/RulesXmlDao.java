@@ -47,8 +47,8 @@ public class RulesXmlDao implements RulesDao {
      * @see breakingtherules.dao.RulesDao#getOriginalRule(int)
      */
     @Override
-    public Rule getOriginalRule(final int jobId) throws IOException {
-	final String path = XmlDaoConfig.getRulesFile(jobId);
+    public Rule getOriginalRule(final String jobName) throws IOException {
+	final String path = XmlDaoConfig.getRulesFile(jobName);
 	// Load from file
 	final Document repositoryDoc = UtilityXmlDao.readFile(path);
 
@@ -64,8 +64,8 @@ public class RulesXmlDao implements RulesDao {
      * @see breakingtherules.dao.RulesDao#getRules(int)
      */
     @Override
-    public ListDto<Rule> getRules(final int jobId) throws IOException {
-	final String path = XmlDaoConfig.getRulesFile(jobId);
+    public ListDto<Rule> getRules(final String jobName) throws IOException {
+	final String path = XmlDaoConfig.getRulesFile(jobName);
 	return getRulesByPath(path);
     }
 
@@ -75,8 +75,8 @@ public class RulesXmlDao implements RulesDao {
      * @see breakingtherules.dao.RulesDao#getRules(int, int, int)
      */
     @Override
-    public ListDto<Rule> getRules(final int jobId, final int startIndex, final int endIndex) throws IOException {
-	final String path = XmlDaoConfig.getRulesFile(jobId);
+    public ListDto<Rule> getRules(final String jobName, final int startIndex, final int endIndex) throws IOException {
+	final String path = XmlDaoConfig.getRulesFile(jobName);
 	return getRulesByPath(path, startIndex, endIndex);
     }
 

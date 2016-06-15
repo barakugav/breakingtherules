@@ -22,13 +22,13 @@ import breakingtherules.utilities.Utility;
 public class SimpleAlgorithm implements SuggestionsAlgorithm {
 
     @Override
-    public List<Suggestion> getSuggestions(final HitsDao dao, final int jobId, final List<Rule> rules,
+    public List<Suggestion> getSuggestions(final HitsDao dao, final String jobName, final List<Rule> rules,
 	    final Filter filter, final int amount, final String attType) throws Exception {
 	final int attTypeId = Attribute.typeStrToTypeId(attType);
 	if (attTypeId == Attribute.UNKOWN_ATTRIBUTE_ID) {
 	    throw new IllegalArgumentException("Unknown attribute: " + attType);
 	}
-	return getSuggestions(dao.getUnique(jobId, rules, filter), amount, attTypeId);
+	return getSuggestions(dao.getUnique(jobName, rules, filter), amount, attTypeId);
     }
 
     List<Suggestion> getSuggestions(final Set<UniqueHit> hits, final int amount, final int attTypeId) {

@@ -33,15 +33,15 @@ public class HitsCSVDao implements HitsDao {
     }
 
     @Override
-    public ListDto<Hit> getHits(int jobId, List<Rule> rules, Filter filter) throws IOException {
+    public ListDto<Hit> getHits(String jobName, List<Rule> rules, Filter filter) throws IOException {
 	try {
-	    List<Hit> hits = CSVParser.fromCSV(CSVParser.DEFAULT_COLUMNS_TYPES, CSVDaoConfig.getHitsFile(jobId), rules,
+	    List<Hit> hits = CSVParser.fromCSV(CSVParser.DEFAULT_COLUMNS_TYPES, CSVDaoConfig.getHitsFile(jobName), rules,
 		    filter, -1);
 	    int size = hits.size();
 
 	    // Create new list of the rules to clone the list - so modifications
 	    // on the original list will not change the list saved in the cache
-	    m_totalHitsCache.put(new UnmodifiableTriple<>(Integer.valueOf(jobId),
+	    m_totalHitsCache.put(new UnmodifiableTriple<>(Integer.valueOf(jobName),
 		    Collections.unmodifiableList(new ArrayList<>(rules)), filter), Integer.valueOf(size));
 	    return new ListDto<>(hits, 0, size, size);
 	} catch (CSVParseException e) {
@@ -50,7 +50,7 @@ public class HitsCSVDao implements HitsDao {
     }
 
     @Override
-    public ListDto<Hit> getHits(int jobId, List<Rule> rules, Filter filter, int startIndex, int endIndex)
+    public ListDto<Hit> getHits(String jobName, List<Rule> rules, Filter filter, int startIndex, int endIndex)
 	    throws IOException {
 	try {
 	    if (endIndex < 0) {
@@ -63,8 +63,8 @@ public class HitsCSVDao implements HitsDao {
 		throw new IllegalArgumentException("startIndex > endIndex");
 	    }
 
-	    int numberOfHits = getHitsNumber(jobId, rules, filter);
-	    final List<Hit> hits = CSVParser.fromCSV(CSVParser.DEFAULT_COLUMNS_TYPES, CSVDaoConfig.getHitsFile(jobId),
+	    int numberOfHits = getHitsNumber(jobName, rules, filter);
+	    final List<Hit> hits = CSVParser.fromCSV(CSVParser.DEFAULT_COLUMNS_TYPES, CSVDaoConfig.getHitsFile(jobName),
 		    rules, filter, endIndex);
 	    final int size = hits.size();
 	    final List<Hit> subList = Utility.subList(hits, startIndex, endIndex - startIndex);
@@ -76,8 +76,8 @@ public class HitsCSVDao implements HitsDao {
     }
 
     @Override
-    public Set<UniqueHit> getUnique(int jobId, List<Rule> rules, Filter filter) throws CSVParseException, IOException {
-	Set<UniqueHit> uniqueHits = getHitsInternal(CSVDaoConfig.getHitsFile(jobId));
+    public Set<UniqueHit> getUnique(String jobName, List<Rule> rules, Filter filter) throws CSVParseException, IOException {
+	Set<UniqueHit> uniqueHits = getHitsInternal(CSVDaoConfig.getHitsFile(jobName));
 
 	if (rules.isEmpty() && Filter.ANY_FILTER.equals(filter))
 	    return uniqueHits;
@@ -90,13 +90,13 @@ public class HitsCSVDao implements HitsDao {
     }
 
     @Override
-    public int getHitsNumber(int jobId, List<Rule> rules, Filter filter) throws IOException {
-	final Integer cachedSize = m_totalHitsCache.get(new Triple<>(Integer.valueOf(jobId), rules, filter));
+    public int getHitsNumber(String jobName, List<Rule> rules, Filter filter) throws IOException {
+	final Integer cachedSize = m_totalHitsCache.get(new Triple<>(Integer.valueOf(jobName), rules, filter));
 	if (cachedSize != null) {
 	    return cachedSize.intValue();
 	} else {
 	    try {
-		Set<UniqueHit> uniqueHits = getHitsInternal(CSVDaoConfig.getHitsFile(jobId));
+		Set<UniqueHit> uniqueHits = getHitsInternal(CSVDaoConfig.getHitsFile(jobName));
 		int hitsNumber = 0;
 		for (UniqueHit hit : uniqueHits) {
 		    if (UtilityDao.isMatch(hit, rules, filter)) {
@@ -104,7 +104,7 @@ public class HitsCSVDao implements HitsDao {
 		    }
 		}
 		m_totalHitsCache.put(
-			new UnmodifiableTriple<>(Integer.valueOf(jobId),
+			new UnmodifiableTriple<>(Integer.valueOf(jobName),
 				Collections.unmodifiableList(new ArrayList<>(rules)), filter),
 			Integer.valueOf(hitsNumber));
 		return hitsNumber;

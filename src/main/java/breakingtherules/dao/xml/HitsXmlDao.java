@@ -40,8 +40,8 @@ public class HitsXmlDao implements HitsDao {
     }
 
     @Override
-    public int getHitsNumber(final int jobId, final List<Rule> rules, final Filter filter) throws IOException {
-	return getHits(jobId, rules, filter).getSize();
+    public int getHitsNumber(final String jobName, final List<Rule> rules, final Filter filter) throws IOException {
+	return getHits(jobName, rules, filter).getSize();
     }
 
     /*
@@ -51,8 +51,8 @@ public class HitsXmlDao implements HitsDao {
      * breakingtherules.firewall.Filter)
      */
     @Override
-    public ListDto<Hit> getHits(final int jobId, final List<Rule> rules, final Filter filter) throws IOException {
-	final String path = XmlDaoConfig.getHitsFile(jobId);
+    public ListDto<Hit> getHits(final String jobName, final List<Rule> rules, final Filter filter) throws IOException {
+	final String path = XmlDaoConfig.getHitsFile(jobName);
 	return getHitsByPath(path, rules, filter);
     }
 
@@ -63,9 +63,9 @@ public class HitsXmlDao implements HitsDao {
      * breakingtherules.firewall.Filter, int, int)
      */
     @Override
-    public ListDto<Hit> getHits(final int jobId, final List<Rule> rules, final Filter filter, final int startIndex,
+    public ListDto<Hit> getHits(final String jobName, final List<Rule> rules, final Filter filter, final int startIndex,
 	    final int endIndex) throws IOException {
-	final String path = XmlDaoConfig.getHitsFile(jobId);
+	final String path = XmlDaoConfig.getHitsFile(jobName);
 	return getHitsByPath(path, rules, filter, startIndex, endIndex);
     }
 

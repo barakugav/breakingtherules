@@ -16,12 +16,12 @@ public class CSVDaoConfig extends DaoConfig {
     /**
      * Get path to repository CSV file by job id
      * 
-     * @param id
-     *            id of the job
+     * @param name
+     *            name of the job
      * @return path to CSV repository file
      */
-    public static String getHitsFile(int id) {
-	return getRepoRoot(id) + HITS_FILE;
+    public static String getHitsFile(String name) {
+	return getRepoRoot(name) + HITS_FILE;
     }
 
 }

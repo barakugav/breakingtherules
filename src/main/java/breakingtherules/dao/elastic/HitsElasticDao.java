@@ -70,10 +70,10 @@ public class HitsElasticDao implements HitsDao {
 	m_elasticNode.close();
     }
 
-    public boolean doesJobExist(int jobId) {
+    public boolean doesJobExist(String jobName) {
 	try {
 	    final SearchRequestBuilder srchRequest = m_elasticClient.prepareSearch(ElasticDaoConfig.INDEX_NAME);
-	    final QueryBuilder query = QueryBuilders.termQuery(ElasticDaoConfig.FIELD_JOB_ID, jobId);
+	    final QueryBuilder query = QueryBuilders.termQuery(ElasticDaoConfig.FIELD_JOB_NAME, jobName);
 	    srchRequest.setQuery(query);
 	    srchRequest.setSize(0);
 	    srchRequest.setTerminateAfter(1);
@@ -85,10 +85,10 @@ public class HitsElasticDao implements HitsDao {
 	}
     }
 
-    public void deleteJob(int jobId) {
+    public void deleteJob(String jobName) {
 	System.out.println("deleting");
 
-	final QueryBuilder query = QueryBuilders.termQuery(ElasticDaoConfig.FIELD_JOB_ID, jobId);
+	final QueryBuilder query = QueryBuilders.termQuery(ElasticDaoConfig.FIELD_JOB_NAME, jobName);
 	final SearchRequestBuilder srchRequest = m_elasticClient.prepareSearch(ElasticDaoConfig.INDEX_NAME);
 	srchRequest.setQuery(query);
 	srchRequest.setSize(ElasticDaoConfig.DELETION_THRESHOLD);
@@ -120,19 +120,19 @@ public class HitsElasticDao implements HitsDao {
 	refreshIndex();
     }
 
-    public void addHit(final Hit hit, final int jobId) {
-	addHits(Collections.singletonList(hit), jobId);
+    public void addHit(final Hit hit, final String jobName) {
+	addHits(Collections.singletonList(hit), jobName);
 	refreshIndex();
     }
 
-    public void addHits(final List<Hit> hits, final int jobId) {
+    public void addHits(final List<Hit> hits, final String jobName) {
 	final BulkRequestBuilder bulkRequest = m_elasticClient.prepareBulk();
 	for (final Hit hit : hits) {
 
 	    try {
 		final XContentBuilder hitJson = XContentFactory.jsonBuilder();
 		hitJson.startObject();
-		hitJson.field(ElasticDaoConfig.FIELD_JOB_ID, jobId);
+		hitJson.field(ElasticDaoConfig.FIELD_JOB_NAME, jobName);
 		hitJson.startArray(ElasticDaoConfig.FIELD_ATTRIBUTES);
 		for (final Attribute attr : hit) {
 		    hitJson.startObject();
@@ -165,39 +165,39 @@ public class HitsElasticDao implements HitsDao {
     }
 
     @Override
-    public int getHitsNumber(final int jobId, final List<Rule> rules, final Filter filter) throws IOException {
-	final Integer cachedSize = m_totalHitsCache.get(new Triple<>(Integer.valueOf(jobId), rules, filter));
+    public int getHitsNumber(final String jobName, final List<Rule> rules, final Filter filter) throws IOException {
+	final Integer cachedSize = m_totalHitsCache.get(new Triple<>(Integer.valueOf(jobName), rules, filter));
 	if (cachedSize != null) {
 	    return cachedSize.intValue();
 	} else {
-	    return getHits(jobId, rules, filter).getSize();
+	    return getHits(jobName, rules, filter).getSize();
 	}
     }
 
     @Override
-    public ListDto<Hit> getHits(final int jobId, final List<Rule> rules, final Filter filter) throws IOException {
-	final List<Hit> hits = getHits(jobId, rules, filter, true, 0, 0);
+    public ListDto<Hit> getHits(final String jobName, final List<Rule> rules, final Filter filter) throws IOException {
+	final List<Hit> hits = getHits(jobName, rules, filter, true, 0, 0);
 
 	// Create new list of the rules to clone the list - so modifications on
 	// the original list will not change the list saved in the cache
-	m_totalHitsCache.put(new UnmodifiableTriple<>(Integer.valueOf(jobId),
+	m_totalHitsCache.put(new UnmodifiableTriple<>(Integer.valueOf(jobName),
 		Collections.unmodifiableList(new ArrayList<>(rules)), filter), Integer.valueOf(hits.size()));
 	return new ListDto<>(hits, 0, hits.size(), hits.size());
     }
 
     @Override
-    public ListDto<Hit> getHits(final int jobId, final List<Rule> rules, final Filter filter, final int startIndex,
+    public ListDto<Hit> getHits(final String jobName, final List<Rule> rules, final Filter filter, final int startIndex,
 	    final int endIndex) throws IOException {
-	final Integer total = m_totalHitsCache.get(new Triple<>(Integer.valueOf(jobId), rules, filter));
+	final Integer total = m_totalHitsCache.get(new Triple<>(Integer.valueOf(jobName), rules, filter));
 	if (total == null) {
 	    // getHits(int, List<Rule>, Filter) save to cache
-	    final ListDto<Hit> allHits = getHits(jobId, rules, filter);
+	    final ListDto<Hit> allHits = getHits(jobName, rules, filter);
 	    final int size = allHits.getSize();
 
 	    final List<Hit> hits = Utility.subList(allHits.getData(), startIndex, endIndex - startIndex);
 	    return new ListDto<>(hits, Math.min(startIndex, size), Math.min(endIndex, size), allHits.getData().size());
 	} else {
-	    final List<Hit> hits = getHits(jobId, rules, filter, false, startIndex, endIndex);
+	    final List<Hit> hits = getHits(jobName, rules, filter, false, startIndex, endIndex);
 	    final int size = hits.size();
 	    return new ListDto<>(hits, Math.min(startIndex, size), Math.min(endIndex, size), total.intValue());
 	}
@@ -215,7 +215,7 @@ public class HitsElasticDao implements HitsDao {
      * hits that do not match the given rules and filter, this method returns
      * the hits in range [startIndex, endIndex)
      * 
-     * @param jobId
+     * @param jobName
      *            The job from which to take the hits
      * @param rules
      *            The rules of this job. Hits that match these rules will not be
@@ -235,9 +235,9 @@ public class HitsElasticDao implements HitsDao {
      * @return A ListDto of the relevant hits, from the given range, if such
      *         exists
      */
-    private List<Hit> getHits(final int jobId, final List<Rule> rules, final Filter filter, final boolean all,
+    private List<Hit> getHits(final String jobName, final List<Rule> rules, final Filter filter, final boolean all,
 	    int startIndex, final int endIndex) {
-	final QueryBuilder query = QueryBuilders.termQuery(ElasticDaoConfig.FIELD_JOB_ID, jobId);
+	final QueryBuilder query = QueryBuilders.termQuery(ElasticDaoConfig.FIELD_JOB_NAME, jobName);
 
 	final SearchRequestBuilder srchRequest = m_elasticClient.prepareSearch(ElasticDaoConfig.INDEX_NAME);
 	srchRequest.setSearchType(SearchType.QUERY_AND_FETCH);

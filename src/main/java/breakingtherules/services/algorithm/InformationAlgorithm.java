@@ -167,24 +167,24 @@ public class InformationAlgorithm implements SuggestionsAlgorithm {
     }
 
     @Override
-    public List<Suggestion> getSuggestions(final HitsDao dao, final int jobId, final List<Rule> rules,
+    public List<Suggestion> getSuggestions(final HitsDao dao, final String jobName, final List<Rule> rules,
 	    final Filter filter, final int amount, final String attType) throws Exception {
 	final int attTypeId = Attribute.typeStrToTypeId(attType);
 	if (attTypeId == Attribute.UNKOWN_ATTRIBUTE_ID) {
 	    throw new IllegalArgumentException("Unkown attribute: " + attType);
 	}
-	Set<UniqueHit> hits = dao.getUnique(jobId, rules, filter);
+	Set<UniqueHit> hits = dao.getUnique(jobName, rules, filter);
 	final InformationAlgoRunner runner = new InformationAlgoRunner(hits, amount, attTypeId);
 	runner.run();
 	return runner.result;
     }
 
     @Override
-    public List<Suggestion>[] getSuggestions(final HitsDao dao, final int jobId, final List<Rule> rules,
+    public List<Suggestion>[] getSuggestions(final HitsDao dao, final String jobName, final List<Rule> rules,
 	    final Filter filter, final int amount, final String[] attTypes) throws Exception {
 
 	InformationAlgoRunner[] runners = new InformationAlgoRunner[attTypes.length];
-	Set<UniqueHit> hits = dao.getUnique(jobId, rules, filter);
+	Set<UniqueHit> hits = dao.getUnique(jobName, rules, filter);
 	for (int i = 0; i < attTypes.length; i++) {
 	    String attType = attTypes[i];
 	    final int attTypeId = Attribute.typeStrToTypeId(attType);
