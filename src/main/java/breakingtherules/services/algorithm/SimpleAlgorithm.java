@@ -1,6 +1,5 @@
 package breakingtherules.services.algorithm;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -15,12 +14,25 @@ import breakingtherules.firewall.Rule;
 import breakingtherules.utilities.Utility;
 
 /**
- * Simple algorithm the implements {@link SuggestionsAlgorithm}
+ * Simple algorithm that implements {@link SuggestionsAlgorithm}.
+ * <p>
+ * Simply count the number of hits for each attribute, and suggests the ones the
+ * ones that occurs more than others.
+ * <p>
  * 
- * Simply count the number of hits for each suggestion
+ * @author Barak Ugav
+ * @author Yishai Gronich
  */
 public class SimpleAlgorithm implements SuggestionsAlgorithm {
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * breakingtherules.services.algorithm.SuggestionsAlgorithm#getSuggestions(
+     * breakingtherules.dao.HitsDao, java.lang.String, java.util.List,
+     * breakingtherules.firewall.Filter, int, java.lang.String)
+     */
     @Override
     public List<Suggestion> getSuggestions(final HitsDao dao, final String jobName, final List<Rule> rules,
 	    final Filter filter, final int amount, final String attType) throws Exception {
@@ -32,7 +44,6 @@ public class SimpleAlgorithm implements SuggestionsAlgorithm {
     }
 
     List<Suggestion> getSuggestions(final Set<UniqueHit> hits, final int amount, final int attTypeId) {
-
 	SimpleAlgorithmRunner runner = new SimpleAlgorithmRunner(hits, amount, attTypeId);
 	runner.run();
 	return runner.result;
@@ -51,6 +62,11 @@ public class SimpleAlgorithm implements SuggestionsAlgorithm {
 	    this.attTypeId = attTypeId;
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see java.lang.Runnable#run()
+	 */
 	@Override
 	public void run() {
 	    // Every possible single attribute becomes a suggestion.
@@ -76,7 +92,7 @@ public class SimpleAlgorithm implements SuggestionsAlgorithm {
 	    }
 
 	    // Calculate scores
-	    List<Suggestion> allSuggestionsList = new ArrayList<>(allSuggestionsMap.values());
+	    final List<Suggestion> allSuggestionsList = Utility.newArrayList(allSuggestionsMap.values());
 	    for (final Suggestion suggestion : allSuggestionsList) {
 		suggestion.setScore(suggestion.getSize() / (double) numberOfHits);
 	    }
@@ -90,6 +106,12 @@ public class SimpleAlgorithm implements SuggestionsAlgorithm {
 	    result = Utility.subList(allSuggestionsList, 0, amount);
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see breakingtherules.services.algorithm.SuggestionsAlgorithmRunner#
+	 * getResults()
+	 */
 	@Override
 	public List<Suggestion> getResults() {
 	    return result;

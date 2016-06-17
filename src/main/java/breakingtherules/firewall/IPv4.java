@@ -1,6 +1,7 @@
 package breakingtherules.firewall;
 
 import java.util.List;
+import java.util.function.Function;
 
 import breakingtherules.utilities.Cache;
 import breakingtherules.utilities.Caches;
@@ -244,9 +245,7 @@ public final class IPv4 extends IP {
      */
     @Override
     public int hashCode() {
-	// Reverse result because a lot of IP's lowers bits are zeros (lowers
-	// bits are usually used by hash tables)
-	return Integer.reverse(m_maskSize ^ m_address);
+	return m_maskSize ^ m_address;
     }
 
     /*
@@ -515,17 +514,10 @@ public final class IPv4 extends IP {
      * @return IPv4 object with the specified address and maskSize.
      */
     private static IPv4 createInternal(final int address, final int maskSize) {
-
 	final Cache<Integer, IPv4> cache = IPv4Cache.cache[maskSize];
-
+	final Function<Integer, IPv4> supplier = IPv4Cache.suppliers[maskSize];
 	// Intentionally using 'new Integer(int)' and not 'Integer.valueOf(int)'
-	final Integer addressInteger = new Integer(Integer.reverse(address));
-
-	IPv4 ip = cache.get(addressInteger);
-	if (ip == null) {
-	    ip = cache.add(addressInteger, new IPv4(address, maskSize));
-	}
-	return ip;
+	return cache.getOrAdd(new Integer(address), supplier);
     }
 
     /**
@@ -542,13 +534,29 @@ public final class IPv4 extends IP {
 	 */
 	static final Cache<Integer, IPv4>[] cache;
 
+	/**
+	 * Array of IPv4 suppliers.
+	 * <p>
+	 * Used as {@link Cache#getOrAdd(Object, Function)} last parameter.
+	 */
+	static final Function<Integer, IPv4>[] suppliers;
+
 	static {
 	    // Used dummy to suppress warnings
 	    @SuppressWarnings({ "unchecked", "unused" })
-	    Object dummy = cache = new Cache[SIZE + 1];
+	    Object dummy1 = cache = new Cache[SIZE + 1];
 
-	    for (int i = cache.length; i-- != 0;)
+	    // Used dummy to suppress warnings
+	    @SuppressWarnings({ "unchecked", "unused" })
+	    Object dummy2 = suppliers = new Function[SIZE + 1];
+
+	    for (int i = cache.length; i-- != 0;) {
 		cache[i] = Caches.synchronizedCache(new SoftCache<>());
+		final int maskSize = i;
+		suppliers[i] = (final Integer address) -> {
+		    return new IPv4(address.intValue(), maskSize);
+		};
+	    }
 	}
 
     }

@@ -1,7 +1,7 @@
 package breakingtherules.utilities;
 
 import java.util.Objects;
-import java.util.function.Supplier;
+import java.util.function.Function;
 
 /**
  * Utilities class for caches.
@@ -345,10 +345,10 @@ public class Caches {
 	}
 
 	/**
-	 * Synchronized version of {@link Cache#getOrAdd(Object, Supplier)}.
+	 * Synchronized version of {@link Cache#getOrAdd(Object, Function)}.
 	 */
 	@Override
-	public E getOrAdd(final K key, final Supplier<E> supplier) {
+	public E getOrAdd(final K key, final Function<? super K, ? extends E> supplier) {
 	    synchronized (sync) {
 		return cache.getOrAdd(key, supplier);
 	    }

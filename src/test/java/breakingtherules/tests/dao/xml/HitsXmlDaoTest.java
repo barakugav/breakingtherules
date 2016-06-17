@@ -16,6 +16,7 @@ import org.w3c.dom.Element;
 
 import breakingtherules.dao.xml.HitsXmlDao;
 import breakingtherules.dao.xml.UtilityXmlDao;
+import breakingtherules.dao.xml.XMLParseException;
 import breakingtherules.firewall.Filter;
 import breakingtherules.firewall.Rule;
 import breakingtherules.tests.TestBase;
@@ -23,7 +24,7 @@ import breakingtherules.tests.TestBase;
 public class HitsXmlDaoTest extends TestBase {
 
     @Test
-    public void getHitsByPathTest() {
+    public void getHitsByPathTest() throws XMLParseException, IOException {
 	RepositoryDocument doc = new RepositoryDocument();
 
 	int numberOfHits = 10;
@@ -36,14 +37,8 @@ public class HitsXmlDaoTest extends TestBase {
 	    doc.addElement(hitElm);
 	}
 
-	try {
-	    HitsXmlDao dao = new HitsXmlDao();
-	    dao.getHitsByPath(doc.getPath(), new ArrayList<Rule>(), Filter.ANY_FILTER);
-
-	} catch (IOException e) {
-	    e.printStackTrace();
-	    fail("Failed to read from file: " + e.getMessage());
-	}
+	HitsXmlDao dao = new HitsXmlDao();
+	dao.getHitsByPath(doc.getPath(), new ArrayList<Rule>(), Filter.ANY_FILTER);
 
 	doc.destroy();
     }

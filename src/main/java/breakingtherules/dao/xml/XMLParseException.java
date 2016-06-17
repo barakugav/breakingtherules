@@ -18,4 +18,8 @@ public class XMLParseException extends ParseException {
 	super(cause);
     }
 
+    public XMLParseException(final String message, final Throwable cause) {
+	super(message, cause);
+    }
+
 }

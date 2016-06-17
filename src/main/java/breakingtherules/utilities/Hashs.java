@@ -45,7 +45,7 @@ public class Hashs {
      * <p>
      * Used to mix hash code bits.
      * 
-     * @see #hash(Object)
+     * @see #mix(int)
      */
     private static final int PHI = 0x9E3779B9;
 
@@ -76,19 +76,84 @@ public class Hashs {
     /**
      * Compute the hash code for an object and mix the result bits.
      * 
-     * <p>
-     * Compute the object hash and mixes the bits of the result by multiplying
-     * by the golden ratio and xorshifting the result. It is borrowed from
-     * <a href="https://github.com/OpenHFT/Koloboke">Koloboke</a>.
-     * 
      * @param o
-     *            non null object
+     *            non null object.
      * @return a hash value obtained by mixing the bits of the object's hash
      *         code.
      */
-    static int hash(final Object o) {
-	final int h = o.hashCode() * PHI;
+    public static int hash(final Object o) {
+	return mix(o.hashCode());
+    }
+
+    /**
+     * Compute the hash code for an object by a strategy and mix the result
+     * bits.
+     * 
+     * @param <K>
+     *            type of the object.
+     * @param k
+     *            non null object.
+     * @param strategy
+     *            the strategy which compute the hash code.
+     * @return a hash value obtained by mixing the bits of the object's hash
+     *         code by the strategy.
+     */
+    public static <K> int hash(final K k, final Strategy<? super K> strategy) {
+	return mix(strategy.hashCode(k));
+    }
+
+    /**
+     * Quickly mixes the bits of an integer.
+     * <p>
+     * This method mixes the bits of the argument by multiplying by the golden
+     * ratio and xorshifting the result. It is borrowed from
+     * <a href="https://github.com/OpenHFT/Koloboke">Koloboke</a>.
+     * 
+     * @param x
+     *            an integer.
+     * @return a hash value obtained by mixing the bits of {@code x}.
+     */
+    public final static int mix(final int x) {
+	final int h = x * PHI;
 	return h ^ (h >>> 16);
+    }
+
+    /**
+     * A hash strategy deciding equality and computing hash codes.
+     * <p>
+     * 
+     * @author Barak Ugav
+     * @author Yishai Gronich
+     * @param <K>
+     *            type of object the strategy is working on.
+     * 
+     */
+    public static interface Strategy<K> {
+
+	/**
+	 * Check if two <bold>non-nulls</bold> objects are equals by the
+	 * strategy.
+	 * <p>
+	 * 
+	 * @param a
+	 *            first compared object.
+	 * @param b
+	 *            second compared object.
+	 * @return true if the two objects are equals by the strategy, else -
+	 *         false.
+	 */
+	public boolean equals(K a, K b);
+
+	/**
+	 * Compute the hash code for an object.
+	 * <p>
+	 * 
+	 * @param k
+	 *            non-null object.
+	 * @return hash code of the object by the strategy.
+	 */
+	public int hashCode(K k);
+
     }
 
 }

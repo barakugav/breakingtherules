@@ -83,7 +83,7 @@ public class TestBase {
     }
 
     public static void assertEquals(String message, Object expected, Object actual) {
-	if (!Utility.equals(expected, actual)) {
+	if (!Utility.deepEquals(expected, actual)) {
 	    failNotEqual(message, expected, actual);
 	}
     }

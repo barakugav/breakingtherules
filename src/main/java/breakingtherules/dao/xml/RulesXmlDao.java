@@ -32,14 +32,8 @@ public class RulesXmlDao implements RulesDao {
     private static final String REPOSITORY_TAG = "Repository";
     private static final String RULE_TAG = "rule";
     private static final String ORIGINAL_RULE_TAG = "original-rule";
-    
-    public static final String REPOSITORY_NAME = "repository.xml";
 
-    /**
-     * Constructor
-     */
-    public RulesXmlDao() {
-    }
+    public static final String REPOSITORY_NAME = "repository.xml";
 
     /*
      * (non-Javadoc)

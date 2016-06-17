@@ -185,15 +185,14 @@ abstract class AttributesContainer implements Iterable<Attribute> {
     private static Attribute[] toArray(final List<Attribute> attributesList) {
 	final Attribute[] attributesArr = new Attribute[Attribute.TYPES_COUNT];
 	for (final Attribute attribute : attributesList) {
-	    if (attribute == null) {
-		continue;
+	    if (attribute != null) {
+		final int attId = attribute.getTypeId();
+		if (attributesArr[attId] != null) {
+		    throw new IllegalArgumentException(
+			    "More then one attribute of the same type (" + attribute.getType() + ")");
+		}
+		attributesArr[attId] = attribute;
 	    }
-	    final int attId = attribute.getTypeId();
-	    if (attributesArr[attId] != null) {
-		throw new IllegalArgumentException(
-			"More then one attribute of the same type (" + attribute.getType() + ")");
-	    }
-	    attributesArr[attId] = attribute;
 	}
 	return attributesArr;
     }

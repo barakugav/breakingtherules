@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import breakingtherules.dao.ParseException;
 import breakingtherules.firewall.Attribute;
 import breakingtherules.firewall.Destination;
 import breakingtherules.firewall.Filter;
@@ -26,7 +27,7 @@ public class FilterController {
     @RequestMapping(value = "/filter", method = RequestMethod.PUT, params = { "source", "destination", "service" })
     public void setFilter(@RequestParam(value = "source") String source,
 	    @RequestParam(value = "destination") String destination, @RequestParam(value = "service") String service)
-		    throws IllegalArgumentException, IOException {
+		    throws IllegalArgumentException, IOException, ParseException {
 	List<Attribute> filterAtts = new ArrayList<>();
 	filterAtts.add(Source.create(source));
 	filterAtts.add(Destination.create(destination));

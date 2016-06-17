@@ -3,11 +3,12 @@ package breakingtherules.firewall;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.function.Function;
 
 import breakingtherules.utilities.Cache;
 import breakingtherules.utilities.Caches;
-import breakingtherules.utilities.IntArrayWrapper;
-import breakingtherules.utilities.SoftCache;
+import breakingtherules.utilities.CustomSoftCache;
+import breakingtherules.utilities.IntArrayStrategy;
 import breakingtherules.utilities.Utility;
 
 /**
@@ -64,7 +65,7 @@ public final class IPv6 extends IP {
     /**
      * Number of ints needed to represent the address.
      */
-    private static final int ADDRESS_ARRAY_SIZE = SIZE / Integer.SIZE; // 4
+    static final int ADDRESS_ARRAY_SIZE = SIZE / Integer.SIZE; // 4
 
     // TODO - javadoc
     private static final int OFFSET_IN_BLOCK_MASK = 0x1f; // 31
@@ -641,13 +642,9 @@ public final class IPv6 extends IP {
      * @return IPv6 object with the specified address and maskSize.
      */
     private static IPv6 createInternal(final int[] address, final int maskSize) {
-	final Cache<IntArrayWrapper, IPv6> cache = IPv6Cache.cache[maskSize];
-	final IntArrayWrapper key = new IntArrayWrapper(address);
-	IPv6 ip = cache.get(key);
-	if (ip == null) {
-	    ip = cache.add(key, new IPv6(address, maskSize));
-	}
-	return ip;
+	final Cache<int[], IPv6> cache = IPv6Cache.cache[maskSize];
+	final Function<int[], IPv6> supplier = IPv6Cache.suppliers[maskSize];
+	return cache.getOrAdd(address, supplier);
     }
 
     /**
@@ -662,15 +659,26 @@ public final class IPv6 extends IP {
 	/**
 	 * Array of IPv6 objects.
 	 */
-	static final Cache<IntArrayWrapper, IPv6>[] cache;
+	static final Cache<int[], IPv6>[] cache;
+
+	static final Function<int[], IPv6>[] suppliers;
 
 	static {
 	    // Used dummy to suppress warnings
 	    @SuppressWarnings({ "unchecked", "unused" })
-	    Object dummy = cache = new Cache[SIZE + 1];
+	    Object dummy1 = cache = new Cache[SIZE + 1];
 
-	    for (int i = cache.length; i-- != 0;)
-		cache[i] = Caches.synchronizedCache(new SoftCache<>());
+	    // Used dummy to suppress warnings
+	    @SuppressWarnings({ "unchecked", "unused" })
+	    Object dummy2 = suppliers = new Function[SIZE + 1];
+
+	    for (int i = cache.length; i-- != 0;) {
+		cache[i] = Caches.synchronizedCache(new CustomSoftCache<>(IntArrayStrategy.INSTANCE));
+		final int maskSize = i;
+		suppliers[i] = (final int[] array) -> {
+		    return new IPv6(array, maskSize);
+		};
+	    }
 	}
 
     }

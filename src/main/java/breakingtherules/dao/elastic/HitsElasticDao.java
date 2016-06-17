@@ -120,45 +120,40 @@ public class HitsElasticDao implements HitsDao {
 	refreshIndex();
     }
 
-    public void addHit(final Hit hit, final String jobName) {
+    public void addHit(final Hit hit, final String jobName) throws IOException {
 	addHits(Collections.singletonList(hit), jobName);
 	refreshIndex();
     }
 
-    public void addHits(final List<Hit> hits, final String jobName) {
+    public void addHits(final List<Hit> hits, final String jobName) throws IOException {
 	final BulkRequestBuilder bulkRequest = m_elasticClient.prepareBulk();
 	for (final Hit hit : hits) {
 
-	    try {
-		final XContentBuilder hitJson = XContentFactory.jsonBuilder();
+	    final XContentBuilder hitJson = XContentFactory.jsonBuilder();
+	    hitJson.startObject();
+	    hitJson.field(ElasticDaoConfig.FIELD_JOB_NAME, jobName);
+	    hitJson.startArray(ElasticDaoConfig.FIELD_ATTRIBUTES);
+	    for (final Attribute attr : hit) {
 		hitJson.startObject();
-		hitJson.field(ElasticDaoConfig.FIELD_JOB_NAME, jobName);
-		hitJson.startArray(ElasticDaoConfig.FIELD_ATTRIBUTES);
-		for (final Attribute attr : hit) {
-		    hitJson.startObject();
-		    hitJson.field(ElasticDaoConfig.FIELD_ATTR_TYPEID, attr.getTypeId());
-		    hitJson.field(ElasticDaoConfig.FIELD_ATTR_VALUE, attr.toString());
-		    hitJson.endObject();
-		}
-		hitJson.endArray().endObject();
-
-		final IndexRequestBuilder indexRequest = m_elasticClient.prepareIndex(ElasticDaoConfig.INDEX_NAME,
-			ElasticDaoConfig.TYPE_HIT);
-		indexRequest.setSource(hitJson);
-		bulkRequest.add(indexRequest);
-
-		hitJson.close();
-
-	    } catch (final IOException e) {
-		e.printStackTrace();
+		hitJson.field(ElasticDaoConfig.FIELD_ATTR_TYPEID, attr.getTypeId());
+		hitJson.field(ElasticDaoConfig.FIELD_ATTR_VALUE, attr.toString());
+		hitJson.endObject();
 	    }
+	    hitJson.endArray().endObject();
+
+	    final IndexRequestBuilder indexRequest = m_elasticClient.prepareIndex(ElasticDaoConfig.INDEX_NAME,
+		    ElasticDaoConfig.TYPE_HIT);
+	    indexRequest.setSource(hitJson);
+	    bulkRequest.add(indexRequest);
+
+	    hitJson.close();
 	}
 	final BulkResponse bulkResponse = bulkRequest.execute().actionGet();
 	if (bulkResponse.hasFailures()) {
-	    System.out.println("Bulk add request had failures.");
+	    System.err.println("Bulk add request had failures.");
 	    // process failures by iterating through each bulk response item
 	    for (final BulkItemResponse item : bulkResponse) {
-		System.out.println(item.getFailureMessage());
+		System.err.println(item.getFailureMessage());
 	    }
 	}
 	refreshIndex();
@@ -180,27 +175,11 @@ public class HitsElasticDao implements HitsDao {
 
 	// Create new list of the rules to clone the list - so modifications on
 	// the original list will not change the list saved in the cache
-	m_totalHitsCache.put(new UnmodifiableTriple<>(Integer.valueOf(jobName),
-		Collections.unmodifiableList(new ArrayList<>(rules)), filter), Integer.valueOf(hits.size()));
+	m_totalHitsCache.put(
+		new UnmodifiableTriple<>(Integer.valueOf(jobName),
+			Collections.unmodifiableList(Utility.newArrayList(rules)), filter),
+		Integer.valueOf(hits.size()));
 	return new ListDto<>(hits, 0, hits.size(), hits.size());
-    }
-
-    @Override
-    public ListDto<Hit> getHits(final String jobName, final List<Rule> rules, final Filter filter, final int startIndex,
-	    final int endIndex) throws IOException {
-	final Integer total = m_totalHitsCache.get(new Triple<>(Integer.valueOf(jobName), rules, filter));
-	if (total == null) {
-	    // getHits(int, List<Rule>, Filter) save to cache
-	    final ListDto<Hit> allHits = getHits(jobName, rules, filter);
-	    final int size = allHits.getSize();
-
-	    final List<Hit> hits = Utility.subList(allHits.getData(), startIndex, endIndex - startIndex);
-	    return new ListDto<>(hits, Math.min(startIndex, size), Math.min(endIndex, size), allHits.getData().size());
-	} else {
-	    final List<Hit> hits = getHits(jobName, rules, filter, false, startIndex, endIndex);
-	    final int size = hits.size();
-	    return new ListDto<>(hits, Math.min(startIndex, size), Math.min(endIndex, size), total.intValue());
-	}
     }
 
     private void refreshIndex() {

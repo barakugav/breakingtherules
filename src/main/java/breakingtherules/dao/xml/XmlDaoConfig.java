@@ -12,11 +12,11 @@ class XmlDaoConfig extends DaoConfig {
     static final String HIT = "hit";
 
     static String getHitsFile(final String jobName) {
-	return getRepoRoot(jobName) + HITS_FILE;
+	return new StringBuilder().append(getRepoRoot(jobName)).append('/').append(HITS_FILE).toString();
     }
 
     static String getRulesFile(final String jobName) {
-	return getRepoRoot(jobName) + RULES_FILE;
+	return new StringBuilder().append(getRepoRoot(jobName)).append('/').append(RULES_FILE).toString();
     }
 
 }

@@ -33,14 +33,9 @@ import breakingtherules.utilities.Utility;
  */
 public class HitsXmlDao implements HitsDao {
 
-    /**
-     * Constructor
-     */
-    public HitsXmlDao() {
-    }
-
     @Override
-    public int getHitsNumber(final String jobName, final List<Rule> rules, final Filter filter) throws IOException {
+    public int getHitsNumber(final String jobName, final List<Rule> rules, final Filter filter)
+	    throws IOException, XMLParseException {
 	return getHits(jobName, rules, filter).getSize();
     }
 
@@ -51,22 +46,10 @@ public class HitsXmlDao implements HitsDao {
      * breakingtherules.firewall.Filter)
      */
     @Override
-    public ListDto<Hit> getHits(final String jobName, final List<Rule> rules, final Filter filter) throws IOException {
+    public ListDto<Hit> getHits(final String jobName, final List<Rule> rules, final Filter filter)
+	    throws IOException, XMLParseException {
 	final String path = XmlDaoConfig.getHitsFile(jobName);
 	return getHitsByPath(path, rules, filter);
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see breakingtherules.dao.HitsDao#getHits(int, java.util.List,
-     * breakingtherules.firewall.Filter, int, int)
-     */
-    @Override
-    public ListDto<Hit> getHits(final String jobName, final List<Rule> rules, final Filter filter, final int startIndex,
-	    final int endIndex) throws IOException {
-	final String path = XmlDaoConfig.getHitsFile(jobName);
-	return getHitsByPath(path, rules, filter, startIndex, endIndex);
     }
 
     /**
@@ -82,9 +65,11 @@ public class HitsXmlDao implements HitsDao {
      * @return all hits that match all rules and filter
      * @throws IOException
      *             if failed to read from memory
+     * @throws XMLParseException
+     *             if any XML parse error occurs in the data.
      */
     public ListDto<Hit> getHitsByPath(final String repoPath, final List<Rule> rules, final Filter filter)
-	    throws IOException {
+	    throws IOException, XMLParseException {
 	final List<Hit> allHits = loadHits(repoPath);
 	final List<Hit> matchedHits = new ArrayList<>();
 
@@ -115,9 +100,11 @@ public class HitsXmlDao implements HitsDao {
      *         endIndex]
      * @throws IOException
      *             if failed to read from memory
+     * @throws XMLParseException
+     *             if any XML parse error occurs in the data.
      */
     public ListDto<Hit> getHitsByPath(final String repoPath, final List<Rule> rules, final Filter filter,
-	    final int startIndex, final int endIndex) throws IOException {
+	    final int startIndex, final int endIndex) throws IOException, XMLParseException {
 	if (startIndex < 0) {
 	    throw new IllegalArgumentException("Start index < 0");
 	} else if (startIndex > endIndex) {
@@ -178,8 +165,10 @@ public class HitsXmlDao implements HitsDao {
      * @return list of loaded hits from repository
      * @throws IOException
      *             if failed to read from file
+     * @throws XMLParseException
+     *             if any XML parse error occurs in the data.
      */
-    private static List<Hit> loadHits(final String repoPath) throws IOException {
+    private static List<Hit> loadHits(final String repoPath) throws IOException, XMLParseException {
 	// Load from file
 	final Document repositoryDoc = UtilityXmlDao.readFile(repoPath);
 
@@ -187,21 +176,17 @@ public class HitsXmlDao implements HitsDao {
 	final NodeList hitsList = repositoryDoc.getElementsByTagName(XmlDaoConfig.HIT);
 
 	// Extract all hits that match the filter
-	final List<Hit> hits = new ArrayList<>();
 	final int length = hitsList.getLength();
+	final ArrayList<Hit> hits = new ArrayList<>(length);
 	for (int i = 0; i < length; i++) {
 	    final Node hitNode = hitsList.item(i);
 	    if (hitNode.getNodeType() == Node.ELEMENT_NODE) {
-		try {
-		    final Element hitElm = (Element) hitNode;
-		    final Hit hit = createHit(hitElm);
-		    hits.add(hit);
-
-		} catch (final XMLParseException e) {
-		    e.printStackTrace();
-		}
+		final Element hitElm = (Element) hitNode;
+		final Hit hit = createHit(hitElm);
+		hits.add(hit);
 	    }
 	}
+	hits.trimToSize();
 	return hits;
     }
 

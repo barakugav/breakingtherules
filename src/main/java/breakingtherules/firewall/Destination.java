@@ -1,11 +1,11 @@
 package breakingtherules.firewall;
 
 import java.util.Objects;
+import java.util.function.Function;
 
 import breakingtherules.utilities.Cache;
 import breakingtherules.utilities.Caches;
-import breakingtherules.utilities.IntArrayWrapper;
-import breakingtherules.utilities.SoftCache;
+import breakingtherules.utilities.CustomSoftCache;
 
 /**
  * Destination attribute.
@@ -118,29 +118,19 @@ public class Destination extends IPAttribute {
      * @return destination object of the IP
      */
     private static Destination createInternal(final IP ip) {
-	Destination destination;
 	if (ip instanceof IPv4) {
-	    final Cache<Integer, Destination> cache = DestinationCache.IPv4Cache[ip.m_maskSize];
-	    // Intentionally using 'new Integer(int)' and not
-	    // 'Integer.valueOf(int)'
-	    final Integer addressInteger = new Integer(((IPv4) ip).m_address);
-	    destination = cache.get(addressInteger);
-	    if (destination == null) {
-		destination = cache.add(addressInteger, new Destination(ip));
-	    }
+	    final Cache<IPv4, Destination> cache = DestinationCache.IPv4Cache[ip.m_maskSize];
+	    final Function<IPv4, Destination> supplier = DestinationCache.IPv4Suppliers[ip.m_maskSize];
+	    return cache.getOrAdd((IPv4) ip, supplier);
 
 	} else if (ip instanceof IPv6) {
-	    final Cache<IntArrayWrapper, Destination> cache = DestinationCache.IPv6Cache[ip.m_maskSize];
-	    final IntArrayWrapper key = new IntArrayWrapper(((IPv6) ip).m_address);
-	    destination = cache.get(key);
-	    if (destination == null) {
-		destination = cache.add(key, new Destination(ip));
-	    }
+	    final Cache<IPv6, Destination> cache = DestinationCache.IPv6Cache[ip.m_maskSize];
+	    final Function<IPv6, Destination> supplier = DestinationCache.IPv6Suppliers[ip.m_maskSize];
+	    return cache.getOrAdd((IPv6) ip, supplier);
 
 	} else {
-	    destination = new Destination(ip);
+	    return new Destination(ip);
 	}
-	return destination;
     }
 
     /**
@@ -155,12 +145,16 @@ public class Destination extends IPAttribute {
 	/**
 	 * Cache of destination objects with IPv4 IPs
 	 */
-	static final Cache<Integer, Destination>[] IPv4Cache;
+	static final Cache<IPv4, Destination>[] IPv4Cache;
+
+	static final Function<IPv4, Destination>[] IPv4Suppliers;
 
 	/**
 	 * Cache of destination objects with IPv6 IPs
 	 */
-	static final Cache<IntArrayWrapper, Destination>[] IPv6Cache;
+	static final Cache<IPv6, Destination>[] IPv6Cache;
+
+	static final Function<IPv6, Destination>[] IPv6Suppliers;
 
 	static {
 	    // Used dummy to suppress warnings
@@ -169,13 +163,29 @@ public class Destination extends IPAttribute {
 
 	    // Used dummy to suppress warnings
 	    @SuppressWarnings({ "unchecked", "unused" })
-	    Object dummy2 = IPv6Cache = new Cache[IPv6.SIZE + 1];
+	    Object dummy2 = IPv4Suppliers = new Function[IPv4.SIZE + 1];
 
-	    for (int i = IPv4Cache.length; i-- != 0;)
-		IPv4Cache[i] = Caches.synchronizedCache(new SoftCache<>());
+	    // Used dummy to suppress warnings
+	    @SuppressWarnings({ "unchecked", "unused" })
+	    Object dummy3 = IPv6Cache = new Cache[IPv6.SIZE + 1];
 
-	    for (int i = IPv6Cache.length; i-- != 0;)
-		IPv6Cache[i] = Caches.synchronizedCache(new SoftCache<>());
+	    // Used dummy to suppress warnings
+	    @SuppressWarnings({ "unchecked", "unused" })
+	    Object dummy4 = IPv6Suppliers = new Function[IPv6.SIZE + 1];
+
+	    for (int i = IPv4Cache.length; i-- != 0;) {
+		IPv4Cache[i] = Caches.synchronizedCache(new CustomSoftCache<>(IPv4AddressStrategy.INSTANCE));
+		IPv4Suppliers[i] = (final IPv4 ip) -> {
+		    return new Destination(ip);
+		};
+	    }
+
+	    for (int i = IPv6Cache.length; i-- != 0;) {
+		IPv6Cache[i] = Caches.synchronizedCache(new CustomSoftCache<>(IPv6AddressStrategy.INSTANCE));
+		IPv6Suppliers[i] = (final IPv6 ip) -> {
+		    return new Destination(ip);
+		};
+	    }
 	}
 
     }

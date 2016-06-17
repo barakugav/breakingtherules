@@ -3,7 +3,7 @@ package breakingtherules.utilities;
 import java.lang.ref.ReferenceQueue;
 import java.lang.ref.WeakReference;
 import java.util.WeakHashMap;
-import java.util.function.Supplier;
+import java.util.function.Function;
 
 /**
  * Cache that provides search of cached element by key and adding element by
@@ -308,7 +308,7 @@ public class WeakCache<K, E> implements Cache<K, E> {
     }
 
     @Override
-    public E getOrAdd(final K key, final Supplier<E> supplier) {
+    public E getOrAdd(final K key, final Function<? super K, ? extends E> supplier) {
 	// Compute hash
 	final Object k = maskNull(key);
 	final int hash = Hashs.hash(k);
@@ -332,7 +332,7 @@ public class WeakCache<K, E> implements Cache<K, E> {
 	}
 
 	// Not found, insert new entry as first entry in list
-	final E element = supplier.get();
+	final E element = supplier.apply(key);
 	table[index] = new Entry(k, element, queue, hash, firstEntry);
 	grow();
 	return element;

@@ -62,7 +62,7 @@ public class CSVParser {
     public CSVParser(final List<Integer> columnsTypes) {
 
 	// Create unmodifiable clone of the input list
-	m_columnsTypes = Collections.unmodifiableList(new ArrayList<>(columnsTypes));
+	m_columnsTypes = Collections.unmodifiableList(Utility.newArrayList(columnsTypes));
 
 	sourceIndex = columnsTypes.indexOf(SOURCE);
 	destinationIndex = columnsTypes.indexOf(DESTINATION);
@@ -158,9 +158,7 @@ public class CSVParser {
      */
     public static List<Hit> fromPath(final List<Integer> columnsTypes, final String filePath)
 	    throws IOException, CSVParseException {
-	final List<Hit> hits = new ArrayList<>();
-	fromCSV(columnsTypes, filePath, new ArrayList<>(0), Filter.ANY_FILTER, 0, -1, hits);
-	return hits;
+	return fromCSV(columnsTypes, filePath, new ArrayList<>(0), Filter.ANY_FILTER, 0, -1, new ArrayList<>());
     }
 
     /**
@@ -221,8 +219,8 @@ public class CSVParser {
 	}
     }
 
-    static void fromCSV(final List<Integer> columnsTypes, final String filePath, final List<Rule> rules,
-	    final Filter filter, final int fromIndex, final int endIndex, final Collection<? super Hit> destination)
+    static <C extends Collection<? super Hit>> C fromCSV(final List<Integer> columnsTypes, final String filePath,
+	    final List<Rule> rules, final Filter filter, final int fromIndex, final int endIndex, final C destination)
 		    throws IOException, CSVParseException {
 	final File repoFile = new File(filePath);
 	if (!repoFile.exists()) {
@@ -261,9 +259,9 @@ public class CSVParser {
 		    }
 		}
 		lineNumber++;
-		
+
 		if (lineNumber % 1_000_000 == 0) {
-		    System.out.println("Reading hits from CSV: " +  lineNumber + " hits have been read so far.");
+		    System.out.println("Reading hits from CSV: " + lineNumber + " hits have been read so far.");
 		}
 	    }
 	} catch (final CSVParseException e) {
@@ -273,13 +271,12 @@ public class CSVParser {
 		reader.close();
 	    }
 	}
+	return destination;
     }
 
     static List<Hit> fromCSV(List<Integer> columnsTypes, String fileName, List<Rule> rules, Filter filter, int endIndex)
 	    throws CSVParseException, IOException {
-	ArrayList<Hit> hits = new ArrayList<>();
-	fromCSV(columnsTypes, fileName, rules, filter, 0, endIndex, hits);
-	return hits;
+	return fromCSV(columnsTypes, fileName, rules, filter, 0, endIndex, new ArrayList<>());
     }
 
     /**

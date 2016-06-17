@@ -1,6 +1,6 @@
 package breakingtherules.utilities;
 
-import java.util.function.Supplier;
+import java.util.function.Function;
 
 /**
  * Cache for reusable objects.
@@ -69,10 +69,10 @@ public interface Cache<K, E> {
      * @return the element that exists in the cache or the ones supplied from
      *         the supplier if needed.
      */
-    default E getOrAdd(final K key, final Supplier<E> supplier) {
+    default E getOrAdd(final K key, final Function<? super K, ? extends E> supplier) {
 	E elm = get(key);
 	if (elm == null) {
-	    elm = supplier.get();
+	    elm = supplier.apply(key);
 	    add(key, elm);
 	}
 	return elm;

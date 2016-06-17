@@ -2,6 +2,8 @@ package breakingtherules.utilities;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -88,7 +90,49 @@ public class Utility {
 
 	// Clone sub list because List.SubList(...) save a reference to the
 	// original list and therefore, the whole list is always kept in memory.
-	return new ArrayList<>(list.subList(offset, Math.min(list.size(), offset + size)));
+	return newArrayList(list.subList(offset, Math.min(list.size(), offset + size)));
+    }
+
+    public static <T> List<T> subList(final Iterable<? extends T> iterable, final int offset, final int size) {
+	if (offset < 0 || size < 0) {
+	    throw new IllegalArgumentException("offset and size should be positive (" + offset + ", " + size + ")");
+	}
+	final List<T> list = new ArrayList<>();
+	int index;
+	final Iterator<? extends T> it = iterable.iterator();
+	for (index = 0; it.hasNext() && index < offset; index++) {
+	    it.next();
+	}
+	for (final int fence = offset + size; it.hasNext() && index < fence; index++) {
+	    list.add(it.next());
+	}
+	return list;
+    }
+
+    /**
+     * Create new array list and initialize it with elements from another
+     * collection.
+     * <p>
+     * This method is preferred over
+     * {@link ArrayList#ArrayList(java.util.Collection)} because it won't call
+     * <code>coll.toArray()<code>.
+     * 
+     * @param <T>
+     *            the type of the elements in the new array list.
+     * @param coll
+     *            the collections that contains the initialize elements of the
+     *            array list.
+     * @return new array list with the collection elements.
+     * @throws NullPointerException
+     *             if the collection is null.
+     */
+    public static <T> ArrayList<T> newArrayList(final Collection<? extends T> coll) {
+	int size = coll.size();
+	ArrayList<T> arrayList = new ArrayList<>(size);
+	for (final Iterator<? extends T> it = coll.iterator(); size-- != 0;) {
+	    arrayList.add(it.next());
+	}
+	return arrayList;
     }
 
     /**
@@ -306,7 +350,7 @@ public class Utility {
      *            second object
      * @return true if the two objects are equal
      */
-    public static boolean equals(final Object o1, final Object o2) {
+    public static boolean deepEquals(final Object o1, final Object o2) {
 	return Arrays.deepEquals(new Object[] { o1 }, new Object[] { o2 });
     }
 
@@ -314,6 +358,8 @@ public class Utility {
      * Log of 2 in base e.
      */
     private static final double LOG2 = StrictMath.log(2);
+
+    private static final double LOG2_INVERSE = (1 + 1e-10) / LOG2;
 
     /**
      * Log 2 of a number
@@ -323,7 +369,7 @@ public class Utility {
      * @return log of base 2 of the number
      */
     public static double log2(final double num) {
-	return StrictMath.log(num) / LOG2;
+	return StrictMath.log(num) * LOG2_INVERSE;
     }
 
     /**

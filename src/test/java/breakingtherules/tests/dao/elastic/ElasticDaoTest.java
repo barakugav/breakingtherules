@@ -1,4 +1,4 @@
-package breakingtherules.tests.dao;
+package breakingtherules.tests.dao.elastic;
 
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -6,11 +6,14 @@ import static org.junit.Assert.fail;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import breakingtherules.dao.ParseException;
+import breakingtherules.dao.UniqueHit;
 import breakingtherules.dao.elastic.HitsElasticDao;
 import breakingtherules.dto.ListDto;
 import breakingtherules.firewall.Attribute;
@@ -21,15 +24,15 @@ import breakingtherules.firewall.Rule;
 import breakingtherules.firewall.Service;
 import breakingtherules.firewall.Source;
 import breakingtherules.tests.TestBase;
+import breakingtherules.tests.firewall.FirewallTestsUtility;
 
 public class ElasticDaoTest extends TestBase {
 
     private static HitsElasticDao hitsDao;
 
-    private static final String JOB_NAME = "572299"; // random
+    private static final String JOB_NAME = String.valueOf(new Random().nextInt());
 
     private static boolean jobInitialized = false;
-
 
     @BeforeClass
     public static void initDaoAndJob() throws Exception {
@@ -61,9 +64,9 @@ public class ElasticDaoTest extends TestBase {
 
     private static Hit createHit() {
 	List<Attribute> attributes = new ArrayList<>();
-	attributes.add(Source.create("128.76.2.9"));
-	attributes.add(Destination.create("128.76.2.9"));
-	attributes.add(Service.createFromString("TCP 80"));
+	attributes.add(Source.create(FirewallTestsUtility.getRandomIP()));
+	attributes.add(Destination.create(FirewallTestsUtility.getRandomIP()));
+	attributes.add(Service.create(rand.nextInt(256), rand.nextInt(1 << 16)));
 	return new Hit(attributes);
     }
 
@@ -90,7 +93,7 @@ public class ElasticDaoTest extends TestBase {
     }
 
     @Test
-    public void numberOfHitsIsCorrect() throws IOException {
+    public void numberOfHitsIsCorrect() throws IOException, ParseException {
 	checkJob();
 	final int SIZE = 10;
 	List<Hit> newHits = new ArrayList<>();
@@ -100,7 +103,8 @@ public class ElasticDaoTest extends TestBase {
 	hitsDao.addHits(newHits, JOB_NAME);
 	int beginIndex = 2;
 	int endIndex = 4;
-	ListDto<Hit> hits = hitsDao.getHits(JOB_NAME, new ArrayList<Rule>(), Filter.ANY_FILTER, beginIndex, endIndex);
+	ListDto<UniqueHit> hits = hitsDao.getHits(JOB_NAME, new ArrayList<Rule>(), Filter.ANY_FILTER, beginIndex,
+		endIndex);
 	assertEquals(endIndex - beginIndex, hits.getData().size());
     }
 

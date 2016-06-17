@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import breakingtherules.dao.ParseException;
 import breakingtherules.session.Job;
 import breakingtherules.session.NoCurrentJobException;
 
@@ -34,9 +35,10 @@ public class InitController {
      *             if any I/O error occurs
      * @throws NoCurrentJobException
      *             if job wan't set yet
+     * @throws ParseException 
      */
     @RequestMapping(value = "/job", method = RequestMethod.PUT)
-    public boolean init(@RequestParam(value = "job_name") String jobName) throws IOException, NoCurrentJobException {
+    public boolean init(@RequestParam(value = "job_name") String jobName) throws IOException, NoCurrentJobException, ParseException {
 	m_job.setJob(jobName);
 	return true;
     }

@@ -1,6 +1,7 @@
 package breakingtherules.utilities;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
@@ -27,17 +28,68 @@ public class UnionList<E> implements Iterable<E> {
     private Node<E> last;
 
     /**
-     * Construct new list with initialize elements
+     * Construct new empty union list.
+     */
+    public UnionList() {
+    }
+
+    /**
+     * Construct new union list with one element.
      * 
+     * @param initElement
+     *            initialize element.
+     */
+    public UnionList(final E initElement) {
+	first = last = new Node<>(initElement);
+    }
+
+    /**
+     * Construct new list with initialize elements.
+     * 
+     * @param firstInitElement
+     *            first initialize element.
+     * @param secondInitElement
+     *            second initialize element.
      * @param initElements
      *            initialize elements
+     * @throws NullPointerException
+     *             if the initialize elements array is null.
      */
     @SafeVarargs
-    public UnionList(final E... initElements) {
-	if (initElements.length > 0) {
-	    first = last = new Node<>(initElements[0]);
-	    for (int i = 1; i < initElements.length; i++) {
-		final Node<E> node = new Node<>(initElements[i]);
+    public UnionList(final E firstInitElement, final E secondInitElement, final E... initElements) {
+	Node<E> l = first = new Node<>(firstInitElement);
+	l = (l.next = new Node<>(secondInitElement));
+	for (int i = initElements.length; i-- != 0;) {
+	    l = (l.next = new Node<>(initElements[i]));
+	}
+	last = l;
+    }
+
+    /**
+     * Construct new list with initialize elements from collection.
+     * 
+     * @param c
+     *            the elements source collection.
+     * @throws NullPointerException
+     *             if the collection is null.
+     */
+    public UnionList(final Collection<? extends E> c) {
+	this(c.iterator());
+    }
+
+    /**
+     * Construct new list with initialize elements from iterator.
+     * 
+     * @param it
+     *            the elements source iterator.
+     * @throws NullPointerException
+     *             if the iterator is null.
+     */
+    public UnionList(final Iterator<? extends E> it) {
+	if (it.hasNext()) {
+	    first = last = new Node<>(it.next());
+	    while (it.hasNext()) {
+		final Node<E> node = new Node<>(it.next());
 		last.next = node;
 		last = node;
 	    }
@@ -58,14 +110,16 @@ public class UnionList<E> implements Iterable<E> {
      *             if the other list is null
      */
     public UnionList<E> transferElementsFrom(final UnionList<E> other) {
-	if (last == null) {
-	    first = other.first;
-	} else {
-	    last.next = other.first;
+	if (other != this) {
+	    if (last == null) {
+		first = other.first;
+	    } else {
+		last.next = other.first;
+	    }
+	    last = other.last;
+	    other.first = null;
+	    other.last = null;
 	}
-	last = other.last;
-	other.first = null;
-	other.last = null;
 	return this;
     }
 
@@ -86,8 +140,8 @@ public class UnionList<E> implements Iterable<E> {
      */
     public ArrayList<E> toArrayList() {
 	final ArrayList<E> l = new ArrayList<>();
-	for (E e : this) {
-	    l.add(e);
+	for (Node<E> node = first; node != null; node = node.next) {
+	    l.add(node.data);
 	}
 	return l;
     }
@@ -119,8 +173,8 @@ public class UnionList<E> implements Iterable<E> {
      * The Node class is a wrapper for an element in the union list that store a
      * reference to the next node in the list.
      * 
-     * 
-     *
+     * @author Barak Ugav
+     * @author Yishai Gronich
      * @param <E>
      *            type of element the node will wrap
      */

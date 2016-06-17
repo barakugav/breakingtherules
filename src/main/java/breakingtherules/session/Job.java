@@ -15,13 +15,14 @@ import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.stereotype.Component;
 
 import breakingtherules.dao.HitsDao;
+import breakingtherules.dao.ParseException;
 import breakingtherules.dao.RulesDao;
+import breakingtherules.dao.UniqueHit;
 import breakingtherules.dao.xml.RulesXmlDao;
 import breakingtherules.dto.ListDto;
 import breakingtherules.dto.SuggestionsDto;
 import breakingtherules.firewall.Attribute;
 import breakingtherules.firewall.Filter;
-import breakingtherules.firewall.Hit;
 import breakingtherules.firewall.Rule;
 import breakingtherules.services.algorithm.Suggestion;
 import breakingtherules.services.algorithm.SuggestionsAlgorithm;
@@ -49,16 +50,16 @@ public class Job {
     private SuggestionsAlgorithm m_algorithm;
 
     /**
-     * Name of the job
-     * 
+     * Name of the job.
+     * <p>
      * Every job has a unique name. In the start of the session, there is no
-     * active job, so the id is set to NO_CURRENT_JOB in the constructor.
+     * active job, so the name is set to NO_CURRENT_JOB in the constructor.
      */
     private String m_name;
 
     /**
-     * The current hit filter
-     * 
+     * The current hit filter.
+     * <p>
      * This is the filter that the user inputs, and receives only the hits that
      * match this filter.
      */
@@ -78,7 +79,7 @@ public class Job {
      * A list of all the attributes that this job holds for each hit/rule. To be
      * used ONLY by getAllAttributeTypes()
      */
-    private List<String> m_allAttributeTypes;
+    private String[] m_allAttributeTypes;
 
     /**
      * The number of hits given as input for the job
@@ -104,9 +105,9 @@ public class Job {
     /************************************************/
 
     /**
-     * Constructor
-     * 
-     * set id to {@link Job#NO_CURRENT_JOB}
+     * Construct new rule.
+     * <p>
+     * Set name to {@link Job#NO_CURRENT_JOB}.
      */
     public Job() {
 	m_name = NO_CURRENT_JOB;
@@ -119,19 +120,24 @@ public class Job {
      *            The name of the job that needs to be worked on.
      * @throws IOException
      *             if DAO failed to load data
+     * @throws ParseException
+     *             if any parse errors occurs in the data.
      */
-    public void setJob(String name) throws IOException {
-	m_name = name;
-	m_originalRule = m_rulesDao.getOriginalRule(name);
-	m_rules = new ArrayList<>();
-	m_filter = Filter.ANY_FILTER;
-	m_totalHitsCount = m_hitsDao.getHitsNumber(name, new ArrayList<Rule>(), Filter.ANY_FILTER);
-	m_coveredHitsCount = 0;
-	m_filteredHitsCount = m_totalHitsCount;
+    public void setJob(final String name) throws IOException, ParseException {
+	synchronized (this) {
+	    m_name = Objects.requireNonNull(name);
+	    m_originalRule = m_rulesDao.getOriginalRule(name);
+	    m_rules = new ArrayList<>();
+	    m_filter = Filter.ANY_FILTER;
+	    m_totalHitsCount = m_hitsDao.getHitsNumber(name, new ArrayList<Rule>(), Filter.ANY_FILTER);
+	    m_coveredHitsCount = 0;
+	    m_filteredHitsCount = m_totalHitsCount;
+	    m_allAttributeTypes = null;
 
-	List<Rule> rules = m_rulesDao.getRules(name).getData();
-	for (Rule rule : rules) {
-	    addRule(rule);
+	    final List<Rule> rules = m_rulesDao.getRules(name).getData();
+	    for (final Rule rule : rules) {
+		addRule(rule);
+	    }
 	}
     }
 
@@ -171,9 +177,10 @@ public class Job {
      */
     public List<Rule> getRules() {
 	checkJobState();
-	List<Rule> rules = new ArrayList<>(m_rules.size());
-	for (StatisticedRule rule : m_rules)
+	final List<Rule> rules = new ArrayList<>(m_rules.size());
+	for (final StatisticedRule rule : m_rules) {
 	    rules.add(rule.m_rule);
+	}
 	return rules;
     }
 
@@ -187,36 +194,42 @@ public class Job {
      *             if index of rule is out of bounds
      * @throws IOException
      *             if any I/O error occurs
+     * @throws ParseException
+     *             if any parse errors occurs in the data.
      */
-    public void deleteRule(int ruleIndex) throws IOException {
-	if (ruleIndex < 0 || ruleIndex >= m_rules.size())
-	    throw new IndexOutOfBoundsException("rule index=" + ruleIndex + ", numer of rules=" + m_rules.size());
+    public void deleteRule(final int ruleIndex) throws IOException, ParseException {
+	synchronized (this) {
+	    if (ruleIndex < 0 || ruleIndex >= m_rules.size()) {
+		throw new IndexOutOfBoundsException("rule index=" + ruleIndex + ", numer of rules=" + m_rules.size());
+	    }
 
-	// Remove all rules up to searched rule
-	List<Rule> removedRules = new ArrayList<>(m_rules.size() - ruleIndex - 1);
-	for (ListIterator<StatisticedRule> it = m_rules.listIterator(m_rules.size()); it.previousIndex() < ruleIndex;) {
-	    StatisticedRule removedRule = it.previous();
-	    m_coveredHitsCount -= removedRule.m_coveredHits;
-	    removedRules.add(removedRule.m_rule);
-	    it.remove();
+	    // Remove all rules up to searched rule
+	    final List<Rule> removedRules = new ArrayList<>(m_rules.size() - ruleIndex - 1);
+	    for (final ListIterator<StatisticedRule> it = m_rules.listIterator(m_rules.size()); it
+		    .previousIndex() < ruleIndex;) {
+		final StatisticedRule removedRule = it.previous();
+		m_coveredHitsCount -= removedRule.m_coveredHits;
+		removedRules.add(removedRule.m_rule);
+		it.remove();
+	    }
+	    // Reverse so order is as insertion order
+	    Collections.reverse(removedRules);
+
+	    // Remove searched rule
+	    final StatisticedRule searchedRule = m_rules.get(ruleIndex);
+	    m_rules.remove(ruleIndex);
+
+	    // Update filtered hits count
+	    m_coveredHitsCount -= searchedRule.m_coveredHits;
+	    m_filteredHitsCount = m_hitsDao.getHitsNumber(m_name, getRules(), m_filter);
+
+	    // Add again removed rules
+	    for (final Rule removedRule : removedRules) {
+		addRule(removedRule);
+	    }
+
+	    updateRulesFile();
 	}
-	// Reverse so order is as insertion order
-	Collections.reverse(removedRules);
-
-	// Remove searched rule
-	StatisticedRule searchedRule = m_rules.get(ruleIndex);
-	m_rules.remove(ruleIndex);
-
-	// Update filtered hits count
-	m_coveredHitsCount -= searchedRule.m_coveredHits;
-	m_filteredHitsCount = m_hitsDao.getHitsNumber(m_name, getRules(), m_filter);
-
-	// Add again removed rules
-	for (Rule removedRule : removedRules) {
-	    addRule(removedRule);
-	}
-
-	updateRulesFile();
     }
 
     /**
@@ -230,8 +243,10 @@ public class Job {
      * @return DTO object that hold list of requested hits
      * @throws IOException
      *             if DAO failed to load data
+     * @throws ParseException
+     *             if any parse errors occurs in the data.
      */
-    public ListDto<Hit> getHits(int startIndex, int endIndex) throws IOException {
+    public ListDto<UniqueHit> getHits(int startIndex, int endIndex) throws IOException, ParseException {
 	checkJobState();
 	return m_hitsDao.getHits(m_name, getRules(), m_filter, startIndex, endIndex);
     }
@@ -250,14 +265,14 @@ public class Job {
     public List<SuggestionsDto> getSuggestions(final int amount) throws Exception {
 	checkJobState();
 
-	List<SuggestionsDto> suggestionsDtos = new ArrayList<>();
-	List<String> allAttributesType = getAllAttributeTypes();
-	for (String attType : allAttributesType) {
-	    List<Suggestion> suggestions = m_algorithm.getSuggestions(m_hitsDao, m_name, getRules(), m_filter, amount,
-		    attType);
-	    SuggestionsDto attSuggestions = new SuggestionsDto(suggestions, attType);
-	    suggestionsDtos.add(attSuggestions);
+	final String[] allAttributesType = getAllAttributeTypes();
+	final List<Suggestion>[] suggestions = m_algorithm.getSuggestions(m_hitsDao, m_name, getRules(), m_filter,
+		amount, allAttributesType);
+	final List<SuggestionsDto> suggestionsDtos = new ArrayList<>();
+	for (int i = 0; i < allAttributesType.length; i++) {
+	    suggestionsDtos.add(new SuggestionsDto(suggestions[i], allAttributesType[i]));
 	}
+
 	return suggestionsDtos;
     }
 
@@ -268,11 +283,15 @@ public class Job {
      *            new filter of this job
      * @throws IOException
      *             if any I/O error occurs
+     * @throws ParseException
+     *             if any parse errors occurs in the data.
      */
-    public void setFilter(Filter filter) throws IOException {
+    public void setFilter(final Filter filter) throws IOException, ParseException {
 	checkJobState();
-	m_filter = filter;
-	m_filteredHitsCount = m_hitsDao.getHitsNumber(m_name, getRules(), m_filter);
+	synchronized (this) {
+	    m_filter = Objects.requireNonNull(filter);
+	    m_filteredHitsCount = m_hitsDao.getHitsNumber(m_name, getRules(), m_filter);
+	}
     }
 
     /**
@@ -282,14 +301,14 @@ public class Job {
      * 
      * @return E.x. ["Source", "Destination", "Service"]
      */
-    private List<String> getAllAttributeTypes() {
+    private String[] getAllAttributeTypes() {
 	checkJobState();
 	if (m_allAttributeTypes == null) {
-	    m_allAttributeTypes = new ArrayList<>();
-	    Rule demoRule = m_originalRule;
-	    for (Attribute att : demoRule) {
-		m_allAttributeTypes.add(att.getType());
+	    List<String> allAttributeTypes = new ArrayList<>();
+	    for (final Attribute att : m_originalRule) {
+		allAttributeTypes.add(att.getType());
 	    }
+	    m_allAttributeTypes = allAttributeTypes.toArray(new String[allAttributeTypes.size()]);
 	}
 	return m_allAttributeTypes;
     }
@@ -298,29 +317,36 @@ public class Job {
      * Takes the current filter and adds it as a new rule
      * 
      * @throws IOException
+     *             if any I/O errors occurs in the data.
+     * @throws ParseException
+     *             if any parse errors occurs in the data.
      */
-    public void addCurrentFilterToRules() throws IOException {
+    public void addCurrentFilterToRules() throws IOException, ParseException {
 	checkJobState();
 
-	Rule newRule = new Rule(m_filter);
+	final Rule newRule = new Rule(m_filter);
 	addRule(new StatisticedRule(newRule, m_filteredHitsCount));
     }
 
-    private void addRule(Rule newRule) throws IOException {
-	List<Rule> newRules = getRules();
-	newRules.add(newRule);
+    private void addRule(final Rule newRule) throws IOException, ParseException {
+	synchronized (this) {
+	    List<Rule> newRules = getRules();
+	    newRules.add(newRule);
 
-	int newUncoveredHitsCount = m_hitsDao.getHitsNumber(m_name, newRules, Filter.ANY_FILTER);
-	int oldUncoveredHitsCount = m_totalHitsCount - m_coveredHitsCount;
-	int ruleCoveredHits = oldUncoveredHitsCount - newUncoveredHitsCount;
-	addRule(new StatisticedRule(newRule, ruleCoveredHits));
+	    final int newUncoveredHitsCount = m_hitsDao.getHitsNumber(m_name, newRules, Filter.ANY_FILTER);
+	    final int oldUncoveredHitsCount = m_totalHitsCount - m_coveredHitsCount;
+	    final int ruleCoveredHits = oldUncoveredHitsCount - newUncoveredHitsCount;
+	    addRule(new StatisticedRule(newRule, ruleCoveredHits));
+	}
     }
 
-    private void addRule(StatisticedRule newRule) throws IOException {
-	m_coveredHitsCount += newRule.m_coveredHits;
-	m_rules.add(newRule);
-	m_filteredHitsCount = m_hitsDao.getHitsNumber(m_name, getRules(), m_filter);
-	updateRulesFile();
+    private void addRule(final StatisticedRule newRule) throws IOException, ParseException {
+	synchronized (this) {
+	    m_coveredHitsCount += newRule.m_coveredHits;
+	    m_rules.add(newRule);
+	    m_filteredHitsCount = m_hitsDao.getHitsNumber(m_name, getRules(), m_filter);
+	    updateRulesFile();
+	}
     }
 
     /**
@@ -357,19 +383,17 @@ public class Job {
     }
 
     private void updateRulesFile() throws IOException {
-	String repositoryPath = getRulesFilePath();
-	List<Rule> rawRules = new ArrayList<Rule>();
-	for (StatisticedRule statRule : m_rules)
-	    rawRules.add(statRule.getRule());
+	final String repositoryPath = getRulesFilePath();
+	final List<Rule> rules = getRules();
 	try {
-	    RulesXmlDao.writeRules(repositoryPath, rawRules, m_originalRule);
+	    RulesXmlDao.writeRules(repositoryPath, rules, m_originalRule);
 	} catch (ParserConfigurationException e) {
 	    throw new IOException("Parser configuration problems.");
 	}
     }
 
     private void checkJobState() {
-	if (m_name == NO_CURRENT_JOB) {
+	if (Objects.equals(m_name, NO_CURRENT_JOB)) {
 	    throw new NoCurrentJobException("Job wasn't set yet");
 	}
     }
@@ -380,22 +404,24 @@ public class Job {
 	private final int m_coveredHits;
 
 	public StatisticedRule(final Rule rule, final int coveredHits) {
-	    if (coveredHits < 0)
+	    if (coveredHits < 0) {
 		throw new IllegalArgumentException("coveredHits < 0: " + coveredHits);
+	    }
 	    m_rule = Objects.requireNonNull(rule);
 	    m_coveredHits = coveredHits;
 	}
 
-	public Rule getRule() {
-	    return m_rule;
-	}
-
 	@Override
-	public boolean equals(Object o) {
+	public boolean equals(final Object o) {
 	    if (o == this) {
 		return true;
 	    }
-	    return o instanceof StatisticedRule && m_rule.equals(((StatisticedRule) o).m_rule);
+	    if (!(o instanceof StatisticedRule)) {
+		return false;
+	    }
+
+	    final StatisticedRule other = (StatisticedRule) o;
+	    return m_rule.equals(other.m_rule);
 	}
 
 	@Override

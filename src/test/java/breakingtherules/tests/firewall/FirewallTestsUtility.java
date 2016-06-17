@@ -12,7 +12,7 @@ import breakingtherules.firewall.Service;
 import breakingtherules.firewall.Source;
 import breakingtherules.tests.TestBase;
 
-class FirewallTestsUtility extends TestBase {
+public class FirewallTestsUtility extends TestBase {
 
     /**
      * Merge a set of boolean arrays to one
@@ -61,7 +61,7 @@ class FirewallTestsUtility extends TestBase {
 	return result;
     }
 
-    static IP getRandomIP() {
+    public static IP getRandomIP() {
 	int ipID = rand.nextInt(2) * 2 + 4; // 4 or 6
 	int[] address = new int[ipID * 2 - 4]; // 4 or 8
 

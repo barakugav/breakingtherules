@@ -33,6 +33,21 @@ public class Hit extends AttributesContainer {
     }
 
     /**
+     * Copy constructor.
+     * <p>
+     * This method has no use other then for subclasses because, there is no
+     * need to copy a hit - all it's field are finals.
+     * 
+     * @param hit
+     *            existing hit.
+     * @throws NullPointerException
+     *             if the copied hit is null.
+     */
+    protected Hit(final Hit hit) {
+	super(hit);
+    }
+
+    /**
      * Construct new hit from attributes array.
      * <p>
      * This constructor should be used carefully, see

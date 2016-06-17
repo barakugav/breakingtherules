@@ -231,8 +231,8 @@ public class UtilityTest extends TestBase {
     public void equalsTest() {
 	Object o1 = new Integer(5487);
 	Object o2 = new Integer(5487);
-	assertTrue(Utility.equals(o1, o2));
-	assertTrue(Utility.equals(o2, o1));
+	assertTrue(Utility.deepEquals(o1, o2));
+	assertTrue(Utility.deepEquals(o2, o1));
     }
 
     @Test
@@ -242,12 +242,12 @@ public class UtilityTest extends TestBase {
 	Object o4 = new int[] { 5, 7, 64, 7, 5 };
 	Object o3 = new int[] { 5, 7, 64, 8 };
 
-	assertTrue(Utility.equals(o1, o2));
-	assertTrue(Utility.equals(o2, o1));
-	assertFalse(Utility.equals(o1, o3));
-	assertFalse(Utility.equals(o3, o1));
-	assertFalse(Utility.equals(o1, o4));
-	assertFalse(Utility.equals(o4, o1));
+	assertTrue(Utility.deepEquals(o1, o2));
+	assertTrue(Utility.deepEquals(o2, o1));
+	assertFalse(Utility.deepEquals(o1, o3));
+	assertFalse(Utility.deepEquals(o3, o1));
+	assertFalse(Utility.deepEquals(o1, o4));
+	assertFalse(Utility.deepEquals(o4, o1));
     }
 
     @Test
@@ -257,30 +257,30 @@ public class UtilityTest extends TestBase {
 	Object o4 = new int[][] { new int[] { 5, 4 }, new int[] { 7, 7, 9 } };
 	Object o3 = new int[][] { new int[] { 5, 4 }, new int[] { 7, 8 } };
 
-	assertTrue(Utility.equals(o1, o2));
-	assertTrue(Utility.equals(o2, o1));
-	assertFalse(Utility.equals(o1, o3));
-	assertFalse(Utility.equals(o3, o1));
-	assertFalse(Utility.equals(o1, o4));
-	assertFalse(Utility.equals(o4, o1));
+	assertTrue(Utility.deepEquals(o1, o2));
+	assertTrue(Utility.deepEquals(o2, o1));
+	assertFalse(Utility.deepEquals(o1, o3));
+	assertFalse(Utility.deepEquals(o3, o1));
+	assertFalse(Utility.deepEquals(o1, o4));
+	assertFalse(Utility.deepEquals(o4, o1));
     }
 
     @Test
     public void equalsTestItself() {
 	Object o = new Object();
-	assertTrue(Utility.equals(o, o));
+	assertTrue(Utility.deepEquals(o, o));
     }
 
     @Test
     public void equalsTestOneNull() {
 	Object o = new Object();
-	assertFalse(Utility.equals(null, o));
-	assertFalse(Utility.equals(o, null));
+	assertFalse(Utility.deepEquals(null, o));
+	assertFalse(Utility.deepEquals(o, null));
     }
 
     @Test
     public void equalsTestTwoNull() {
-	assertTrue(Utility.equals(null, null));
+	assertTrue(Utility.deepEquals(null, null));
     }
 
     @Test

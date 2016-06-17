@@ -4,6 +4,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Function;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
@@ -654,15 +655,9 @@ public class Service extends Attribute {
      */
     private static Service createInternal(final int protocolCode, final int portsRange) {
 	final Cache<Integer, Service> cache = ServiceCache.cache[protocolCode];
-
+	final Function<Integer, Service> supplier = ServiceCache.suppliers[protocolCode];
 	// Intentionally using 'new Integer(int)' and not 'Integer.valueOf(int)'
-	final Integer portsRangeInteger = new Integer(portsRange);
-
-	Service service = cache.get(portsRangeInteger);
-	if (service == null) {
-	    service = cache.add(portsRangeInteger, new Service(protocolCode, portsRange));
-	}
-	return service;
+	return cache.getOrAdd(new Integer(portsRange), supplier);
     }
 
     /**
@@ -679,14 +674,25 @@ public class Service extends Attribute {
 	 */
 	static final Cache<Integer, Service>[] cache;
 
+	static final Function<Integer, Service>[] suppliers;
+
 	static {
 	    // Used dummy to suppress warnings
 	    @SuppressWarnings({ "unchecked", "unused" })
 	    Object dummy = cache = new Cache[257]; // 256 and 1 for 'any
 						   // protocol'
 
-	    for (int i = cache.length; i-- != 0;)
+	    // Used dummy to suppress warnings
+	    @SuppressWarnings({ "unchecked", "unused" })
+	    Object dummy2 = suppliers = new Function[257];
+
+	    for (int i = cache.length; i-- != 0;) {
 		cache[i] = Caches.synchronizedCache(new SoftCache<>());
+		final int protocolCode = i;
+		suppliers[i] = (final Integer portsRange) -> {
+		    return new Service(protocolCode, portsRange.intValue());
+		};
+	    }
 	}
 
     }

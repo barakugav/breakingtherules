@@ -1,7 +1,5 @@
 package breakingtherules.tests.services.algorithm;
 
-import static org.junit.Assert.fail;
-
 import java.util.List;
 
 import org.junit.Test;
@@ -27,30 +25,24 @@ public class InformationAlgorithmTest extends TestBase {
     private static final boolean PRINT_RESULTS = false;
 
     @Test
-    public void getSuggestionTest() {
-	try {
-	    RulesDao rulesDao = new RulesXmlDao();
-	    HitsDao hitsDao = new HitsXmlDao();
-	    Filter filter = Filter.ANY_FILTER;
-	    ListDto<Rule> rulesDto = rulesDao.getRules(JOB_NAME);
-	    List<Rule> rules = rulesDto.getData();
+    public void getSuggestionTest() throws Exception {
+	RulesDao rulesDao = new RulesXmlDao();
+	HitsDao hitsDao = new HitsXmlDao();
+	Filter filter = Filter.ANY_FILTER;
+	ListDto<Rule> rulesDto = rulesDao.getRules(JOB_NAME);
+	List<Rule> rules = rulesDto.getData();
 
-	    InformationAlgorithm algorithm = new InformationAlgorithm();
-	    algorithm.setRuleWeight(RULE_WEIGHT);
-	    List<Suggestion> suggestions = algorithm.getSuggestions(hitsDao, JOB_NAME, rules, filter,
-		    NUMBER_OF_SUGGESTIONS, ATTRIBUTE);
+	InformationAlgorithm algorithm = new InformationAlgorithm();
+	algorithm.setRuleWeight(RULE_WEIGHT);
+	List<Suggestion> suggestions = algorithm.getSuggestions(hitsDao, JOB_NAME, rules, filter, NUMBER_OF_SUGGESTIONS,
+		ATTRIBUTE);
 
-	    if (PRINT_RESULTS) {
-		System.out.println("\nResults:");
-		for (Suggestion sug : suggestions) {
-		    Attribute att = sug.getAttribute();
-		    System.out.println(att.toString());
-		}
+	if (PRINT_RESULTS) {
+	    System.out.println("\nResults:");
+	    for (Suggestion sug : suggestions) {
+		Attribute att = sug.getAttribute();
+		System.out.println(att.toString());
 	    }
-
-	} catch (Exception e) {
-	    e.printStackTrace();
-	    fail(e.getMessage());
 	}
     }
 
