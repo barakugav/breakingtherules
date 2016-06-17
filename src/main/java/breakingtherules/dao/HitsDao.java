@@ -19,6 +19,7 @@ import breakingtherules.utilities.Utility;
  * 
  * @author Barak Ugav
  * @author Yishai Gronich
+ * 
  */
 public interface HitsDao {
 
@@ -71,18 +72,21 @@ public interface HitsDao {
     }
 
     /**
-     * TODO
+     * Get unique hits filtered by filter and rules.
      * 
      * @param jobName
+     *            the name of the job.
      * @param rules
+     *            list of current rules.
      * @param filter
-     * @return
+     *            current filter/
+     * @return set of unique hits.
      * @throws IOException
-     *             if failed to read from memory
+     *             if failed to read from memory.
      * @throws ParseException
      *             if any parse errors occurs in the data.
      */
-    default Set<UniqueHit> getUnique(String jobName, List<Rule> rules, Filter filter)
+    default Set<UniqueHit> getUnique(final String jobName, final List<Rule> rules, final Filter filter)
 	    throws IOException, ParseException {
 	final List<Hit> hits = getHits(jobName, rules, filter).getData();
 	final Map<Hit, Integer> hitsCount = new HashMap<>();

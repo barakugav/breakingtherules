@@ -12,7 +12,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
-import breakingtherules.dao.UtilityDao;
+import breakingtherules.dao.DaoUtilities;
 import breakingtherules.firewall.Attribute;
 import breakingtherules.firewall.Destination;
 import breakingtherules.firewall.Filter;
@@ -24,29 +24,84 @@ import breakingtherules.utilities.Utility;
 
 /**
  * The CSVParser used to read and write CSV file to and from hits.
+ * <p>
+ * 
+ * @author Barak Ugav
+ * @author Yishai Gronich
+ * 
  */
 public class CSVParser {
 
+    /**
+     * The column index of source attribute in the CSV file or -1 if doesn't
+     * exist.
+     */
     private final int sourceIndex;
+
+    /**
+     * The column index of destination attribute in the CSV file or -1 if
+     * doesn't exist.
+     */
     private final int destinationIndex;
+
+    /**
+     * The column index of service protocol in the CSV file or -1 if doesn't
+     * exist.
+     */
     private final int serviceProtocolIndex;
+
+    /**
+     * The column index of service port in the CSV file or -1 if doesn't exist.
+     */
     private final int servicePortIndex;
+
+    /**
+     * The types of each column in the CSV file.
+     */
     private final List<Integer> m_columnsTypes;
 
     /**
-     * IDs for attributes used by this parser
+     * The symbol's value for source attribute column.
      */
     private static final int SOURCE_VAL = 0;
+
+    /**
+     * The symbol's value for destination attribute column.
+     */
     private static final int DESTINATION_VAL = 1;
+
+    /**
+     * The symbol's value for service protocol column.
+     */
     private static final int SERVICE_PROTOCOL_VAL = 2;
+
+    /**
+     * The symbol's value for service port column.
+     */
     private static final int SERVICE_PORT_VAL = 3;
+
+    /**
+     * The symbol for source attribute column.
+     */
     public static final Integer SOURCE = Integer.valueOf(SOURCE_VAL);
+
+    /**
+     * The symbol for destination attribute column.
+     */
     public static final Integer DESTINATION = Integer.valueOf(DESTINATION_VAL);
+
+    /**
+     * The symbol for service protocol column.
+     */
     public static final Integer SERVICE_PROTOCOL = Integer.valueOf(SERVICE_PROTOCOL_VAL);
+
+    /**
+     * The symbol for service port column.
+     */
     public static final Integer SERVICE_PORT = Integer.valueOf(SERVICE_PORT_VAL);
 
     /**
-     * Default columns types
+     * Default columns types.
      */
     public static final List<Integer> DEFAULT_COLUMNS_TYPES;
 
@@ -59,8 +114,17 @@ public class CSVParser {
 	DEFAULT_COLUMNS_TYPES = Collections.unmodifiableList(list);
     }
 
+    /**
+     * Construct new CSVParser.
+     * <p>
+     * Initialize the parser with columns order.
+     * 
+     * @param columnsTypes
+     *            type of each column in the CSV file.
+     * @throws NullPointerException
+     *             if the columns types list is null.
+     */
     public CSVParser(final List<Integer> columnsTypes) {
-
 	// Create unmodifiable clone of the input list
 	m_columnsTypes = Collections.unmodifiableList(Utility.newArrayList(columnsTypes));
 
@@ -70,6 +134,18 @@ public class CSVParser {
 	servicePortIndex = columnsTypes.indexOf(SERVICE_PORT);
     }
 
+    /**
+     * Parse a hit from a line.
+     * <p>
+     * 
+     * @param line
+     *            string line.
+     * @return hit parsed from the line.
+     * @throws CSVParseException
+     *             if the line is invalid.
+     * @throws NullPointerException
+     *             if the line is null.
+     */
     public Hit fromCSV(final String line) throws CSVParseException {
 	final List<String> words = Utility.breakToWords(line);
 	final List<Attribute> attributes = new ArrayList<>();
@@ -95,6 +171,19 @@ public class CSVParser {
 	return new Hit(attributes);
     }
 
+    /**
+     * Parse hit to CSV string line.
+     * <p>
+     * 
+     * @param hit
+     *            parsed hit.
+     * @return CSV string line representation of the hit.
+     * @throws CSVParseException
+     *             if the hit lack one of the attributes, or any other errors
+     *             occurs.
+     * @throws NullPointerException
+     *             if the hit is null.
+     */
     public String toCSV(final Hit hit) throws CSVParseException {
 	final StringBuilder builder = new StringBuilder();
 	for (final int colomnsType : m_columnsTypes) {
@@ -158,7 +247,7 @@ public class CSVParser {
      */
     public static List<Hit> fromPath(final List<Integer> columnsTypes, final String filePath)
 	    throws IOException, CSVParseException {
-	return fromCSV(columnsTypes, filePath, new ArrayList<>(0), Filter.ANY_FILTER, 0, -1, new ArrayList<>());
+	return fromCSV(columnsTypes, filePath, new ArrayList<>(), Filter.ANY_FILTER, new ArrayList<>());
     }
 
     /**
@@ -219,12 +308,56 @@ public class CSVParser {
 	}
     }
 
-    static <C extends Collection<? super Hit>> C fromCSV(final List<Integer> columnsTypes, final String filePath,
-	    final List<Rule> rules, final Filter filter, final int fromIndex, final int endIndex, final C destination)
-		    throws IOException, CSVParseException {
-	final File repoFile = new File(filePath);
+    /**
+     * Parse a CSV file and outputs the hits to a list.
+     * <p>
+     * 
+     * @param columnsTypes
+     *            the types of the columns in the CSV files.
+     * @param fileName
+     *            the name of the CSV file.
+     * @param rules
+     *            the rules to filter the hits by.
+     * @param filter
+     *            the filter to filter the hits by.
+     * @return list with all parsed hits that matched the filter and rules.
+     * @throws IOException
+     *             if any I/O errors occurs.
+     * @throws CSVParseException
+     *             if the data in the file is invalid.
+     */
+    static List<Hit> fromCSV(final List<Integer> columnsTypes, final String fileName, final List<Rule> rules,
+	    final Filter filter) throws CSVParseException, IOException {
+	return fromCSV(columnsTypes, fileName, rules, filter, new ArrayList<>());
+    }
+
+    /**
+     * Parse a CSV file and outputs the hits to desire collection destination.
+     * <p>
+     * 
+     * @param <C>
+     *            the type of the destination.
+     * @param columnsTypes
+     *            the types of the columns in the CSV files.
+     * @param fileName
+     *            the name of the CSV file.
+     * @param rules
+     *            the rules to filter the hits by.
+     * @param filter
+     *            the filter to filter the hits by.
+     * @param destination
+     *            the destination collection, which the hits are inserted to.
+     * @return the destination collection.
+     * @throws IOException
+     *             if any I/O errors occurs.
+     * @throws CSVParseException
+     *             if the data in the file is invalid.
+     */
+    static <C extends Collection<? super Hit>> C fromCSV(final List<Integer> columnsTypes, final String fileName,
+	    final List<Rule> rules, final Filter filter, final C destination) throws IOException, CSVParseException {
+	final File repoFile = new File(fileName);
 	if (!repoFile.exists()) {
-	    throw new FileNotFoundException("File not found: " + filePath);
+	    throw new FileNotFoundException("File not found: " + fileName);
 	} else if (!repoFile.canRead()) {
 	    throw new IOException("File read is not permitted!");
 	}
@@ -235,28 +368,18 @@ public class CSVParser {
 
 	final CSVParser parser = new CSVParser(columnsTypes);
 	int lineNumber = 1;
-	int readHits = 0;
 
 	BufferedReader reader = null;
 	try {
 	    reader = new BufferedReader(new FileReader(repoFile));
-
-	    // Skip until 'fromIndex'
-	    for (String line; lineNumber++ <= fromIndex && (line = reader.readLine()) != null;)
-		if (line.isEmpty())
-		    lineNumber--;
 
 	    for (String line; (line = reader.readLine()) != null;) {
 		if (line.isEmpty()) {
 		    continue;
 		}
 		Hit hit = parser.fromCSV(line);
-		if (UtilityDao.isMatch(hit, rules, filter)) {
+		if (DaoUtilities.isMatch(hit, rules, filter)) {
 		    destination.add(hit);
-		    if (endIndex >= 0 && ++readHits >= endIndex) {
-			// Break if reached end index
-			break;
-		    }
 		}
 		lineNumber++;
 
@@ -272,11 +395,6 @@ public class CSVParser {
 	    }
 	}
 	return destination;
-    }
-
-    static List<Hit> fromCSV(List<Integer> columnsTypes, String fileName, List<Rule> rules, Filter filter, int endIndex)
-	    throws CSVParseException, IOException {
-	return fromCSV(columnsTypes, fileName, rules, filter, 0, endIndex, new ArrayList<>());
     }
 
     /**

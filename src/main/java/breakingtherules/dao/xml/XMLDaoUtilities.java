@@ -9,6 +9,7 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerConfigurationException;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
@@ -21,33 +22,45 @@ import org.xml.sax.SAXException;
  * The UtilityXmlDao class is used XML DAOs, and include only static method -
  * all helper method
  * 
+ * @author Barak Ugav
+ * @author Yishai Gronich
+ * 
  * @see HitsXmlDao
  * @see RulesXmlDao
  */
-public class UtilityXmlDao {
+public class XMLDaoUtilities {
 
     /**
-     * Read document from a file
+     * Read document from a file.
+     * <p>
      * 
-     * @param path
-     *            string path to file
+     * @param fileName
+     *            name of the file.
      * @return document with the file data
      * @throws IOException
      *             if reading from file failed
+     * @throws XMLParseException
+     *             if failed to parse the file.
      */
-    public static Document readFile(final String path) throws IOException {
+    public static Document readFile(final String fileName) throws IOException, XMLParseException {
 	try {
-	    final File repoFile = new File(path);
+	    final File repoFile = new File(fileName);
 	    if (!repoFile.exists()) {
-		throw new FileNotFoundException(path);
+		throw new FileNotFoundException(fileName);
 	    }
-	    final DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-	    final DocumentBuilder builder = factory.newDocumentBuilder();
+	    final DocumentBuilder builder;
+	    try {
+		final DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+		builder = factory.newDocumentBuilder();
+	    } catch (ParserConfigurationException e) {
+		// Shouldn't happen.
+		throw new InternalError(e);
+	    }
 	    final Document fileDocument = builder.parse(repoFile);
 	    return fileDocument;
 
-	} catch (final IOException | SAXException | ParserConfigurationException e) {
-	    throw new IOException("Unable to load file", e);
+	} catch (SAXException e) {
+	    throw new XMLParseException(e);
 	}
     }
 
@@ -62,16 +75,21 @@ public class UtilityXmlDao {
      *             if failed to write to memory
      */
     public static void writeFile(final String path, final Document doc) throws IOException {
+	final File file = new File(path);
+	final Transformer transformer;
 	try {
-	    final File file = new File(path);
 	    final TransformerFactory factory = TransformerFactory.newInstance();
-	    final Transformer transformer = factory.newTransformer();
-	    transformer.setOutputProperty(OutputKeys.INDENT, "yes");
-	    transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
-	    final DOMSource source = new DOMSource(doc);
-	    final StreamResult result = new StreamResult(file);
+	    transformer = factory.newTransformer();
+	} catch (TransformerConfigurationException e) {
+	    // Shouldn't happen.
+	    throw new InternalError(e);
+	}
+	transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+	transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
+	final DOMSource source = new DOMSource(doc);
+	final StreamResult result = new StreamResult(file);
+	try {
 	    transformer.transform(source, result);
-
 	} catch (final TransformerException e) {
 	    throw new IOException(e);
 	}

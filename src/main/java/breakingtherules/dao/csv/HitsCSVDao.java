@@ -12,9 +12,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 
+import breakingtherules.dao.DaoUtilities;
 import breakingtherules.dao.HitsDao;
 import breakingtherules.dao.UniqueHit;
-import breakingtherules.dao.UtilityDao;
 import breakingtherules.dto.ListDto;
 import breakingtherules.firewall.Filter;
 import breakingtherules.firewall.Hit;
@@ -23,34 +23,69 @@ import breakingtherules.utilities.Cache;
 import breakingtherules.utilities.SynchronizedHashCache;
 import breakingtherules.utilities.Triple;
 import breakingtherules.utilities.Triple.UnmodifiableTriple;
-import breakingtherules.utilities.Utility;
 
+/**
+ * The HitsCSVDao is a basic DAO that only parse hits, line by line from CSV
+ * files.
+ * <p>
+ * 
+ * @author Barak Ugav
+ * @author Yishai Gronich
+ * 
+ * @see CSVParser
+ *
+ */
 public class HitsCSVDao implements HitsDao {
 
-    private final Cache<UnmodifiableTriple<String, List<Rule>, Filter>, Integer> m_totalHitsCache;
+    /**
+     * Cache for loaded unique hits.
+     */
     private final Cache<String, Set<UniqueHit>> m_cacheHits;
 
+    /**
+     * Cache for hits number by filter and rules.
+     * <p>
+     * The 'number of hits' cache is keyed by the hits jobName, rules (which are
+     * stored in a set, because there order doesn't change anything) and filter.
+     */
+    private final Cache<UnmodifiableTriple<String, Set<Rule>, Filter>, Integer> m_totalHitsCache;
+
+    /**
+     * Construct new HitsCSVDao.
+     */
     public HitsCSVDao() {
-	m_totalHitsCache = new SynchronizedHashCache<>();
 	m_cacheHits = new SynchronizedHashCache<>();
+	m_totalHitsCache = new SynchronizedHashCache<>();
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see breakingtherules.dao.HitsDao#getHits(java.lang.String,
+     * java.util.List, breakingtherules.firewall.Filter)
+     */
     @Override
     public ListDto<Hit> getHits(final String jobName, final List<Rule> rules, final Filter filter)
 	    throws IOException, CSVParseException {
 	final List<Hit> hits = CSVParser.fromCSV(CSVParser.DEFAULT_COLUMNS_TYPES, CSVDaoConfig.getHitsFile(jobName),
-		rules, filter, -1);
+		rules, filter);
 	// TODO - take the opportunity and add hits to cache.
 	final int size = hits.size();
 
 	// Create new list of the rules to clone the list - so modifications
 	// on the original list will not change the list saved in the cache
 	m_totalHitsCache.add(
-		new UnmodifiableTriple<>(jobName, Collections.unmodifiableList(Utility.newArrayList(rules)), filter),
+		new UnmodifiableTriple<>(jobName, Collections.unmodifiableSet(new HashSet<>(rules)), filter),
 		Integer.valueOf(size));
 	return new ListDto<>(hits, 0, size, size);
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see breakingtherules.dao.HitsDao#getUnique(java.lang.String,
+     * java.util.List, breakingtherules.firewall.Filter)
+     */
     @Override
     public Set<UniqueHit> getUnique(final String jobName, final List<Rule> rules, final Filter filter)
 	    throws CSVParseException, IOException {
@@ -62,21 +97,26 @@ public class HitsCSVDao implements HitsDao {
 
 	final Set<UniqueHit> filteredHits = new HashSet<>();
 	for (final UniqueHit hit : uniqueHits) {
-	    if (UtilityDao.isMatch(hit, rules, filter)) {
+	    if (DaoUtilities.isMatch(hit, rules, filter)) {
 		filteredHits.add(hit);
 	    }
 	}
 	return filteredHits;
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see breakingtherules.dao.HitsDao#getHitsNumber(java.lang.String,
+     * java.util.List, breakingtherules.firewall.Filter)
+     */
     @Override
     public int getHitsNumber(final String jobName, final List<Rule> rules, final Filter filter)
 	    throws IOException, CSVParseException {
 	try {
-	    return m_totalHitsCache
-		    .getOrAdd(new UnmodifiableTriple<>(jobName,
-			    Collections.unmodifiableList(Utility.newArrayList(rules)), filter), HITS_NUMBER_SUPPLIER)
-		    .intValue();
+	    return m_totalHitsCache.getOrAdd(
+		    new UnmodifiableTriple<>(jobName, Collections.unmodifiableSet(new HashSet<>(rules)), filter),
+		    HITS_NUMBER_SUPPLIER).intValue();
 	} catch (UncheckedIOException e) {
 	    throw e.getCause();
 	} catch (UncheckedCSVParseException e) {
@@ -84,6 +124,18 @@ public class HitsCSVDao implements HitsDao {
 	}
     }
 
+    /**
+     * Get unique hits, used internally.
+     * <p>
+     * 
+     * @param fileName
+     *            the name of the input file.
+     * @return set of unique hits, parsed from the files or returned from cache.
+     * @throws CSVParseException
+     *             if the data in the file is invalid.
+     * @throws IOException
+     *             if any I/O errors occurs.
+     */
     private Set<UniqueHit> getUniqueHitsInternal(final String fileName) throws CSVParseException, IOException {
 	try {
 	    return m_cacheHits.getOrAdd(fileName, UNIQUE_HITS_SUPPLIER);
@@ -94,16 +146,22 @@ public class HitsCSVDao implements HitsDao {
 	}
     }
 
-    private final Function<Triple<String, List<Rule>, Filter>, Integer> HITS_NUMBER_SUPPLIER = (
-	    final Triple<String, List<Rule>, Filter> triple) -> {
+    /**
+     * Supplier function of the 'hits number'.
+     * <p>
+     * 
+     * @see #getHitsNumber(String, List, Filter)
+     */
+    private final Function<Triple<String, Set<Rule>, Filter>, Integer> HITS_NUMBER_SUPPLIER = (
+	    final Triple<String, Set<Rule>, Filter> triple) -> {
 	try {
 	    final String jobName = triple.getFirst();
-	    final List<Rule> rules = triple.getSecond();
+	    final Set<Rule> rules = triple.getSecond();
 	    final Filter filter = triple.getThird();
 	    final Set<UniqueHit> uniqueHits = getUniqueHitsInternal(CSVDaoConfig.getHitsFile(jobName));
 	    int hitsNumber = 0;
 	    for (final UniqueHit hit : uniqueHits) {
-		if (UtilityDao.isMatch(hit, rules, filter)) {
+		if (DaoUtilities.isMatch(hit, rules, filter)) {
 		    hitsNumber += hit.getAmount();
 		}
 	    }
@@ -115,11 +173,17 @@ public class HitsCSVDao implements HitsDao {
 	}
     };
 
+    /**
+     * Supplier function of unique hits.
+     * <p>
+     * 
+     * @see HitsCSVDao#getUniqueHitsInternal(String)
+     */
     private static final Function<String, Set<UniqueHit>> UNIQUE_HITS_SUPPLIER = (final String fileName) -> {
 	final Map<Hit, Integer> hitsCount = new HashMap<>();
 	try {
-	    CSVParser.fromCSV(CSVParser.DEFAULT_COLUMNS_TYPES, fileName, Collections.emptyList(), Filter.ANY_FILTER, 0,
-		    -1, new AbstractSet<Hit>() {
+	    CSVParser.fromCSV(CSVParser.DEFAULT_COLUMNS_TYPES, fileName, Collections.emptyList(), Filter.ANY_FILTER,
+		    new AbstractSet<Hit>() {
 
 		@Override
 		public boolean add(Hit hit) {

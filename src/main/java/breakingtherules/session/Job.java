@@ -7,8 +7,6 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.Objects;
 
-import javax.xml.parsers.ParserConfigurationException;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.context.annotation.ScopedProxyMode;
@@ -147,6 +145,7 @@ public class Job {
      * @return the job's name
      */
     public String getName() {
+	checkJobState();
 	return m_name;
     }
 
@@ -302,7 +301,6 @@ public class Job {
      * @return E.x. ["Source", "Destination", "Service"]
      */
     private String[] getAllAttributeTypes() {
-	checkJobState();
 	if (m_allAttributeTypes == null) {
 	    List<String> allAttributeTypes = new ArrayList<>();
 	    for (final Attribute att : m_originalRule) {
@@ -355,6 +353,7 @@ public class Job {
      * @return The number of hits given as input for the job
      */
     public int getTotalHitsCount() {
+	checkJobState();
 	return m_totalHitsCount;
     }
 
@@ -364,6 +363,7 @@ public class Job {
      * @return The number of hits covered by the created rules
      */
     public int getCoveredHitsCount() {
+	checkJobState();
 	return m_coveredHitsCount;
     }
 
@@ -375,21 +375,19 @@ public class Job {
      *         any created rule)
      */
     public int getFilteredHitsCount() {
+	checkJobState();
 	return m_filteredHitsCount;
     }
 
     public String getRulesFilePath() {
+	checkJobState();
 	return "./repository/" + m_name + "/" + RulesXmlDao.REPOSITORY_NAME;
     }
 
     private void updateRulesFile() throws IOException {
 	final String repositoryPath = getRulesFilePath();
 	final List<Rule> rules = getRules();
-	try {
-	    RulesXmlDao.writeRules(repositoryPath, rules, m_originalRule);
-	} catch (ParserConfigurationException e) {
-	    throw new IOException("Parser configuration problems.");
-	}
+	RulesXmlDao.writeRules(repositoryPath, rules, m_originalRule);
     }
 
     private void checkJobState() {

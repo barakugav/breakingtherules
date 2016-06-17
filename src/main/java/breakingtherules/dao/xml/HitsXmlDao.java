@@ -14,7 +14,7 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 import breakingtherules.dao.HitsDao;
-import breakingtherules.dao.UtilityDao;
+import breakingtherules.dao.DaoUtilities;
 import breakingtherules.dto.ListDto;
 import breakingtherules.firewall.Attribute;
 import breakingtherules.firewall.Destination;
@@ -26,13 +26,24 @@ import breakingtherules.firewall.Source;
 import breakingtherules.utilities.Utility;
 
 /**
- * Implementation of {@link HitsDao} by XML repository
- * 
+ * Implementation of {@link HitsDao} by XML repository.
+ * <p>
  * Able to read hits from repository files, save the hits for each repository
- * for next hits request
+ * for next hits request.
+ * <p>
+ * 
+ * @author Barak Ugav
+ * @author Yishai Gronich
+ * 
  */
 public class HitsXmlDao implements HitsDao {
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see breakingtherules.dao.HitsDao#getHitsNumber(java.lang.String,
+     * java.util.List, breakingtherules.firewall.Filter)
+     */
     @Override
     public int getHitsNumber(final String jobName, final List<Rule> rules, final Filter filter)
 	    throws IOException, XMLParseException {
@@ -42,8 +53,8 @@ public class HitsXmlDao implements HitsDao {
     /*
      * (non-Javadoc)
      * 
-     * @see breakingtherules.dao.HitsDao#getHits(int, java.util.List,
-     * breakingtherules.firewall.Filter)
+     * @see breakingtherules.dao.HitsDao#getHits(java.lang.String,
+     * java.util.List, breakingtherules.firewall.Filter)
      */
     @Override
     public ListDto<Hit> getHits(final String jobName, final List<Rule> rules, final Filter filter)
@@ -74,7 +85,7 @@ public class HitsXmlDao implements HitsDao {
 	final List<Hit> matchedHits = new ArrayList<>();
 
 	for (final Hit hit : allHits) {
-	    if (UtilityDao.isMatch(hit, rules, filter)) {
+	    if (DaoUtilities.isMatch(hit, rules, filter)) {
 		matchedHits.add(hit);
 	    }
 	}
@@ -145,13 +156,12 @@ public class HitsXmlDao implements HitsDao {
 
 	    final Element repoElm = doc.createElement(XmlDaoConfig.REPOSITORY);
 	    for (final Hit hit : hits) {
-		final Element elm = doc.createElement(XmlDaoConfig.HIT);
-		createElement(elm, hit);
+		final Element elm = createElement(doc, hit);
 		repoElm.appendChild(elm);
 	    }
 	    doc.appendChild(repoElm);
 
-	    UtilityXmlDao.writeFile(filePath, doc);
+	    XMLDaoUtilities.writeFile(filePath, doc);
 	} catch (final ParserConfigurationException e) {
 	    throw new IOException(e);
 	}
@@ -170,7 +180,7 @@ public class HitsXmlDao implements HitsDao {
      */
     private static List<Hit> loadHits(final String repoPath) throws IOException, XMLParseException {
 	// Load from file
-	final Document repositoryDoc = UtilityXmlDao.readFile(repoPath);
+	final Document repositoryDoc = XMLDaoUtilities.readFile(repoPath);
 
 	// Get all hits from repository
 	final NodeList hitsList = repositoryDoc.getElementsByTagName(XmlDaoConfig.HIT);
@@ -214,27 +224,34 @@ public class HitsXmlDao implements HitsDao {
 	}
 
 	// Convert strings to attributes
+	final List<Attribute> attributes = new ArrayList<>();
 	try {
-	    final Source sourceObj = Source.create(sourceStr);
-	    final Destination destinationObj = Destination.create(destinationStr);
-	    final Service serviceObj = Service.createFromString(serviceStr);
-
-	    // Create attributes list
-	    final List<Attribute> attributes = new ArrayList<>();
-	    attributes.add(sourceObj);
-	    attributes.add(destinationObj);
-	    attributes.add(serviceObj);
-	    return new Hit(attributes);
+	    attributes.add(Source.create(sourceStr));
+	    attributes.add(Destination.create(destinationStr));
+	    attributes.add(Service.createFromString(serviceStr));
 
 	} catch (final Exception e) {
 	    throw new XMLParseException(e);
 	}
+	return new Hit(attributes);
     }
 
-    private static void createElement(final Element node, final Hit hit) {
+    /**
+     * Create new XML element of hit.
+     * <p>
+     * 
+     * @param doc
+     *            the parent document.
+     * @param hit
+     *            the parsed hit.
+     * @return XML element that represent the hit.
+     */
+    private static Element createElement(final Document doc, final Hit hit) {
+	final Element elm = doc.createElement(XmlDaoConfig.HIT);
 	for (final Attribute attribute : hit) {
-	    node.setAttribute(attribute.getType().toLowerCase(), attribute.toString());
+	    elm.setAttribute(attribute.getType().toLowerCase(), attribute.toString());
 	}
+	return elm;
     }
 
 }

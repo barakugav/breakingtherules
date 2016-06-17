@@ -15,7 +15,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 import breakingtherules.dao.xml.HitsXmlDao;
-import breakingtherules.dao.xml.UtilityXmlDao;
+import breakingtherules.dao.xml.XMLDaoUtilities;
 import breakingtherules.dao.xml.XMLParseException;
 import breakingtherules.firewall.Filter;
 import breakingtherules.firewall.Rule;
@@ -73,7 +73,7 @@ public class HitsXmlDaoTest extends TestBase {
 	public void addElement(Element elm) {
 	    try {
 		m_repoElm.appendChild(elm);
-		UtilityXmlDao.writeFile(m_path, m_doc);
+		XMLDaoUtilities.writeFile(m_path, m_doc);
 
 	    } catch (IOException e) {
 		e.printStackTrace();
@@ -93,7 +93,7 @@ public class HitsXmlDaoTest extends TestBase {
 		Document doc = builder.newDocument();
 		m_repoElm = doc.createElement("Repository");
 		doc.appendChild(m_repoElm);
-		UtilityXmlDao.writeFile(path, doc);
+		XMLDaoUtilities.writeFile(path, doc);
 		return doc;
 
 	    } catch (IOException | ParserConfigurationException e) {

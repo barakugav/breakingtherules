@@ -4,7 +4,12 @@ import breakingtherules.dao.DaoConfig;
 
 /**
  * The CSVDaoConfig used to get configuration information specific for CSV DAO
- * objects
+ * objects.
+ * <p>
+ * 
+ * @author Barak Ugav
+ * @author Yishai Gronich
+ * 
  */
 public class CSVDaoConfig extends DaoConfig {
 

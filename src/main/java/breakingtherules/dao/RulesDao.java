@@ -6,29 +6,40 @@ import breakingtherules.dto.ListDto;
 import breakingtherules.firewall.Rule;
 
 /**
- * Component that supply rules from repository
+ * Component that supply rules from repository.
+ * <p>
+ * 
+ * @author Barak Ugav
+ * @author Yishai Gronich
+ * 
  */
 public interface RulesDao {
 
     /**
-     * @param jobName
-     *            The name of the job that is in question
-     * @return The original rule of the given job
-     * @throws IOException
-     *             if any I/O error occurs
-     */
-    public Rule getOriginalRule(String jobName) throws IOException;
-
-    /**
-     * Get all rules from repository
+     * Get the original rule of the job.
      * 
      * @param jobName
-     *            Name of the rules' job
+     *            The name of the job.
+     * @return The original rule of the given job.
+     * @throws IOException
+     *             if any I/O error occurs.
+     * @throws ParseException
+     *             if the data is invalid.
+     */
+    public Rule getOriginalRule(String jobName) throws IOException, ParseException;
+
+    /**
+     * Get all rules from repository.
+     * 
+     * @param jobName
+     *            Name of the rules' job.
      * @return all rules created
      * @throws IOException
-     *             if failed to read from memory
+     *             if failed to read from memory.
+     * @throws ParseException
+     *             if the data is invalid.
      */
-    public ListDto<Rule> getRules(String jobName) throws IOException;
+    public ListDto<Rule> getRules(String jobName) throws IOException, ParseException;
 
     /**
      * Get rules from repository in range [startIndex, endIndex]
@@ -41,8 +52,10 @@ public interface RulesDao {
      *            the end index of the rules list, including this index
      * @return rules in range [startIndex, endIndex]
      * @throws IOException
-     *             if failed to read from memory
+     *             if failed to read from memory.
+     * @throws ParseException
+     *             if the data is invalid.
      */
-    public ListDto<Rule> getRules(String jobName, int startIndex, int endIndex) throws IOException;
+    public ListDto<Rule> getRules(String jobName, int startIndex, int endIndex) throws IOException, ParseException;
 
 }

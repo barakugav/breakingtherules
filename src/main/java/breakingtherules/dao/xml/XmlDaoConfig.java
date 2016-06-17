@@ -2,6 +2,12 @@ package breakingtherules.dao.xml;
 
 import breakingtherules.dao.DaoConfig;
 
+/**
+ * 
+ * @author Barak Ugav
+ * @author Yishai Gronich
+ *
+ */
 class XmlDaoConfig extends DaoConfig {
 
     private static final String HITS_FILE = "fullRepository.xml";
