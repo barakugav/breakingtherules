@@ -6,10 +6,12 @@ import java.util.List;
 import breakingtherules.dao.HitsDao;
 
 /**
- * Filter of hits, base on given attributes
+ * Filter of hits, base on given attributes.
+ * <p>
  * 
  * @author Barak Ugav
  * @author Yishai Gronich
+ * 
  * @see Hit
  * @see HitsDao
  */
@@ -35,12 +37,12 @@ public class Filter extends AbstractHitMatcher {
     }
 
     /**
-     * Copy constructor
+     * Copy constructor.
      * 
      * @param c
-     *            other container
+     *            other container.
      * @throws NullPointerException
-     *             if the other container is null
+     *             if the other container is null.
      */
     public Filter(final AttributesContainer c) {
 	super(c);

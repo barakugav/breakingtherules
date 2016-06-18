@@ -753,7 +753,7 @@ public class CSVScrambler implements Runnable {
     private static Hit mutateHit(final Hit hit, final int ipAttId, final List<Boolean> prefix) {
 	final IPAttribute attribute = (IPAttribute) hit.getAttribute(ipAttId);
 	final IP currentIp = attribute.getIp();
-	final IP newIp = IP.fromBooleans(prefix, currentIp.getClass());
+	final IP newIp = IP.fromBits(prefix, currentIp.getClass());
 	return hit.createMutation(attribute.createMutation(newIp));
     }
 

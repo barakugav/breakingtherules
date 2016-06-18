@@ -7,6 +7,7 @@ import java.util.function.Function;
 
 import breakingtherules.utilities.Cache;
 import breakingtherules.utilities.Caches;
+import breakingtherules.utilities.Caches.CacheSupplierPair;
 import breakingtherules.utilities.CustomSoftCache;
 import breakingtherules.utilities.IntArrayStrategy;
 import breakingtherules.utilities.Utility;
@@ -15,12 +16,12 @@ import breakingtherules.utilities.Utility;
  * IP address that is represented by a 128 bits.
  * <p>
  * For more information, see the
- * <a href='https://en.wikipedia.org/wiki/IPv6'>wiki</a>.
+ * <a href='https://en.wikipedia.org/wiki/IPv6'>wiki</a>.<p>
  * 
  * @author Barak Ugav
  * @author Yishai Gronich
- * @see IPv4
  * 
+ * @see IPv4
  */
 public final class IPv6 extends IP {
 
@@ -100,11 +101,12 @@ public final class IPv6 extends IP {
 	return a;
     }
 
-    /**
-     * Get the 128 bits representing the IP's address.
+    /*
+     * (non-Javadoc)
      * 
-     * @return the address's 128 bits as an array of size 4 of ints.
+     * @see breakingtherules.firewall.IP#getAddressBits()
      */
+    @Override
     public int[] getAddressBits() {
 	return m_address.clone();
     }
@@ -297,10 +299,6 @@ public final class IPv6 extends IP {
 	}
 	final int[] thisAddress = m_address;
 	final int[] otherAddress = other.m_address;
-
-	if (thisAddress.length != otherAddress.length) {
-	    return false;
-	}
 	for (int i = 0; i < thisAddress.length; i++) {
 	    if (thisAddress[i] != otherAddress[i]) {
 		return false;
@@ -642,9 +640,7 @@ public final class IPv6 extends IP {
      * @return IPv6 object with the specified address and maskSize.
      */
     private static IPv6 createInternal(final int[] address, final int maskSize) {
-	final Cache<int[], IPv6> cache = IPv6Cache.cache[maskSize];
-	final Function<int[], IPv6> supplier = IPv6Cache.suppliers[maskSize];
-	return cache.getOrAdd(address, supplier);
+	return IPv6Cache.caches[maskSize].getOrAdd(address);
     }
 
     /**
@@ -657,27 +653,26 @@ public final class IPv6 extends IP {
     private static class IPv6Cache {
 
 	/**
-	 * Array of IPv6 objects.
+	 * All caches.
+	 * <p>
+	 * The caches array is of size {@value IPv4#SIZE} + 1, and in each cache
+	 * 'i' the elements are the IPs with maskSize = i.
 	 */
-	static final Cache<int[], IPv6>[] cache;
-
-	static final Function<int[], IPv6>[] suppliers;
+	static final CacheSupplierPair<int[], IPv6>[] caches;
 
 	static {
 	    // Used dummy to suppress warnings
 	    @SuppressWarnings({ "unchecked", "unused" })
-	    Object dummy1 = cache = new Cache[SIZE + 1];
+	    Object dummy1 = caches = new CacheSupplierPair[SIZE + 1];
 
-	    // Used dummy to suppress warnings
-	    @SuppressWarnings({ "unchecked", "unused" })
-	    Object dummy2 = suppliers = new Function[SIZE + 1];
-
-	    for (int i = cache.length; i-- != 0;) {
-		cache[i] = Caches.synchronizedCache(new CustomSoftCache<>(IntArrayStrategy.INSTANCE));
+	    for (int i = caches.length; i-- != 0;) {
 		final int maskSize = i;
-		suppliers[i] = (final int[] array) -> {
+		final Cache<int[], IPv6> cache = Caches
+			.synchronizedCache(new CustomSoftCache<>(IntArrayStrategy.INSTANCE));
+		final Function<int[], IPv6> supplier = (final int[] array) -> {
 		    return new IPv6(array, maskSize);
 		};
+		caches[i] = Caches.cacheSupplierPair(cache, supplier);
 	    }
 	}
 

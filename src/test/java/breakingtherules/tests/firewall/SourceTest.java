@@ -29,13 +29,13 @@ public class SourceTest extends TestBase {
     @Test
     public void constructorStringTest() {
 	String ip = "2.12.45.7/21";
-	Source.create(ip);
+	Source.createFromString(ip);
     }
 
     @Test(expected = NullPointerException.class)
     public void constructorStringTestNullIP() {
 	String ip = null;
-	Source.create(ip);
+	Source.createFromString(ip);
     }
 
     @Test
@@ -86,16 +86,16 @@ public class SourceTest extends TestBase {
     @Test
     public void equalsTestTrue() {
 	Source s1, s2;
-	s1 = Source.create("2.12.45.7/21");
-	s2 = Source.create("2.12.45.7/21");
+	s1 = Source.createFromString("2.12.45.7/21");
+	s2 = Source.createFromString("2.12.45.7/21");
 	assertEquals(s1, s2);
     }
 
     @Test
     public void equalsTestFalse() {
 	Source s1, s2;
-	s1 = Source.create("2.12.45.7/21");
-	s2 = Source.create("2.13.45.7/21");
+	s1 = Source.createFromString("2.12.45.7/21");
+	s2 = Source.createFromString("2.13.45.7/21");
 	assertNotEquals(s1, s2);
     }
 

@@ -29,8 +29,8 @@ public class FilterController {
 	    @RequestParam(value = "destination") String destination, @RequestParam(value = "service") String service)
 		    throws IllegalArgumentException, IOException, ParseException {
 	List<Attribute> filterAtts = new ArrayList<>();
-	filterAtts.add(Source.create(source));
-	filterAtts.add(Destination.create(destination));
+	filterAtts.add(Source.createFromString(source));
+	filterAtts.add(Destination.createFromString(destination));
 	filterAtts.add(Service.createFromString(service));
 	Filter newFilter = new Filter(filterAtts);
 	m_job.setFilter(newFilter);

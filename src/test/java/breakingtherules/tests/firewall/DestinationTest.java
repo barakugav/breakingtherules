@@ -29,13 +29,13 @@ public class DestinationTest extends TestBase {
     @Test
     public void constructorStringTest() {
 	String ip = "2.12.45.7/21";
-	Destination.create(ip);
+	Destination.createFromString(ip);
     }
 
     @Test(expected = NullPointerException.class)
     public void constructorStringTestNullIP() {
 	String ip = null;
-	Destination.create(ip);
+	Destination.createFromString(ip);
     }
 
     @Test
@@ -94,16 +94,16 @@ public class DestinationTest extends TestBase {
     @Test
     public void equalsTestTrue() {
 	Destination s1, s2;
-	s1 = Destination.create("2.12.45.7/21");
-	s2 = Destination.create("2.12.45.7/21");
+	s1 = Destination.createFromString("2.12.45.7/21");
+	s2 = Destination.createFromString("2.12.45.7/21");
 	assertEquals(s1, s2);
     }
 
     @Test
     public void equalsTestFalse() {
 	Destination s1, s2;
-	s1 = Destination.create("2.12.45.7/21");
-	s2 = Destination.create("2.13.45.7/21");
+	s1 = Destination.createFromString("2.12.45.7/21");
+	s2 = Destination.createFromString("2.13.45.7/21");
 	assertNotEquals(s1, s2);
     }
 

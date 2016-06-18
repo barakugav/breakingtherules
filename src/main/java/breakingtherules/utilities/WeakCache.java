@@ -2,6 +2,8 @@ package breakingtherules.utilities;
 
 import java.lang.ref.ReferenceQueue;
 import java.lang.ref.WeakReference;
+import java.util.Map;
+import java.util.Objects;
 import java.util.WeakHashMap;
 import java.util.function.Function;
 
@@ -82,7 +84,7 @@ public class WeakCache<K, E> implements Cache<K, E> {
      * <p>
      * The table length MUST be a power of 2. See {@link #mask}.
      */
-    private Entry[] table;
+    private Entry<E>[] table;
 
     /**
      * Number of elements in the cache
@@ -143,7 +145,7 @@ public class WeakCache<K, E> implements Cache<K, E> {
      * Queue used to determine which elements was queued and needed to be
      * removed from the table.
      */
-    private final ReferenceQueue<Object> queue;
+    private final ReferenceQueue<E> queue;
 
     /**
      * Minimum capacity which the table will not be shrinking less then.
@@ -199,7 +201,7 @@ public class WeakCache<K, E> implements Cache<K, E> {
 	    throw new IllegalArgumentException("load factor must be greater then 0 and not NaN: " + loadFactor);
 
 	final int capacity = Hashs.nextPowerOfTwo((int) (initCapacity / loadFactor));
-	table = new Entry[capacity];
+	table = newTable(capacity);
 	mask = capacity - 1;
 	growThreshold = (int) (capacity * loadFactor);
 	shrinkThreshold = growThreshold >> 2;
@@ -215,7 +217,6 @@ public class WeakCache<K, E> implements Cache<K, E> {
      * @return the cached element or null if non found.
      */
     @Override
-    @SuppressWarnings("unchecked")
     public E get(final K key) {
 	// Compute hash
 	final Object k = maskNull(key);
@@ -225,7 +226,7 @@ public class WeakCache<K, E> implements Cache<K, E> {
 	cleanCache();
 
 	// Search entry
-	for (Entry p = table[hash & mask]; p != null; p = p.next)
+	for (Entry<E> p = table[hash & mask]; p != null; p = p.next)
 	    if (hash == p.hash && k.equals(p.key))
 		/*
 		 * Entry found, no need to check if it's element is a dead
@@ -243,7 +244,7 @@ public class WeakCache<K, E> implements Cache<K, E> {
 		 * reference are eliminated, so for each key is guaranteed that
 		 * there is at most one entry that match it).
 		 */
-		return (E) p.get();
+		return p.get();
 
 	// No entry found with same key
 	return null;
@@ -265,9 +266,6 @@ public class WeakCache<K, E> implements Cache<K, E> {
      */
     @Override
     public E add(final K key, final E element) {
-	if (element == null)
-	    throw new NullPointerException("Nulls elements are not allowed in weak cache");
-
 	// Compute hash
 	final Object k = maskNull(key);
 	final int hash = Hashs.hash(k);
@@ -280,11 +278,10 @@ public class WeakCache<K, E> implements Cache<K, E> {
 	final int index = hash & mask;
 
 	// Check that such key doesn't already exist
-	final Entry firstEntry = table[index];
-	for (Entry p = firstEntry; p != null; p = p.next) {
+	final Entry<E> firstEntry = table[index];
+	for (Entry<E> p = firstEntry; p != null; p = p.next) {
 	    if (hash == p.hash && k.equals(p.key)) {
-		@SuppressWarnings("unchecked")
-		final E existing = (E) p.get();
+		final E existing = p.get();
 		if (existing != null)
 		    return existing;
 		/*
@@ -302,11 +299,43 @@ public class WeakCache<K, E> implements Cache<K, E> {
 	}
 
 	// Insert new entry as first entry in list
-	table[index] = new Entry(k, element, queue, hash, firstEntry);
+	table[index] = new Entry<>(k, element, queue, hash, firstEntry);
 	grow();
 	return element;
     }
 
+    /**
+     * Get an element from the cache by it's key or add one if one doesn't
+     * exist.
+     * <p>
+     * This method should be used for two reasons:
+     * <ol>
+     * <li>It can improve performance, instead of calling {@link #get(Object)}
+     * and if null is returned call {@link #add(Object, Object)}, the operation
+     * combined to one.</li>
+     * <li>Thread safety, if all the cache methods are synchronized, calling
+     * this method ensure that no other threads used the cache between the
+     * element search and it's insertion (if needed). If this method wasn't
+     * exist, and the alternative is to call {@link #get(Object)} and if
+     * returned null call {@link #add(Object, Object)}, another thread could add
+     * the desire element between the two calls, duplication the creation effort
+     * of the element.</li>
+     * </ol>
+     * <p>
+     * This method is similar to {@link Map#computeIfAbsent(Object, Function)}.
+     * <p>
+     * 
+     * @param key
+     *            the key of the element.
+     * @param supplier
+     *            the supplier of the element if one doesn't exist in the cache.
+     * @return the existing element or the one created from the supplier (if
+     *         needed).
+     * @throws NullPointerException
+     *             if the supplier is needed and it's null or the supplied
+     *             element is null (null elements are not allowed in weak
+     *             cache).
+     */
     @Override
     public E getOrAdd(final K key, final Function<? super K, ? extends E> supplier) {
 	// Compute hash
@@ -321,19 +350,20 @@ public class WeakCache<K, E> implements Cache<K, E> {
 	final int index = hash & mask;
 
 	// Search entry
-	final Entry firstEntry = table[index];
-	for (Entry p = firstEntry; p != null; p = p.next) {
+	final Entry<E> firstEntry = table[index];
+	for (Entry<E> p = firstEntry; p != null; p = p.next) {
 	    if (hash == p.hash && k.equals(p.key)) {
-		@SuppressWarnings("unchecked")
-		E elm = (E) p.get();
+		final E elm = p.get();
 		if (elm != null)
 		    return elm;
 	    }
 	}
 
-	// Not found, insert new entry as first entry in list
+	// Not found, supply element
 	final E element = supplier.apply(key);
-	table[index] = new Entry(k, element, queue, hash, firstEntry);
+
+	// Insert new entry as first entry in list
+	table[index] = new Entry<>(k, element, queue, hash, firstEntry);
 	grow();
 	return element;
     }
@@ -357,30 +387,23 @@ public class WeakCache<K, E> implements Cache<K, E> {
 	// may be caused and may change the mask.
 	final int index = hash & mask;
 
-	// Check if element is first in his list
-	Entry p = table[index];
-	if (p == null)
-	    return;
-	if (hash == p.hash && k.equals(p.key)) {
-	    // Element is first in this list, remove and shrink
-	    table[index] = p.next;
-	    p.next = null; // Help GC
-	    p.key = null; // Help GC
-	    shrink();
-	    return;
-	}
-
-	// Element is not first in his list, search it
-	Entry prev;
-	while ((p = (prev = p).next) != null) {
+	Entry<E> p = table[index];
+	Entry<E> prev = null;
+	while (p != null) {
+	    final Entry<E> next = p.next;
 	    if (hash == p.hash && k.equals(p.key)) {
-		// Element found, remove and shrink
-		prev.next = p.next;
-		p.next = null; // Help GC
-		p.key = null; // Help GC
+		if (prev == null) {
+		    table[index] = next;
+		} else {
+		    prev.next = next;
+		}
+		p.next = null;
+		p.key = null;
 		shrink();
-		return;
+		break;
 	    }
+	    prev = p;
+	    p = next;
 	}
     }
 
@@ -407,10 +430,10 @@ public class WeakCache<K, E> implements Cache<K, E> {
 	}
 
 	// Clear table
-	final Entry[] tab = table;
+	final Entry<E>[] tab = table;
 	for (int index = tab.length; index-- != 0;) {
-	    for (Entry entry = tab[index]; entry != null;) {
-		final Entry next = entry.next;
+	    for (Entry<E> entry = tab[index]; entry != null;) {
+		final Entry<E> next = entry.next;
 		entry.clear();
 		entry.next = null; // Help GC
 		entry.key = null; // Help GC
@@ -443,10 +466,11 @@ public class WeakCache<K, E> implements Cache<K, E> {
     public void cleanCache() {
 	// Poll from dead entries queue until it's empty. Remove each entry of
 	// dead element from the table.
-	for (Entry entry; (entry = (Entry) queue.poll()) != null;) {
+	for (Object o; (o = queue.poll()) != null;) {
+	    @SuppressWarnings("unchecked")
+	    final Entry<E> entry = (Entry<E>) o;
+
 	    synchronized (queue) {
-		final int index = entry.hash & mask;
-		Entry p = table[index];
 		/*
 		 * Search the entry in it's list. If found, remove it, if not,
 		 * do nothing. The scenario that the entry is not found means
@@ -454,31 +478,25 @@ public class WeakCache<K, E> implements Cache<K, E> {
 		 * element's entry was detected already during other operation,
 		 * for example, during resize.
 		 */
-		if (p == entry) {
-		    // Entry is the first one in it's list, remove and shrink.
-		    table[index] = p.next;
-		    shrink();
-
-		} else if (p == null) {
-		    // Already removed.
-		    continue;
-
-		} else {
-		    // The entry is not the first entry in it's list, search it
-		    Entry prev;
-		    while ((p = (prev = p).next) != null) {
-			if (p == entry) {
-			    // Entry found, remove and shrink
-			    prev.next = p.next;
-			    shrink();
-			    break;
+		final int index = entry.hash & mask;
+		Entry<E> p = table[index];
+		Entry<E> prev = null;
+		while (p != null) {
+		    final Entry<E> next = p.next;
+		    if (p == entry) {
+			if (prev == null) {
+			    table[index] = next;
+			} else {
+			    prev.next = next;
 			}
+			entry.key = null;
+			entry.next = null;
+			shrink();
+			break;
 		    }
-		    // Entry was not found, already removed.
+		    prev = p;
+		    p = next;
 		}
-
-		entry.key = null; // Help GC
-		entry.next = null; // Help GC
 	    }
 	}
     }
@@ -498,9 +516,9 @@ public class WeakCache<K, E> implements Cache<K, E> {
 	cleanCache();
 
 	// Iterate over all elements and append them
-	final Entry[] tab = table;
+	final Entry<E>[] tab = table;
 	for (int i = tab.length; i-- != 0;) {
-	    for (Entry entry = tab[i]; entry != null; entry = entry.next) {
+	    for (Entry<E> entry = tab[i]; entry != null; entry = entry.next) {
 		final Object element = entry.get();
 		if (element == null)
 		    // If element is already dead reference, ignore him
@@ -544,8 +562,8 @@ public class WeakCache<K, E> implements Cache<K, E> {
      *            new table capacity. MUST be a power of 2.
      */
     private void resize(final int newCapacity) {
-	final Entry[] oldTable = table;
-	final Entry[] newTable = table = new Entry[newCapacity];
+	final Entry<E>[] oldTable = table;
+	final Entry<E>[] newTable = table = newTable(newCapacity);
 
 	// Update thresholds and mask
 	growThreshold = (int) (newCapacity * loadFactor);
@@ -554,12 +572,12 @@ public class WeakCache<K, E> implements Cache<K, E> {
 
 	// transfer all elements to newTable
 	for (int oldIndex = oldTable.length; oldIndex-- != 0;) {
-	    for (Entry entry = oldTable[oldIndex]; entry != null;) {
+	    for (Entry<E> entry = oldTable[oldIndex]; entry != null;) {
 
 		// Hold next entry before transferring entry. entry.next will be
 		// irrelevant for the iteration after transferring current entry
 		// to new table.
-		final Entry next = entry.next;
+		final Entry<E> next = entry.next;
 
 		if (entry.get() == null) {
 		    // If we encounter dead reference, don't transfer it to new
@@ -604,6 +622,21 @@ public class WeakCache<K, E> implements Cache<K, E> {
     }
 
     /**
+     * Create new table of entries.
+     * <p>
+     * 
+     * @param <E>
+     *            type of keys of the table's entries.
+     * @param capacity
+     *            the desire capacity of the table.
+     * @return new table with the specified capacity.
+     */
+    @SuppressWarnings("unchecked")
+    private static <E> Entry<E>[] newTable(final int capacity) {
+	return new Entry[capacity];
+    }
+
+    /**
      * Mask object by replacing null will non null object.
      * <p>
      * Used to mask null keys.
@@ -627,7 +660,7 @@ public class WeakCache<K, E> implements Cache<K, E> {
      * the element the {@link WeakCache} will remove the entry from the table.
      *
      */
-    private static class Entry extends WeakReference<Object> {
+    private static class Entry<E> extends WeakReference<E> {
 
 	/**
 	 * The entry key.
@@ -643,7 +676,7 @@ public class WeakCache<K, E> implements Cache<K, E> {
 	 * The next entry at the entry linked list, or null if this entry is the
 	 * last entry in the list.
 	 */
-	private Entry next;
+	private Entry<E> next;
 
 	/**
 	 * Construct new entry
@@ -660,9 +693,9 @@ public class WeakCache<K, E> implements Cache<K, E> {
 	 * @param next
 	 *            next entry
 	 */
-	public Entry(final Object key, final Object element, final ReferenceQueue<Object> queue, final int hash,
-		final Entry next) {
-	    super(element, queue);
+	public Entry(final Object key, final E element, final ReferenceQueue<? super E> queue, final int hash,
+		final Entry<E> next) {
+	    super(Objects.requireNonNull(element, "Nulls elements are not allowed in weak cache"), queue);
 	    this.key = key;
 	    this.hash = hash;
 	    this.next = next;

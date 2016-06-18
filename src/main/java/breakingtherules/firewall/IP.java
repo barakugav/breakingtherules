@@ -14,17 +14,17 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 public abstract class IP implements Comparable<IP> {
 
     /**
-     * Any IP, contains all other
+     * Any IP, contains all other.
      */
     public static final IP ANY_IP = new AnyIP();
 
     /**
-     * Size of the subnetwork mask
+     * Size of the subnetwork mask.
      */
     final int m_maskSize;
 
     /**
-     * String representation of any IP
+     * String representation of any IP.
      */
     static final String ANY = "Any";
 
@@ -34,28 +34,60 @@ public abstract class IP implements Comparable<IP> {
     static final char MASK_SIZE_SEPARATOR = '/';
 
     /**
-     * Construct new IP
+     * Construct new IP.
      * 
      * @param maskSize
-     *            size of subnetwork mask
+     *            size of subnetwork mask.
      */
     IP(final int maskSize) {
 	m_maskSize = maskSize;
     }
 
     /**
-     * Get the address of the IP
+     * Get the address of the IP, in blocks format.
+     * <p>
+     * This method should be used as a user friendly method. The method return
+     * an array of the 'blocks' of the IP.
+     * <p>
+     * for example:<br>
+     * If the IP is 102.54.87.89 the method will return [102, 54, 87, 89].<br>
+     * If the IP is 10842:54:8557:89:0:40045:84:999 the method will return
+     * [10842, 54, 8557, 89, 0, 40045, 84, 999].
+     * <p>
+     * To get the actual bits of the address, in the minimal time and space, use
+     * {@link #getAddressBits()}.
+     * <p>
      * 
-     * @return address of the IP
+     * @return address of the IP, in blocks format.
      */
     public abstract int[] getAddress();
+
+    /**
+     * Get the address bits of the IP, in the minimal size of int array.
+     * <p>
+     * This method is more technical and less user friendly then
+     * {@link #getAddress()}. The method return array of int, each int is 32
+     * bits, each cell in the array represent another 32 bits of the address
+     * (the array is as minimal as possible).
+     * <p>
+     * For example:<br>
+     * If the IP is 102.54.87.89 the method will return [1714837337].<br>
+     * If the IP is 10842:54:8557:89:0:40045:84:999 the method will return
+     * [710541366, 560791641, 40045, 5506023].
+     * <p>
+     * For more user friendly address use {@link #getAddress()}.
+     * <p>
+     * 
+     * @return array of the bits of the address in minimal space.
+     */
+    public abstract int[] getAddressBits();
 
     /**
      * Get the size of the sub network of this IP.
      * <p>
      * Should be <code>SIZE - maskSize</code>.
      * 
-     * @return this IP's network size
+     * @return this IP's network size.
      */
     @JsonIgnore
     public abstract int getSubnetBitsNum();
@@ -74,6 +106,7 @@ public abstract class IP implements Comparable<IP> {
     /**
      * Checks if this IP has parent (more general IP, subnetwork that contains
      * this IP and it's subnetwork mask is smaller then this one's mask by 1).
+     * <p>
      * 
      * @return true if this IP has parent, else - false
      * @see #getParent()
@@ -89,10 +122,11 @@ public abstract class IP implements Comparable<IP> {
      * For example:<br>
      * IP: 101.54.17.0/24<br>
      * Parent: 101.54.16.0/23<br>
+     * <p>
      * 
-     * @return this IP's parent
+     * @return this IP's parent.
      * @throws IllegalStateException
-     *             if the IP doesn't have a parent.
+     *             if the IP doesn't have a parent (by {@link #hasParent()}).
      */
     @JsonIgnore
     public abstract IP getParent();
@@ -114,10 +148,11 @@ public abstract class IP implements Comparable<IP> {
      * For example:<br>
      * IP: 101.54.16.0/23<br>
      * Children: 101.54.16.0/24, 101.54.17.0/24<br>
+     * <p>
      * 
      * @return this IP's children
      * @throws IllegalStateException
-     *             if the IP doesn't have children
+     *             if the IP doesn't have children (by {@link #hasChildren()}).
      */
     @JsonIgnore
     public abstract IP[] getChildren();
@@ -143,8 +178,8 @@ public abstract class IP implements Comparable<IP> {
      * <p>
      * 
      * @param bitNumber
-     *            the bit's number
-     * @return value of the requested bit
+     *            the bit's number.
+     * @return value of the requested bit.
      * @throws IndexOutOfBoundsException
      *             if the bit number is negative or greater then the IP size.
      */
@@ -155,8 +190,8 @@ public abstract class IP implements Comparable<IP> {
      * Get the last masked bit value.
      * <p>
      * For example:<br>
-     * IP: 101.54.17/24 lastBit: 1
-     * IP: 101.54.16/25 lastBit: 0
+     * IP: 101.54.17/24 lastBit: 1<br>
+     * IP: 101.54.16/25 lastBit: 0<br>
      * <p>
      * This method could have been implemented in this class and not to be
      * abstract by: <br>
@@ -166,6 +201,7 @@ public abstract class IP implements Comparable<IP> {
      * method is specific for last bit, less checks can be made and the bit
      * number is known - for example {@link IPv6#getLastBit()} compare to
      * {@link IPv6#getBit(int)}).
+     * <p>
      * 
      * @return true if the last bit value is 1, else false
      */
@@ -180,6 +216,7 @@ public abstract class IP implements Comparable<IP> {
      * For example:<br>
      * 127.0.0.1 and 127.0.0.0<br>
      * or 10.69.0.0/16 and 10.68.0.0/16<br>
+     * <p>
      * 
      * @param other
      *            potential brother
@@ -195,7 +232,7 @@ public abstract class IP implements Comparable<IP> {
     public abstract int getSize();
 
     /**
-     * Create new IP from String IP
+     * Create new IP from String IP.
      * <p>
      * This method detect formats of IPv4 and IPv6 only.
      * <p>
@@ -204,30 +241,31 @@ public abstract class IP implements Comparable<IP> {
      *            String IP
      * @return IP object based on the String IP
      * @throws NullPointerException
-     *             if the string is null
+     *             if the string is null.
      * @throws IllegalArgumentException
      *             if the string is invalid.
      */
     public static IP fromString(final String ip) {
-	if (ip.equals("Any")) {
+	if (ip.equals(ANY)) {
 	    return ANY_IP;
 	}
 
 	final boolean isIPv4 = ip.indexOf(IPv4.BLOCKS_SEPARATOR) >= 0;
 	final boolean isIPv6 = ip.indexOf(IPv6.BLOCKS_SEPARATOR) >= 0;
-	if (isIPv4 && isIPv6) {
-	    throw new IllegalArgumentException("Unknown format");
+	if (!(isIPv4 ^ isIPv6)) {
+	    throw new IllegalArgumentException("Unknown format: " + ip);
 	} else if (isIPv4) {
 	    return IPv4.createFromString(ip);
 	} else if (isIPv6) {
 	    return IPv6.createFromString(ip);
 	} else {
-	    throw new IllegalArgumentException("Unknown format: " + ip);
+	    // Impossible flow.
+	    throw new InternalError();
 	}
     }
 
     /**
-     * Create new IP from boolean bits list.
+     * Create new IP from bits list.
      * <p>
      * This method create IPs of type IPv4, IPv6 and AnyIP only.
      * <p>
@@ -241,7 +279,7 @@ public abstract class IP implements Comparable<IP> {
      *             if the given class is not IPv4, IPv6 or AnyIP, or if the bits
      *             list is invalid.
      */
-    public static IP fromBooleans(final List<Boolean> ip, final Class<?> clazz) {
+    public static IP fromBits(final List<Boolean> ip, final Class<?> clazz) {
 	if (clazz.equals(IPv4.class)) {
 	    return IPv4.createFromBits(ip);
 	} else if (clazz.equals(IPv6.class)) {
@@ -256,6 +294,7 @@ public abstract class IP implements Comparable<IP> {
 
     /**
      * The AnyIP class represents 'Any' IP (contains all others).
+     * <p>
      * 
      * @author Barak Ugav
      * @author Yishai Gronich
@@ -268,6 +307,36 @@ public abstract class IP implements Comparable<IP> {
 	 */
 	AnyIP() {
 	    super(0);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see breakingtherules.firewall.IP#getAddress()
+	 */
+	@Override
+	public int[] getAddress() {
+	    return new int[0];
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see breakingtherules.firewall.IP#getAddressBits()
+	 */
+	@Override
+	public int[] getAddressBits() {
+	    return new int[0];
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see breakingtherules.firewall.IP#getSubnetBitsNum()
+	 */
+	@Override
+	public int getSubnetBitsNum() {
+	    return 0;
 	}
 
 	/*
@@ -287,7 +356,7 @@ public abstract class IP implements Comparable<IP> {
 	 */
 	@Override
 	public IP getParent() {
-	    return null;
+	    throw new IllegalStateException();
 	}
 
 	/*
@@ -307,7 +376,28 @@ public abstract class IP implements Comparable<IP> {
 	 */
 	@Override
 	public IP[] getChildren() {
-	    return null;
+	    throw new IllegalStateException();
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * breakingtherules.firewall.IP#contains(breakingtherules.firewall.IP)
+	 */
+	@Override
+	public boolean contains(final IP other) {
+	    return other != null;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see breakingtherules.firewall.IP#getBit(int)
+	 */
+	@Override
+	public boolean getBit(int bitNumber) {
+	    return false;
 	}
 
 	/*
@@ -324,11 +414,21 @@ public abstract class IP implements Comparable<IP> {
 	 * (non-Javadoc)
 	 * 
 	 * @see
-	 * breakingtherules.firewall.IP#contains(breakingtherules.firewall.IP)
+	 * breakingtherules.firewall.IP#isBrother(breakingtherules.firewall.IP)
 	 */
 	@Override
-	public boolean contains(IP other) {
-	    return true;
+	public boolean isBrother(IP other) {
+	    return other instanceof AnyIP;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see breakingtherules.firewall.IP#getSize()
+	 */
+	@Override
+	public int getSize() {
+	    return 0;
 	}
 
 	/*
@@ -337,7 +437,7 @@ public abstract class IP implements Comparable<IP> {
 	 * @see java.lang.Object#equals(java.lang.Object)
 	 */
 	@Override
-	public boolean equals(Object o) {
+	public boolean equals(final Object o) {
 	    return o instanceof AnyIP;
 	}
 
@@ -367,59 +467,8 @@ public abstract class IP implements Comparable<IP> {
 	 * @see java.lang.Comparable#compareTo(java.lang.Object)
 	 */
 	@Override
-	public int compareTo(IP o) {
+	public int compareTo(final IP o) {
 	    return o instanceof AnyIP ? 0 : 1;
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see breakingtherules.firewall.IP#getAddress()
-	 */
-	@Override
-	public int[] getAddress() {
-	    return new int[0];
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see breakingtherules.firewall.IP#getBit(int)
-	 */
-	@Override
-	public boolean getBit(int bitNumber) {
-	    return false;
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * breakingtherules.firewall.IP#isBrother(breakingtherules.firewall.IP)
-	 */
-	@Override
-	public boolean isBrother(IP other) {
-	    return other instanceof AnyIP;
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see breakingtherules.firewall.IP#getSubnetBitsNum()
-	 */
-	@Override
-	public int getSubnetBitsNum() {
-	    return 0;
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see breakingtherules.firewall.IP#getSize()
-	 */
-	@Override
-	public int getSize() {
-	    return 0;
 	}
 
     }

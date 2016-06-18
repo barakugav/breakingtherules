@@ -10,6 +10,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import breakingtherules.utilities.Cache;
 import breakingtherules.utilities.Caches;
+import breakingtherules.utilities.Caches.CacheSupplierPair;
 import breakingtherules.utilities.SoftCache;
 import breakingtherules.utilities.Utility;
 
@@ -83,11 +84,6 @@ public class Service extends Attribute {
      * Map from protocol names to their codes
      */
     private static final Map<String, Integer> PROTOCOL_CODES;
-
-    /**
-     * String representation of any attribute service, protocol or ports range.
-     */
-    private static final String ANY = "Any";
 
     static {
 	PROTOCOL_NAMES = new String[256];
@@ -654,10 +650,8 @@ public class Service extends Attribute {
      * @return Service object of the specified protocol and ports
      */
     private static Service createInternal(final int protocolCode, final int portsRange) {
-	final Cache<Integer, Service> cache = ServiceCache.cache[protocolCode];
-	final Function<Integer, Service> supplier = ServiceCache.suppliers[protocolCode];
 	// Intentionally using 'new Integer(int)' and not 'Integer.valueOf(int)'
-	return cache.getOrAdd(new Integer(portsRange), supplier);
+	return ServiceCache.caches[protocolCode].getOrAdd(new Integer(portsRange));
     }
 
     /**
@@ -669,29 +663,22 @@ public class Service extends Attribute {
      */
     private static class ServiceCache {
 
-	/**
-	 * Arrays of service caches
-	 */
-	static final Cache<Integer, Service>[] cache;
-
-	static final Function<Integer, Service>[] suppliers;
+	// TODO
+	static final CacheSupplierPair<Integer, Service>[] caches;
 
 	static {
 	    // Used dummy to suppress warnings
 	    @SuppressWarnings({ "unchecked", "unused" })
-	    Object dummy = cache = new Cache[257]; // 256 and 1 for 'any
-						   // protocol'
+	    // 256 and 1 for 'any protocol'
+	    Object dummy = caches = new CacheSupplierPair[257];
 
-	    // Used dummy to suppress warnings
-	    @SuppressWarnings({ "unchecked", "unused" })
-	    Object dummy2 = suppliers = new Function[257];
-
-	    for (int i = cache.length; i-- != 0;) {
-		cache[i] = Caches.synchronizedCache(new SoftCache<>());
+	    for (int i = caches.length; i-- != 0;) {
 		final int protocolCode = i;
-		suppliers[i] = (final Integer portsRange) -> {
+		final Cache<Integer, Service> cache = Caches.synchronizedCache(new SoftCache<>());
+		final Function<Integer, Service> supplier = (final Integer portsRange) -> {
 		    return new Service(protocolCode, portsRange.intValue());
 		};
+		caches[i] = Caches.cacheSupplierPair(cache, supplier);
 	    }
 	}
 

@@ -1,22 +1,28 @@
 package breakingtherules.dto;
 
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
 /**
  * DTO object that have a list of elements out of a bigger total elements list.
+ * <p>
  * This DTO saves the indexes of this elements list out of the total list, and
- * some parameters about the total list
+ * some parameters about the total list.
+ * <p>
  * 
- * @param <T>
- *            The internal type of the list
+ * @author Barak Ugav
+ * @author Yishai Gronich
+ * 
+ * @param <E>
+ *            The type list elements.
  */
-public class ListDto<T> implements Iterable<T> {
+public class ListDto<E> implements Iterable<E> {
 
     /**
      * Data list to be passed
      */
-    private final List<T> m_data;
+    private final List<E> m_data;
 
     /**
      * The 0-index of the first element, out of all the elements of the total
@@ -49,7 +55,7 @@ public class ListDto<T> implements Iterable<T> {
      * @param total
      *            the size of the total elements list
      */
-    public ListDto(final List<T> data, final int startIndex, final int endIndex, final int total) {
+    public ListDto(final List<E> data, final int startIndex, final int endIndex, final int total) {
 	m_total = total;
 	m_startIndex = startIndex;
 	m_endIndex = endIndex;
@@ -61,7 +67,7 @@ public class ListDto<T> implements Iterable<T> {
      * 
      * @return list of the elements this DTO has
      */
-    public List<T> getData() {
+    public List<E> getData() {
 	return m_data;
     }
 
@@ -107,8 +113,8 @@ public class ListDto<T> implements Iterable<T> {
      * @see java.lang.Iterable#iterator()
      */
     @Override
-    public Iterator<T> iterator() {
-	return m_data.iterator();
+    public Iterator<E> iterator() {
+	return m_data != null ? m_data.iterator() : Collections.emptyIterator();
     }
 
 }

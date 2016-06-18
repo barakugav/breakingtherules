@@ -408,7 +408,7 @@ public class CSVParser {
      */
     private static Source fromCSVSource(final String source) throws CSVParseException {
 	try {
-	    return Source.create(source);
+	    return Source.createFromString(source);
 	} catch (final IllegalArgumentException e) {
 	    throw new CSVParseException("Unable to parse source: ", e);
 	}
@@ -425,7 +425,7 @@ public class CSVParser {
      */
     private static Destination fromCSVDestination(final String destination) throws CSVParseException {
 	try {
-	    return Destination.create(destination);
+	    return Destination.createFromString(destination);
 	} catch (final IllegalArgumentException e) {
 	    throw new CSVParseException("Unable to parse destination: ", e);
 	}

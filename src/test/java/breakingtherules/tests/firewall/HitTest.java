@@ -41,8 +41,8 @@ public class HitTest extends TestBase {
 	List<Attribute> actual = hit.getAttributes();
 
 	// Sort lists for comparison
-	expected.sort(Attribute.ATTRIBUTES_COMPARATOR);
-	actual.sort(Attribute.ATTRIBUTES_COMPARATOR);
+	expected.sort(Attribute.ATTRIBUTES_TYPE_COMPARATOR);
+	actual.sort(Attribute.ATTRIBUTES_TYPE_COMPARATOR);
 
 	assertEquals(expected, actual);
     }

@@ -5,6 +5,7 @@ import java.util.function.Function;
 
 import breakingtherules.utilities.Cache;
 import breakingtherules.utilities.Caches;
+import breakingtherules.utilities.Caches.CacheSupplierPair;
 import breakingtherules.utilities.SoftCache;
 import breakingtherules.utilities.Utility;
 
@@ -12,12 +13,12 @@ import breakingtherules.utilities.Utility;
  * IP address that is represented by a 32 bits.
  * <p>
  * For more information, see the
- * <a href='https://en.wikipedia.org/wiki/IPv4'>wiki</a>.
+ * <a href='https://en.wikipedia.org/wiki/IPv4'>wiki</a>.<p>
  * 
  * @author Barak Ugav
  * @author Yishai Gronich
+ * 
  * @see IPv6
- *
  */
 public final class IPv4 extends IP {
 
@@ -89,12 +90,27 @@ public final class IPv4 extends IP {
 	return aArr;
     }
 
-    /**
-     * Get the 32 bits representing the IP's address.
+    /*
+     * (non-Javadoc)
      * 
-     * @return the address's 32 bits,
+     * @see breakingtherules.firewall.IP#getAddressBits()
      */
-    public int addressBits() {
+    @Override
+    public int[] getAddressBits() {
+	return new int[] { m_address };
+    }
+
+    /**
+     * Get the address bits in an int form.
+     * <p>
+     * Similar to {@link #getAddressBits()} but specific for IPv4. This method
+     * is possible because IPv4 address is only 32 bits, so it can be
+     * represented in a single int and doesn't require array of ints.
+     * <p>
+     * 
+     * @return 32 bits of the address in an int form.
+     */
+    public int getAddressBitsInt() {
 	return m_address;
     }
 
@@ -514,10 +530,8 @@ public final class IPv4 extends IP {
      * @return IPv4 object with the specified address and maskSize.
      */
     private static IPv4 createInternal(final int address, final int maskSize) {
-	final Cache<Integer, IPv4> cache = IPv4Cache.cache[maskSize];
-	final Function<Integer, IPv4> supplier = IPv4Cache.suppliers[maskSize];
 	// Intentionally using 'new Integer(int)' and not 'Integer.valueOf(int)'
-	return cache.getOrAdd(new Integer(address), supplier);
+	return IPv4Cache.caches[maskSize].getOrAdd(new Integer(address));
     }
 
     /**
@@ -530,32 +544,25 @@ public final class IPv4 extends IP {
     private static final class IPv4Cache {
 
 	/**
-	 * Array of IPv4 objects.
-	 */
-	static final Cache<Integer, IPv4>[] cache;
-
-	/**
-	 * Array of IPv4 suppliers.
+	 * All caches.
 	 * <p>
-	 * Used as {@link Cache#getOrAdd(Object, Function)} last parameter.
+	 * The caches array is of size {@value IPv4#SIZE} + 1, and in each cache
+	 * 'i' the elements are the IPs with maskSize = i.
 	 */
-	static final Function<Integer, IPv4>[] suppliers;
+	static final CacheSupplierPair<Integer, IPv4>[] caches;
 
 	static {
 	    // Used dummy to suppress warnings
 	    @SuppressWarnings({ "unchecked", "unused" })
-	    Object dummy1 = cache = new Cache[SIZE + 1];
+	    Object dummy1 = caches = new CacheSupplierPair[SIZE + 1];
 
-	    // Used dummy to suppress warnings
-	    @SuppressWarnings({ "unchecked", "unused" })
-	    Object dummy2 = suppliers = new Function[SIZE + 1];
-
-	    for (int i = cache.length; i-- != 0;) {
-		cache[i] = Caches.synchronizedCache(new SoftCache<>());
+	    for (int i = caches.length; i-- != 0;) {
 		final int maskSize = i;
-		suppliers[i] = (final Integer address) -> {
+		final Cache<Integer, IPv4> cache = Caches.synchronizedCache(new SoftCache<>());
+		final Function<Integer, IPv4> supplier = (final Integer address) -> {
 		    return new IPv4(address.intValue(), maskSize);
 		};
+		caches[i] = Caches.cacheSupplierPair(cache, supplier);
 	    }
 	}
 

@@ -4,13 +4,13 @@ import breakingtherules.dao.ParseException;
 
 /**
  * A XML parse exception thrown when parsing XML files, and the data is invalid.
+ * <p>
  * 
  * @author Barak Ugav
  * @author Yishai Gronich
  * 
  * @see HitsXmlDao
  * @see RulesXmlDao
- *
  */
 public class XMLParseException extends ParseException {
 

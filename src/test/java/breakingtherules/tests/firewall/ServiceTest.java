@@ -307,10 +307,10 @@ public class ServiceTest extends TestBase {
 	int[] range = FirewallTestsUtility.getRandomPortRange();
 	Service service = Service.create(protocol, range[0], range[1]);
 
-	Source source = Source.create("1.1.1.1");
+	Source source = Source.createFromString("1.1.1.1");
 	assertFalse(service.contains(source));
 
-	Destination des = Destination.create("1.1.1.1");
+	Destination des = Destination.createFromString("1.1.1.1");
 	assertFalse(service.contains(des));
     }
 

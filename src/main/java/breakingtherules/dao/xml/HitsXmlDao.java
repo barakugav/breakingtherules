@@ -226,8 +226,8 @@ public class HitsXmlDao implements HitsDao {
 	// Convert strings to attributes
 	final List<Attribute> attributes = new ArrayList<>();
 	try {
-	    attributes.add(Source.create(sourceStr));
-	    attributes.add(Destination.create(destinationStr));
+	    attributes.add(Source.createFromString(sourceStr));
+	    attributes.add(Destination.createFromString(destinationStr));
 	    attributes.add(Service.createFromString(serviceStr));
 
 	} catch (final Exception e) {

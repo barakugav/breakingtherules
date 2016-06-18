@@ -12,9 +12,11 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  * A string invariant the {@link AttributesContainer} assume is that all
  * attributes are <strong>immutable</strong>, so a subclass of an attribute
  * should obey this rule.
+ * <p>
  * 
  * @author Barak Ugav
  * @author Yishai Gronich
+ * 
  * @see Hit
  * @see AttributesContainer
  */
@@ -25,22 +27,22 @@ public abstract class Attribute {
      * <p>
      * 
      * @param other
-     *            another attribute to compare to
-     * @return true if this attribute contains other, else - false
+     *            another attribute to compare to.
+     * @return true if this attribute contains other, else - false.
      */
     public abstract boolean contains(Attribute other);
 
     /**
-     * Get the type of the attribute
+     * Get the type of the attribute.
      * 
-     * @return the attribute's type
+     * @return the attribute's type.
      */
     public abstract String getType();
 
     /**
-     * Get the id of the attribute's type
+     * Get the id of the attribute's type.
      * 
-     * @return the attribute's type id
+     * @return the attribute's type id.
      */
     @JsonIgnore
     public abstract int getTypeId();
@@ -66,7 +68,7 @@ public abstract class Attribute {
     /**
      * Type id of unknown attribute.
      */
-    public static final int UNKOWN_ATTRIBUTE_ID = -1;
+    public static final int UNKOWN_ATTRIBUTE_ID = Integer.MAX_VALUE;
 
     /**
      * Type id of source attribute.
@@ -104,9 +106,16 @@ public abstract class Attribute {
     public static final String SERVICE_TYPE = "service";
 
     /**
-     * Comparator of attributes by their type id
+     * Representation of 'Any' attribute, used by subclasses.
+     * <p>
+     * This field is implementation detail and can be changed.
      */
-    public static Comparator<Attribute> ATTRIBUTES_COMPARATOR = new Comparator<Attribute>() {
+    static final String ANY = "Any";
+
+    /**
+     * Comparator of attributes by their type.
+     */
+    public static Comparator<Attribute> ATTRIBUTES_TYPE_COMPARATOR = new Comparator<Attribute>() {
 
 	/*
 	 * (non-Javadoc)
@@ -115,7 +124,7 @@ public abstract class Attribute {
 	 */
 	@Override
 	public int compare(final Attribute o1, final Attribute o2) {
-	    return o1.getTypeId() - o2.getTypeId();
+	    return Integer.compare(o1.getTypeId(), o2.getTypeId());
 	}
 
     };
@@ -141,8 +150,7 @@ public abstract class Attribute {
     }
 
     /**
-     * Factory method to create an attribute, of the given type, using a String
-     * constructor
+     * Factory method to create an attribute, of the given type.
      * 
      * @param typeId
      *            The type of the attribute, for example
@@ -151,13 +159,15 @@ public abstract class Attribute {
      *            The String representing the attribute, for example "127.0.0.1"
      * @return An attribute, of the wanted class, with the given value. If the
      *         class is unknown, returns null.
+     * @throws IllegalArgumentException
+     *             if the attribute type is unknown.
      */
     public static Attribute createFromString(final int typeId, final String str) {
 	switch (typeId) {
 	case SOURCE_TYPE_ID:
-	    return Source.create(str);
+	    return Source.createFromString(str);
 	case DESTINATION_TYPE_ID:
-	    return Destination.create(str);
+	    return Destination.createFromString(str);
 	case SERVICE_TYPE_ID:
 	    return Service.createFromString(str);
 	default:

@@ -42,7 +42,7 @@ public class IPTest extends TestBase {
 	    addressBol = FirewallTestsUtility.merge(addressBol, FirewallTestsUtility.intToBooleans(block, blockSize));
 	}
 
-	IP ip = IP.fromBooleans(toBooleanList(addressBol), IPv4.class);
+	IP ip = IP.fromBits(toBooleanList(addressBol), IPv4.class);
 	assertNotNull(ip);
 	assertTrue(ip instanceof IPv4);
 	assertEquals(address, ip.getAddress());
@@ -58,7 +58,7 @@ public class IPTest extends TestBase {
 	    addressBol = FirewallTestsUtility.merge(addressBol, FirewallTestsUtility.intToBooleans(block, blockSize));
 	}
 
-	IP ip = IP.fromBooleans(toBooleanList(addressBol), IPv6.class);
+	IP ip = IP.fromBits(toBooleanList(addressBol), IPv6.class);
 	assertNotNull(ip);
 	assertTrue(ip instanceof IPv6);
 	assertEquals(address, ip.getAddress());
@@ -66,19 +66,19 @@ public class IPTest extends TestBase {
 
     @Test(expected = NullPointerException.class)
     public void fromBooleansTestNullIp() {
-	IP.fromBooleans(null, IPv4.class);
+	IP.fromBits(null, IPv4.class);
     }
 
     @Test(expected = NullPointerException.class)
     public void fromBooleansTestNullClass() {
 	boolean[] ip = new boolean[] {};
-	IP.fromBooleans(toBooleanList(ip), null);
+	IP.fromBits(toBooleanList(ip), null);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void fromBooleansTestUnkownClass() {
 	boolean[] ip = new boolean[] {};
-	IP.fromBooleans(toBooleanList(ip), getClass());
+	IP.fromBits(toBooleanList(ip), getClass());
     }
 
     @Test

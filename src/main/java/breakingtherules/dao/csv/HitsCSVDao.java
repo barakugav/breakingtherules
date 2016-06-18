@@ -20,7 +20,7 @@ import breakingtherules.firewall.Filter;
 import breakingtherules.firewall.Hit;
 import breakingtherules.firewall.Rule;
 import breakingtherules.utilities.Cache;
-import breakingtherules.utilities.SynchronizedHashCache;
+import breakingtherules.utilities.HeavySynchronizedHashCache;
 import breakingtherules.utilities.Triple;
 import breakingtherules.utilities.Triple.UnmodifiableTriple;
 
@@ -54,8 +54,8 @@ public class HitsCSVDao implements HitsDao {
      * Construct new HitsCSVDao.
      */
     public HitsCSVDao() {
-	m_cacheHits = new SynchronizedHashCache<>();
-	m_totalHitsCache = new SynchronizedHashCache<>();
+	m_cacheHits = new HeavySynchronizedHashCache<>();
+	m_totalHitsCache = new HeavySynchronizedHashCache<>();
     }
 
     /*

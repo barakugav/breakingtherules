@@ -4,6 +4,7 @@ import java.util.List;
 
 /**
  * Rule that apply on hits by the super matcher.
+ * <p>
  * 
  * @author Barak Ugav
  * @author Yishai Gronich

@@ -13,20 +13,21 @@ import java.util.List;
  * 
  * @author Barak Ugav
  * @author Yishai Gronich
+ * 
  * @see Source
  * @see Destination
  */
 public class Hit extends AttributesContainer {
 
     /**
-     * Construct new Hit from a list of attributes
+     * Construct new Hit from a list of attributes.
      * 
      * @param attributes
-     *            list of this hit's attributes
+     *            list of this hit's attributes.
      * @throws NullPointerException
-     *             if the attribute list is null
+     *             if the attribute list is null.
      * @throws IllegalArgumentException
-     *             if the list contains two attributes of the same type
+     *             if the list contains two attributes of the same type.
      */
     public Hit(final List<Attribute> attributes) {
 	super(attributes);
@@ -52,13 +53,14 @@ public class Hit extends AttributesContainer {
      * <p>
      * This constructor should be used carefully, see
      * {@link AttributesContainer#AttributesContainer(Attribute[])}.
+     * <p>
      * 
      * @param id
-     *            id of the new hit
+     *            id of the new hit.
      * @param attributes
-     *            array of the hits attributes
+     *            array of the hits attributes.
      * @throws NullPointerException
-     *             if the attributes array is null
+     *             if the attributes array is null.
      */
     Hit(final Attribute[] attributes) {
 	super(attributes);

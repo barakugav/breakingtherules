@@ -11,16 +11,18 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import breakingtherules.utilities.ArrayIterator;
 
 /**
- * The AttributesContainer class is a container of attributes
+ * The AttributesContainer class is a container of attributes.
+ * <p>
  * 
  * @author Barak Ugav
  * @author Yishai Gronich
+ * 
  * @see Attribute
  */
 abstract class AttributesContainer implements Iterable<Attribute> {
 
     /**
-     * The attributes this container contains
+     * The attributes this container contains.
      */
     final Attribute[] m_attributes;
 
@@ -28,23 +30,23 @@ abstract class AttributesContainer implements Iterable<Attribute> {
      * Construct new container
      * 
      * @param attributes
-     *            the attributes of this container
+     *            the attributes of this container.
      * @throws NullPointerException
-     *             if the attribute list is null
+     *             if the attribute list is null.
      * @throws IllegalArgumentException
-     *             if the list contains two attributes of the same type
+     *             if the list contains two attributes of the same type.
      */
     public AttributesContainer(final List<Attribute> attributes) {
 	m_attributes = toArray(attributes);
     }
 
     /**
-     * Copy constructor
+     * Copy constructor.
      * 
      * @param c
-     *            other container
+     *            other container.
      * @throws NullPointerException
-     *             if the other container is null
+     *             if the other container is null.
      */
     public AttributesContainer(final AttributesContainer c) {
 	// Clone is not needed because everything is final
@@ -60,20 +62,21 @@ abstract class AttributesContainer implements Iterable<Attribute> {
      * <p>
      * This constructor is meant to be used by subclasses to create a mutation
      * copy of their own.
+     * <p>
      * 
      * @param attributes
-     *            the attributes array of the container
+     *            the attributes array of the container.
      * @throws NullPointerException
-     *             if the attributes array is null
+     *             if the attributes array is null.
      */
     AttributesContainer(final Attribute[] attributes) {
 	m_attributes = Objects.requireNonNull(attributes);
     }
 
     /**
-     * Get the attributes of the hit
+     * Get the attributes of the hit.
      * 
-     * @return list of the hit's attributes
+     * @return list of the hit's attributes.
      */
     @JsonProperty("attributes")
     public List<Attribute> getAttributes() {
@@ -87,22 +90,22 @@ abstract class AttributesContainer implements Iterable<Attribute> {
     }
 
     /**
-     * Get specific attribute by type
+     * Get specific attribute by type.
      * 
      * @param type
-     *            wanted attribute type
-     * @return the wanted attribute
+     *            wanted attribute type.
+     * @return the wanted attribute.
      */
     public Attribute getAttribute(final String type) {
 	return getAttribute(Attribute.typeStrToTypeId(type));
     }
 
     /**
-     * Get specific attribute by type id
+     * Get specific attribute by type id.
      * 
      * @param typeId
-     *            wanted attribute type id
-     * @return the wanted attribute
+     *            wanted attribute type id.
+     * @return the wanted attribute.
      */
     public Attribute getAttribute(final int typeId) {
 	return (0 <= typeId && typeId < Attribute.TYPES_COUNT) ? m_attributes[typeId] : null;

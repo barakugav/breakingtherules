@@ -4,9 +4,11 @@ import java.util.Objects;
 
 /**
  * The IPAttribute class represents an attribute with an IP.
+ * <p>
  * 
  * @author Barak Ugav
  * @author Yishai Gronich
+ * 
  * @see IP
  */
 public abstract class IPAttribute extends Attribute implements Comparable<IPAttribute> {
@@ -32,7 +34,8 @@ public abstract class IPAttribute extends Attribute implements Comparable<IPAttr
      * {@inheritDoc}
      * 
      * Return true only if the other attribute is an IPAttribute and this
-     * attribute's IP contains the other attribute's IP.<p>
+     * attribute's IP contains the other attribute's IP.
+     * <p>
      */
     @Override
     public boolean contains(final Attribute other) {

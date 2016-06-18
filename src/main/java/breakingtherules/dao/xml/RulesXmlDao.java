@@ -246,8 +246,8 @@ public class RulesXmlDao implements RulesDao {
 
 	final List<Attribute> attributes = new ArrayList<>();
 	try {
-	    attributes.add(Source.create(source));
-	    attributes.add(Destination.create(destination));
+	    attributes.add(Source.createFromString(source));
+	    attributes.add(Destination.createFromString(destination));
 	    attributes.add(Service.createFromString(service));
 	} catch (Exception e) {
 	    throw new XMLParseException(e);

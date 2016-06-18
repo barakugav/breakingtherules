@@ -2,6 +2,7 @@ package breakingtherules.dao;
 
 /**
  * The DaoConfig used to get configurations information used by DAO objects.
+ * <p>
  * 
  * @author Barak Ugav
  * @author Yishai Gronich
