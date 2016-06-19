@@ -73,53 +73,35 @@ public class UtilityTest extends TestBase {
     @Test
     public void breakToWordsTest() {
 	String text = "Hello \t\tbig\t world";
-	List<String> expected = new ArrayList<>();
-	expected.add("Hello");
-	expected.add("big");
-	expected.add("world");
+	String[] expected = new String[] { "Hello", "big", "world" };
 	assertEquals(expected, Utility.breakToWords(text));
     }
 
     @Test
     public void breakToWordsTestOnlyTabs() {
 	String text = "Hello\t\tbig\tworld,\t\tsup?";
-	List<String> expected = new ArrayList<>();
-	expected.add("Hello");
-	expected.add("big");
-	expected.add("world,");
-	expected.add("sup?");
+	String[] expected = new String[] { "Hello", "big", "world,", "sup?" };
 	assertEquals(expected, Utility.breakToWords(text));
-
     }
 
     @Test
     public void breakToWordsTestOnlySpaces() {
 	String text = "Hello  big world,  sup?";
-	List<String> expected = new ArrayList<>();
-	expected.add("Hello");
-	expected.add("big");
-	expected.add("world,");
-	expected.add("sup?");
+	String[] expected = new String[] { "Hello", "big", "world,", "sup?" };
 	assertEquals(expected, Utility.breakToWords(text));
     }
 
     @Test
     public void breakToWordsTestSpaceInStart() {
 	String text = "  Hello \t\tbig\t world";
-	List<String> expected = new ArrayList<>();
-	expected.add("Hello");
-	expected.add("big");
-	expected.add("world");
+	String[] expected = new String[] { "Hello", "big", "world" };
 	assertEquals(expected, Utility.breakToWords(text));
     }
 
     @Test
     public void breakToWordsTestSpaceInEnd() {
 	String text = "Hello \t\tbig\t world ";
-	List<String> expected = new ArrayList<>();
-	expected.add("Hello");
-	expected.add("big");
-	expected.add("world");
+	String[] expected = new String[] { "Hello", "big", "world" };
 	assertEquals(expected, Utility.breakToWords(text));
     }
 
@@ -131,11 +113,7 @@ public class UtilityTest extends TestBase {
     @Test
     public void breakToWordsTestCustomSeparators() {
 	String text = "qHellozqqbigqzworldz[]]";
-	List<String> expected = new ArrayList<>();
-	expected.add("Hello");
-	expected.add("big");
-	expected.add("world");
-	expected.add("]");
+	String[] expected = new String[] { "Hello", "big", "world", "]" };
 	assertEquals(expected, Utility.breakToWords(text, "z", "q", "[]"));
     }
 

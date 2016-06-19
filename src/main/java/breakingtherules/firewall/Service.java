@@ -493,7 +493,15 @@ public class Service extends Attribute {
      *             range ({@link #MIN_PORT} to {@link #MAX_PORT}).
      */
     public static Service create(final int protocolCode, final int port) {
-	return create(protocolCode, port, port);
+	if (protocolCode != ANY_PROTOCOL && (protocolCode < MIN_PROTOCOL || protocolCode > MAX_PROTOCOL)) {
+	    throw new IllegalArgumentException(
+		    "protocol should be in range [" + MIN_PROTOCOL + ", " + MAX_PROTOCOL + "]: " + protocolCode);
+	}
+	if (port < MIN_PORT || port > MAX_PORT) {
+	    throw new IllegalArgumentException(
+		    "Port not in range: " + port + ". should be in range [" + MIN_PORT + ", " + MAX_PORT + "]");
+	}
+	return createInternal(protocolCode, port);
     }
 
     /**
@@ -515,16 +523,22 @@ public class Service extends Attribute {
 	if (protocolCode != ANY_PROTOCOL && (protocolCode < MIN_PROTOCOL || protocolCode > MAX_PROTOCOL)) {
 	    throw new IllegalArgumentException(
 		    "protocol should be in range [" + MIN_PROTOCOL + ", " + MAX_PROTOCOL + "]: " + protocolCode);
-	} else if (portRangeStart < MIN_PORT || portRangeStart > MAX_PORT) {
+	}
+	if (portRangeStart < MIN_PORT || portRangeStart > MAX_PORT) {
 	    throw new IllegalArgumentException("Port not in range: " + portRangeStart + ". should be in range ["
 		    + MIN_PORT + ", " + MAX_PORT + "]");
-	} else if (portRangeEnd < MIN_PORT || portRangeEnd > MAX_PORT) {
+	}
+	if (portRangeEnd < MIN_PORT || portRangeEnd > MAX_PORT) {
 	    throw new IllegalArgumentException(
 		    "Port not in range: " + portRangeEnd + ". should be in range [" + MIN_PORT + ", " + MAX_PORT + "]");
-	} else if (portRangeStart > portRangeEnd) {
+	}
+	if (portRangeStart >= portRangeEnd) {
+	    if (portRangeStart == portRangeEnd) {
+		return createInternal(protocolCode, portRangeStart);
+	    }
 	    throw new IllegalArgumentException("portRangeStart > portRangeEnd");
 	}
-	return createInternal(protocolCode, (portRangeEnd << 16) | portRangeStart);
+	return new Service(protocolCode, (portRangeEnd << 16) | portRangeStart);
     }
 
     /**
@@ -545,7 +559,7 @@ public class Service extends Attribute {
 
 	// If Any Service
 	if (service.equals(ANY) || service.equals("Any Any")) {
-	    return createInternal(ANY_PROTOCOL, (MAX_PORT << 16) | MIN_PORT);
+	    return new Service(ANY_PROTOCOL, (MAX_PORT << 16) | MIN_PORT);
 	}
 
 	// If Any port, specific protocol
@@ -556,7 +570,7 @@ public class Service extends Attribute {
 								     // the
 								     // space
 	    if (protString.matches("[a-zA-Z]+")) {
-		return createInternal(protocolCode(protString), (portRangeEnd << 16) | portRangeStart);
+		return new Service(protocolCode(protString), (portRangeEnd << 16) | portRangeStart);
 	    }
 	    throw new IllegalArgumentException("Bad protocol name in 'any port' option.");
 	}
@@ -637,7 +651,10 @@ public class Service extends Attribute {
 	    protocolCode = protocolCode(service);
 	}
 
-	return createInternal(protocolCode, (portRangeEnd << 16) | portRangeStart);
+	if (portRangeEnd == portRangeStart) {
+	    return createInternal(protocolCode, portRangeStart);
+	}
+	return new Service(protocolCode, (portRangeEnd << 16) | portRangeStart);
     }
 
     /**
@@ -649,9 +666,9 @@ public class Service extends Attribute {
      *            the ports range in one integer
      * @return Service object of the specified protocol and ports
      */
-    private static Service createInternal(final int protocolCode, final int portsRange) {
+    private static Service createInternal(final int protocolCode, final int port) {
 	// Intentionally using 'new Integer(int)' and not 'Integer.valueOf(int)'
-	return ServiceCache.caches[protocolCode].getOrAdd(new Integer(portsRange));
+	return ServiceCache.caches[protocolCode].getOrAdd(new Integer(port));
     }
 
     /**
@@ -675,8 +692,9 @@ public class Service extends Attribute {
 	    for (int i = caches.length; i-- != 0;) {
 		final int protocolCode = i;
 		final Cache<Integer, Service> cache = Caches.synchronizedCache(new SoftCache<>());
-		final Function<Integer, Service> supplier = (final Integer portsRange) -> {
-		    return new Service(protocolCode, portsRange.intValue());
+		final Function<Integer, Service> supplier = (final Integer portInteger) -> {
+		    final int port = portInteger.intValue();
+		    return new Service(protocolCode, (port << 16) | port);
 		};
 		caches[i] = Caches.cacheSupplierPair(cache, supplier);
 	    }

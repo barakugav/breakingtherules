@@ -42,7 +42,7 @@ public class IPTest extends TestBase {
 	    addressBol = FirewallTestsUtility.merge(addressBol, FirewallTestsUtility.intToBooleans(block, blockSize));
 	}
 
-	IP ip = IP.fromBits(toBooleanList(addressBol), IPv4.class);
+	IP ip = IP.createFromBits(toBooleanList(addressBol), IPv4.class);
 	assertNotNull(ip);
 	assertTrue(ip instanceof IPv4);
 	assertEquals(address, ip.getAddress());
@@ -58,7 +58,7 @@ public class IPTest extends TestBase {
 	    addressBol = FirewallTestsUtility.merge(addressBol, FirewallTestsUtility.intToBooleans(block, blockSize));
 	}
 
-	IP ip = IP.fromBits(toBooleanList(addressBol), IPv6.class);
+	IP ip = IP.createFromBits(toBooleanList(addressBol), IPv6.class);
 	assertNotNull(ip);
 	assertTrue(ip instanceof IPv6);
 	assertEquals(address, ip.getAddress());
@@ -66,36 +66,36 @@ public class IPTest extends TestBase {
 
     @Test(expected = NullPointerException.class)
     public void fromBooleansTestNullIp() {
-	IP.fromBits(null, IPv4.class);
+	IP.createFromBits(null, IPv4.class);
     }
 
     @Test(expected = NullPointerException.class)
     public void fromBooleansTestNullClass() {
 	boolean[] ip = new boolean[] {};
-	IP.fromBits(toBooleanList(ip), null);
+	IP.createFromBits(toBooleanList(ip), null);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void fromBooleansTestUnkownClass() {
 	boolean[] ip = new boolean[] {};
-	IP.fromBits(toBooleanList(ip), getClass());
+	IP.createFromBits(toBooleanList(ip), getClass());
     }
 
     @Test
     public void fromStringTestIPv4() {
-	IP ip = IP.fromString("255.0.28.0/24");
+	IP ip = IP.createFromString("255.0.28.0/24");
 	assertTrue(ip instanceof IPv4);
     }
 
     @Test
     public void fromStringTestIPv6() {
-	IP ip = IP.fromString("255:0:24:51:24567:55555:0:0/32");
+	IP ip = IP.createFromString("255:0:24:51:24567:55555:0:0/32");
 	assertTrue(ip instanceof IPv6);
     }
 
     @Test(expected = NullPointerException.class)
     public void fromStringTestNull() {
-	IP.fromString(null);
+	IP.createFromString(null);
     }
 
     @Test

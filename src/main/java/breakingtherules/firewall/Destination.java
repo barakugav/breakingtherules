@@ -110,7 +110,7 @@ public class Destination extends IPAttribute {
      * @return destination object of the IP
      */
     public static Destination createFromString(final String ip) {
-	return createInternal(IP.fromString(ip));
+	return createInternal(IP.createFromString(ip));
     }
 
     /**
@@ -121,13 +121,14 @@ public class Destination extends IPAttribute {
      * @return destination object of the IP
      */
     private static Destination createInternal(final IP ip) {
-	if (ip instanceof IPv4) {
-	    return DestinationCache.IPv4Caches[ip.m_maskSize].getOrAdd((IPv4) ip);
-	} else if (ip instanceof IPv6) {
-	    return DestinationCache.IPv6Caches[ip.m_maskSize].getOrAdd((IPv6) ip);
-	} else {
-	    return new Destination(ip);
+	if (ip.m_maskSize == ip.getSize()) {
+	    if (ip instanceof IPv4) {
+		return DestinationCache.IPv4Cache.getOrAdd((IPv4) ip);
+	    } else if (ip instanceof IPv6) {
+		return DestinationCache.IPv6Cache.getOrAdd((IPv6) ip);
+	    }
 	}
+	return new Destination(ip);
     }
 
     /**
@@ -139,36 +140,24 @@ public class Destination extends IPAttribute {
      */
     private static class DestinationCache {
 
-	static final CacheSupplierPair<IPv4, Destination>[] IPv4Caches;
+	static final CacheSupplierPair<IPv4, Destination> IPv4Cache;
 
-	static final CacheSupplierPair<IPv6, Destination>[] IPv6Caches;
+	static final CacheSupplierPair<IPv6, Destination> IPv6Cache;
 
 	static {
-	    // Used dummy to suppress warnings
-	    @SuppressWarnings({ "unchecked", "unused" })
-	    Object dummy1 = IPv4Caches = new CacheSupplierPair[IPv4.SIZE + 1];
+	    final Cache<IPv4, Destination> cache4 = Caches
+		    .synchronizedCache(new CustomSoftCache<>(IPv4AddressStrategy.INSTANCE));
+	    final Function<IPv4, Destination> supplier4 = (final IPv4 ip) -> {
+		return new Destination(ip);
+	    };
+	    IPv4Cache = Caches.cacheSupplierPair(cache4, supplier4);
 
-	    // Used dummy to suppress warnings
-	    @SuppressWarnings({ "unchecked", "unused" })
-	    Object dummy2 = IPv6Caches = new CacheSupplierPair[IPv6.SIZE + 1];
-
-	    for (int i = IPv4Caches.length; i-- != 0;) {
-		final Cache<IPv4, Destination> cache = Caches
-			.synchronizedCache(new CustomSoftCache<>(IPv4AddressStrategy.INSTANCE));
-		final Function<IPv4, Destination> supplier = (final IPv4 ip) -> {
-		    return new Destination(ip);
-		};
-		IPv4Caches[i] = Caches.cacheSupplierPair(cache, supplier);
-	    }
-
-	    for (int i = IPv6Caches.length; i-- != 0;) {
-		final Cache<IPv6, Destination> cache = Caches
-			.synchronizedCache(new CustomSoftCache<>(IPv6AddressStrategy.INSTANCE));
-		final Function<IPv6, Destination> supplier = (final IPv6 ip) -> {
-		    return new Destination(ip);
-		};
-		IPv6Caches[i] = Caches.cacheSupplierPair(cache, supplier);
-	    }
+	    final Cache<IPv6, Destination> cache6 = Caches
+		    .synchronizedCache(new CustomSoftCache<>(IPv6AddressStrategy.INSTANCE));
+	    final Function<IPv6, Destination> supplier6 = (final IPv6 ip) -> {
+		return new Destination(ip);
+	    };
+	    IPv6Cache = Caches.cacheSupplierPair(cache6, supplier6);
 	}
 
     }

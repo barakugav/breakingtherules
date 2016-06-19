@@ -8,8 +8,8 @@ import java.util.function.Function;
  * 
  * @author Barak Ugav
  * @author Yishai Gronich
+ * 
  * @see Cache
- *
  */
 public class Caches {
 
@@ -89,6 +89,17 @@ public class Caches {
 	return new SynchronizedCache<>(cache, sync);
     }
 
+    /**
+     * TODO
+     * 
+     * @author Barak Ugav
+     * @author Yishai Gronich
+     * 
+     * @param <K>
+     *            type of key of the cache
+     * @param <E>
+     *            type of cached elements
+     */
     public static class CacheSupplierPair<K, E> {
 
 	private final Cache<K, E> cache;
@@ -114,11 +125,11 @@ public class Caches {
      * 
      * @author Barak Ugav
      * @author Yishai Gronich
+     * 
      * @param <K>
      *            type of key of the cache
      * @param <E>
      *            type of cached elements
-     * 
      */
     public static class EmptyCache<K, E> implements Cache<K, E> {
 
@@ -203,11 +214,11 @@ public class Caches {
      * 
      * @author Barak Ugav
      * @author Yishai Gronich
+     * 
      * @param <K>
      *            type of key of the cache
      * @param <E>
      *            type of cached elements
-     * 
      */
     public static class UnmodifiableCache<K, E> implements Cache<K, E> {
 
@@ -309,11 +320,11 @@ public class Caches {
      * 
      * @author Barak Ugav
      * @author Yishai Gronich
+     * 
      * @param <K>
      *            type of key of the cache
      * @param <E>
      *            type of cached elements
-     * 
      */
     public static class SynchronizedCache<K, E> implements Cache<K, E> {
 

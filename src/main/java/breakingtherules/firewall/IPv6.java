@@ -138,7 +138,7 @@ public final class IPv6 extends IP {
 	final int mask = ~(1 << (Integer.SIZE - (m & OFFSET_IN_BLOCK_MASK)));
 	parentAddress[blockNum] &= mask;
 
-	return createInternal(parentAddress, m - 1);
+	return new IPv6(parentAddress, m - 1);
     }
 
     /*
@@ -170,11 +170,10 @@ public final class IPv6 extends IP {
 	childrenAddresses[0][blockNum] &= ~helper;
 	childrenAddresses[1][blockNum] |= helper;
 
-	IPv6[] children = new IPv6[2];
-	children[0] = createInternal(childrenAddresses[0], m);
-	children[1] = createInternal(childrenAddresses[1], m);
-
-	return children;
+	if (m == SIZE) {
+	    return new IPv6[] { createInternal(childrenAddresses[0]), createInternal(childrenAddresses[1]) };
+	}
+	return new IPv6[] { new IPv6(childrenAddresses[0], m), new IPv6(childrenAddresses[1], m) };
     }
 
     /*
@@ -439,14 +438,17 @@ public final class IPv6 extends IP {
 	    a[blockNum >> 1] |= blockValue;
 	}
 
-	// Reset suffix
-	if (maskSize != SIZE) {
-	    for (int blockNum = ADDRESS_ARRAY_SIZE; blockNum-- > 0 && maskSize < ((blockNum + 1) << 5);) {
-		a[blockNum] &= maskSize <= (blockNum << 5) ? 0
-			: ~((1 << (Integer.SIZE - (maskSize & OFFSET_IN_BLOCK_MASK))) - 1);
-	    }
+	if (maskSize == SIZE) {
+	    createInternal(a);
 	}
-	return createInternal(a, maskSize);
+
+	// Reset suffix
+	for (int blockNum = ADDRESS_ARRAY_SIZE; blockNum-- > 0 && maskSize < ((blockNum + 1) << 5);) {
+	    a[blockNum] &= maskSize <= (blockNum << 5) ? 0
+		    : ~((1 << (Integer.SIZE - (maskSize & OFFSET_IN_BLOCK_MASK))) - 1);
+
+	}
+	return new IPv6(a, maskSize);
     }
 
     /**
@@ -542,15 +544,17 @@ public final class IPv6 extends IP {
 	    a[blockNum >> 1] |= blockValue;
 	}
 
-	// Reset by mask
-	if (maskSize != SIZE) {
-	    for (int blockNum = ADDRESS_ARRAY_SIZE; blockNum-- > 0 && maskSize < ((blockNum + 1) << 5);) {
-		a[blockNum] &= maskSize <= (blockNum << 5) ? 0
-			: ~((1 << (Integer.SIZE - (maskSize & OFFSET_IN_BLOCK_MASK))) - 1);
-	    }
+	if (maskSize == SIZE) {
+	    return createInternal(a);
 	}
 
-	return createInternal(a, maskSize);
+	// Reset by mask
+	for (int blockNum = ADDRESS_ARRAY_SIZE; blockNum-- > 0 && maskSize < ((blockNum + 1) << 5);) {
+	    a[blockNum] &= maskSize <= (blockNum << 5) ? 0
+		    : ~((1 << (Integer.SIZE - (maskSize & OFFSET_IN_BLOCK_MASK))) - 1);
+	}
+
+	return new IPv6(a, maskSize);
     }
 
     /**
@@ -585,17 +589,22 @@ public final class IPv6 extends IP {
      *             {@value #ADDRESS_ARRAY_SIZE} or if the mask size is out of
      *             range (0 to 128).
      */
-    public static IPv6 createFromBits(final int[] addressBits, final int maskSize) {
+    public static IPv6 createFromBits(int[] addressBits, final int maskSize) {
 	if (addressBits.length != ADDRESS_ARRAY_SIZE) {
 	    throw new IllegalArgumentException(
 		    "Address bits array: " + Utility.formatEqual(ADDRESS_ARRAY_SIZE, addressBits.length));
 	}
-	if (!(0 <= maskSize && maskSize <= SIZE)) {
-	    throw new IllegalArgumentException("IPv6 subnetwork mask size: " + Utility.formatRange(0, SIZE, maskSize));
-	}
 	// Must clone addressBits to be safe that the address won't be changed
 	// in the future.
-	return createInternal(addressBits.clone(), maskSize);
+	addressBits = addressBits.clone();
+	if (!(0 <= maskSize && maskSize < SIZE)) {
+	    if (maskSize == SIZE) {
+		return createInternal(addressBits);
+	    }
+	    throw new IllegalArgumentException("IPv6 subnetwork mask size: " + Utility.formatRange(0, SIZE, maskSize));
+	}
+
+	return new IPv6(addressBits, maskSize);
     }
 
     /**
@@ -627,7 +636,7 @@ public final class IPv6 extends IP {
 	    blockValue <<= (blockNum & 1) == 0 ? 16 : 0;
 	    address[blockNum >> 1] |= blockValue;
 	}
-	return createInternal(address, SIZE);
+	return createInternal(address);
     }
 
     /**
@@ -639,8 +648,8 @@ public final class IPv6 extends IP {
      *            the subnetwork mask size.
      * @return IPv6 object with the specified address and maskSize.
      */
-    private static IPv6 createInternal(final int[] address, final int maskSize) {
-	return IPv6Cache.caches[maskSize].getOrAdd(address);
+    private static IPv6 createInternal(final int[] address) {
+	return IPv6Cache.cache.getOrAdd(address);
     }
 
     /**
@@ -658,22 +667,14 @@ public final class IPv6 extends IP {
 	 * The caches array is of size {@value IPv4#SIZE} + 1, and in each cache
 	 * 'i' the elements are the IPs with maskSize = i.
 	 */
-	static final CacheSupplierPair<int[], IPv6>[] caches;
+	static final CacheSupplierPair<int[], IPv6> cache;
 
 	static {
-	    // Used dummy to suppress warnings
-	    @SuppressWarnings({ "unchecked", "unused" })
-	    Object dummy1 = caches = new CacheSupplierPair[SIZE + 1];
-
-	    for (int i = caches.length; i-- != 0;) {
-		final int maskSize = i;
-		final Cache<int[], IPv6> cache = Caches
-			.synchronizedCache(new CustomSoftCache<>(IntArrayStrategy.INSTANCE));
-		final Function<int[], IPv6> supplier = (final int[] array) -> {
-		    return new IPv6(array, maskSize);
-		};
-		caches[i] = Caches.cacheSupplierPair(cache, supplier);
-	    }
+	    final Cache<int[], IPv6> c = Caches.synchronizedCache(new CustomSoftCache<>(IntArrayStrategy.INSTANCE));
+	    final Function<int[], IPv6> supplier = (final int[] array) -> {
+		return new IPv6(array, SIZE);
+	    };
+	    cache = Caches.cacheSupplierPair(c, supplier);
 	}
 
     }

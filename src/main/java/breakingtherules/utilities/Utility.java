@@ -19,12 +19,12 @@ public class Utility {
     /**
      * Space character.
      */
-    static final char SPACE = ' ';
+    public static final char SPACE = ' ';
 
     /**
      * Tab character.
      */
-    static final char TAB = '\t';
+    public static final char TAB = '\t';
 
     /**
      * Space string.
@@ -164,8 +164,91 @@ public class Utility {
      * @throws IllegalArgumentException
      *             if line is null
      */
-    public static List<String> breakToWords(final String text) {
-	return breakToWords(text, SPACE_STR, TAB_STR);
+    public static String[] breakToWords(final String text) {
+	return breakToWords(text, SPACE, TAB);
+    }
+
+    public static String[] breakToWords(final String text, final char separator) {
+	String[] words = new String[4];
+	int wordsCount = 0;
+
+	int fromIndex = 0;
+	int separatorIndex = text.indexOf(separator);
+	while (separatorIndex >= 0) {
+	    if (fromIndex != separatorIndex) {
+		if (words.length <= wordsCount) {
+		    words = expand(words);
+		}
+		words[wordsCount++] = text.substring(fromIndex, separatorIndex);
+	    }
+	    fromIndex = separatorIndex + 1;
+	    separatorIndex = text.indexOf(separator, fromIndex);
+	}
+	// Last word
+	if (fromIndex != text.length()) {
+	    if (words.length <= wordsCount) {
+		words = expand(words);
+	    }
+	    words[wordsCount++] = text.substring(fromIndex);
+	}
+
+	return words.length == wordsCount ? words : trim(words, wordsCount);
+    }
+
+    public static String[] breakToWords(final String text, final String separator) {
+	String[] words = new String[4];
+	int wordsCount = 0;
+
+	final int separatorLength = separator.length();
+	int fromIndex = 0;
+	int separatorIndex = text.indexOf(separator);
+	while (separatorIndex >= 0) {
+	    if (fromIndex != separatorIndex) {
+		if (words.length <= wordsCount) {
+		    words = expand(words);
+		}
+		words[wordsCount++] = text.substring(fromIndex, separatorIndex);
+	    }
+	    fromIndex = separatorIndex + separatorLength;
+	    separatorIndex = text.indexOf(separator, fromIndex);
+	}
+	// Last word
+	if (fromIndex != text.length()) {
+	    if (words.length <= wordsCount) {
+		words = expand(words);
+	    }
+	    words[wordsCount++] = text.substring(fromIndex);
+	}
+
+	return words.length == wordsCount ? words : trim(words, wordsCount);
+    }
+
+    public static String[] breakToWords(final String text, final char... separatorCharss) {
+	String[] words = new String[4];
+	int wordsCount = 0;
+
+	int separatorIndex = indexOf(text, separatorCharss);
+	int fromIndex = 0;
+
+	while (separatorIndex >= 0) {
+	    if (fromIndex != separatorIndex) {
+		if (words.length <= wordsCount) {
+		    words = expand(words);
+		}
+		words[wordsCount++] = text.substring(fromIndex, separatorIndex);
+	    }
+	    fromIndex = separatorIndex + 1;
+	    separatorIndex = indexOf(text, fromIndex, separatorCharss);
+	}
+	// Last word
+	if (fromIndex != text.length()) {
+	    if (words.length <= wordsCount) {
+		words = expand(words);
+	    }
+	    words[wordsCount++] = text.substring(fromIndex);
+	}
+
+	return words.length == wordsCount ? words : trim(words, wordsCount);
     }
 
     /**
@@ -179,28 +262,36 @@ public class Utility {
      *            words
      * @return list of all words in the text separated by the separatorSequences
      */
-    public static List<String> breakToWords(String text, final String... separatorSequences) {
-	List<String> words = new ArrayList<>();
+    public static String[] breakToWords(final String text, final String... separatorSequences) {
+	String[] words = new String[4];
+	int wordsCount = 0;
+
 	int[] nextSeparator = positionOf(text, separatorSequences);
 	int separatorIndex = nextSeparator[0];
 	int separatorLength = nextSeparator[1];
+	int fromIndex = 0;
 
 	while (separatorIndex >= 0) {
-	    final String word = text.substring(0, separatorIndex);
-	    if (!word.isEmpty()) {
-		words.add(word);
+	    if (fromIndex != separatorIndex) {
+		if (words.length <= wordsCount) {
+		    words = expand(words);
+		}
+		words[wordsCount++] = text.substring(fromIndex, separatorIndex);
 	    }
-	    text = text.substring(separatorIndex + separatorLength);
-	    nextSeparator = positionOf(text, separatorSequences);
+	    fromIndex = separatorIndex + separatorLength;
+	    nextSeparator = positionOf(text, fromIndex, separatorSequences);
 	    separatorIndex = nextSeparator[0];
 	    separatorLength = nextSeparator[1];
 	}
 	// Last word
-	if (!text.isEmpty()) {
-	    words.add(text);
+	if (fromIndex != text.length()) {
+	    if (words.length <= wordsCount) {
+		words = expand(words);
+	    }
+	    words[wordsCount++] = text.substring(fromIndex);
 	}
 
-	return words;
+	return words.length == wordsCount ? words : trim(words, wordsCount);
     }
 
     /**
@@ -372,6 +463,28 @@ public class Utility {
 	return StrictMath.log(num) * LOG2_INVERSE;
     }
 
+    public static int indexOf(final String text, final char... chars) {
+	int index = -1;
+	for (final char ch : chars) {
+	    final int seqIndex = text.indexOf(ch);
+	    if (seqIndex != -1 && (index == -1 || seqIndex < index)) {
+		index = seqIndex;
+	    }
+	}
+	return index;
+    }
+
+    public static int indexOf(final String text, final int fromIndex, final char... chars) {
+	int index = -1;
+	for (final char ch : chars) {
+	    final int seqIndex = text.indexOf(ch, fromIndex);
+	    if (seqIndex != -1 && (index == -1 || seqIndex < index)) {
+		index = seqIndex;
+	    }
+	}
+	return index;
+    }
+
     /**
      * Return the first index of one of the sequences
      * 
@@ -423,6 +536,19 @@ public class Utility {
 	return new int[] { index, length };
     }
 
+    public static int[] positionOf(final String text, final int fromIndex, final String... sequences) {
+	int index = -1;
+	int length = -1;
+	for (final String seq : sequences) {
+	    final int seqIndex = text.indexOf(seq, fromIndex);
+	    if (seqIndex != -1 && (index == -1 || seqIndex < index)) {
+		index = seqIndex;
+		length = seq.length();
+	    }
+	}
+	return new int[] { index, length };
+    }
+
     /**
      * Return pair of index and length of the last sequence out of the input
      * sequences
@@ -445,6 +571,18 @@ public class Utility {
 	    }
 	}
 	return new int[] { index, length };
+    }
+
+    private static String[] expand(final String[] array) {
+	final String[] newArray = new String[array.length * 2 + 1];
+	System.arraycopy(array, 0, newArray, 0, array.length);
+	return newArray;
+    }
+
+    private static String[] trim(final String[] array, final int newLength) {
+	final String[] newArray = new String[newLength];
+	System.arraycopy(array, 0, newArray, 0, newLength);
+	return newArray;
     }
 
 }

@@ -9,11 +9,11 @@ import java.util.function.Function;
  * 
  * @author Barak Ugav
  * @author Yishai Gronich
+ * 
  * @param <K>
  *            type of key of the cache
  * @param <E>
  *            type of cached elements
- * 
  */
 public interface Cache<K, E> {
 

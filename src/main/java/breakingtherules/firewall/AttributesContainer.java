@@ -1,7 +1,6 @@
 package breakingtherules.firewall;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
@@ -80,7 +79,7 @@ abstract class AttributesContainer implements Iterable<Attribute> {
      */
     @JsonProperty("attributes")
     public List<Attribute> getAttributes() {
-	final List<Attribute> attributeList = new ArrayList<>(m_attributes.length);
+	final List<Attribute> attributeList = new ArrayList<>(Attribute.TYPES_COUNT);
 	for (final Attribute attribute : m_attributes) {
 	    if (attribute != null) {
 		attributeList.add(attribute);
@@ -97,18 +96,25 @@ abstract class AttributesContainer implements Iterable<Attribute> {
      * @return the wanted attribute.
      */
     public Attribute getAttribute(final String type) {
-	return getAttribute(Attribute.typeStrToTypeId(type));
+	final int typeId = Attribute.typeStrToTypeId(type);
+	if (typeId == Attribute.UNKOWN_ATTRIBUTE_ID)
+	    return null;
+	return getAttribute(typeId);
     }
 
     /**
      * Get specific attribute by type id.
+     * <p>
+     * This method should be used carefully, it may throw
+     * {@link ArrayIndexOutOfBoundsException} if the typeId is not id of a real
+     * attribute.
      * 
      * @param typeId
      *            wanted attribute type id.
      * @return the wanted attribute.
      */
-    public Attribute getAttribute(final int typeId) {
-	return (0 <= typeId && typeId < Attribute.TYPES_COUNT) ? m_attributes[typeId] : null;
+    public final Attribute getAttribute(final int typeId) {
+	return m_attributes[typeId];
     }
 
     /*
@@ -134,8 +140,14 @@ abstract class AttributesContainer implements Iterable<Attribute> {
 	    return false;
 	}
 
+	// Could use Arrays.equals but there are redundant null checks.
 	final AttributesContainer other = (AttributesContainer) o;
-	return Arrays.equals(m_attributes, other.m_attributes);
+	for (int i = Attribute.TYPES_COUNT; i-- != 0;) {
+	    if (!Objects.equals(m_attributes[i], other.m_attributes[i])) {
+		return false;
+	    }
+	}
+	return true;
     }
 
     /*
@@ -145,7 +157,11 @@ abstract class AttributesContainer implements Iterable<Attribute> {
      */
     @Override
     public int hashCode() {
-	return Arrays.hashCode(m_attributes);
+	// Could use Arrays.hashCode but there are redundant null checks.
+	int h = 17;
+	for (int i = Attribute.TYPES_COUNT; i-- != 0;)
+	    h = h * 31 + Objects.hashCode(m_attributes[i]);
+	return h;
     }
 
     /*
@@ -158,14 +174,14 @@ abstract class AttributesContainer implements Iterable<Attribute> {
 	final StringBuilder builder = new StringBuilder();
 	builder.append('[');
 	int index;
-	for (index = 0; index < m_attributes.length; index++) {
+	for (index = 0; index < Attribute.TYPES_COUNT; index++) {
 	    final Attribute attribute = m_attributes[index];
 	    if (attribute != null) {
 		builder.append(attribute.toString());
 		break;
 	    }
 	}
-	for (; index < m_attributes.length; index++) {
+	for (; index < Attribute.TYPES_COUNT; index++) {
 	    final Attribute attribute = m_attributes[index];
 	    if (attribute != null) {
 		builder.append(", ");

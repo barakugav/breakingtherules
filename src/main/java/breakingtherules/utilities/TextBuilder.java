@@ -1,7 +1,5 @@
 package breakingtherules.utilities;
 
-import java.util.List;
-
 /**
  * The TextBuilder in a tool used to create text that doesn't go over max line
  * size and provide easy interface for indented text writing.
@@ -116,7 +114,7 @@ public class TextBuilder {
      *            new text
      */
     public void append(String text) {
-	List<String> words = Utility.breakToWords(text, m_separatorSequences);
+	String[] words = Utility.breakToWords(text, m_separatorSequences);
 	for (String word : words) {
 	    int lineLength = lineLength();
 	    if (lineLength != 0) {
@@ -160,7 +158,7 @@ public class TextBuilder {
 	}
 
 	int intentedMaxLine = m_maxLine - m_indentSize;
-	List<String> words = Utility.breakToWords(text, m_separatorSequences);
+	String[] words = Utility.breakToWords(text, m_separatorSequences);
 	for (String word : words) {
 	    lineLength = lineLength(getText(), indentedLineSeparator());
 	    if (lineLength != 0) {

@@ -8,9 +8,9 @@ import java.util.NoSuchElementException;
  * 
  * @author Barak Ugav
  * @author Yishai Gronich
+ * 
  * @param <T>
  *            type of elements the iterator will iterate over
- * 
  */
 public class ArrayIterator<T> implements Iterator<T> {
 

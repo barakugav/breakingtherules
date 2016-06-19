@@ -245,7 +245,7 @@ public abstract class IP implements Comparable<IP> {
      * @throws IllegalArgumentException
      *             if the string is invalid.
      */
-    public static IP fromString(final String ip) {
+    public static IP createFromString(final String ip) {
 	if (ip.equals(ANY)) {
 	    return ANY_IP;
 	}
@@ -254,14 +254,16 @@ public abstract class IP implements Comparable<IP> {
 	final boolean isIPv6 = ip.indexOf(IPv6.BLOCKS_SEPARATOR) >= 0;
 	if (!(isIPv4 ^ isIPv6)) {
 	    throw new IllegalArgumentException("Unknown format: " + ip);
-	} else if (isIPv4) {
-	    return IPv4.createFromString(ip);
-	} else if (isIPv6) {
-	    return IPv6.createFromString(ip);
-	} else {
-	    // Impossible flow.
-	    throw new InternalError();
 	}
+	if (isIPv4) {
+	    return IPv4.createFromString(ip);
+	}
+	if (isIPv6) {
+	    return IPv6.createFromString(ip);
+	}
+
+	// Impossible flow.
+	throw new InternalError();
     }
 
     /**
@@ -279,7 +281,7 @@ public abstract class IP implements Comparable<IP> {
      *             if the given class is not IPv4, IPv6 or AnyIP, or if the bits
      *             list is invalid.
      */
-    public static IP fromBits(final List<Boolean> ip, final Class<?> clazz) {
+    public static IP createFromBits(final List<Boolean> ip, final Class<?> clazz) {
 	if (clazz.equals(IPv4.class)) {
 	    return IPv4.createFromBits(ip);
 	} else if (clazz.equals(IPv6.class)) {

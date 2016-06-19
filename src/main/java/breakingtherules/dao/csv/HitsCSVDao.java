@@ -21,6 +21,7 @@ import breakingtherules.firewall.Hit;
 import breakingtherules.firewall.Rule;
 import breakingtherules.utilities.Cache;
 import breakingtherules.utilities.HeavySynchronizedHashCache;
+import breakingtherules.utilities.MutableInteger;
 import breakingtherules.utilities.Triple;
 import breakingtherules.utilities.Triple.UnmodifiableTriple;
 
@@ -180,16 +181,20 @@ public class HitsCSVDao implements HitsDao {
      * @see HitsCSVDao#getUniqueHitsInternal(String)
      */
     private static final Function<String, Set<UniqueHit>> UNIQUE_HITS_SUPPLIER = (final String fileName) -> {
-	final Map<Hit, Integer> hitsCount = new HashMap<>();
+	final Map<Hit, MutableInteger> hitsCount = new HashMap<>();
 	try {
 	    CSVParser.fromCSV(CSVParser.DEFAULT_COLUMNS_TYPES, fileName, Collections.emptyList(), Filter.ANY_FILTER,
 		    new AbstractSet<Hit>() {
 
 		@Override
-		public boolean add(Hit hit) {
-		    Integer count = hitsCount.get(hit);
-		    count = Integer.valueOf(count == null ? 1 : count.intValue() + 1);
-		    hitsCount.put(hit, count);
+		public boolean add(final Hit hit) {
+		    MutableInteger count = hitsCount.get(hit);
+		    if (count == null) {
+			count = new MutableInteger(1);
+			hitsCount.put(hit, count);
+		    } else {
+			count.value++;
+		    }
 		    return true;
 		}
 
@@ -210,11 +215,10 @@ public class HitsCSVDao implements HitsDao {
 	    throw new UncheckedCSVParseException(e);
 	}
 	final Set<UniqueHit> uniqueHits = new HashSet<>();
-	for (Iterator<Map.Entry<Hit, Integer>> it = hitsCount.entrySet().iterator(); it.hasNext();) {
-	    Map.Entry<Hit, Integer> entry = it.next();
-	    Hit hit = entry.getKey();
-	    int amount = entry.getValue().intValue();
-	    uniqueHits.add(new UniqueHit(hit, amount));
+	for (final Iterator<Map.Entry<Hit, MutableInteger>> it = hitsCount.entrySet().iterator(); it.hasNext();) {
+	    final Map.Entry<Hit, MutableInteger> entry = it.next();
+	    final Hit hit = entry.getKey();
+	    uniqueHits.add(new UniqueHit(hit, entry.getValue().value));
 	    it.remove();
 	}
 	// Don't let anyone change the cache

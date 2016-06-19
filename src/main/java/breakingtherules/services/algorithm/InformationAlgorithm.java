@@ -4,8 +4,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -110,17 +112,6 @@ public class InformationAlgorithm implements SuggestionsAlgorithm {
 	@Override
 	public int compare(final SubnetSuggestion s1, final SubnetSuggestion s2) {
 	    return s1.uniqueHitsCount - s2.uniqueHitsCount;
-	}
-    };
-
-    /**
-     * Comparator of IPNodes, comparing them by their IPs.
-     */
-    private static final Comparator<IPNode> IP_COMPARATOR = new Comparator<IPNode>() {
-
-	@Override
-	public int compare(final IPNode o1, final IPNode o2) {
-	    return o1.ip.compareTo(o2.ip);
 	}
     };
 
@@ -314,7 +305,8 @@ public class InformationAlgorithm implements SuggestionsAlgorithm {
 
 	    final List<Suggestion> suggestions = new ArrayList<>(subnets.size());
 	    for (final SubnetSuggestion subnet : subnets) {
-		suggestions.add(new Suggestion(Destination.create(subnet.ip), subnet.totalHitsCount, subnet.score));
+		suggestions
+			.add(new Suggestion(Destination.create(subnet.ip), subnet.totalHitsCount, subnet.getScore()));
 	    }
 
 	    return suggestions;
@@ -343,14 +335,14 @@ public class InformationAlgorithm implements SuggestionsAlgorithm {
 
 	    final List<Suggestion> suggestions = new ArrayList<>(subnets.size());
 	    for (final SubnetSuggestion subnet : subnets) {
-		suggestions.add(new Suggestion(Source.create(subnet.ip), subnet.totalHitsCount, subnet.score));
+		suggestions.add(new Suggestion(Source.create(subnet.ip), subnet.totalHitsCount, subnet.getScore()));
 	    }
 	    return suggestions;
 	}
 
 	private List<SubnetSuggestion> getIPSuggestions() {
-	    // Creates lowest layer nodes from hits
-	    IPNode[] nodes = toIPNodes(hits, attTypeId);
+	    // Creates lowest layer nodes from hits.
+	    IPNode[] nodes = toIPNodes();
 
 	    if (nodes.length == 0) {
 		return new ArrayList<>();
@@ -363,7 +355,7 @@ public class InformationAlgorithm implements SuggestionsAlgorithm {
 	    // The total number of hits, used to calculate probability (constant
 	    // value)
 	    int totalSize = 0;
-	    for (IPNode node : nodes) {
+	    for (final IPNode node : nodes) {
 		totalSize += node.size;
 	    }
 
@@ -371,10 +363,10 @@ public class InformationAlgorithm implements SuggestionsAlgorithm {
 	    IPNode[] currentLayer = nodes;
 	    nodes = null; // Free memory
 
-	    // Sort the IPs, ensuring the assumption that if for a node there is
-	    // a brother, it will be next to it. This assumption will stay for
-	    // next layers too.
-	    Arrays.parallelSort(currentLayer, IP_COMPARATOR);
+	    // Sort the nodes by their IPs, ensuring the assumption that if for
+	    // a node there is a brother, it will be next to it. This assumption
+	    // will stay for next layers too.
+	    Arrays.parallelSort(currentLayer, IPNode.IPS_COMPARATOR);
 
 	    // Run until there are only one element in the list (all nodes are
 	    // sub children of the node)
@@ -517,6 +509,45 @@ public class InformationAlgorithm implements SuggestionsAlgorithm {
 	    return root.bestSubnets.toArrayList();
 	}
 
+	/**
+	 * Create list of IPNodes from iterable of hits
+	 * 
+	 * @param hits
+	 *            iterable object of hits
+	 * @param ipAttTypeId
+	 *            id of the IP attribute
+	 * @return list of IPNodes constructed from the hits
+	 * @throws NullPointerException
+	 *             if hits are null, or one of the hits are null
+	 * @throws IllegalArgumentException
+	 *             if one of the hits doesn't contains the desire attribute
+	 */
+	private IPNode[] toIPNodes() {
+	    final Map<IP, IPNode> uniqueIPNodes = new HashMap<>();
+	    for (final UniqueHit hit : hits) {
+		final IPAttribute att = (IPAttribute) hit.getAttribute(attTypeId);
+		if (att == null) {
+		    throw new IllegalArgumentException("One of the hits doesn't have the desire attribute");
+		}
+		final IP ip = att.getIp();
+		final IPNode existingNode = uniqueIPNodes.get(ip);
+		if (existingNode == null) {
+		    final IPNode ipNode = new IPNode(ip);
+		    ipNode.compressSize = m_ruleWeight;
+		    ipNode.size = 1;
+		    ipNode.totalHitsCount = hit.getAmount();
+		    uniqueIPNodes.put(ip, ipNode);
+		} else {
+		    existingNode.size++;
+		    existingNode.totalHitsCount += hit.getAmount();
+		}
+	    }
+	    for (final IPNode node : uniqueIPNodes.values()) {
+		node.bestSubnets = new UnionList<>(new SubnetSuggestion(node));
+	    }
+	    return uniqueIPNodes.values().toArray(new IPNode[uniqueIPNodes.size()]);
+	}
+
     }
 
     private static class InformationAlgoLayerRunner implements Runnable {
@@ -652,59 +683,6 @@ public class InformationAlgorithm implements SuggestionsAlgorithm {
     }
 
     /**
-     * Create list of IPNodes from iterable of hits
-     * 
-     * @param hits
-     *            iterable object of hits
-     * @param ipAttTypeId
-     *            id of the IP attribute
-     * @return list of IPNodes constructed from the hits
-     * @throws NullPointerException
-     *             if hits are null, or one of the hits are null
-     * @throws IllegalArgumentException
-     *             if one of the hits doesn't contains the desire attribute
-     */
-    private IPNode[] toIPNodes(final Set<UniqueHit> hits, final int ipAttTypeId) {
-	final ArrayList<IPNode> allNodes = new ArrayList<>(hits.size());
-
-	for (final Iterator<UniqueHit> it = hits.iterator(); it.hasNext();) {
-	    final UniqueHit hit = it.next();
-	    final IPAttribute att = (IPAttribute) hit.getAttribute(ipAttTypeId);
-	    if (att == null) {
-		throw new IllegalArgumentException("One of the hits doesn't have the desire attribute");
-	    }
-	    final IPNode ipNode = new IPNode(att.getIp());
-	    ipNode.compressSize = m_ruleWeight;
-	    ipNode.size = 1;
-	    ipNode.totalHitsCount = hit.getAmount();
-	    ipNode.bestSubnets = new UnionList<>(new SubnetSuggestion(ipNode));
-	    allNodes.add(ipNode);
-	}
-	allNodes.sort(IP_COMPARATOR);
-
-	// Init list with approximate size depends on nodes list size
-	final ArrayList<IPNode> uniqueNodes = new ArrayList<>((int) (allNodes.size() * UNIQUE_LIST_FACTOR));
-	final Iterator<IPNode> it = allNodes.iterator();
-	if (it.hasNext()) {
-	    IPNode lastNode = it.next();
-	    uniqueNodes.add(lastNode);
-
-	    while (it.hasNext()) {
-		final IPNode node = it.next();
-		if (lastNode.ip.equals(node.ip)) {
-		    lastNode.size++;
-		    lastNode.totalHitsCount += node.totalHitsCount;
-		} else {
-		    uniqueNodes.add(node);
-		    lastNode = node;
-		}
-		lastNode.bestSubnets = new UnionList<>(new SubnetSuggestion(lastNode));
-	    }
-	}
-	return uniqueNodes.toArray(new IPNode[0]);
-    }
-
-    /**
      * Configuration check. Used to check the static final fields of this
      * algorithm.
      * 
@@ -747,17 +725,25 @@ public class InformationAlgorithm implements SuggestionsAlgorithm {
      * subnetwork of the node.</li>
      * </ul>
      */
-    private static class IPNode {
+    private static final class IPNode {
 
-	private final IP ip;
+	final IP ip;
 
-	private int size;
+	int size;
 
-	private int totalHitsCount;
+	int totalHitsCount;
 
-	private double compressSize;
+	double compressSize;
 
-	private UnionList<SubnetSuggestion> bestSubnets;
+	UnionList<SubnetSuggestion> bestSubnets;
+
+	static final Comparator<IPNode> IPS_COMPARATOR = new Comparator<IPNode>() {
+
+	    @Override
+	    public int compare(final IPNode o1, final IPNode o2) {
+		return o1.ip.compareTo(o2.ip);
+	    }
+	};
 
 	public IPNode(final IP ip) {
 	    this.ip = ip;
@@ -814,7 +800,7 @@ public class InformationAlgorithm implements SuggestionsAlgorithm {
 
     }
 
-    private static class SubnetSuggestion {
+    private static final class SubnetSuggestion {
 
 	private final IP ip;
 
@@ -822,18 +808,23 @@ public class InformationAlgorithm implements SuggestionsAlgorithm {
 
 	private final int totalHitsCount;
 
-	private final double score;
+	private final double compressSize;
 
 	SubnetSuggestion(final IPNode node) {
 	    ip = node.ip;
 	    uniqueHitsCount = node.size;
 	    totalHitsCount = node.totalHitsCount;
-	    score = 1 / node.compressSize;
+	    compressSize = node.compressSize;
+	}
+
+	public double getScore() {
+	    return 1 / compressSize;
 	}
 
 	@Override
 	public String toString() {
-	    return ip.toString() + " uniqueSize=" + uniqueHitsCount + " totalSize=" + totalHitsCount + "score=" + score;
+	    return ip.toString() + " uniqueSize=" + uniqueHitsCount + " totalSize=" + totalHitsCount + " score="
+		    + getScore();
 	}
 
     }

@@ -136,7 +136,7 @@ public final class IPv4 extends IP {
 	    throw new IllegalStateException("No parent");
 	}
 	final int mask = ~(1 << (SIZE - m));
-	return createInternal(m_address & mask, m - 1);
+	return new IPv4(m_address & mask, m - 1);
     }
 
     /*
@@ -162,7 +162,10 @@ public final class IPv4 extends IP {
 	}
 	final int a = m_address;
 	final int mask = 1 << (SIZE - m);
-	return new IPv4[] { createInternal(a & ~mask, m), createInternal(a | mask, m) };
+	if (m == SIZE) {
+	    return new IPv4[] { createInternal(a & ~mask), createInternal(a | mask) };
+	}
+	return new IPv4[] { new IPv4(a & ~mask, m), new IPv4(a | mask, m) };
     }
 
     /*
@@ -358,18 +361,23 @@ public final class IPv4 extends IP {
 	    throw new IllegalArgumentException(
 		    "IPv4 blocks number: " + Utility.formatEqual(BLOCK_NUMBER, address.length));
 	}
-	if (!(0 <= maskSize && maskSize <= SIZE)) {
-	    throw new IllegalArgumentException("IPv4 subnetwork mask: " + Utility.formatRange(0, SIZE, maskSize));
-	}
 
 	int a = 0;
 	for (int i = 0; i < address.length; i++) {
 	    a = (a << BLOCK_SIZE) + address[i];
 	}
 
+	if (!(0 <= maskSize && maskSize < SIZE)) {
+	    if (maskSize == SIZE) {
+		return createInternal(a);
+	    }
+	    throw new IllegalArgumentException("IPv4 subnetwork mask: " + Utility.formatRange(0, SIZE, maskSize));
+	}
+
 	// Reset suffix
 	a &= maskSize != 0 ? ~((1 << (SIZE - maskSize)) - 1) : 0;
-	return createInternal(a, maskSize);
+
+	return new IPv4(a, maskSize);
     }
 
     /**
@@ -392,77 +400,51 @@ public final class IPv4 extends IP {
 	int address = 0;
 	int maskSize;
 
-	List<String> blocks = Utility.breakToWords(ip, String.valueOf(BLOCKS_SEPARATOR));
-	if (blocks.size() != BLOCK_NUMBER) {
+	int fromIndex = 0;
+	int separatorIndex = ip.indexOf(BLOCKS_SEPARATOR);
+	int numberOfSeparators = 0;
+	while (separatorIndex >= 0) {
+	    if (fromIndex != separatorIndex) {
+		address = (address << BLOCK_SIZE) + parseBlockValue(ip, fromIndex, separatorIndex);
+		numberOfSeparators++;
+	    }
+	    fromIndex = separatorIndex + 1;
+	    separatorIndex = ip.indexOf(BLOCKS_SEPARATOR, fromIndex);
+	}
+	if (numberOfSeparators != BLOCK_NUMBER - 1) {
 	    throw new IllegalArgumentException(
-		    "IPv4 blocks number: " + Utility.formatEqual(BLOCK_NUMBER, blocks.size()));
+		    "IPv4 blocks number: " + Utility.formatEqual(BLOCK_NUMBER, numberOfSeparators + 1));
 	}
-	for (int blockNum = 0; blockNum < blocks.size() - 1; blockNum++) {
-	    final int blockVal;
-	    try {
-		blockVal = Integer.parseInt(blocks.get(blockNum));
-	    } catch (NumberFormatException e) {
-		throw new IllegalArgumentException("In block number " + blockNum, e);
-	    }
-	    if (!(0 <= blockVal && blockVal <= MAX_BLOCK_VALUE)) {
-		throw new IllegalArgumentException(
-			"IPv4 block value: " + Utility.formatRange(0, MAX_BLOCK_VALUE, blockVal));
-	    }
-	    address = (address << BLOCK_SIZE) + blockVal;
-	}
-	String lastBlock = blocks.get(BLOCK_NUMBER - 1);
 
 	// Read suffix of IP - last block
-	int separatorIndex = lastBlock.indexOf(MASK_SIZE_SEPARATOR);
-	if (separatorIndex < 0) {
+	final int maskSeparatorIndex = ip.indexOf(MASK_SIZE_SEPARATOR, fromIndex);
+	if (maskSeparatorIndex < 0) {
 	    // No mask size specification
-	    final int blockVal;
-	    try {
-		blockVal = Integer.parseInt(lastBlock);
-	    } catch (NumberFormatException e) {
-		throw new IllegalArgumentException("In block last block", e);
-	    }
-	    if (!(0 <= blockVal && blockVal <= MAX_BLOCK_VALUE))
-		throw new IllegalArgumentException(
-			"IPv4 block value: " + Utility.formatRange(0, MAX_BLOCK_VALUE, blockVal));
-	    address = (address << BLOCK_SIZE) + blockVal;
-	    maskSize = SIZE;
-	} else {
-	    // Has mask size specification
-	    String stNum = lastBlock.substring(0, separatorIndex);
-	    lastBlock = lastBlock.substring(separatorIndex + 1);
+	    address = (address << BLOCK_SIZE) + parseBlockValue(ip, fromIndex, ip.length());
+	    return createInternal(address);
+	}
 
-	    final int blockVal;
-	    try {
-		blockVal = Integer.parseInt(stNum);
-	    } catch (NumberFormatException e) {
-		throw new IllegalArgumentException("In block last block", e);
-	    }
-	    if (!(0 <= blockVal && blockVal <= MAX_BLOCK_VALUE))
-		throw new IllegalArgumentException(
-			"IPv4 block value: " + Utility.formatRange(0, MAX_BLOCK_VALUE, blockVal));
-	    address = (address << BLOCK_SIZE) + blockVal;
+	// Has mask size specification
+	address = (address << BLOCK_SIZE) + parseBlockValue(ip, fromIndex, maskSeparatorIndex);
 
-	    // Read subnetwork mask
-	    if (ip.length() > 0) {
-		try {
-		    maskSize = Integer.parseInt(lastBlock);
-		} catch (NumberFormatException e) {
-		    throw new IllegalArgumentException("IPv4 subnetwork mask", e);
-		}
-		if (!(0 <= maskSize && maskSize <= SIZE)) {
-		    throw new IllegalArgumentException(
-			    "IPv4 subnetwork mask: " + Utility.formatRange(0, SIZE, maskSize));
-		}
-	    } else {
-		maskSize = SIZE;
+	// Read subnetwork mask
+	try {
+	    maskSize = Integer.parseInt(ip.substring(maskSeparatorIndex + 1, ip.length()));
+	} catch (NumberFormatException e) {
+	    throw new IllegalArgumentException("IPv4 subnetwork mask", e);
+	}
+
+	if (!(0 <= maskSize && maskSize < SIZE)) {
+	    if (maskSize == SIZE) {
+		return createInternal(address);
 	    }
+	    throw new IllegalArgumentException("IPv4 subnetwork mask: " + Utility.formatRange(0, SIZE, maskSize));
 	}
 
 	// Reset suffix
 	address &= maskSize != 0 ? ~((1 << (SIZE - maskSize)) - 1) : 0;
 
-	return createInternal(address, maskSize);
+	return new IPv4(address, maskSize);
     }
 
     /**
@@ -488,10 +470,13 @@ public final class IPv4 extends IP {
      *             if the mask size is out of range (0 to 32).
      */
     public static IPv4 createFromBits(final int addressBits, final int maskSize) {
-	if (!(0 <= maskSize && maskSize <= SIZE)) {
+	if (!(0 <= maskSize && maskSize < SIZE)) {
+	    if (maskSize == SIZE) {
+		return createInternal(addressBits);
+	    }
 	    throw new IllegalArgumentException("IPv4 subnetwork mask: " + Utility.formatRange(0, SIZE, maskSize));
 	}
-	return createInternal(addressBits, maskSize);
+	return new IPv4(addressBits, maskSize);
     }
 
     /**
@@ -517,7 +502,7 @@ public final class IPv4 extends IP {
 		address += 1;
 	    }
 	}
-	return createInternal(address, SIZE);
+	return createInternal(address);
     }
 
     /**
@@ -529,9 +514,8 @@ public final class IPv4 extends IP {
      *            the subnetwork mask size.
      * @return IPv4 object with the specified address and maskSize.
      */
-    private static IPv4 createInternal(final int address, final int maskSize) {
-	// Intentionally using 'new Integer(int)' and not 'Integer.valueOf(int)'
-	return IPv4Cache.caches[maskSize].getOrAdd(new Integer(address));
+    private static IPv4 createInternal(final int address) {
+	return IPv4Cache.cache.getOrAdd(new Integer(address));
     }
 
     /**
@@ -549,23 +533,30 @@ public final class IPv4 extends IP {
 	 * The caches array is of size {@value IPv4#SIZE} + 1, and in each cache
 	 * 'i' the elements are the IPs with maskSize = i.
 	 */
-	static final CacheSupplierPair<Integer, IPv4>[] caches;
+	static final CacheSupplierPair<Integer, IPv4> cache;
 
 	static {
-	    // Used dummy to suppress warnings
-	    @SuppressWarnings({ "unchecked", "unused" })
-	    Object dummy1 = caches = new CacheSupplierPair[SIZE + 1];
-
-	    for (int i = caches.length; i-- != 0;) {
-		final int maskSize = i;
-		final Cache<Integer, IPv4> cache = Caches.synchronizedCache(new SoftCache<>());
-		final Function<Integer, IPv4> supplier = (final Integer address) -> {
-		    return new IPv4(address.intValue(), maskSize);
-		};
-		caches[i] = Caches.cacheSupplierPair(cache, supplier);
-	    }
+	    final Cache<Integer, IPv4> c = Caches.synchronizedCache(new SoftCache<>());
+	    final Function<Integer, IPv4> supplier = (final Integer address) -> {
+		return new IPv4(address.intValue(), SIZE);
+	    };
+	    cache = Caches.cacheSupplierPair(c, supplier);
 	}
 
+    }
+
+    private static int parseBlockValue(final String blockValue, final int fromIndex, final int toIndex) {
+	final int blockVal;
+	try {
+	    blockVal = Integer.parseInt(blockValue.substring(fromIndex, toIndex));
+	} catch (NumberFormatException e) {
+	    throw new IllegalArgumentException("In block last block", e);
+	}
+	if (!(0 <= blockVal && blockVal <= MAX_BLOCK_VALUE)) {
+	    throw new IllegalArgumentException(
+		    "IPv4 block value: " + Utility.formatRange(0, MAX_BLOCK_VALUE, blockVal));
+	}
+	return blockVal;
     }
 
 }

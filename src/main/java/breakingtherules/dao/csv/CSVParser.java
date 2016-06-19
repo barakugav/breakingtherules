@@ -147,24 +147,24 @@ public class CSVParser {
      *             if the line is null.
      */
     public Hit fromCSV(final String line) throws CSVParseException {
-	final List<String> words = Utility.breakToWords(line);
-	final List<Attribute> attributes = new ArrayList<>();
+	final String[] words = Utility.breakToWords(line);
+	final List<Attribute> attributes = new ArrayList<>(Attribute.TYPES_COUNT);
 
 	try {
 	    if (sourceIndex >= 0) {
-		final String source = words.get(sourceIndex);
+		final String source = words[sourceIndex];
 		attributes.add(fromCSVSource(source));
 	    }
 	    if (destinationIndex >= 0) {
-		final String destination = words.get(destinationIndex);
+		final String destination = words[destinationIndex];
 		attributes.add(fromCSVDestination(destination));
 	    }
 	    if (serviceProtocolIndex >= 0 && servicePortIndex >= 0) {
-		final String protocol = words.get(serviceProtocolIndex);
-		final String port = words.get(servicePortIndex);
+		final String protocol = words[serviceProtocolIndex];
+		final String port = words[servicePortIndex];
 		attributes.add(fromCSVService(port, protocol));
 	    }
-	} catch (IndexOutOfBoundsException e) {
+	} catch (ArrayIndexOutOfBoundsException e) {
 	    throw new CSVParseException("hit line didn't have enough attributes", e);
 	}
 
@@ -367,21 +367,21 @@ public class CSVParser {
 	}
 
 	final CSVParser parser = new CSVParser(columnsTypes);
-	int lineNumber = 1;
+	int lineNumber = 0;
 
 	BufferedReader reader = null;
 	try {
 	    reader = new BufferedReader(new FileReader(repoFile));
 
 	    for (String line; (line = reader.readLine()) != null;) {
+		lineNumber++;
 		if (line.isEmpty()) {
 		    continue;
 		}
-		Hit hit = parser.fromCSV(line);
+		final Hit hit = parser.fromCSV(line);
 		if (DaoUtilities.isMatch(hit, rules, filter)) {
 		    destination.add(hit);
 		}
-		lineNumber++;
 
 		if (lineNumber % 1_000_000 == 0) {
 		    System.out.println("Reading hits from CSV: " + lineNumber + " hits have been read so far.");
@@ -455,13 +455,8 @@ public class CSVParser {
 	    throw new CSVParseException("Unable to parse protocol code to integer: ", e);
 	}
 
-	final String protocolStr = Service.protocolName(protocolInt);
-	if (protocolStr == null) {
-	    throw new CSVParseException("Unknown protocol number " + protocolInt);
-	}
-
 	try {
-	    return Service.create(protocolStr, portNum);
+	    return Service.create(protocolInt, portNum);
 	} catch (final IllegalArgumentException e) {
 	    throw new CSVParseException("Unable to parse service: ", e);
 	}
