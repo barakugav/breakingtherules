@@ -6,8 +6,8 @@ import org.junit.Test;
 
 import breakingtherules.dao.HitsDao;
 import breakingtherules.dao.RulesDao;
-import breakingtherules.dao.xml.HitsXmlDao;
-import breakingtherules.dao.xml.RulesXmlDao;
+import breakingtherules.dao.xml.XMLHitsDao;
+import breakingtherules.dao.xml.XMLRulesDao;
 import breakingtherules.dto.ListDto;
 import breakingtherules.firewall.Attribute;
 import breakingtherules.firewall.Filter;
@@ -26,8 +26,8 @@ public class InformationAlgorithmTest extends TestBase {
 
     @Test
     public void getSuggestionTest() throws Exception {
-	RulesDao rulesDao = new RulesXmlDao();
-	HitsDao hitsDao = new HitsXmlDao();
+	RulesDao rulesDao = new XMLRulesDao();
+	HitsDao hitsDao = new XMLHitsDao();
 	Filter filter = Filter.ANY_FILTER;
 	ListDto<Rule> rulesDto = rulesDao.getRules(JOB_NAME);
 	List<Rule> rules = rulesDto.getData();

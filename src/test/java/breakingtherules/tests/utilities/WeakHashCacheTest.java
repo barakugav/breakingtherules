@@ -10,43 +10,43 @@ import java.util.Random;
 
 import org.junit.Test;
 
-import breakingtherules.utilities.WeakCache;
+import breakingtherules.utilities.WeakHashCache;
 
-public class WeakCacheTest {
+public class WeakHashCacheTest {
 
     @Test
     public void createTest() {
-	new WeakCache<>();
+	new WeakHashCache<>();
     }
 
     @Test
     public void createTestInitCapacity() {
-	new WeakCache<>(16);
+	new WeakHashCache<>(16);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void createTestInitCapacityNegative() {
-	new WeakCache<>(-1);
+	new WeakHashCache<>(-1);
     }
 
     @Test
     public void createTestLoadFactor() {
-	new WeakCache<>(16, 0.5f);
+	new WeakHashCache<>(16, 0.5f);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void createTestLoadFactorNegative() {
-	new WeakCache<>(16, -0.5f);
+	new WeakHashCache<>(16, -0.5f);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void createTestLoadFactorNan() {
-	new WeakCache<>(16, Float.NaN);
+	new WeakHashCache<>(16, Float.NaN);
     }
 
     @Test
     public void sizeTest() {
-	WeakCache<Integer, Object> cache = new WeakCache<>();
+	WeakHashCache<Integer, Object> cache = new WeakHashCache<>();
 	assertEquals(0, cache.size());
 
 	Integer key1 = Integer.valueOf(1);
@@ -62,7 +62,7 @@ public class WeakCacheTest {
 
     @Test
     public void addTest() {
-	WeakCache<Integer, Object> cache = new WeakCache<>();
+	WeakHashCache<Integer, Object> cache = new WeakHashCache<>();
 	Integer one = Integer.valueOf(1);
 	Object key = new Object();
 	cache.add(one, key);
@@ -71,7 +71,7 @@ public class WeakCacheTest {
 
     @Test
     public void addTestNullKey() {
-	WeakCache<Integer, Object> cache = new WeakCache<>();
+	WeakHashCache<Integer, Object> cache = new WeakHashCache<>();
 	Object val = new Object();
 	cache.add(null, val);
 	assertEquals(val, cache.get(null));
@@ -79,13 +79,13 @@ public class WeakCacheTest {
 
     @Test(expected = NullPointerException.class)
     public void addTestNullValue() {
-	WeakCache<Integer, Object> cache = new WeakCache<>();
+	WeakHashCache<Integer, Object> cache = new WeakHashCache<>();
 	cache.add(Integer.valueOf(1), null);
     }
 
     @Test
     public void addTestNoUniqeKey() {
-	WeakCache<Integer, Object> cache = new WeakCache<>();
+	WeakHashCache<Integer, Object> cache = new WeakHashCache<>();
 	Integer key = Integer.valueOf(1);
 	Object val1 = new Object();
 	Object val2 = new Object();
@@ -95,7 +95,7 @@ public class WeakCacheTest {
 
     @Test
     public void getTest() {
-	WeakCache<Integer, Object> cache = new WeakCache<>();
+	WeakHashCache<Integer, Object> cache = new WeakHashCache<>();
 	for (int i = 0; i < 25; i++) {
 	    Integer key = Integer.valueOf(i);
 	    Object expected = new Object();
@@ -104,7 +104,7 @@ public class WeakCacheTest {
 	    assertEquals(expected, actual);
 	}
 
-	cache = new WeakCache<>();
+	cache = new WeakHashCache<>();
 	Map<Integer, Object> m = new HashMap<>();
 	Random rand = new Random();
 	for (int i = 0; i < 500; i++) {
@@ -124,7 +124,7 @@ public class WeakCacheTest {
 	final String POSSIBLE_GC_NOT_WORKING_MSSG = "Cache didn't clean, "
 		+ "or GC didn't act (This test is inconsistent and can't be "
 		+ "changed as far as we know) try running this test alone.";
-	WeakCache<Integer, Object> cache = new WeakCache<>();
+	WeakHashCache<Integer, Object> cache = new WeakHashCache<>();
 	Integer key1 = Integer.valueOf(0);
 	Integer key2 = Integer.valueOf(1);
 	Integer key3 = Integer.valueOf(2);

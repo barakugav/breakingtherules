@@ -6,7 +6,7 @@ import java.util.function.Function;
 import breakingtherules.utilities.Cache;
 import breakingtherules.utilities.Caches;
 import breakingtherules.utilities.Caches.CacheSupplierPair;
-import breakingtherules.utilities.SoftCache;
+import breakingtherules.utilities.SoftHashCache;
 import breakingtherules.utilities.Utility;
 
 /**
@@ -536,7 +536,7 @@ public final class IPv4 extends IP {
 	static final CacheSupplierPair<Integer, IPv4> cache;
 
 	static {
-	    final Cache<Integer, IPv4> c = Caches.synchronizedCache(new SoftCache<>());
+	    final Cache<Integer, IPv4> c = Caches.synchronizedCache(new SoftHashCache<>());
 	    final Function<Integer, IPv4> supplier = (final Integer address) -> {
 		return new IPv4(address.intValue(), SIZE);
 	    };

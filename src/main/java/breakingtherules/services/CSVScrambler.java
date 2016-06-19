@@ -581,7 +581,7 @@ public class CSVScrambler implements Runnable {
 	    reader = new BufferedReader(new FileReader(inputFile));
 	    for (String line; (line = reader.readLine()) != null;) {
 		lineNumber++;
-		final Hit hit = parser.fromCSV(line);
+		final Hit hit = parser.parseHit(line);
 		IP ip = ((IPAttribute) hit.getAttribute(ipAttId)).getIp();
 
 		if (existingNodes.containsKey(ip)) {
@@ -693,7 +693,7 @@ public class CSVScrambler implements Runnable {
 	    reader = new BufferedReader(new FileReader(inputFile));
 	    for (String line; (line = reader.readLine()) != null;) {
 		lineNumber++;
-		Hit hit = parser.fromCSV(line);
+		Hit hit = parser.parseHit(line);
 		hit = mutateHit(hit, ipAttId, tree);
 		line = parser.toCSV(hit);
 		writer.append(line + lineSeparator);

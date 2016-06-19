@@ -32,7 +32,7 @@ import breakingtherules.utilities.Utility;
  * 
  */
 @Component
-public class RulesXmlDao implements RulesDao {
+public class XMLRulesDao implements RulesDao {
 
     /**
      * Tag of the whole repository in XML format.
@@ -61,9 +61,9 @@ public class RulesXmlDao implements RulesDao {
      */
     @Override
     public Rule getOriginalRule(final String jobName) throws IOException, XMLParseException {
-	final String path = XmlDaoConfig.getRulesFile(jobName);
+	final String path = XMLDaoConfig.getRulesFile(jobName);
 	// Load from file
-	final Document repositoryDoc = XMLDaoUtilities.readFile(path);
+	final Document repositoryDoc = XMLUtilities.readFile(path);
 
 	// Get all rules from repository
 	final Element ruleElem = (Element) repositoryDoc.getElementsByTagName(ORIGINAL_RULE_TAG).item(0);
@@ -78,7 +78,7 @@ public class RulesXmlDao implements RulesDao {
      */
     @Override
     public ListDto<Rule> getRules(final String jobName) throws IOException, XMLParseException {
-	final String path = XmlDaoConfig.getRulesFile(jobName);
+	final String path = XMLDaoConfig.getRulesFile(jobName);
 	return getRulesByPath(path);
     }
 
@@ -90,7 +90,7 @@ public class RulesXmlDao implements RulesDao {
     @Override
     public ListDto<Rule> getRules(final String jobName, final int startIndex, final int endIndex)
 	    throws IOException, XMLParseException {
-	final String path = XmlDaoConfig.getRulesFile(jobName);
+	final String path = XMLDaoConfig.getRulesFile(jobName);
 	return getRulesByPath(path, startIndex, endIndex);
     }
 
@@ -188,7 +188,7 @@ public class RulesXmlDao implements RulesDao {
 	repoElm.appendChild(ruleElm);
 
 	document.appendChild(repoElm);
-	XMLDaoUtilities.writeFile(fileName, document);
+	XMLUtilities.writeFile(fileName, document);
     }
 
     /**
@@ -205,7 +205,7 @@ public class RulesXmlDao implements RulesDao {
     private static List<Rule> loadRules(final String repoPath) throws IOException, XMLParseException {
 	// Check if this repository is already loaded
 	// Load from file
-	final Document repositoryDoc = XMLDaoUtilities.readFile(repoPath);
+	final Document repositoryDoc = XMLUtilities.readFile(repoPath);
 
 	// Get all rules from repository
 	final NodeList rulesList = repositoryDoc.getElementsByTagName(RULE_TAG);

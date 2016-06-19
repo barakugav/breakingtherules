@@ -179,7 +179,7 @@ public class InformationAlgorithm implements SuggestionsAlgorithm {
 	if (attTypeId == Attribute.UNKOWN_ATTRIBUTE_ID) {
 	    throw new IllegalArgumentException("Unkown attribute: " + attType);
 	}
-	Set<UniqueHit> hits = dao.getUnique(jobName, rules, filter);
+	Set<UniqueHit> hits = dao.getUniqueHits(jobName, rules, filter);
 	final InformationAlgoRunner runner = new InformationAlgoRunner(hits, amount, attTypeId);
 	runner.run();
 	return runner.result;
@@ -190,7 +190,7 @@ public class InformationAlgorithm implements SuggestionsAlgorithm {
 	    final Filter filter, final int amount, final String[] attTypes) throws Exception {
 
 	final InformationAlgoRunner[] runners = new InformationAlgoRunner[attTypes.length];
-	final Set<UniqueHit> hits = dao.getUnique(jobName, rules, filter);
+	final Set<UniqueHit> hits = dao.getUniqueHits(jobName, rules, filter);
 	for (int i = 0; i < attTypes.length; i++) {
 	    final String attType = attTypes[i];
 	    final int attTypeId = Attribute.typeStrToTypeId(attType);
@@ -240,12 +240,12 @@ public class InformationAlgorithm implements SuggestionsAlgorithm {
 	@SuppressWarnings("unchecked")
 	final List<Suggestion>[] suggestions = new List[attTypes.length];
 	for (int i = 0; i < runners.length; i++) {
-	    suggestions[i] = runners[i].getResults();
+	    suggestions[i] = runners[i].result;
 	}
 	return suggestions;
     }
 
-    private class InformationAlgoRunner implements SuggestionsAlgorithmRunner {
+    private class InformationAlgoRunner implements Runnable {
 
 	private final Set<UniqueHit> hits;
 	private final int attTypeId;
@@ -276,11 +276,6 @@ public class InformationAlgorithm implements SuggestionsAlgorithm {
 		throw new InternalError(
 			"Attribute type wasn't destination not source after checking it was one of them.");
 	    }
-	}
-
-	@Override
-	public List<Suggestion> getResults() {
-	    return result;
 	}
 
 	/**
@@ -532,11 +527,11 @@ public class InformationAlgorithm implements SuggestionsAlgorithm {
 		final IP ip = att.getIp();
 		final IPNode existingNode = uniqueIPNodes.get(ip);
 		if (existingNode == null) {
-		    final IPNode ipNode = new IPNode(ip);
-		    ipNode.compressSize = m_ruleWeight;
-		    ipNode.size = 1;
-		    ipNode.totalHitsCount = hit.getAmount();
-		    uniqueIPNodes.put(ip, ipNode);
+		    final IPNode newNode = new IPNode(ip);
+		    newNode.compressSize = m_ruleWeight;
+		    newNode.size = 1;
+		    newNode.totalHitsCount = hit.getAmount();
+		    uniqueIPNodes.put(ip, newNode);
 		} else {
 		    existingNode.size++;
 		    existingNode.totalHitsCount += hit.getAmount();

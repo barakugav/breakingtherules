@@ -1,5 +1,6 @@
 package breakingtherules.utilities;
 
+import java.util.Map;
 import java.util.function.Function;
 
 /**
@@ -27,7 +28,11 @@ public interface Cache<K, E> {
     public E get(K key);
 
     /**
-     * Add new element to cache
+     * Add new element to cache.
+     * <p>
+     * This method is different from {@link Map#put(Object, Object)}, if an
+     * element with the same key as added is already in the cache, this
+     * operation has no effect.
      * 
      * @param key
      *            the element key

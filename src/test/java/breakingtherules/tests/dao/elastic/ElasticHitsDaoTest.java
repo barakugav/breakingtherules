@@ -14,7 +14,7 @@ import org.junit.Test;
 
 import breakingtherules.dao.ParseException;
 import breakingtherules.dao.UniqueHit;
-import breakingtherules.dao.elastic.HitsElasticDao;
+import breakingtherules.dao.elastic.ElasticHitsDao;
 import breakingtherules.dto.ListDto;
 import breakingtherules.firewall.Attribute;
 import breakingtherules.firewall.Destination;
@@ -26,9 +26,9 @@ import breakingtherules.firewall.Source;
 import breakingtherules.tests.TestBase;
 import breakingtherules.tests.firewall.FirewallTestsUtility;
 
-public class ElasticDaoTest extends TestBase {
+public class ElasticHitsDaoTest extends TestBase {
 
-    private static HitsElasticDao hitsDao;
+    private static ElasticHitsDao hitsDao;
 
     private static final String JOB_NAME = String.valueOf(new Random().nextInt());
 
@@ -37,7 +37,7 @@ public class ElasticDaoTest extends TestBase {
     @BeforeClass
     public static void initDaoAndJob() throws Exception {
 	try {
-	    hitsDao = new HitsElasticDao();
+	    hitsDao = new ElasticHitsDao();
 	    if (hitsDao.doesJobExist(JOB_NAME)) {
 		throw new Exception("Job number exists. Choose different job number.");
 	    }

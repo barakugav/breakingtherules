@@ -6,7 +6,7 @@ import java.util.function.Function;
 import breakingtherules.utilities.Cache;
 import breakingtherules.utilities.Caches;
 import breakingtherules.utilities.Caches.CacheSupplierPair;
-import breakingtherules.utilities.CustomSoftCache;
+import breakingtherules.utilities.SoftCustomHashCache;
 
 /**
  * Source attribute.
@@ -147,14 +147,14 @@ public class Source extends IPAttribute {
 
 	static {
 	    final Cache<IPv4, Source> cache4 = Caches
-		    .synchronizedCache(new CustomSoftCache<>(IPv4AddressStrategy.INSTANCE));
+		    .synchronizedCache(new SoftCustomHashCache<>(IPv4AddressStrategy.INSTANCE));
 	    final Function<IPv4, Source> supplier4 = (final IPv4 ip) -> {
 		return new Source(ip);
 	    };
 	    IPv4Cache = Caches.cacheSupplierPair(cache4, supplier4);
 
 	    final Cache<IPv6, Source> cache6 = Caches
-		    .synchronizedCache(new CustomSoftCache<>(IPv6AddressStrategy.INSTANCE));
+		    .synchronizedCache(new SoftCustomHashCache<>(IPv6AddressStrategy.INSTANCE));
 	    final Function<IPv6, Source> supplier6 = (final IPv6 ip) -> {
 		return new Source(ip);
 	    };

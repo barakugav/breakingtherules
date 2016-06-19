@@ -1,7 +1,7 @@
 package breakingtherules.firewall;
 
-import breakingtherules.utilities.CustomSoftCache;
-import breakingtherules.utilities.CustomWeakCache;
+import breakingtherules.utilities.SoftCustomHashCache;
+import breakingtherules.utilities.WeakCustomHashCache;
 import breakingtherules.utilities.Hashs.Strategy;
 
 /**
@@ -16,8 +16,8 @@ import breakingtherules.utilities.Hashs.Strategy;
  * @author Barak Ugav
  * @author Yishai Gronich
  * 
- * @see CustomWeakCache
- * @see CustomSoftCache
+ * @see WeakCustomHashCache
+ * @see SoftCustomHashCache
  */
 class IPv4AddressStrategy implements Strategy<IPv4> {
 

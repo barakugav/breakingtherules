@@ -10,9 +10,9 @@ import org.springframework.web.multipart.MultipartResolver;
 import org.springframework.web.multipart.support.StandardServletMultipartResolver;
 
 import breakingtherules.dao.HitsDao;
-import breakingtherules.dao.csv.HitsCSVDao;
-import breakingtherules.dao.elastic.HitsElasticDao;
-import breakingtherules.dao.xml.HitsXmlDao;
+import breakingtherules.dao.csv.CSVHitsDao;
+import breakingtherules.dao.elastic.ElasticHitsDao;
+import breakingtherules.dao.xml.XMLHitsDao;
 import breakingtherules.services.algorithm.InformationAlgorithm;
 import breakingtherules.services.algorithm.SimpleAlgorithm;
 import breakingtherules.services.algorithm.SuggestionsAlgorithm;
@@ -33,17 +33,17 @@ public class Config {
 
     // @Bean
     public HitsDao hitsXmlDao() {
-	return new HitsXmlDao();
+	return new XMLHitsDao();
     }
 
     @Bean
     public HitsDao hitsCSVDao() {
-	return new HitsCSVDao();
+	return new CSVHitsDao();
     }
 
     // @Bean(destroyMethod = "cleanup")
     public HitsDao hitsElasticDao() {
-	return new HitsElasticDao();
+	return new ElasticHitsDao();
     }
 
     @Bean

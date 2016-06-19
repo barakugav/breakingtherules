@@ -19,16 +19,20 @@ import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
 
 /**
- * The UtilityXmlDao class is used XML DAOs, and include only static method -
- * all helper method
+ * The XMLUtilities class is used by XML DAOs, and include only helper static
+ * methods.
  * 
  * @author Barak Ugav
  * @author Yishai Gronich
  * 
- * @see HitsXmlDao
- * @see RulesXmlDao
+ * @see XMLHitsDao
+ * @see XMLRulesDao
  */
-public class XMLDaoUtilities {
+public class XMLUtilities {
+
+    // Suppresses default constructor, ensuring non-instantiability.
+    private XMLUtilities() {
+    }
 
     /**
      * Read document from a file.

@@ -3,6 +3,7 @@ package breakingtherules.dao.csv;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.util.AbstractSet;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -26,7 +27,7 @@ import breakingtherules.utilities.Triple;
 import breakingtherules.utilities.Triple.UnmodifiableTriple;
 
 /**
- * The HitsCSVDao is a basic DAO that only parse hits, line by line from CSV
+ * The CSVHitsDao is a basic DAO that only parse hits, line by line from CSV
  * files.
  * <p>
  * 
@@ -34,9 +35,8 @@ import breakingtherules.utilities.Triple.UnmodifiableTriple;
  * @author Yishai Gronich
  * 
  * @see CSVParser
- *
  */
-public class HitsCSVDao implements HitsDao {
+public class CSVHitsDao implements HitsDao {
 
     /**
      * Cache for loaded unique hits.
@@ -52,34 +52,34 @@ public class HitsCSVDao implements HitsDao {
     private final Cache<UnmodifiableTriple<String, Set<Rule>, Filter>, Integer> m_totalHitsCache;
 
     /**
-     * Construct new HitsCSVDao.
+     * Construct new CSVHitsDao.
      */
-    public HitsCSVDao() {
+    public CSVHitsDao() {
 	m_cacheHits = new HeavySynchronizedHashCache<>();
 	m_totalHitsCache = new HeavySynchronizedHashCache<>();
     }
-    
+
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    public void initJob(String jobName, List<Hit> hits) throws IllegalArgumentException, IOException {
+    public void initJob(final String jobName, final List<Hit> hits) throws IOException {
+	String repoPath = CSVDaoConfig.getHitsFile(jobName);
 	try {
-	    String repoPath = CSVDaoConfig.getHitsFile(jobName);
 	    CSVParser.toCSV(CSVParser.DEFAULT_COLUMNS_TYPES, hits, repoPath);
-	} catch (CSVParseException e) {
-	    throw new IOException(e);
+	} catch (final CSVParseException e) {
+	    throw new IllegalArgumentException(e);
 	}
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see breakingtherules.dao.HitsDao#getHits(java.lang.String,
-     * java.util.List, breakingtherules.firewall.Filter)
+    /**
+     * {@inheritDoc}
      */
     @Override
     public ListDto<Hit> getHits(final String jobName, final List<Rule> rules, final Filter filter)
 	    throws IOException, CSVParseException {
-	final List<Hit> hits = CSVParser.fromCSV(CSVParser.DEFAULT_COLUMNS_TYPES, CSVDaoConfig.getHitsFile(jobName),
-		rules, filter);
+	final List<Hit> hits = new ArrayList<>();
+	CSVParser.fromCSV(CSVParser.DEFAULT_COLUMNS_TYPES, CSVDaoConfig.getHitsFile(jobName), rules, filter, hits);
 	// TODO - take the opportunity and add hits to cache.
 	final int size = hits.size();
 
@@ -91,21 +91,20 @@ public class HitsCSVDao implements HitsDao {
 	return new ListDto<>(hits, 0, size, size);
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see breakingtherules.dao.HitsDao#getUnique(java.lang.String,
-     * java.util.List, breakingtherules.firewall.Filter)
+    /**
+     * {@inheritDoc}
      */
     @Override
-    public Set<UniqueHit> getUnique(final String jobName, final List<Rule> rules, final Filter filter)
+    public Set<UniqueHit> getUniqueHits(final String jobName, final List<Rule> rules, final Filter filter)
 	    throws CSVParseException, IOException {
 	final Set<UniqueHit> uniqueHits = getUniqueHitsInternal(CSVDaoConfig.getHitsFile(jobName));
 
 	if (rules.isEmpty() && Filter.ANY_FILTER.equals(filter)) {
+	    // No filter is needed.
 	    return uniqueHits;
 	}
 
+	// Filter hits by the rules and filter.
 	final Set<UniqueHit> filteredHits = new HashSet<>();
 	for (final UniqueHit hit : uniqueHits) {
 	    if (DaoUtilities.isMatch(hit, rules, filter)) {
@@ -115,11 +114,8 @@ public class HitsCSVDao implements HitsDao {
 	return filteredHits;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see breakingtherules.dao.HitsDao#getHitsNumber(java.lang.String,
-     * java.util.List, breakingtherules.firewall.Filter)
+    /**
+     * {@inheritDoc}
      */
     @Override
     public int getHitsNumber(final String jobName, final List<Rule> rules, final Filter filter)
@@ -128,9 +124,9 @@ public class HitsCSVDao implements HitsDao {
 	    return m_totalHitsCache.getOrAdd(
 		    new UnmodifiableTriple<>(jobName, Collections.unmodifiableSet(new HashSet<>(rules)), filter),
 		    HITS_NUMBER_SUPPLIER).intValue();
-	} catch (UncheckedIOException e) {
+	} catch (final UncheckedIOException e) {
 	    throw e.getCause();
-	} catch (UncheckedCSVParseException e) {
+	} catch (final UncheckedCSVParseException e) {
 	    throw e.getCause();
 	}
     }
@@ -150,9 +146,9 @@ public class HitsCSVDao implements HitsDao {
     private Set<UniqueHit> getUniqueHitsInternal(final String fileName) throws CSVParseException, IOException {
 	try {
 	    return m_cacheHits.getOrAdd(fileName, UNIQUE_HITS_SUPPLIER);
-	} catch (UncheckedIOException e) {
+	} catch (final UncheckedIOException e) {
 	    throw e.getCause();
-	} catch (UncheckedCSVParseException e) {
+	} catch (final UncheckedCSVParseException e) {
 	    throw e.getCause();
 	}
     }
@@ -177,9 +173,9 @@ public class HitsCSVDao implements HitsDao {
 		}
 	    }
 	    return Integer.valueOf(hitsNumber);
-	} catch (IOException e) {
+	} catch (final IOException e) {
 	    throw new UncheckedIOException(e);
-	} catch (CSVParseException e) {
+	} catch (final CSVParseException e) {
 	    throw new UncheckedCSVParseException(e);
 	}
     };
@@ -188,7 +184,7 @@ public class HitsCSVDao implements HitsDao {
      * Supplier function of unique hits.
      * <p>
      * 
-     * @see HitsCSVDao#getUniqueHitsInternal(String)
+     * @see CSVHitsDao#getUniqueHitsInternal(String)
      */
     private static final Function<String, Set<UniqueHit>> UNIQUE_HITS_SUPPLIER = (final String fileName) -> {
 	final Map<Hit, MutableInteger> hitsCount = new HashMap<>();
@@ -219,11 +215,12 @@ public class HitsCSVDao implements HitsDao {
 		}
 
 	    });
-	} catch (IOException e) {
+	} catch (final IOException e) {
 	    throw new UncheckedIOException(e);
-	} catch (CSVParseException e) {
+	} catch (final CSVParseException e) {
 	    throw new UncheckedCSVParseException(e);
 	}
+
 	final Set<UniqueHit> uniqueHits = new HashSet<>();
 	for (final Iterator<Map.Entry<Hit, MutableInteger>> it = hitsCount.entrySet().iterator(); it.hasNext();) {
 	    final Map.Entry<Hit, MutableInteger> entry = it.next();

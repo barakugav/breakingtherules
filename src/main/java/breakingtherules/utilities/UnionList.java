@@ -12,6 +12,7 @@ import java.util.NoSuchElementException;
  * 
  * @author Barak Ugav
  * @author Yishai Gronich
+ * 
  * @param <E>
  *            type of elements the list will contain
  */

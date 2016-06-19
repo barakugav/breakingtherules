@@ -8,21 +8,26 @@ import java.util.function.Function;
 import breakingtherules.utilities.Hashs.Strategy;
 
 /**
+ * TODO
  * 
  * @author Barak Ugav
  * @author Yishai Gronich
+ * 
+ * @see SoftHashCache
+ * @see Strategy
  *
- * @param <K> type of keys 
+ * @param <K>
+ *            type of keys
  * @param <E>
  */
-public class CustomSoftCache<K, E> implements Cache<K, E> {
+public class SoftCustomHashCache<K, E> implements Cache<K, E> {
 
     /*
      * Implementation notes.
      * 
-     * The CustomSoftCache is implemented by a bucket hash table. In each cell
-     * in the table there is a bin (linked list of entries) that contains all
-     * entries that fell to that cell.
+     * The SoftCustomHashCache is implemented by a bucket hash table. In each
+     * cell in the table there is a bin (linked list of entries) that contains
+     * all entries that fell to that cell.
      * 
      * The number of expected elements in each bin, if using the default load
      * factor (0.75) and the hash codes of the keys are random (in theory) is
@@ -141,8 +146,8 @@ public class CustomSoftCache<K, E> implements Cache<K, E> {
     private static final int MINIMUM_SHRINK_CAPACITY = 8;
 
     /**
-     * Construct new CustomSoftCache with default init capacity and default load
-     * factor.
+     * Construct new SoftCustomHashCache with default init capacity and default
+     * load factor.
      * <p>
      * 
      * @param strategy
@@ -150,13 +155,13 @@ public class CustomSoftCache<K, E> implements Cache<K, E> {
      * @throws NullPointerException
      *             if the strategy is null.
      */
-    public CustomSoftCache(final Strategy<? super K> strategy) {
+    public SoftCustomHashCache(final Strategy<? super K> strategy) {
 	this(strategy, Hashs.DEFAULT_INIT_CAPACITY, Hashs.DEFAULT_LOAD_FACTOR);
     }
 
     /**
-     * Construct new CustomSoftCache with init capacity parameter and default
-     * load factor.
+     * Construct new SoftCustomHashCache with init capacity parameter and
+     * default load factor.
      * <p>
      * 
      * @param strategy
@@ -168,12 +173,12 @@ public class CustomSoftCache<K, E> implements Cache<K, E> {
      * @throws NullPointerException
      *             if the strategy is null.
      */
-    public CustomSoftCache(final Strategy<? super K> strategy, final int initCapacity) {
+    public SoftCustomHashCache(final Strategy<? super K> strategy, final int initCapacity) {
 	this(strategy, initCapacity, Hashs.DEFAULT_LOAD_FACTOR);
     }
 
     /**
-     * Construct new CustomSoftCache with init capacity parameter and load
+     * Construct new SoftCustomHashCache with init capacity parameter and load
      * factor parameter.
      * <p>
      * 
@@ -189,7 +194,7 @@ public class CustomSoftCache<K, E> implements Cache<K, E> {
      * @throws NullPointerException
      *             if the strategy is null.
      */
-    public CustomSoftCache(final Strategy<? super K> strategy, final int initCapacity, final float loadFactor) {
+    public SoftCustomHashCache(final Strategy<? super K> strategy, final int initCapacity, final float loadFactor) {
 	if (strategy == null)
 	    throw new NullPointerException("Null strategy");
 	if (initCapacity < 0)
@@ -734,15 +739,15 @@ public class CustomSoftCache<K, E> implements Cache<K, E> {
     }
 
     /**
-     * Entry of cached element in the {@link CustomSoftCache}.
+     * Entry of cached element in the {@link SoftCustomHashCache}.
      * <p>
      * The entries are save as a bin (one way linked list) in each table cell,
      * and last entry at the list {@link #next} field is null.
      * <p>
      * The key is saved as a field and the element itself is saved via the super
      * class {@link SoftReference}. When there is no more strong references to
-     * the element the {@link CustomSoftCache} will remove the entry from the
-     * table.
+     * the element the {@link SoftCustomHashCache} will remove the entry from
+     * the table.
      *
      */
     private static class Entry<K, V> extends SoftReference<V> {

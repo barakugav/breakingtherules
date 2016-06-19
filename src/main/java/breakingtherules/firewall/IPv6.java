@@ -8,7 +8,7 @@ import java.util.function.Function;
 import breakingtherules.utilities.Cache;
 import breakingtherules.utilities.Caches;
 import breakingtherules.utilities.Caches.CacheSupplierPair;
-import breakingtherules.utilities.CustomSoftCache;
+import breakingtherules.utilities.SoftCustomHashCache;
 import breakingtherules.utilities.IntArrayStrategy;
 import breakingtherules.utilities.Utility;
 
@@ -670,7 +670,7 @@ public final class IPv6 extends IP {
 	static final CacheSupplierPair<int[], IPv6> cache;
 
 	static {
-	    final Cache<int[], IPv6> c = Caches.synchronizedCache(new CustomSoftCache<>(IntArrayStrategy.INSTANCE));
+	    final Cache<int[], IPv6> c = Caches.synchronizedCache(new SoftCustomHashCache<>(IntArrayStrategy.INSTANCE));
 	    final Function<int[], IPv6> supplier = (final int[] array) -> {
 		return new IPv6(array, SIZE);
 	    };

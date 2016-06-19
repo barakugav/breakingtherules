@@ -38,7 +38,7 @@ public interface HitsDao {
      * @throws ParseException
      *             if any parse errors occurs in the data.
      * @deprecated non practical when working on large data. Use
-     *             {@link #getUnique(String, List, Filter)}.
+     *             {@link #getUniqueHits(String, List, Filter)}.
      */
     @Deprecated
     public ListDto<Hit> getHits(String jobName, List<Rule> rules, Filter filter) throws IOException, ParseException;
@@ -65,7 +65,7 @@ public interface HitsDao {
      */
     default ListDto<UniqueHit> getHits(String jobName, List<Rule> rules, Filter filter, int startIndex, int endIndex)
 	    throws IOException, ParseException {
-	final Set<UniqueHit> allHits = getUnique(jobName, rules, filter);
+	final Set<UniqueHit> allHits = getUniqueHits(jobName, rules, filter);
 	final int size = allHits.size();
 	final List<UniqueHit> hits = Utility.subList(allHits, startIndex, endIndex - startIndex);
 	return new ListDto<>(hits, Math.min(startIndex, size), Math.min(endIndex, size), size);
@@ -86,7 +86,7 @@ public interface HitsDao {
      * @throws ParseException
      *             if any parse errors occurs in the data.
      */
-    default Set<UniqueHit> getUnique(final String jobName, final List<Rule> rules, final Filter filter)
+    default Set<UniqueHit> getUniqueHits(final String jobName, final List<Rule> rules, final Filter filter)
 	    throws IOException, ParseException {
 	final List<Hit> hits = getHits(jobName, rules, filter).getData();
 	final Map<Hit, Integer> hitsCount = new HashMap<>();

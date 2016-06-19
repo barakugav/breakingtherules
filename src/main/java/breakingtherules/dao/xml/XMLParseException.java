@@ -9,8 +9,8 @@ import breakingtherules.dao.ParseException;
  * @author Barak Ugav
  * @author Yishai Gronich
  * 
- * @see HitsXmlDao
- * @see RulesXmlDao
+ * @see XMLHitsDao
+ * @see XMLRulesDao
  */
 public class XMLParseException extends ParseException {
 

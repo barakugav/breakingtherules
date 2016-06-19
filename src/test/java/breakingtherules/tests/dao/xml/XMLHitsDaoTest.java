@@ -14,14 +14,14 @@ import org.junit.Test;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
-import breakingtherules.dao.xml.HitsXmlDao;
-import breakingtherules.dao.xml.XMLDaoUtilities;
+import breakingtherules.dao.xml.XMLHitsDao;
+import breakingtherules.dao.xml.XMLUtilities;
 import breakingtherules.dao.xml.XMLParseException;
 import breakingtherules.firewall.Filter;
 import breakingtherules.firewall.Rule;
 import breakingtherules.tests.TestBase;
 
-public class HitsXmlDaoTest extends TestBase {
+public class XMLHitsDaoTest extends TestBase {
 
     @Test
     public void getHitsByPathTest() throws XMLParseException, IOException {
@@ -37,7 +37,7 @@ public class HitsXmlDaoTest extends TestBase {
 	    doc.addElement(hitElm);
 	}
 
-	HitsXmlDao dao = new HitsXmlDao();
+	XMLHitsDao dao = new XMLHitsDao();
 	dao.getHitsByPath(doc.getPath(), new ArrayList<Rule>(), Filter.ANY_FILTER);
 
 	doc.destroy();
@@ -73,7 +73,7 @@ public class HitsXmlDaoTest extends TestBase {
 	public void addElement(Element elm) {
 	    try {
 		m_repoElm.appendChild(elm);
-		XMLDaoUtilities.writeFile(m_path, m_doc);
+		XMLUtilities.writeFile(m_path, m_doc);
 
 	    } catch (IOException e) {
 		e.printStackTrace();
@@ -93,7 +93,7 @@ public class HitsXmlDaoTest extends TestBase {
 		Document doc = builder.newDocument();
 		m_repoElm = doc.createElement("Repository");
 		doc.appendChild(m_repoElm);
-		XMLDaoUtilities.writeFile(path, doc);
+		XMLUtilities.writeFile(path, doc);
 		return doc;
 
 	    } catch (IOException | ParserConfigurationException e) {

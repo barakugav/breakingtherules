@@ -21,7 +21,7 @@ public class CSVParserTest extends TestBase {
     @Test
     public void parseTest() {
 	try {
-	    List<Hit> hits = CSVParser.fromCSV(COLOMNS_TYPES, JOB_NAME);
+	    List<Hit> hits = CSVParser.parseHitsByJob(COLOMNS_TYPES, JOB_NAME);
 	    if (PRINT) {
 		for (Hit hit : hits) {
 		    System.out.println(hit);

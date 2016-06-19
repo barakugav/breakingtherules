@@ -21,9 +21,9 @@ import breakingtherules.dao.ParseException;
 import breakingtherules.dao.RulesDao;
 import breakingtherules.dao.UniqueHit;
 import breakingtherules.dao.csv.CSVDaoConfig;
+import breakingtherules.dao.csv.CSVHitsDao;
 import breakingtherules.dao.csv.CSVParseException;
-import breakingtherules.dao.csv.HitsCSVDao;
-import breakingtherules.dao.xml.RulesXmlDao;
+import breakingtherules.dao.xml.XMLRulesDao;
 import breakingtherules.dto.ListDto;
 import breakingtherules.dto.SuggestionsDto;
 import breakingtherules.firewall.Attribute;
@@ -138,7 +138,7 @@ public class Job {
 
 	File fileDestination = new File(new File(CSVDaoConfig.getHitsFile(jobName)).getAbsolutePath());
 	hitsFile.transferTo(fileDestination);
-	List<Hit> hits = new HitsCSVDao().getHits(jobName, new ArrayList<Rule>(), Filter.ANY_FILTER).getData();
+	List<Hit> hits = new CSVHitsDao().getHits(jobName, new ArrayList<Rule>(), Filter.ANY_FILTER).getData();
 	m_hitsDao.initJob(jobName, hits);
 
 	Job job = new Job();
@@ -425,13 +425,13 @@ public class Job {
      */
     public FileSystemResource getRulesFile() {
 	checkJobState();
-	return new FileSystemResource(DaoConfig.getRepoRoot(m_name) + RulesXmlDao.REPOSITORY_NAME);
+	return new FileSystemResource(DaoConfig.getRepoRoot(m_name) + XMLRulesDao.REPOSITORY_NAME);
     }
 
     private void updateRulesFile() throws IOException {
-	String repositoryPath = DaoConfig.getRepoRoot(m_name) + RulesXmlDao.REPOSITORY_NAME;
+	String repositoryPath = DaoConfig.getRepoRoot(m_name) + XMLRulesDao.REPOSITORY_NAME;
 	final List<Rule> rules = getRules();
-	RulesXmlDao.writeRules(repositoryPath, rules, m_originalRule);
+	XMLRulesDao.writeRules(repositoryPath, rules, m_originalRule);
     }
 
     private void checkJobState() {

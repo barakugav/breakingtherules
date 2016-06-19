@@ -3,12 +3,13 @@ package breakingtherules.dao.xml;
 import breakingtherules.dao.DaoConfig;
 
 /**
+ * TODO
  * 
  * @author Barak Ugav
  * @author Yishai Gronich
  *
  */
-class XmlDaoConfig extends DaoConfig {
+class XMLDaoConfig {
 
     private static final String HITS_FILE = "fullRepository.xml";
 
@@ -17,12 +18,16 @@ class XmlDaoConfig extends DaoConfig {
     static final String REPOSITORY = "Repository";
     static final String HIT = "hit";
 
+    // Suppresses default constructor, ensuring non-instantiability.
+    private XMLDaoConfig() {
+    }
+
     static String getHitsFile(final String jobName) {
-	return new StringBuilder().append(getRepoRoot(jobName)).append('/').append(HITS_FILE).toString();
+	return new StringBuilder().append(DaoConfig.getRepoRoot(jobName)).append('/').append(HITS_FILE).toString();
     }
 
     static String getRulesFile(final String jobName) {
-	return new StringBuilder().append(getRepoRoot(jobName)).append('/').append(RULES_FILE).toString();
+	return new StringBuilder().append(DaoConfig.getRepoRoot(jobName)).append('/').append(RULES_FILE).toString();
     }
 
 }

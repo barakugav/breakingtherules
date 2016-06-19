@@ -40,7 +40,7 @@ public class SimpleAlgorithm implements SuggestionsAlgorithm {
 	if (attTypeId == Attribute.UNKOWN_ATTRIBUTE_ID) {
 	    throw new IllegalArgumentException("Unknown attribute: " + attType);
 	}
-	return getSuggestions(dao.getUnique(jobName, rules, filter), amount, attTypeId);
+	return getSuggestions(dao.getUniqueHits(jobName, rules, filter), amount, attTypeId);
     }
 
     List<Suggestion> getSuggestions(final Set<UniqueHit> hits, final int amount, final int attTypeId) {
@@ -49,7 +49,7 @@ public class SimpleAlgorithm implements SuggestionsAlgorithm {
 	return runner.result;
     }
 
-    static class SimpleAlgorithmRunner implements SuggestionsAlgorithmRunner {
+    static class SimpleAlgorithmRunner implements Runnable {
 
 	private final Set<UniqueHit> hits;
 	private final int amount;
@@ -104,17 +104,6 @@ public class SimpleAlgorithm implements SuggestionsAlgorithm {
 	    Collections.reverse(allSuggestionsList);
 
 	    result = Utility.subList(allSuggestionsList, 0, amount);
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see breakingtherules.services.algorithm.SuggestionsAlgorithmRunner#
-	 * getResults()
-	 */
-	@Override
-	public List<Suggestion> getResults() {
-	    return result;
 	}
 
     }

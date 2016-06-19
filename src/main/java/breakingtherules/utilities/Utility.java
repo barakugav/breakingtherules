@@ -36,6 +36,10 @@ public class Utility {
      */
     static final String TAB_STR = String.valueOf(TAB);
 
+    // Suppresses default constructor, ensuring non-instantiability.
+    private Utility() {
+    }
+
     /**
      * Put a value in a list at an index even if the list is too small.
      * <p>

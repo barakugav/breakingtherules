@@ -40,7 +40,7 @@ import breakingtherules.utilities.Triple;
 import breakingtherules.utilities.Triple.UnmodifiableTriple;
 import breakingtherules.utilities.Utility;
 
-public class HitsElasticDao implements HitsDao {
+public class ElasticHitsDao implements HitsDao {
 
     private final Node m_elasticNode;
 
@@ -53,7 +53,7 @@ public class HitsElasticDao implements HitsDao {
      */
     private final Map<UnmodifiableTriple<Integer, List<Rule>, Filter>, Integer> m_totalHitsCache;
 
-    public HitsElasticDao() {
+    public ElasticHitsDao() {
 	final NodeBuilder nodeBuilder = NodeBuilder.nodeBuilder();
 	final Builder settingsBuilder = Settings.settingsBuilder();
 	settingsBuilder.put("http.enabled", false);

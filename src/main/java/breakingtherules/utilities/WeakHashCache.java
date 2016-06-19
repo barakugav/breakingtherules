@@ -17,8 +17,8 @@ import java.util.function.Function;
  * <p>
  * This class is similar to {@link WeakHashMap} but has one big difference: In
  * {@link WeakHashMap} the keys are held by weak references and the values are
- * held by strong references, in the WeakCache it's the other way around - keys
- * are held by strong references and elements are held by weak reference.
+ * held by strong references, in the WeakHashCache it's the other way around -
+ * keys are held by strong references and elements are held by weak reference.
  * <p>
  * This class has the same performance as hash map and it depends strongly on
  * the keys {@link Object#hashCode()} method.
@@ -36,24 +36,24 @@ import java.util.function.Function;
  * 
  * @author Barak Ugav
  * @author Yishai Gronich
+ * 
  * @see WeakReference
  * @see WeakHashMap
- * @see SoftCache
+ * @see SoftHashCache
  * 
  * @param <K>
  *            type of key of the cache
  * @param <E>
  *            type of cached elements
- * 
  */
-public class WeakCache<K, E> implements Cache<K, E> {
+public class WeakHashCache<K, E> implements Cache<K, E> {
 
     /*
      * Implementation notes.
      * 
-     * The WeakCache is implemented by a bucket hash table. In each cell in the
-     * table there is a bin (linked list of entries) that contains all entries
-     * that fell to that cell.
+     * The WeakHashCache is implemented by a bucket hash table. In each cell in
+     * the table there is a bin (linked list of entries) that contains all
+     * entries that fell to that cell.
      * 
      * The number of expected elements in each bin, if using the default load
      * factor (0.75) and the hash codes of the keys are random (in theory) is
@@ -162,15 +162,15 @@ public class WeakCache<K, E> implements Cache<K, E> {
     private static final Object NULL = new Object();
 
     /**
-     * Construct new WeakCache with default init capacity and default load
+     * Construct new WeakHashCache with default init capacity and default load
      * factor.
      */
-    public WeakCache() {
+    public WeakHashCache() {
 	this(Hashs.DEFAULT_INIT_CAPACITY, Hashs.DEFAULT_LOAD_FACTOR);
     }
 
     /**
-     * Construct new WeakCache with init capacity parameter and default load
+     * Construct new WeakHashCache with init capacity parameter and default load
      * factor.
      * 
      * @param initCapacity
@@ -178,12 +178,12 @@ public class WeakCache<K, E> implements Cache<K, E> {
      * @throws IllegalArgumentException
      *             if init capacity is negative
      */
-    public WeakCache(final int initCapacity) {
+    public WeakHashCache(final int initCapacity) {
 	this(initCapacity, Hashs.DEFAULT_LOAD_FACTOR);
     }
 
     /**
-     * Construct new WeakCache with init capacity parameter and load factor
+     * Construct new WeakHashCache with init capacity parameter and load factor
      * parameter.
      * 
      * @param initCapacity
@@ -194,7 +194,7 @@ public class WeakCache<K, E> implements Cache<K, E> {
      *             if init capacity is negative, load factor is negative, 0 or
      *             NaN.
      */
-    public WeakCache(final int initCapacity, final float loadFactor) {
+    public WeakHashCache(final int initCapacity, final float loadFactor) {
 	if (initCapacity < 0)
 	    throw new IllegalArgumentException("initCapacity < 0: " + initCapacity);
 	if (loadFactor <= 0 || Float.isNaN(loadFactor))
@@ -650,14 +650,15 @@ public class WeakCache<K, E> implements Cache<K, E> {
     }
 
     /**
-     * Entry of cached element in the {@link WeakCache}.
+     * Entry of cached element in the {@link WeakHashCache}.
      * <p>
      * The entries are save as a bin (one way linked list) in each table cell,
      * and last entry at the list {@link #next} field is null.
      * <p>
      * The key is saved as a field and the element itself is saved via the super
      * class {@link WeakReference}. When there is no more strong references to
-     * the element the {@link WeakCache} will remove the entry from the table.
+     * the element the {@link WeakHashCache} will remove the entry from the
+     * table.
      *
      */
     private static class Entry<E> extends WeakReference<E> {
