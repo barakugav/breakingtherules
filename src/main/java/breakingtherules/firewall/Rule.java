@@ -38,10 +38,8 @@ public class Rule extends AbstractHitMatcher {
 	super(attributes);
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see java.lang.Object#equals(java.lang.Object)
+    /**
+     * {@inheritDoc}
      */
     @Override
     public boolean equals(final Object o) {

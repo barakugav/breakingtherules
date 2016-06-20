@@ -10,6 +10,9 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
  * @author Barak Ugav
  * @author Yishai Gronich
  * 
+ * @see IPv4
+ * @see IPv6
+ * @see IPAttribute
  */
 public abstract class IP implements Comparable<IP> {
 
@@ -311,132 +314,104 @@ public abstract class IP implements Comparable<IP> {
 	    super(0);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see breakingtherules.firewall.IP#getAddress()
+	/**
+	 * {@inheritDoc}
 	 */
 	@Override
 	public int[] getAddress() {
 	    return new int[0];
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see breakingtherules.firewall.IP#getAddressBits()
+	/**
+	 * {@inheritDoc}
 	 */
 	@Override
 	public int[] getAddressBits() {
 	    return new int[0];
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see breakingtherules.firewall.IP#getSubnetBitsNum()
+	/**
+	 * {@inheritDoc}
 	 */
 	@Override
 	public int getSubnetBitsNum() {
 	    return 0;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see breakingtherules.firewall.IP#hasParent()
+	/**
+	 * {@inheritDoc}
 	 */
 	@Override
 	public boolean hasParent() {
 	    return false;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see breakingtherules.firewall.IP#getParent()
+	/**
+	 * {@inheritDoc}
 	 */
 	@Override
 	public IP getParent() {
 	    throw new IllegalStateException();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see breakingtherules.firewall.IP#hasChildren()
+	/**
+	 * {@inheritDoc}
 	 */
 	@Override
 	public boolean hasChildren() {
 	    return false;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see breakingtherules.firewall.IP#getChildren()
+	/**
+	 * {@inheritDoc}
 	 */
 	@Override
 	public IP[] getChildren() {
 	    throw new IllegalStateException();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * breakingtherules.firewall.IP#contains(breakingtherules.firewall.IP)
+	/**
+	 * {@inheritDoc}
 	 */
 	@Override
 	public boolean contains(final IP other) {
 	    return other != null;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see breakingtherules.firewall.IP#getBit(int)
+	/**
+	 * {@inheritDoc}
 	 */
 	@Override
 	public boolean getBit(int bitNumber) {
 	    return false;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see breakingtherules.firewall.IP#getLastBit()
+	/**
+	 * {@inheritDoc}
 	 */
 	@Override
 	public boolean getLastBit() {
 	    return false;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * breakingtherules.firewall.IP#isBrother(breakingtherules.firewall.IP)
+	/**
+	 * {@inheritDoc}
 	 */
 	@Override
 	public boolean isBrother(IP other) {
 	    return other instanceof AnyIP;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see breakingtherules.firewall.IP#getSize()
+	/**
+	 * {@inheritDoc}
 	 */
 	@Override
 	public int getSize() {
 	    return 0;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see java.lang.Object#equals(java.lang.Object)
+	/**
+	 * {@inheritDoc}
 	 */
 	@Override
 	public boolean equals(final Object o) {
@@ -444,30 +419,24 @@ public abstract class IP implements Comparable<IP> {
 	    return o instanceof AnyIP;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see java.lang.Object#hashCode()
+	/**
+	 * {@inheritDoc}
 	 */
 	@Override
 	public int hashCode() {
 	    return 0;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see java.lang.Object#toString()
+	/**
+	 * {@inheritDoc}
 	 */
 	@Override
 	public String toString() {
 	    return ANY;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see java.lang.Comparable#compareTo(java.lang.Object)
+	/**
+	 * {@inheritDoc}
 	 */
 	@Override
 	public int compareTo(final IP o) {

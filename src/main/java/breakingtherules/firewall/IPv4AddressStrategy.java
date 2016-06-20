@@ -33,21 +33,16 @@ class IPv4AddressStrategy implements Strategy<IPv4> {
     private IPv4AddressStrategy() {
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see breakingtherules.utilities.Hashs.Strategy#equals(java.lang.Object,
-     * java.lang.Object)
+    /**
+     * {@inheritDoc}
      */
     @Override
     public boolean equals(final IPv4 a, final IPv4 b) {
 	return a.m_address == b.m_address;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see breakingtherules.utilities.Hashs.Strategy#hashCode(java.lang.Object)
+    /**
+     * {@inheritDoc}
      */
     @Override
     public int hashCode(final IPv4 k) {

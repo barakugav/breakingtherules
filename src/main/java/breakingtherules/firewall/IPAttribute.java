@@ -49,51 +49,6 @@ public abstract class IPAttribute extends Attribute implements Comparable<IPAttr
 	return m_ip.contains(o.m_ip);
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see java.lang.Object#toString()
-     */
-    @Override
-    public String toString() {
-	return m_ip.toString();
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see java.lang.Object#equals(java.lang.Object)
-     */
-    @Override
-    public boolean equals(final Object o) {
-	if (o == this) {
-	    return true;
-	} else if (!(o instanceof IPAttribute)) {
-	    return false;
-	}
-
-	IPAttribute other = (IPAttribute) o;
-	return m_ip.equals(other.m_ip);
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see java.lang.Object#hashCode()
-     */
-    @Override
-    public int hashCode() {
-	return m_ip.hashCode();
-    }
-
-    /**
-     * Compare the two attributes by their IPs.
-     */
-    @Override
-    public int compareTo(final IPAttribute o) {
-	return m_ip.compareTo(o.m_ip);
-    }
-
     /**
      * Get the IP of this attribute
      * 
@@ -111,5 +66,44 @@ public abstract class IPAttribute extends Attribute implements Comparable<IPAttr
      * @return mutation of this attribute with the IP mutation
      */
     public abstract IPAttribute createMutation(IP ip);
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean equals(final Object o) {
+	if (o == this) {
+	    return true;
+	} else if (!(o instanceof IPAttribute)) {
+	    return false;
+	}
+
+	IPAttribute other = (IPAttribute) o;
+	return m_ip.equals(other.m_ip);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int hashCode() {
+	return m_ip.hashCode();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String toString() {
+	return m_ip.toString();
+    }
+
+    /**
+     * Compare the two attributes by their IPs.
+     */
+    @Override
+    public int compareTo(final IPAttribute o) {
+	return m_ip.compareTo(o.m_ip);
+    }
 
 }

@@ -12,21 +12,46 @@ import breakingtherules.dao.ParseException;
  */
 public class CSVParseException extends ParseException {
 
+    @SuppressWarnings("javadoc")
     private static final long serialVersionUID = 1L;
 
+    /**
+     * Construct new CSVParseException without a message or a cause.
+     */
     public CSVParseException() {
 	super();
     }
 
-    public CSVParseException(String message) {
+    /**
+     * Construct new CSVParseException with a message.
+     * 
+     * @param message
+     *            the exception's message.
+     */
+    public CSVParseException(final String message) {
 	super(message);
     }
 
-    public CSVParseException(Throwable cause) {
+    /**
+     * Construct new CSVParseException with a cause.
+     * 
+     * @param cause
+     *            the cause of this exception.
+     */
+    public CSVParseException(final Throwable cause) {
 	super(cause);
     }
 
-    public CSVParseException(String message, Throwable cause) {
+    /**
+     * 
+     * Construct new CSVParseException with a message and cause.
+     * 
+     * @param message
+     *            the exception's message.
+     * @param cause
+     *            the cause of this exception.
+     */
+    public CSVParseException(final String message, final Throwable cause) {
 	super(message, cause);
     }
 

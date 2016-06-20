@@ -221,13 +221,6 @@ public class CSVParser {
 	return builder.toString();
     }
 
-    public static List<Hit> fromBufferedReader(final List<Integer> columnsTypes, final BufferedReader reader)
-	    throws CSVParseException, IOException {
-	final List<Hit> hits = new ArrayList<>();
-	fromCSV(columnsTypes, reader, Collections.emptyList(), Filter.ANY_FILTER, hits);
-	return hits;
-    }
-
     /**
      * Write to a file hits by CSV format
      * 
@@ -282,64 +275,55 @@ public class CSVParser {
     }
 
     /**
-     * Parse all hits of a job.
-     * 
-     * @param columnsTypes
-     *            configuration of columns types
-     * @param jobName
-     *            name of the job
-     * @return list of the hits
-     * @throws IOException
-     *             if IO errors occurs
-     * @throws CSVParseException
-     *             if fails to parse file
-     */
-    public static List<Hit> parseHitsByJob(final List<Integer> columnsTypes, final String jobName)
-	    throws IOException, CSVParseException {
-	return parseHitsByPath(columnsTypes, CSVDaoConfig.getHitsFile(jobName));
-    }
-
-    /**
      * Parse all hits that are in a file.
      * 
      * @param columnsTypes
      *            configuration of columns types
-     * @param filePath
-     *            path to file
+     * @param fileName
+     *            name of the file.
      * @return list of hits built from the CSV file
      * @throws IOException
      *             if IO errors occurs
      * @throws CSVParseException
      *             if fails to parse file
      */
-    public static List<Hit> parseHitsByPath(final List<Integer> columnsTypes, final String filePath)
+    public static List<Hit> parseHits(final List<Integer> columnsTypes, final String fileName)
 	    throws IOException, CSVParseException {
 	final List<Hit> hits = new ArrayList<>();
-	fromCSV(columnsTypes, filePath, Collections.emptyList(), Filter.ANY_FILTER, hits);
+	parseHits(columnsTypes, fileName, Collections.emptyList(), Filter.ANY_FILTER, hits);
 	return hits;
     }
 
     /**
-     * Parse a CSV file and outputs the hits to desire collection destination.
+     * Parse CSV file of hits and output the hits to a destination collection.
      * <p>
+     * All hits from file will be parsed. If they will match all rules and
+     * filter, they will be added to the destination collection through the
+     * {@link Collection#add(Object)} method.
      * 
      * @param columnsTypes
-     *            the types of the columns in the CSV files.
+     *            configuration of columns types.
      * @param fileName
-     *            the name of the CSV file.
+     *            name of the CSV file.
      * @param rules
-     *            the rules to filter the hits by.
+     *            list of rules to filter by them.
      * @param filter
-     *            the filter to filter the hits by.
+     *            filter to filter by it.
      * @param destination
-     *            the destination collection, which the hits are inserted to.
-     * @throws IOException
-     *             if any I/O errors occurs.
+     *            the destination collection.
      * @throws CSVParseException
      *             if the data in the file is invalid.
+     * @throws IOException
+     *             if any I/O errors occurs.
      */
-    static void fromCSV(final List<Integer> columnsTypes, final BufferedReader reader, final List<Rule> rules,
-	    final Filter filter, final Collection<? super Hit> destination) throws IOException, CSVParseException {
+    static void parseHits(final List<Integer> columnsTypes, final String fileName, final List<Rule> rules,
+	    final Filter filter, final Collection<? super Hit> destination) throws CSVParseException, IOException {
+	final File repoFile = new File(fileName);
+	if (!repoFile.exists()) {
+	    throw new FileNotFoundException("File not found: " + fileName);
+	} else if (!repoFile.canRead()) {
+	    throw new IOException("File read is not permitted!");
+	}
 
 	if (columnsTypes.contains(SERVICE_PORT) ^ columnsTypes.contains(SERVICE_PROTOCOL)) {
 	    throw new IllegalArgumentException("Choose service port and service protocol or neither of them");
@@ -348,7 +332,7 @@ public class CSVParser {
 	final CSVParser parser = new CSVParser(columnsTypes);
 	int lineNumber = 0;
 
-	try {
+	try (final BufferedReader reader = new BufferedReader(new FileReader(repoFile))) {
 	    for (String line; (line = reader.readLine()) != null;) {
 		lineNumber++;
 		if (line.isEmpty()) {
@@ -366,27 +350,6 @@ public class CSVParser {
 	} catch (final CSVParseException e) {
 	    throw new CSVParseException("In line " + lineNumber + ": ", e);
 	}
-    }
-
-    static void fromCSV(final List<Integer> columnsTypes, String filePath, final List<Rule> rules, final Filter filter,
-	    final Collection<? super Hit> destination) throws CSVParseException, IOException {
-	final File repoFile = new File(filePath);
-	if (!repoFile.exists()) {
-	    throw new FileNotFoundException("File not found: " + filePath);
-	} else if (!repoFile.canRead()) {
-	    throw new IOException("File read is not permitted!");
-	}
-
-	try (final BufferedReader reader = new BufferedReader(new FileReader(repoFile))) {
-	    fromCSV(columnsTypes, reader, rules, filter, destination);
-	}
-    }
-
-    static List<Hit> fromCSV(final List<Integer> columnsTypes, String filePath, final List<Rule> rules,
-	    final Filter filter) throws CSVParseException, IOException {
-	final List<Hit> hits = new ArrayList<>();
-	fromCSV(columnsTypes, filePath, rules, filter, hits);
-	return hits;
     }
 
     /**

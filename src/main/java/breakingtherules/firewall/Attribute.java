@@ -47,12 +47,8 @@ public abstract class Attribute {
     @JsonIgnore
     public abstract int getTypeId();
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see java.lang.Object#toString()
-     * 
-     * This method was added to this interface so JSON could read it
+    /**
+     * {@inheritDoc}
      */
     @Override
     @JsonProperty("str")

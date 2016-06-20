@@ -46,11 +46,8 @@ import breakingtherules.utilities.MutableInteger;
  */
 public class XMLHitsDao implements HitsDao {
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see breakingtherules.dao.HitsDao#getHitsNumber(java.lang.String,
-     * java.util.List, breakingtherules.firewall.Filter)
+    /**
+     * {@inheritDoc}
      */
     @Override
     public int getHitsNumber(final String jobName, final List<Rule> rules, final Filter filter)
@@ -58,11 +55,8 @@ public class XMLHitsDao implements HitsDao {
 	return getHits(jobName, rules, filter).getSize();
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see breakingtherules.dao.HitsDao#getHits(java.lang.String,
-     * java.util.List, breakingtherules.firewall.Filter)
+    /**
+     * {@inheritDoc}
      */
     @Override
     public ListDto<Hit> getHits(final String jobName, final List<Rule> rules, final Filter filter)
@@ -95,6 +89,9 @@ public class XMLHitsDao implements HitsDao {
 	return new ListDto<>(hits, 0, size, size);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Set<UniqueHit> getUniqueHits(final String jobName, final List<Rule> rules, final Filter filter)
 	    throws XMLParseException, IOException {
@@ -152,7 +149,7 @@ public class XMLHitsDao implements HitsDao {
 	    final DocumentBuilder builder = factory.newDocumentBuilder();
 	    final Document doc = builder.newDocument();
 
-	    final Element repoElm = doc.createElement(XMLDaoConfig.REPOSITORY);
+	    final Element repoElm = doc.createElement(XMLDaoConfig.TAG_REPOSITORY);
 	    for (final Hit hit : hits) {
 		final Element elm = createElement(doc, hit);
 		repoElm.appendChild(elm);
@@ -165,13 +162,30 @@ public class XMLHitsDao implements HitsDao {
 	}
     }
 
+    /**
+     * Parse all hits from file to a destination collection.
+     * 
+     * @param fileName
+     *            the input file name.
+     * @param rules
+     *            list of rules to filter by them.
+     * @param filter
+     *            filter to filter by it.
+     * @param destination
+     *            the destination collection of all hits parsed from the file
+     *            and matched all rules and the filter.
+     * @throws XMLParseException
+     *             if the data in the file is invalid.
+     * @throws IOException
+     *             if any I/O errors occurs.
+     */
     private static void parseHits(final String fileName, final List<Rule> rules, final Filter filter,
 	    final Collection<? super Hit> destination) throws XMLParseException, IOException {
 	// Load from file
 	final Document repositoryDoc = XMLUtilities.readFile(fileName);
 
 	// Get all hits from repository
-	final NodeList hitsList = repositoryDoc.getElementsByTagName(XMLDaoConfig.HIT);
+	final NodeList hitsList = repositoryDoc.getElementsByTagName(XMLDaoConfig.TAG_HIT);
 
 	// Extract all hits that match the filter
 	final int length = hitsList.getLength();
@@ -198,24 +212,26 @@ public class XMLHitsDao implements HitsDao {
      */
     private static Hit createHit(final Element hitElm) throws XMLParseException {
 	// Read attributes from element
-	final String sourceStr = hitElm.getAttribute(Attribute.SOURCE_TYPE.toLowerCase());
-	final String destinationStr = hitElm.getAttribute(Attribute.DESTINATION_TYPE.toLowerCase());
-	final String serviceStr = hitElm.getAttribute(Attribute.SERVICE_TYPE.toLowerCase());
+	final String source = hitElm.getAttribute(XMLDaoConfig.TAG_SOURCE);
+	final String destination = hitElm.getAttribute(XMLDaoConfig.TAG_DESTINATION);
+	final String service = hitElm.getAttribute(XMLDaoConfig.TAG_SERVICE);
 
-	if (sourceStr == null || sourceStr.isEmpty()) {
+	if (source == null || source.isEmpty()) {
 	    throw new XMLParseException("Source does not exist");
-	} else if (destinationStr == null || destinationStr.isEmpty()) {
+	}
+	if (destination == null || destination.isEmpty()) {
 	    throw new XMLParseException("Destination does not exist");
-	} else if (serviceStr == null || serviceStr.isEmpty()) {
+	}
+	if (service == null || service.isEmpty()) {
 	    throw new XMLParseException("Service does not exist");
 	}
 
 	// Convert strings to attributes
 	final List<Attribute> attributes = new ArrayList<>();
 	try {
-	    attributes.add(Source.createFromString(sourceStr));
-	    attributes.add(Destination.createFromString(destinationStr));
-	    attributes.add(Service.createFromString(serviceStr));
+	    attributes.add(Source.createFromString(source));
+	    attributes.add(Destination.createFromString(destination));
+	    attributes.add(Service.createFromString(service));
 
 	} catch (final Exception e) {
 	    throw new XMLParseException(e);
@@ -234,7 +250,7 @@ public class XMLHitsDao implements HitsDao {
      * @return XML element that represent the hit.
      */
     private static Element createElement(final Document doc, final Hit hit) {
-	final Element elm = doc.createElement(XMLDaoConfig.HIT);
+	final Element elm = doc.createElement(XMLDaoConfig.TAG_HIT);
 	for (final Attribute attribute : hit) {
 	    elm.setAttribute(attribute.getType().toLowerCase(), attribute.toString());
 	}

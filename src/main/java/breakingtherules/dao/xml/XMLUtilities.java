@@ -30,7 +30,9 @@ import org.xml.sax.SAXException;
  */
 public class XMLUtilities {
 
-    // Suppresses default constructor, ensuring non-instantiability.
+    /**
+     * Suppresses default constructor, ensuring non-instantiability.
+     */
     private XMLUtilities() {
     }
 

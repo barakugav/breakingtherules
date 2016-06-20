@@ -16,7 +16,9 @@ class ElasticDaoConfig {
     static final int TIME_PER_SCROLL = 60000; // in milliseconds
     static final int HITS_PER_SCROLL = 5000;
 
-    // Suppresses default constructor, ensuring non-instantiability.
+    /**
+     * Suppresses default constructor, ensuring non-instantiability.
+     */
     private ElasticDaoConfig() {
     }
 

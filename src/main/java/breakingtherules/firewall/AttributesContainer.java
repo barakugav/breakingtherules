@@ -117,20 +117,16 @@ abstract class AttributesContainer implements Iterable<Attribute> {
 	return m_attributes[typeId];
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see java.lang.Iterable#iterator()
+    /**
+     * {@inheritDoc}
      */
     @Override
     public Iterator<Attribute> iterator() {
 	return new ArrayIterator<>(m_attributes, true);
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see java.lang.Object#equals(java.lang.Object)
+    /**
+     * {@inheritDoc}
      */
     @Override
     public boolean equals(final Object o) {
@@ -150,10 +146,8 @@ abstract class AttributesContainer implements Iterable<Attribute> {
 	return true;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see java.lang.Object#hashCode()
+    /**
+     * {@inheritDoc}
      */
     @Override
     public int hashCode() {
@@ -164,10 +158,8 @@ abstract class AttributesContainer implements Iterable<Attribute> {
 	return h;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see java.lang.Object#toString()
+    /**
+     * {@inheritDoc}
      */
     @Override
     public String toString() {

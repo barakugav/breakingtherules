@@ -16,7 +16,6 @@ import breakingtherules.utilities.SoftCustomHashCache;
  * @author Yishai Gronich
  * 
  * @see SoftCustomHashCache
- *
  */
 class IPv6AddressStrategy implements Strategy<IPv6> {
 
@@ -27,15 +26,15 @@ class IPv6AddressStrategy implements Strategy<IPv6> {
 
     /**
      * Construct new IPv6AddressStrategy, called once.
+     * <p>
+     * 
+     * @see #INSTANCE
      */
     private IPv6AddressStrategy() {
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see breakingtherules.utilities.Hashs.Strategy#equals(java.lang.Object,
-     * java.lang.Object)
+    /**
+     * {@inheritDoc}
      */
     @Override
     public boolean equals(final IPv6 a, final IPv6 b) {
@@ -45,10 +44,8 @@ class IPv6AddressStrategy implements Strategy<IPv6> {
 	return true;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see breakingtherules.utilities.Hashs.Strategy#hashCode(java.lang.Object)
+    /**
+     * {@inheritDoc}
      */
     @Override
     public int hashCode(final IPv6 k) {

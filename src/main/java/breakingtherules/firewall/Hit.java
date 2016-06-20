@@ -55,8 +55,6 @@ public class Hit extends AttributesContainer {
      * {@link AttributesContainer#AttributesContainer(Attribute[])}.
      * <p>
      * 
-     * @param id
-     *            id of the new hit.
      * @param attributes
      *            array of the hits attributes.
      * @throws NullPointerException
@@ -66,11 +64,8 @@ public class Hit extends AttributesContainer {
 	super(attributes);
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * breakingtherules.firewall.AttributesContainer#equals(java.lang.Object)
+    /**
+     * {@inheritDoc}
      */
     @Override
     public boolean equals(final Object o) {

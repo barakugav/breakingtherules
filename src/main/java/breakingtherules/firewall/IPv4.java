@@ -1,10 +1,10 @@
 package breakingtherules.firewall;
 
 import java.util.List;
+import java.util.function.Function;
 
 import breakingtherules.utilities.Cache;
 import breakingtherules.utilities.Caches;
-import breakingtherules.utilities.Caches.CacheSupplierPair;
 import breakingtherules.utilities.SoftHashCache;
 import breakingtherules.utilities.Utility;
 
@@ -72,10 +72,8 @@ public final class IPv4 extends IP {
 	m_address = address;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see breakingtherules.firewall.IP#getAddress()
+    /**
+     * {@inheritDoc}
      */
     @Override
     public int[] getAddress() {
@@ -89,10 +87,8 @@ public final class IPv4 extends IP {
 	return aArr;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see breakingtherules.firewall.IP#getAddressBits()
+    /**
+     * {@inheritDoc}
      */
     @Override
     public int[] getAddressBits() {
@@ -113,20 +109,16 @@ public final class IPv4 extends IP {
 	return m_address;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see breakingtherules.firewall.IP#getSubnetBitsNum()
+    /**
+     * {@inheritDoc}
      */
     @Override
     public int getSubnetBitsNum() {
 	return SIZE - m_maskSize;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see breakingtherules.firewall.IP#getParent()
+    /**
+     * {@inheritDoc}
      */
     @Override
     public IPv4 getParent() {
@@ -138,20 +130,16 @@ public final class IPv4 extends IP {
 	return new IPv4(m_address & mask, m - 1);
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see breakingtherules.firewall.IP#hasChildren()
+    /**
+     * {@inheritDoc}
      */
     @Override
     public boolean hasChildren() {
 	return m_maskSize < SIZE;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see breakingtherules.firewall.IP#getChildren()
+    /**
+     * {@inheritDoc}
      */
     @Override
     public IPv4[] getChildren() {
@@ -162,15 +150,13 @@ public final class IPv4 extends IP {
 	final int a = m_address;
 	final int mask = 1 << (SIZE - m);
 	if (m == SIZE) {
-	    return new IPv4[] { createInternal(a & ~mask), createInternal(a | mask) };
+	    return new IPv4[] { createFullIPInternal(a & ~mask), createFullIPInternal(a | mask) };
 	}
 	return new IPv4[] { new IPv4(a & ~mask, m), new IPv4(a | mask, m) };
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see breakingtherules.firewall.IP#contains(breakingtherules.firewall.IP)
+    /**
+     * {@inheritDoc}
      */
     @Override
     public boolean contains(final IP other) {
@@ -182,10 +168,8 @@ public final class IPv4 extends IP {
 	return m <= o.m_maskSize && (m == 0 || ((m_address ^ o.m_address) & ~((1 << (SIZE - m)) - 1)) == 0);
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see breakingtherules.firewall.IP#getBit(int)
+    /**
+     * {@inheritDoc}
      */
     @Override
     public boolean getBit(final int bitNumber) {
@@ -195,20 +179,16 @@ public final class IPv4 extends IP {
 	return (m_address & (1 << SIZE - bitNumber)) != 0;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see breakingtherules.firewall.IP#getLastBit()
+    /**
+     * {@inheritDoc}
      */
     @Override
     public boolean getLastBit() {
 	return (m_address & (1 << (SIZE - m_maskSize))) != 0;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see breakingtherules.firewall.IP#isBrother(breakingtherules.firewall.IP)
+    /**
+     * {@inheritDoc}
      */
     @Override
     public boolean isBrother(final IP other) {
@@ -229,20 +209,16 @@ public final class IPv4 extends IP {
 	return (m_address & mask) == (o.m_address & mask);
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see breakingtherules.firewall.IP#getSize()
+    /**
+     * {@inheritDoc}
      */
     @Override
     public int getSize() {
 	return SIZE;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see java.lang.Object#equals(java.lang.Object)
+    /**
+     * {@inheritDoc}
      */
     @Override
     public boolean equals(final Object o) {
@@ -256,20 +232,16 @@ public final class IPv4 extends IP {
 	return m_address == other.m_address && m_maskSize == other.m_maskSize;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see java.lang.Object#hashCode()
+    /**
+     * {@inheritDoc}
      */
     @Override
     public int hashCode() {
 	return m_maskSize ^ m_address;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see java.lang.Object#toString()
+    /**
+     * {@inheritDoc}
      */
     @Override
     public String toString() {
@@ -294,10 +266,8 @@ public final class IPv4 extends IP {
 	return st.toString();
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see java.lang.Comparable#compareTo(java.lang.Object)
+    /**
+     * {@inheritDoc}
      */
     @Override
     public int compareTo(final IP other) {
@@ -368,7 +338,7 @@ public final class IPv4 extends IP {
 
 	if (!(0 <= maskSize && maskSize < SIZE)) {
 	    if (maskSize == SIZE) {
-		return createInternal(a);
+		return createFullIPInternal(a);
 	    }
 	    throw new IllegalArgumentException("IPv4 subnetwork mask: " + Utility.formatRange(0, SIZE, maskSize));
 	}
@@ -420,7 +390,7 @@ public final class IPv4 extends IP {
 	if (maskSeparatorIndex < 0) {
 	    // No mask size specification
 	    address = (address << BLOCK_SIZE) + parseBlockValue(ip, fromIndex, ip.length());
-	    return createInternal(address);
+	    return createFullIPInternal(address);
 	}
 
 	// Has mask size specification
@@ -435,7 +405,7 @@ public final class IPv4 extends IP {
 
 	if (!(0 <= maskSize && maskSize < SIZE)) {
 	    if (maskSize == SIZE) {
-		return createInternal(address);
+		return createFullIPInternal(address);
 	    }
 	    throw new IllegalArgumentException("IPv4 subnetwork mask: " + Utility.formatRange(0, SIZE, maskSize));
 	}
@@ -471,7 +441,7 @@ public final class IPv4 extends IP {
     public static IPv4 createFromBits(final int addressBits, final int maskSize) {
 	if (!(0 <= maskSize && maskSize < SIZE)) {
 	    if (maskSize == SIZE) {
-		return createInternal(addressBits);
+		return createFullIPInternal(addressBits);
 	    }
 	    throw new IllegalArgumentException("IPv4 subnetwork mask: " + Utility.formatRange(0, SIZE, maskSize));
 	}
@@ -501,20 +471,18 @@ public final class IPv4 extends IP {
 		address += 1;
 	    }
 	}
-	return createInternal(address);
+	return createFullIPInternal(address);
     }
 
     /**
-     * Create an IPv4, used internally.
+     * Create full (maskSize = {@value #SIZE}) IPv4, used internally.
      * 
      * @param address
      *            the 32 bits of the address.
-     * @param maskSize
-     *            the subnetwork mask size.
      * @return IPv4 object with the specified address and maskSize.
      */
-    private static IPv4 createInternal(final int address) {
-	return IPv4Cache.cache.getOrAdd(new Integer(address));
+    private static IPv4 createFullIPInternal(final int address) {
+	return IPv4Cache.cache.getOrAdd(new Integer(address), IPv4Cache.supplier);
     }
 
     /**
@@ -523,28 +491,48 @@ public final class IPv4 extends IP {
      * @author Barak Ugav
      * @author Yishai Gronich
      *
+     * @see Cache
      */
     private static final class IPv4Cache {
 
 	/**
-	 * All caches.
-	 * <p>
-	 * The caches array is of size {@value IPv4#SIZE} + 1, and in each cache
-	 * 'i' the elements are the IPs with maskSize = i.
+	 * Cache of full (maskSize = {@link IPv4#SIZE}) IPv4 objects.
 	 */
-	static final CacheSupplierPair<Integer, IPv4> cache;
+	static final Cache<Integer, IPv4> cache;
+
+	/**
+	 * Supplier of new IPv4 objects by integer address.
+	 * <p>
+	 * Used by {@link Cache#getOrAdd(Object, Function)}.
+	 */
+	static final Function<Integer, IPv4> supplier;
 
 	static {
-	    final Cache<Integer, IPv4> c = Caches.synchronizedCache(new SoftHashCache<>());
-	    cache = Caches.cacheSupplierPair(c, address -> new IPv4(address.intValue(), SIZE));
+	    cache = Caches.synchronizedCache(new SoftHashCache<>());
+	    supplier = address -> new IPv4(address.intValue(), SIZE);
 	}
 
     }
 
-    private static int parseBlockValue(final String blockValue, final int fromIndex, final int toIndex) {
+    /**
+     * Parse a block of IPv4 and check if it's range is valid.
+     * 
+     * @param text
+     *            the full text.
+     * @param fromIndex
+     *            the start index of the value in the text.
+     * @param toIndex
+     *            the end index of the value in the text.
+     * @return block value parsed from the specified interval on the text.
+     * @throws IllegalArgumentException
+     *             if failed to parse to integer or the parsed integer is not in
+     *             in range of valid block value [0,
+     *             {@link IPv4#MAX_BLOCK_VALUE}].
+     */
+    private static int parseBlockValue(final String text, final int fromIndex, final int toIndex) {
 	final int blockVal;
 	try {
-	    blockVal = Integer.parseInt(blockValue.substring(fromIndex, toIndex));
+	    blockVal = Integer.parseInt(text.substring(fromIndex, toIndex));
 	} catch (NumberFormatException e) {
 	    throw new IllegalArgumentException("In block last block", e);
 	}

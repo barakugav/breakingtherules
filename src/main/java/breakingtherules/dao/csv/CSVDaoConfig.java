@@ -18,7 +18,9 @@ public class CSVDaoConfig {
      */
     private static final String HITS_FILE = "repository.csv";
 
-    // Suppresses default constructor, ensuring non-instantiability.
+    /**
+     * Suppresses default constructor, ensuring non-instantiability.
+     */
     private CSVDaoConfig() {
     }
 

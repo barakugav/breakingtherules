@@ -18,7 +18,9 @@ public class DaoConfig {
      */
     private static final String REPOS_ROOT = "repository";
 
-    // Suppresses default constructor, ensuring non-instantiability.
+    /**
+     * Suppresses default constructor, ensuring non-instantiability.
+     */
     private DaoConfig() {
     }
 

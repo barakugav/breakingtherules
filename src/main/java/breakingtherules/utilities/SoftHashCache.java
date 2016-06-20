@@ -207,10 +207,8 @@ public class SoftHashCache<K, E> implements Cache<K, E> {
 	containsNull = false;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see breakingtherules.utilities.Cache#get(java.lang.Object)
+    /**
+     * {@inheritDoc}
      */
     @Override
     public E get(final K key) {
@@ -342,10 +340,8 @@ public class SoftHashCache<K, E> implements Cache<K, E> {
 	return element;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see breakingtherules.utilities.Cache#remove(java.lang.Object)
+    /**
+     * {@inheritDoc}
      */
     @Override
     public void remove(final K key) {
@@ -387,10 +383,8 @@ public class SoftHashCache<K, E> implements Cache<K, E> {
 	}
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see breakingtherules.utilities.Cache#size()
+    /**
+     * {@inheritDoc}
      */
     @Override
     public int size() {
@@ -398,16 +392,14 @@ public class SoftHashCache<K, E> implements Cache<K, E> {
 	return size;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see breakingtherules.utilities.Cache#clear()
+    /**
+     * {@inheritDoc}
      */
     @Override
     public void clear() {
 	// Clear dead elements queue
-	while (queue.poll() != null) {
-	}
+	do { // Until queue is empty
+	} while (queue.poll() != null);
 
 	// Clear table
 	final Entry<K, E>[] tab = table;
@@ -430,8 +422,8 @@ public class SoftHashCache<K, E> implements Cache<K, E> {
 	    resize(MINIMUM_SHRINK_CAPACITY); // Update thresholds and mask
 
 	// Clear dead elements queue if some already added
-	while (queue.poll() != null) {
-	}
+	do {// Until queue is empty
+	} while (queue.poll() != null);
     }
 
     /**
@@ -493,10 +485,8 @@ public class SoftHashCache<K, E> implements Cache<K, E> {
 	}
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see java.lang.Object#toString()
+    /**
+     * {@inheritDoc}
      */
     @Override
     public String toString() {

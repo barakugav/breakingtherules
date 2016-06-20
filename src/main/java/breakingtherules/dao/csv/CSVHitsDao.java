@@ -79,7 +79,7 @@ public class CSVHitsDao implements HitsDao {
     public ListDto<Hit> getHits(final String jobName, final List<Rule> rules, final Filter filter)
 	    throws IOException, CSVParseException {
 	final List<Hit> hits = new ArrayList<>();
-	CSVParser.fromCSV(CSVParser.DEFAULT_COLUMNS_TYPES, CSVDaoConfig.getHitsFile(jobName), rules, filter, hits);
+	CSVParser.parseHits(CSVParser.DEFAULT_COLUMNS_TYPES, CSVDaoConfig.getHitsFile(jobName), rules, filter, hits);
 	// TODO - take the opportunity and add hits to cache.
 	final int size = hits.size();
 
@@ -188,7 +188,7 @@ public class CSVHitsDao implements HitsDao {
     private static final Function<String, List<UniqueHit>> UNIQUE_HITS_SUPPLIER = fileName -> {
 	final Map<Hit, MutableInteger> hitsCount = new HashMap<>();
 	try {
-	    CSVParser.fromCSV(CSVParser.DEFAULT_COLUMNS_TYPES, fileName, Collections.emptyList(), Filter.ANY_FILTER,
+	    CSVParser.parseHits(CSVParser.DEFAULT_COLUMNS_TYPES, fileName, Collections.emptyList(), Filter.ANY_FILTER,
 		    new AbstractSet<Hit>() {
 
 		@Override

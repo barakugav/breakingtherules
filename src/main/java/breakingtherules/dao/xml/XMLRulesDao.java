@@ -54,10 +54,8 @@ public class XMLRulesDao implements RulesDao {
      */
     public static final String REPOSITORY_NAME = "repository.xml";
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see breakingtherules.dao.RulesDao#getOriginalRule(java.lang.String)
+    /**
+     * {@inheritDoc}
      */
     @Override
     public Rule getOriginalRule(final String jobName) throws IOException, XMLParseException {
@@ -71,10 +69,8 @@ public class XMLRulesDao implements RulesDao {
 	return rule;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see breakingtherules.dao.RulesDao#getRules(int)
+    /**
+     * {@inheritDoc}
      */
     @Override
     public ListDto<Rule> getRules(final String jobName) throws IOException, XMLParseException {
@@ -82,10 +78,8 @@ public class XMLRulesDao implements RulesDao {
 	return getRulesByPath(path);
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see breakingtherules.dao.RulesDao#getRules(java.lang.String, int, int)
+    /**
+     * {@inheritDoc}
      */
     @Override
     public ListDto<Rule> getRules(final String jobName, final int startIndex, final int endIndex)

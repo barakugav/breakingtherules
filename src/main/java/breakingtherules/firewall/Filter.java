@@ -48,11 +48,8 @@ public class Filter extends AbstractHitMatcher {
 	super(c);
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * breakingtherules.firewall.AttributesContainer#equals(java.lang.Object)
+    /**
+     * {@inheritDoc}
      */
     @Override
     public boolean equals(final Object o) {
@@ -83,10 +80,8 @@ public class Filter extends AbstractHitMatcher {
 	    return true;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see breakingtherules.firewall.Filter#equals(java.lang.Object)
+	/**
+	 * {@inheritDoc}
 	 */
 	@Override
 	public boolean equals(Object o) {

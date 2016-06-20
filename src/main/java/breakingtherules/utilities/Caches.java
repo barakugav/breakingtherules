@@ -17,11 +17,6 @@ public class Caches {
     private Caches() {
     }
 
-    public static <K, E> CacheSupplierPair<K, E> cacheSupplierPair(final Cache<K, E> cache,
-	    final Function<? super K, ? extends E> supplier) {
-	return new CacheSupplierPair<>(cache, supplier);
-    }
-
     /**
      * Get an empty cache object.
      * 
@@ -87,37 +82,6 @@ public class Caches {
      */
     public static <K, E> Cache<K, E> synchronizedCache(final Cache<K, E> cache, final Object sync) {
 	return new SynchronizedCache<>(cache, sync);
-    }
-
-    /**
-     * TODO
-     * 
-     * @author Barak Ugav
-     * @author Yishai Gronich
-     * 
-     * @param <K>
-     *            type of key of the cache
-     * @param <E>
-     *            type of cached elements
-     */
-    public static class CacheSupplierPair<K, E> {
-
-	private final Cache<K, E> cache;
-	private final Function<? super K, ? extends E> supplier;
-
-	public CacheSupplierPair(final Cache<K, E> cache, final Function<? super K, ? extends E> supplier) {
-	    this.cache = Objects.requireNonNull(cache);
-	    this.supplier = Objects.requireNonNull(supplier);
-	}
-
-	public Cache<K, E> getCache() {
-	    return cache;
-	}
-
-	public E getOrAdd(final K key) {
-	    return cache.getOrAdd(key, supplier);
-	}
-
     }
 
     /**

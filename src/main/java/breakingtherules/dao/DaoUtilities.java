@@ -14,7 +14,9 @@ import breakingtherules.firewall.Rule;
  */
 public class DaoUtilities {
 
-    // Suppresses default constructor, ensuring non-instantiability.
+    /**
+     * Suppresses default constructor, ensuring non-instantiability.
+     */
     private DaoUtilities() {
     }
 

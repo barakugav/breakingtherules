@@ -10,7 +10,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import breakingtherules.utilities.Cache;
 import breakingtherules.utilities.Caches;
-import breakingtherules.utilities.Caches.CacheSupplierPair;
 import breakingtherules.utilities.SoftHashCache;
 import breakingtherules.utilities.Utility;
 
@@ -300,12 +299,8 @@ public class Service extends Attribute {
 	return (m_portsRange >> 16) & PORT_MASK;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * breakingtherules.firewall.Attribute#contains(breakingtherules.firewall.
-     * Attribute)
+    /**
+     * {@inheritDoc}
      */
     @Override
     public boolean contains(final Attribute other) {
@@ -325,20 +320,24 @@ public class Service extends Attribute {
 	return getPortRangeStart() <= o.getPortRangeStart() && o.getPortRangeEnd() <= getPortRangeEnd();
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see java.lang.Object#hashCode()
+    /**
+     * {@inheritDoc}
      */
     @Override
-    public int hashCode() {
-	return m_portsRange ^ m_protocolCode;
+    public String getType() {
+	return SERVICE_TYPE;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see java.lang.Object#equals(java.lang.Object)
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int getTypeId() {
+	return SERVICE_TYPE_ID;
+    }
+
+    /**
+     * {@inheritDoc}
      */
     @Override
     public boolean equals(Object o) {
@@ -352,10 +351,16 @@ public class Service extends Attribute {
 	return m_portsRange == other.m_portsRange && m_protocolCode == other.m_protocolCode;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see java.lang.Object#toString()
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int hashCode() {
+	return m_portsRange ^ m_protocolCode;
+    }
+
+    /**
+     * {@inheritDoc}
      */
     @Override
     public String toString() {
@@ -375,37 +380,15 @@ public class Service extends Attribute {
 	    // Some ports, any protocol
 	    if (portRangeStart == portRangeEnd) {
 		return "Port " + Integer.toString(portRangeStart);
-	    } else {
-		return "Ports " + portRangeStart + '-' + portRangeEnd;
 	    }
+	    return "Ports " + portRangeStart + '-' + portRangeEnd;
 	}
 
 	// Some ports, one protocol
 	if (portRangeStart == portRangeEnd) {
 	    return protocolName(m_protocolCode) + ' ' + Integer.toString(portRangeStart);
-	} else {
-	    return protocolName(m_protocolCode) + ' ' + portRangeStart + '-' + portRangeEnd;
 	}
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see breakingtherules.firewall.Attribute#getType()
-     */
-    @Override
-    public String getType() {
-	return SERVICE_TYPE;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see breakingtherules.firewall.Attribute#getTypeId()
-     */
-    @Override
-    public int getTypeId() {
-	return SERVICE_TYPE_ID;
+	return protocolName(m_protocolCode) + ' ' + portRangeStart + '-' + portRangeEnd;
     }
 
     /**
@@ -501,7 +484,7 @@ public class Service extends Attribute {
 	    throw new IllegalArgumentException(
 		    "Port not in range: " + port + ". should be in range [" + MIN_PORT + ", " + MAX_PORT + "]");
 	}
-	return createInternal(protocolCode, port);
+	return createSinglePortServiceInternal(protocolCode, port);
     }
 
     /**
@@ -534,7 +517,7 @@ public class Service extends Attribute {
 	}
 	if (portRangeStart >= portRangeEnd) {
 	    if (portRangeStart == portRangeEnd) {
-		return createInternal(protocolCode, portRangeStart);
+		return createSinglePortServiceInternal(protocolCode, portRangeStart);
 	    }
 	    throw new IllegalArgumentException("portRangeStart > portRangeEnd");
 	}
@@ -652,23 +635,23 @@ public class Service extends Attribute {
 	}
 
 	if (portRangeEnd == portRangeStart) {
-	    return createInternal(protocolCode, portRangeStart);
+	    return createSinglePortServiceInternal(protocolCode, portRangeStart);
 	}
 	return new Service(protocolCode, (portRangeEnd << 16) | portRangeStart);
     }
 
     /**
-     * Create a service. Used internally.
+     * Create a service with single port (not a port range), used internally.
      * 
      * @param protocolCode
      *            the protocol code
-     * @param portsRange
-     *            the ports range in one integer
+     * @param port
+     *            the service port
      * @return Service object of the specified protocol and ports
      */
-    private static Service createInternal(final int protocolCode, final int port) {
+    private static Service createSinglePortServiceInternal(final int protocolCode, final int port) {
 	// Intentionally using 'new Integer(int)' and not 'Integer.valueOf(int)'
-	return ServiceCache.caches[protocolCode].getOrAdd(new Integer(port));
+	return ServiceCache.caches[protocolCode].getOrAdd(new Integer(port), ServiceCache.suppliers[protocolCode]);
     }
 
     /**
@@ -680,23 +663,45 @@ public class Service extends Attribute {
      */
     private static class ServiceCache {
 
-	// TODO
-	static final CacheSupplierPair<Integer, Service>[] caches;
+	/**
+	 * Array of service caches.
+	 * <p>
+	 * Each cache is contains only services with single port (not a port
+	 * range) of specific protocol. Services with protocol 'x' are in cache
+	 * number x.
+	 */
+	static final Cache<Integer, Service>[] caches;
+
+	/**
+	 * Array of suppliers for each service cache.
+	 * <p>
+	 * The supplier supply new service of a single port.
+	 * <p>
+	 * Used by {@link Cache#getOrAdd(Object, Function)}.
+	 */
+	static final Function<Integer, Service>[] suppliers;
 
 	static {
+	    final int numberOfCaches = 257; // 256 and 1 for 'any protocol'
+
 	    // Used dummy to suppress warnings
 	    @SuppressWarnings({ "unchecked", "unused" })
-	    // 256 and 1 for 'any protocol'
-	    Object dummy = caches = new CacheSupplierPair[257];
+	    Object dummy = caches = new Cache[numberOfCaches];
+
+	    // Used dummy to suppress warnings
+	    @SuppressWarnings({ "unchecked", "unused" })
+	    Object dummy2 = suppliers = new Function[numberOfCaches];
 
 	    for (int i = caches.length; i-- != 0;) {
+		caches[i] = Caches.synchronizedCache(new SoftHashCache<>());
+	    }
+
+	    for (int i = suppliers.length; i-- != 0;) {
 		final int protocolCode = i;
-		final Cache<Integer, Service> cache = Caches.synchronizedCache(new SoftHashCache<>());
-		final Function<Integer, Service> supplier = portInteger -> {
+		suppliers[i] = portInteger -> {
 		    final int port = portInteger.intValue();
 		    return new Service(protocolCode, (port << 16) | port);
 		};
-		caches[i] = Caches.cacheSupplierPair(cache, supplier);
 	    }
 	}
 
@@ -718,22 +723,16 @@ public class Service extends Attribute {
 	    super(ANY_PROTOCOL, (MAX_PORT << 16) | MIN_PORT);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * breakingtherules.firewall.Service#contains(breakingtherules.firewall.
-	 * Attribute)
+	/**
+	 * {@inheritDoc}
 	 */
 	@Override
 	public boolean contains(Attribute other) {
 	    return other instanceof Service;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see breakingtherules.firewall.Service#toString()
+	/**
+	 * {@inheritDoc}
 	 */
 	@Override
 	public String toString() {

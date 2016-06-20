@@ -34,6 +34,18 @@ public interface SuggestionsAlgorithm {
     public List<Suggestion> getSuggestions(HitsDao dao, String jobName, List<Rule> rules, Filter filter, int amount,
 	    String attType) throws Exception;
 
+    /**
+     * TODO
+     * 
+     * @param dao
+     * @param jobName
+     * @param rules
+     * @param filter
+     * @param amount
+     * @param attTypes
+     * @return
+     * @throws Exception
+     */
     default List<Suggestion>[] getSuggestions(HitsDao dao, String jobName, List<Rule> rules, Filter filter, int amount,
 	    String[] attTypes) throws Exception {
 	@SuppressWarnings("unchecked")

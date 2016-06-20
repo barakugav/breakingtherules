@@ -5,7 +5,6 @@ import java.util.function.Function;
 
 import breakingtherules.utilities.Cache;
 import breakingtherules.utilities.Caches;
-import breakingtherules.utilities.Caches.CacheSupplierPair;
 import breakingtherules.utilities.SoftCustomHashCache;
 
 /**
@@ -37,54 +36,40 @@ public class Destination extends IPAttribute {
 	super(ip);
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * breakingtherules.firewall.IPAttribute#contains(breakingtherules.firewall.
-     * Attribute)
+    /**
+     * {@inheritDoc}
      */
     @Override
     public boolean contains(final Attribute other) {
 	return other instanceof Destination && super.contains(other);
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see breakingtherules.firewall.Attribute#getType()
+    /**
+     * {@inheritDoc}
      */
     @Override
     public String getType() {
 	return DESTINATION_TYPE;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see breakingtherules.firewall.Attribute#getTypeId()
+    /**
+     * {@inheritDoc}
      */
     @Override
     public int getTypeId() {
 	return DESTINATION_TYPE_ID;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see breakingtherules.firewall.IPAttribute#equals(java.lang.Object)
+    /**
+     * {@inheritDoc}
      */
     @Override
     public boolean equals(final Object o) {
 	return o instanceof Destination && super.equals(o);
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * breakingtherules.firewall.IPAttribute#createMutation(breakingtherules.
-     * firewall.IP)
+    /**
+     * {@inheritDoc}
      */
     @Override
     public Destination createMutation(final IP ip) {
@@ -122,10 +107,13 @@ public class Destination extends IPAttribute {
      */
     private static Destination createInternal(final IP ip) {
 	if (ip.m_maskSize == ip.getSize()) {
+	    // If ip is a full IP (most common destination objects) search it in
+	    // cache, or add one if one doesn't exist.
 	    if (ip instanceof IPv4) {
-		return DestinationCache.IPv4Cache.getOrAdd((IPv4) ip);
-	    } else if (ip instanceof IPv6) {
-		return DestinationCache.IPv6Cache.getOrAdd((IPv6) ip);
+		return DestinationCache.IPv4Cache.getOrAdd((IPv4) ip, DestinationCache.supplier);
+	    }
+	    if (ip instanceof IPv6) {
+		return DestinationCache.IPv6Cache.getOrAdd((IPv6) ip, DestinationCache.supplier);
 	    }
 	}
 	return new Destination(ip);
@@ -137,22 +125,32 @@ public class Destination extends IPAttribute {
      * @author Barak Ugav
      * @author Yishai Gronich
      *
+     * @see Cache
      */
     private static class DestinationCache {
 
-	static final CacheSupplierPair<IPv4, Destination> IPv4Cache;
+	/**
+	 * Cache of destination objects with full(not subnetwork) IPv4 ips.
+	 */
+	static final Cache<IPv4, Destination> IPv4Cache;
 
-	static final CacheSupplierPair<IPv6, Destination> IPv6Cache;
+	/**
+	 * Cache of destination objects with full(not subnetwork) IPv6 ips.
+	 */
+	static final Cache<IPv6, Destination> IPv6Cache;
+
+	/**
+	 * Supplier used to supply new destination objects if need to the cache
+	 * in case they are missing.
+	 * <p>
+	 * Used when using {@link Cache#getOrAdd(Object, Function)}.
+	 */
+	static final Function<IP, Destination> supplier;
 
 	static {
-	    final Function<IP, Destination> supplier = ip -> new Destination(ip);
-	    final Cache<IPv4, Destination> cache4 = Caches
-		    .synchronizedCache(new SoftCustomHashCache<>(IPv4AddressStrategy.INSTANCE));
-	    final Cache<IPv6, Destination> cache6 = Caches
-		    .synchronizedCache(new SoftCustomHashCache<>(IPv6AddressStrategy.INSTANCE));
-
-	    IPv4Cache = Caches.cacheSupplierPair(cache4, supplier);
-	    IPv6Cache = Caches.cacheSupplierPair(cache6, supplier);
+	    IPv4Cache = Caches.synchronizedCache(new SoftCustomHashCache<>(IPv4AddressStrategy.INSTANCE));
+	    IPv6Cache = Caches.synchronizedCache(new SoftCustomHashCache<>(IPv6AddressStrategy.INSTANCE));
+	    supplier = ip -> new Destination(ip);
 	}
 
     }
@@ -178,28 +176,16 @@ public class Destination extends IPAttribute {
 	 * Contains all destinations.
 	 */
 	@Override
-	public boolean contains(Attribute other) {
+	public boolean contains(final Attribute other) {
 	    return other instanceof Destination;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see breakingtherules.firewall.Destination#equals(java.lang.Object)
+	/**
+	 * {@inheritDoc}
 	 */
 	@Override
-	public boolean equals(Object o) {
+	public boolean equals(final Object o) {
 	    return o instanceof AnyDestination || super.equals(o);
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see breakingtherules.firewall.IPAttribute#toString()
-	 */
-	@Override
-	public String toString() {
-	    return "Any";
 	}
 
     }

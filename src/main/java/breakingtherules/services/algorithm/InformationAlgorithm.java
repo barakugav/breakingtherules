@@ -171,6 +171,9 @@ public class InformationAlgorithm implements SuggestionsAlgorithm {
 	m_parallel = false;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public List<Suggestion> getSuggestions(final HitsDao dao, final String jobName, final List<Rule> rules,
 	    final Filter filter, final int amount, final String attType) throws Exception {
@@ -184,6 +187,12 @@ public class InformationAlgorithm implements SuggestionsAlgorithm {
 	return runner.result;
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Operate the request with multithreaded if the parallel option was turn
+     * on.
+     */
     @Override
     public List<Suggestion>[] getSuggestions(final HitsDao dao, final String jobName, final List<Rule> rules,
 	    final Filter filter, final int amount, final String[] attTypes) throws Exception {
@@ -251,7 +260,7 @@ public class InformationAlgorithm implements SuggestionsAlgorithm {
 	private final int amount;
 	private List<Suggestion> result;
 
-	private InformationAlgoRunner(final Iterable<UniqueHit> hits, final int amount, final int attTypeId) {
+	InformationAlgoRunner(final Iterable<UniqueHit> hits, final int amount, final int attTypeId) {
 	    this.hits = hits;
 	    this.attTypeId = attTypeId;
 	    this.amount = amount;

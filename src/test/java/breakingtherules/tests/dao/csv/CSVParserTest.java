@@ -7,6 +7,7 @@ import java.util.List;
 
 import org.junit.Test;
 
+import breakingtherules.dao.csv.CSVDaoConfig;
 import breakingtherules.dao.csv.CSVParseException;
 import breakingtherules.dao.csv.CSVParser;
 import breakingtherules.firewall.Hit;
@@ -21,7 +22,7 @@ public class CSVParserTest extends TestBase {
     @Test
     public void parseTest() {
 	try {
-	    List<Hit> hits = CSVParser.parseHitsByJob(COLOMNS_TYPES, JOB_NAME);
+	    List<Hit> hits = CSVParser.parseHits(COLOMNS_TYPES, CSVDaoConfig.getHitsFile(JOB_NAME));
 	    if (PRINT) {
 		for (Hit hit : hits) {
 		    System.out.println(hit);

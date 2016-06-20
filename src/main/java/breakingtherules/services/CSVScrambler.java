@@ -6,7 +6,6 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.io.Writer;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -99,10 +98,8 @@ public class CSVScrambler implements Runnable {
 	m_columnsTypes = Objects.requireNonNull(columnsTypes, "columns types can't be null!");
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see java.lang.Runnable#run()
+    /**
+     * {@inheritDoc}
      */
     @Override
     public void run() {
@@ -149,21 +146,73 @@ public class CSVScrambler implements Runnable {
 	private String[] m_args;
 
 	/**
-	 * All flags used as input to this runner
+	 * 'help' flag.
 	 */
 	public static final String HELP_FLAG = "--help";
+
+	/**
+	 * short version of {@link #HELP_FLAG}.
+	 */
 	public static final String HELP_FLAG_SHORT = "-h";
+
+	/**
+	 * 'input' flag.
+	 */
 	public static final String INPUT_FLAG = "--input";
+
+	/**
+	 * short version of {@link #INPUT_FLAG}.
+	 */
 	public static final String INPUT_FLAG_SHORT = "-i";
+
+	/**
+	 * 'output' flag.
+	 */
 	public static final String OUTPUT_FLAG = "--output";
+
+	/**
+	 * short version of {@link #OUTPUT_FLAG}.
+	 */
 	public static final String OUTPUT_FLAG_SHORT = "-o";
+
+	/**
+	 * 'source column index' flag.
+	 */
 	public static final String SOURCE_FLAG = "--source";
+
+	/**
+	 * short version of {@link #SOURCE_FLAG}.
+	 */
 	public static final String SOURCE_FLAG_SHORT = "-s";
+
+	/**
+	 * 'destination column index' flag.
+	 */
 	public static final String DESTINATION_FLAG = "--destination";
+
+	/**
+	 * short version of {@link #DESTINATION_FLAG}.
+	 */
 	public static final String DESTINATION_FLAG_SHORT = "-d";
+
+	/**
+	 * 'service protocol code column index' flag.
+	 */
 	public static final String SERVICE_PROTOCOL_FLAG = "--service-protocol";
+
+	/**
+	 * short version of {@link #SERVICE_PROTOCOL_FLAG}.
+	 */
 	public static final String SERVICE_PROTOCOL_FLAG_SHORT = "-spr";
+
+	/**
+	 * 'service port column index' flag.
+	 */
 	public static final String SERVICE_PORT_FLAG = "--service-port";
+
+	/**
+	 * short version of {@link #SERVICE_PORT_FLAG}.
+	 */
 	public static final String SERVICE_PORT_FLAG_SHORT = "-spo";
 
 	/**
@@ -183,10 +232,8 @@ public class CSVScrambler implements Runnable {
 	    this.m_args = args;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see java.lang.Runnable#run()
+	/**
+	 * {@inheritDoc}
 	 */
 	@Override
 	public void run() {
@@ -576,9 +623,7 @@ public class CSVScrambler implements Runnable {
 	final CSVParser parser = new CSVParser(columnsTypes);
 
 	int lineNumber = 0;
-	BufferedReader reader = null;
-	try {
-	    reader = new BufferedReader(new FileReader(inputFile));
+	try (final BufferedReader reader = new BufferedReader(new FileReader(inputFile))) {
 	    for (String line; (line = reader.readLine()) != null;) {
 		lineNumber++;
 		final Hit hit = parser.parseHit(line);
@@ -603,14 +648,8 @@ public class CSVScrambler implements Runnable {
 		    node = parent;
 		}
 	    }
-	} catch (final UncheckedIOException e) {
-	    throw e.getCause();
 	} catch (final CSVParseException e) {
 	    throw new CSVParseException("In line " + lineNumber + ": ", e);
-	} finally {
-	    if (reader != null) {
-		reader.close();
-	    }
 	}
 
 	Node root = null;
@@ -684,32 +723,20 @@ public class CSVScrambler implements Runnable {
 	CSVParser parser = new CSVParser(columnsTypes);
 
 	int lineNumber = 0;
-	BufferedReader reader = null;
-	Writer writer = null;
-	try {
-	    writer = new FileWriter(outputFile);
-	    String lineSeparator = System.lineSeparator();
+	try (final BufferedReader reader = new BufferedReader(new FileReader(inputFile))) {
+	    try (final Writer writer = new FileWriter(outputFile)) {
 
-	    reader = new BufferedReader(new FileReader(inputFile));
-	    for (String line; (line = reader.readLine()) != null;) {
-		lineNumber++;
-		Hit hit = parser.parseHit(line);
-		hit = mutateHit(hit, ipAttId, tree);
-		line = parser.toCSV(hit);
-		writer.append(line + lineSeparator);
+		final String lineSeparator = System.lineSeparator();
+		for (String line; (line = reader.readLine()) != null;) {
+		    lineNumber++;
+		    Hit hit = parser.parseHit(line);
+		    hit = mutateHit(hit, ipAttId, tree);
+		    line = parser.toCSV(hit);
+		    writer.append(line + lineSeparator);
+		}
 	    }
-
-	} catch (final UncheckedIOException e) {
-	    throw e.getCause();
 	} catch (final CSVParseException e) {
 	    throw new CSVParseException("In line " + lineNumber + ": ", e);
-	} finally {
-	    if (reader != null) {
-		reader.close();
-	    }
-	    if (writer != null) {
-		writer.close();
-	    }
 	}
     }
 
@@ -722,6 +749,7 @@ public class CSVScrambler implements Runnable {
      *            id of the IP attribute
      * @param tree
      *            root node of the scrambled IP attribute tree
+     * @return the hit mutation.
      */
     private static Hit mutateHit(final Hit hit, final int ipAttId, Node tree) {
 	IP ip = ((IPAttribute) hit.getAttribute(ipAttId)).getIp();
@@ -788,6 +816,9 @@ public class CSVScrambler implements Runnable {
 	    this.ip = ip;
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	public String toString() {
 	    return ip.toString();

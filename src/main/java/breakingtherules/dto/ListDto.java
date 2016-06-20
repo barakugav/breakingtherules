@@ -107,10 +107,8 @@ public class ListDto<E> implements Iterable<E> {
 	return m_total;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see java.lang.Iterable#iterator()
+    /**
+     * {@inheritDoc}
      */
     @Override
     public Iterator<E> iterator() {
