@@ -1,11 +1,30 @@
 (function (angular) {
 
-	var app = angular.module('btrData', []);
+	var app = angular.module('btrData', ['ngFileUpload']);
 
-	app.factory('BtrData', ['$http', function ($http) {
+	app.factory('BtrData', ['$http', 'Upload', function ($http, Upload) {
 
 		function setJob(jobName) {
 			return $http.put('/job?job_name=' + jobName);
+		}
+
+		function startJob(jobName, hitsFile) {
+			// var data = new FormData();
+	        // data.append('job_name', jobName);
+	        // data.append('hits_file', hitsFile);
+	        // return $http.post('/job', data, {
+	        //     transformRequest: angular.identity,
+	        //     headers: {'Content-Type': undefined}
+	        // });
+	        // console.log(hitsFile);
+	        hitsFile.upload = Upload.upload({
+	        	url: '/job',
+	        	data: {
+	        		'job_name': jobName,
+	        		'hits_file': hitsFile
+	        	}
+	        });
+	        return hitsFile.upload;
 		}
 
 		function getRules() {
@@ -53,6 +72,7 @@
 
 		return {
 			setJob: setJob,
+			startJob: startJob,
 			getRules: getRules,
 			postRule: postRule,
 			putNewFilter: putNewFilter,

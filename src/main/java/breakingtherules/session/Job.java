@@ -1,5 +1,6 @@
 package breakingtherules.session;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -10,17 +11,24 @@ import java.util.Objects;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.context.annotation.ScopedProxyMode;
+import org.springframework.core.io.FileSystemResource;
 import org.springframework.stereotype.Component;
+import org.springframework.web.multipart.MultipartFile;
 
+import breakingtherules.dao.DaoConfig;
 import breakingtherules.dao.HitsDao;
 import breakingtherules.dao.ParseException;
 import breakingtherules.dao.RulesDao;
 import breakingtherules.dao.UniqueHit;
+import breakingtherules.dao.csv.CSVDaoConfig;
+import breakingtherules.dao.csv.CSVParseException;
+import breakingtherules.dao.csv.HitsCSVDao;
 import breakingtherules.dao.xml.RulesXmlDao;
 import breakingtherules.dto.ListDto;
 import breakingtherules.dto.SuggestionsDto;
 import breakingtherules.firewall.Attribute;
 import breakingtherules.firewall.Filter;
+import breakingtherules.firewall.Hit;
 import breakingtherules.firewall.Rule;
 import breakingtherules.services.algorithm.Suggestion;
 import breakingtherules.services.algorithm.SuggestionsAlgorithm;
@@ -109,6 +117,35 @@ public class Job {
      */
     public Job() {
 	m_name = NO_CURRENT_JOB;
+    }
+
+    /**
+     * Create a new job, with the given job name and the given hits
+     * 
+     * @param jobName
+     *            The name of the new job. Must be different from existing names
+     * @param hitsFile
+     *            A CSV file with all of the hits that should be processed in
+     *            this job
+     * @param columnTypes
+     *            The order of the columns in the CSV file
+     * @throws IOException
+     * @throws CSVParseException
+     */
+    public void createJob(String jobName, MultipartFile hitsFile, List<Integer> columnTypes)
+	    throws CSVParseException, IOException {
+	DaoConfig.initRepository(jobName);
+
+	File fileDestination = new File(new File(CSVDaoConfig.getHitsFile(jobName)).getAbsolutePath());
+	hitsFile.transferTo(fileDestination);
+	List<Hit> hits = new HitsCSVDao().getHits(jobName, new ArrayList<Rule>(), Filter.ANY_FILTER).getData();
+	m_hitsDao.initJob(jobName, hits);
+
+	Job job = new Job();
+	job.m_name = jobName;
+	job.m_originalRule = new Rule(Filter.ANY_FILTER);
+	job.m_rules = new ArrayList<>();
+	job.updateRulesFile();
     }
 
     /**
@@ -251,6 +288,7 @@ public class Job {
     }
 
     /**
+     * 
      * Get all the suggestions computed by the algorithm.
      * 
      * @param amount
@@ -379,13 +417,19 @@ public class Job {
 	return m_filteredHitsCount;
     }
 
-    public String getRulesFilePath() {
+    /**
+     * Creates (or returns an existing) XML file with all of the job's rules.
+     * Can be downloaded by the user.
+     * 
+     * @return A file of XML format with this job's rules.
+     */
+    public FileSystemResource getRulesFile() {
 	checkJobState();
-	return "./repository/" + m_name + "/" + RulesXmlDao.REPOSITORY_NAME;
+	return new FileSystemResource(DaoConfig.getRepoRoot(m_name) + RulesXmlDao.REPOSITORY_NAME);
     }
 
     private void updateRulesFile() throws IOException {
-	final String repositoryPath = getRulesFilePath();
+	String repositoryPath = DaoConfig.getRepoRoot(m_name) + RulesXmlDao.REPOSITORY_NAME;
 	final List<Rule> rules = getRules();
 	RulesXmlDao.writeRules(repositoryPath, rules, m_originalRule);
     }

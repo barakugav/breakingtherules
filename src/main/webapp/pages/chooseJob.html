@@ -3,17 +3,31 @@
 	<h1>BreakingTheRules</h1>
 	
 	<section class="JobChoosebox">
-		<h2>Create a New Job</h2>
-		<p>To begin, upload a CSV file with hits. The column order is: source IP, destination IP, 
+		<form ng-submit="ChJobCtrl.new()">
+			<h2>Create a New Job</h2>
+		
+			<p>To begin, upload a CSV file with hits. The column order is: source IP, destination IP, 
 			port, protocol.</p>
-		<input type="file" />
+			<input type="file" class="form-control" name="hits_file"
+				ngf-select="ChJobCtrl.chooseFile($file)" ng-required />
+			<p>Your job needs a name. Choose a name you can remember, because you will need it in the next times you connect to BreakingTheRules:</p>
+			<label>
+				Job name:
+				<input type="text" class="form-control" name="job_name" ng-required
+					ng-model="ChJobCtrl.newJobName" />
+			</label>
+			<button class="btn">Start</button>
+		</form>
 	</section>
 
 	<section class="JobChoosebox">
-		<h2>Choose an Existing Job</h2>
-		<p>Enter the name of the job you would like to work on:</p>
-		<input type="text" class="form-control" 
-			ng-model="ChJobCtrl.jobName" on-enter-key="ChJobCtrl.submit()" />
-		<button class="btn" ng-click="ChJobCtrl.submit()">Continue</button>
+		<form action="" ng-submit="ChJobCtrl.existing()">
+			<h2>Choose an Existing Job</h2>
+			<p>Enter the name of the job you would like to work on:</p>
+			<input type="text" class="form-control" ng-required
+				ng-model="ChJobCtrl.existingJobName" />
+			<button class="btn">Continue</button>	
+		</form>
 	</section>
+
 </div>

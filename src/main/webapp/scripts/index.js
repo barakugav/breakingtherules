@@ -30,7 +30,7 @@ var events = {
 
 (function (angular, $) {
 	
-	var app = angular.module('BreakingTheRules', ['btrData', 'ngRoute']);
+	var app = angular.module('BreakingTheRules', ['btrData', 'ngRoute', 'ngFileUpload']);
 
 	app.config(['$routeProvider', function($routeProvider) {
 		$routeProvider
@@ -124,11 +124,38 @@ var events = {
 		});
 	}]);
 
-	app.controller('ChooseJobController', ['BtrData', '$location', function (BtrData, $location) {
-		this.submit = function () {
-			BtrData.setJob(this.jobName).then(function () {
+	app.controller('ChooseJobController', ['BtrData', '$location', '$scope', function (BtrData, $location, $scope) {
+		var ChJobCtrl = this;
+		ChJobCtrl.hitsFile = null;
+
+		function patience() {
+			alert('Loading all your hits... Please wait...')
+		}
+		this.existing = function () {
+			patience();
+			BtrData.setJob(this.existingJobName).then(function () {
 				$location.url('/main');
 			});
+		};
+		this.new = function () {
+			if (!ChJobCtrl.hitsFile) {
+				alert('You must first choose a hits file.')
+				return;
+			}
+			patience();
+			BtrData.startJob(ChJobCtrl.newJobName, ChJobCtrl.hitsFile).then(function () {
+				BtrData.setJob(ChJobCtrl.newJobName).then(function () {
+					$location.url('/main');
+				});
+			}, function (error) {
+				alert('Uh oh! Error in creating new job. See console for more info.');
+				console.error(error);
+			}, function (progressEvt) {
+				console.log('Upload progress: ' + progressEvt.loaded / progressEvt.total);
+			});	
+		}
+		this.chooseFile = function (file) {
+			ChJobCtrl.hitsFile = file;
 		};
 	}]);
 
@@ -177,10 +204,12 @@ var events = {
 		filterCtrl.hasFilter = false;
 
 		filterCtrl.init = function () {
+			console.log('Init filter controller');
 			filterCtrl.updateFilter();
 		};
 
 		filterCtrl.updateFilter = function () {
+			console.log('Updating filter...');
 			BtrData.getFilter().success(function (data) {
 				filterCtrl.filter = data;
 
@@ -204,6 +233,7 @@ var events = {
 			var attributes = filterCtrl.filter.attributes;
 			
 			BtrData.putNewFilter(attributes).success(function () {
+				console.log('Setting new filter');
 				filterCtrl.updateFilter();
 			});
 		};
@@ -307,6 +337,7 @@ var events = {
 		}
 
 		$rootScope.$on(events.FILTER_UPDATE, function () {
+			console.log('Filter updated. Getting suggestions.');
 			sugCtrl.refresh();
 		});
 	}]);

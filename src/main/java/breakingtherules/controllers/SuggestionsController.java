@@ -20,7 +20,7 @@ public class SuggestionsController {
     @RequestMapping(value = "/suggestions", method = RequestMethod.GET)
     public List<SuggestionsDto> getSuggestions(@RequestParam(value = "amount", defaultValue = "10") int amount)
 	    throws Exception {
-	return  job.getSuggestions(amount);
+	return job.getSuggestions(amount);
     }
 
 }

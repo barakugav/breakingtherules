@@ -58,6 +58,16 @@ public class HitsCSVDao implements HitsDao {
 	m_cacheHits = new HeavySynchronizedHashCache<>();
 	m_totalHitsCache = new HeavySynchronizedHashCache<>();
     }
+    
+    @Override
+    public void initJob(String jobName, List<Hit> hits) throws IllegalArgumentException, IOException {
+	try {
+	    String repoPath = CSVDaoConfig.getHitsFile(jobName);
+	    CSVParser.toCSV(CSVParser.DEFAULT_COLUMNS_TYPES, hits, repoPath);
+	} catch (CSVParseException e) {
+	    throw new IOException(e);
+	}
+    }
 
     /*
      * (non-Javadoc)

@@ -138,6 +138,11 @@ public class HitsXmlDao implements HitsDao {
 	return new ListDto<>(subHitsList, startIndex, endIndex, total);
     }
 
+    @Override
+    public void initJob(String jobName, List<Hit> hits) throws IllegalArgumentException, IOException {
+	toXml(hits, XmlDaoConfig.getHitsFile(jobName));
+    }
+
     /**
      * Write a list of hits to file in XML format
      * 

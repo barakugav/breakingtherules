@@ -73,8 +73,12 @@ section {
 
 /* Job Choosing
 *************************************************/
-.JobChoosebox input[type="text"] {
+.JobChoosebox input {
   width: 400px; }
+.JobChoosebox input[type='file'] {
+  margin-bottom: 1.6rem; }
+.JobChoosebox label {
+  display: block; }
 .JobChoosebox button {
   margin-top: 1rem;
   margin-left: 100px;

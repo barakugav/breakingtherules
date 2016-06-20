@@ -125,4 +125,18 @@ public interface HitsDao {
      */
     public int getHitsNumber(String jobName, List<Rule> rules, Filter filter) throws IOException, ParseException;
 
+    /**
+     * Initiate a repository for this job, with the given hits
+     * 
+     * @param jobName
+     *            The name for the new job
+     * @param hits
+     *            The hits that the job should be initiated with
+     * @throws IllegalArgumentException
+     *             If this job (name) already exists
+     * @throws IOException
+     *             If there was an error writing to IO
+     */
+    public void initJob(String jobName, List<Hit> hits) throws IllegalArgumentException, IOException;
+
 }

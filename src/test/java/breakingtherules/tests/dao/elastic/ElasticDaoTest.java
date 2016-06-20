@@ -49,7 +49,7 @@ public class ElasticDaoTest extends TestBase {
     }
 
     @AfterClass
-    public static void deleteFakeJobAndCleanDao() {
+    public static void deleteFakeJobAndCleanDao() throws IOException {
 	if (jobInitialized) {
 	    hitsDao.deleteJob(JOB_NAME);
 	}

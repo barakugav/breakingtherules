@@ -440,6 +440,7 @@ public abstract class IP implements Comparable<IP> {
 	 */
 	@Override
 	public boolean equals(final Object o) {
+	    // TODO why
 	    return o instanceof AnyIP;
 	}
 
@@ -470,6 +471,7 @@ public abstract class IP implements Comparable<IP> {
 	 */
 	@Override
 	public int compareTo(final IP o) {
+	    // TODO why
 	    return o instanceof AnyIP ? 0 : 1;
 	}
 

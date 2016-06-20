@@ -66,10 +66,19 @@ public class HitsElasticDao implements HitsDao {
 	m_totalHitsCache = new HashMap<>();
     }
 
+    /**
+     * Should be called before destroying the DAO, in order to close the
+     * connection to other ElasticSearch nodes
+     */
     public void cleanup() {
 	m_elasticNode.close();
     }
 
+    /**
+     * @param jobName
+     *            The name of the job to check
+     * @return Whether the job exists (has hits) in ElasticSearch
+     */
     public boolean doesJobExist(String jobName) {
 	try {
 	    final SearchRequestBuilder srchRequest = m_elasticClient.prepareSearch(ElasticDaoConfig.INDEX_NAME);
@@ -85,8 +94,20 @@ public class HitsElasticDao implements HitsDao {
 	}
     }
 
-    public void deleteJob(String jobName) {
-	System.out.println("deleting");
+    /**
+     * Deleting a job from ElasticSearch. Since this is a "dangerous" one-way
+     * procedure, it cannot be done on jobs with many hits, and they have to be
+     * erased directly through ES
+     * 
+     * @param jobName
+     *            The name of the job to delete
+     * @return Iff the job exited before calling deleteJob
+     * @throws IOException
+     *             If ElasticSearch has failures while deleting the job
+     * @throws IllegalArgumentException
+     *             If the job has too many hits
+     */
+    public boolean deleteJob(String jobName) throws IOException {
 
 	final QueryBuilder query = QueryBuilders.termQuery(ElasticDaoConfig.FIELD_JOB_NAME, jobName);
 	final SearchRequestBuilder srchRequest = m_elasticClient.prepareSearch(ElasticDaoConfig.INDEX_NAME);
@@ -95,17 +116,15 @@ public class HitsElasticDao implements HitsDao {
 
 	final SearchHits hitsRes = srchRequest.get().getHits();
 	if (hitsRes.totalHits() > ElasticDaoConfig.DELETION_THRESHOLD) {
-	    System.out
-		    .println("Job is too big to delete programatically. Please delete manually through ElasticSearch.");
+	    throw new IllegalArgumentException(
+		    "Job is too big to delete programatically. Please delete manually through ElasticSearch.");
+
 	}
 	if (hitsRes.getTotalHits() == 0) {
-	    System.out.println("nothing to delete");
-	    return;
+	    return false;
 	}
 	final BulkRequestBuilder bulkDelete = m_elasticClient.prepareBulk();
 	for (final SearchHit hit : hitsRes.getHits()) {
-	    System.out.println(hit.getId());
-
 	    final DeleteRequestBuilder deleteRequest = m_elasticClient.prepareDelete();
 	    deleteRequest.setIndex(ElasticDaoConfig.INDEX_NAME);
 	    deleteRequest.setType(ElasticDaoConfig.TYPE_HIT);
@@ -115,16 +134,37 @@ public class HitsElasticDao implements HitsDao {
 	}
 	final BulkResponse deleteResponse = bulkDelete.execute().actionGet();
 	if (deleteResponse.hasFailures()) {
-	    throw new RuntimeException(deleteResponse.buildFailureMessage());
+	    throw new IOException(deleteResponse.buildFailureMessage());
 	}
 	refreshIndex();
+	return true;
     }
 
+    /**
+     * Adding a hit to a certain job
+     * 
+     * @param hit
+     *            A firewall Hit to be inserted to ElasticSearch
+     * @param jobName
+     *            The name of the job
+     * @throws IOException
+     *             If ElasticSearch cannot save the data
+     */
     public void addHit(final Hit hit, final String jobName) throws IOException {
 	addHits(Collections.singletonList(hit), jobName);
 	refreshIndex();
     }
 
+    /**
+     * Adding hits to a certain job
+     * 
+     * @param hits
+     *            A list of firewall Hits to be inserted to ElasticSearch
+     * @param jobName
+     *            The name of the job
+     * @throws IOException
+     *             If ElasticSearch cannot save the data
+     */
     public void addHits(final List<Hit> hits, final String jobName) throws IOException {
 	final BulkRequestBuilder bulkRequest = m_elasticClient.prepareBulk();
 	for (final Hit hit : hits) {
@@ -150,11 +190,12 @@ public class HitsElasticDao implements HitsDao {
 	}
 	final BulkResponse bulkResponse = bulkRequest.execute().actionGet();
 	if (bulkResponse.hasFailures()) {
-	    System.err.println("Bulk add request had failures.");
+	    String error = "Bulk add request had failures. ";
 	    // process failures by iterating through each bulk response item
 	    for (final BulkItemResponse item : bulkResponse) {
-		System.err.println(item.getFailureMessage());
+		error += item.getFailureMessage() + " ";
 	    }
+	    throw new IOException(error);
 	}
 	refreshIndex();
     }
@@ -181,7 +222,16 @@ public class HitsElasticDao implements HitsDao {
 		Integer.valueOf(hits.size()));
 	return new ListDto<>(hits, 0, hits.size(), hits.size());
     }
+    
+    @Override
+    public void initJob(String jobName, List<Hit> hits) throws IllegalArgumentException, IOException {
+	addHits(hits, jobName);
+    }
 
+    /**
+     * Refreshes the ElasticSearch index, which means updating it, so that the
+     * next queries will be consistent will the previous ones
+     */
     private void refreshIndex() {
 	// using "execute" instead of "get" in the following line, does not
 	// ensure that the refresh will happen immediately
@@ -296,6 +346,17 @@ public class HitsElasticDao implements HitsDao {
 	return true;
     }
 
+    /**
+     * Translates a SearchHit that represents a firewall Hit, into a firewall
+     * Hit object
+     * 
+     * @param searchHit
+     *            The outcome of an ElasticSearch search - a Hit, representing a
+     *            firewall hit
+     * @throws IllegalArgumentException
+     *             If the searchHit is not in a valid hit format
+     * @return A firewall Hit object with the values from the search
+     */
     private static Hit toFirewallHit(final SearchHit searchHit) {
 	final Map<String, Object> fields = searchHit.getSource();
 
@@ -303,13 +364,11 @@ public class HitsElasticDao implements HitsDao {
 
 	final Object allAtributes = fields.get(ElasticDaoConfig.FIELD_ATTRIBUTES);
 	if (!(allAtributes instanceof ArrayList)) {
-	    System.out.println("Unexpected hit format");
-	    return null;
+	    throw new IllegalArgumentException("The searchHit it not in valid hit format");
 	}
 	for (final Object attribute : (ArrayList<?>) allAtributes) {
 	    if (!(attribute instanceof Map)) {
-		System.out.println("Unexpected hit format");
-		return null;
+		throw new IllegalArgumentException("The searchHit it not in valid hit format");
 	    }
 	    final Map<?, ?> attributeHash = (Map<?, ?>) attribute;
 	    final int attrTypeID = ((Integer) attributeHash.get(ElasticDaoConfig.FIELD_ATTR_TYPEID)).intValue();

@@ -6,6 +6,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
+import org.springframework.web.multipart.MultipartResolver;
+import org.springframework.web.multipart.support.StandardServletMultipartResolver;
 
 import breakingtherules.dao.HitsDao;
 import breakingtherules.dao.csv.HitsCSVDao;
@@ -52,6 +54,12 @@ public class Config {
     // @Bean
     public SuggestionsAlgorithm simpleAlgorithm() {
 	return new SimpleAlgorithm();
+    }
+
+    @Bean
+    public MultipartResolver uploadSettings() {
+	MultipartResolver resolver = new StandardServletMultipartResolver();
+	return resolver;
     }
 
 }

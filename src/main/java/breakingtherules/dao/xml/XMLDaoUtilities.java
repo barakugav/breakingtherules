@@ -60,7 +60,7 @@ public class XMLDaoUtilities {
 	    return fileDocument;
 
 	} catch (SAXException e) {
-	    throw new XMLParseException(e);
+	    throw new IOException("Unable to load file", e);
 	}
     }
 

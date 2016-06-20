@@ -247,7 +247,15 @@ public class CSVParser {
      */
     public static List<Hit> fromPath(final List<Integer> columnsTypes, final String filePath)
 	    throws IOException, CSVParseException {
-	return fromCSV(columnsTypes, filePath, new ArrayList<>(), Filter.ANY_FILTER, new ArrayList<>());
+
+	return fromCSV(columnsTypes, filePath, new ArrayList<>(0), Filter.ANY_FILTER, new ArrayList<Hit>());
+    }
+
+    public static List<Hit> fromBufferedReader(final List<Integer> columnsTypes, final BufferedReader reader)
+	    throws CSVParseException, IOException {
+	final List<Hit> hits = new ArrayList<>();
+	fromCSV(columnsTypes, reader, new ArrayList<>(0), Filter.ANY_FILTER, hits);
+	return hits;
     }
 
     /**
@@ -309,34 +317,9 @@ public class CSVParser {
     }
 
     /**
-     * Parse a CSV file and outputs the hits to a list.
-     * <p>
-     * 
-     * @param columnsTypes
-     *            the types of the columns in the CSV files.
-     * @param fileName
-     *            the name of the CSV file.
-     * @param rules
-     *            the rules to filter the hits by.
-     * @param filter
-     *            the filter to filter the hits by.
-     * @return list with all parsed hits that matched the filter and rules.
-     * @throws IOException
-     *             if any I/O errors occurs.
-     * @throws CSVParseException
-     *             if the data in the file is invalid.
-     */
-    static List<Hit> fromCSV(final List<Integer> columnsTypes, final String fileName, final List<Rule> rules,
-	    final Filter filter) throws CSVParseException, IOException {
-	return fromCSV(columnsTypes, fileName, rules, filter, new ArrayList<>());
-    }
-
-    /**
      * Parse a CSV file and outputs the hits to desire collection destination.
      * <p>
      * 
-     * @param <C>
-     *            the type of the destination.
      * @param columnsTypes
      *            the types of the columns in the CSV files.
      * @param fileName
@@ -347,20 +330,13 @@ public class CSVParser {
      *            the filter to filter the hits by.
      * @param destination
      *            the destination collection, which the hits are inserted to.
-     * @return the destination collection.
      * @throws IOException
      *             if any I/O errors occurs.
      * @throws CSVParseException
      *             if the data in the file is invalid.
      */
-    static <C extends Collection<? super Hit>> C fromCSV(final List<Integer> columnsTypes, final String fileName,
+    static <C extends Collection<? super Hit>> C fromCSV(final List<Integer> columnsTypes, final BufferedReader reader,
 	    final List<Rule> rules, final Filter filter, final C destination) throws IOException, CSVParseException {
-	final File repoFile = new File(fileName);
-	if (!repoFile.exists()) {
-	    throw new FileNotFoundException("File not found: " + fileName);
-	} else if (!repoFile.canRead()) {
-	    throw new IOException("File read is not permitted!");
-	}
 
 	if (columnsTypes.contains(SERVICE_PORT) ^ columnsTypes.contains(SERVICE_PROTOCOL)) {
 	    throw new IllegalArgumentException("Choose service port and service protocol or neither of them");
@@ -369,10 +345,7 @@ public class CSVParser {
 	final CSVParser parser = new CSVParser(columnsTypes);
 	int lineNumber = 0;
 
-	BufferedReader reader = null;
 	try {
-	    reader = new BufferedReader(new FileReader(repoFile));
-
 	    for (String line; (line = reader.readLine()) != null;) {
 		lineNumber++;
 		if (line.isEmpty()) {
@@ -395,6 +368,24 @@ public class CSVParser {
 	    }
 	}
 	return destination;
+    }
+
+    static <C extends Collection<? super Hit>> C fromCSV(final List<Integer> columnsTypes, String filePath,
+	    final List<Rule> rules, final Filter filter, final C destination) throws CSVParseException, IOException {
+	final File repoFile = new File(filePath);
+	if (!repoFile.exists()) {
+	    throw new FileNotFoundException("File not found: " + filePath);
+	} else if (!repoFile.canRead()) {
+	    throw new IOException("File read is not permitted!");
+	}
+
+	BufferedReader reader = new BufferedReader(new FileReader(repoFile));
+	return fromCSV(columnsTypes, reader, rules, filter, destination);
+    }
+
+    static List<Hit> fromCSV(final List<Integer> columnsTypes, String filePath, final List<Rule> rules,
+	    final Filter filter) throws CSVParseException, IOException {
+	return fromCSV(columnsTypes, filePath, rules, filter, new ArrayList<Hit>());
     }
 
     /**
