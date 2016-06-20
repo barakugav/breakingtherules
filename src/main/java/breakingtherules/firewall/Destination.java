@@ -145,19 +145,14 @@ public class Destination extends IPAttribute {
 	static final CacheSupplierPair<IPv6, Destination> IPv6Cache;
 
 	static {
+	    final Function<IP, Destination> supplier = ip -> new Destination(ip);
 	    final Cache<IPv4, Destination> cache4 = Caches
 		    .synchronizedCache(new SoftCustomHashCache<>(IPv4AddressStrategy.INSTANCE));
-	    final Function<IPv4, Destination> supplier4 = (final IPv4 ip) -> {
-		return new Destination(ip);
-	    };
-	    IPv4Cache = Caches.cacheSupplierPair(cache4, supplier4);
-
 	    final Cache<IPv6, Destination> cache6 = Caches
 		    .synchronizedCache(new SoftCustomHashCache<>(IPv6AddressStrategy.INSTANCE));
-	    final Function<IPv6, Destination> supplier6 = (final IPv6 ip) -> {
-		return new Destination(ip);
-	    };
-	    IPv6Cache = Caches.cacheSupplierPair(cache6, supplier6);
+
+	    IPv4Cache = Caches.cacheSupplierPair(cache4, supplier);
+	    IPv6Cache = Caches.cacheSupplierPair(cache6, supplier);
 	}
 
     }

@@ -8,7 +8,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -179,7 +178,7 @@ public class InformationAlgorithm implements SuggestionsAlgorithm {
 	if (attTypeId == Attribute.UNKOWN_ATTRIBUTE_ID) {
 	    throw new IllegalArgumentException("Unkown attribute: " + attType);
 	}
-	Set<UniqueHit> hits = dao.getUniqueHits(jobName, rules, filter);
+	final Iterable<UniqueHit> hits = dao.getUniqueHits(jobName, rules, filter);
 	final InformationAlgoRunner runner = new InformationAlgoRunner(hits, amount, attTypeId);
 	runner.run();
 	return runner.result;
@@ -190,7 +189,7 @@ public class InformationAlgorithm implements SuggestionsAlgorithm {
 	    final Filter filter, final int amount, final String[] attTypes) throws Exception {
 
 	final InformationAlgoRunner[] runners = new InformationAlgoRunner[attTypes.length];
-	final Set<UniqueHit> hits = dao.getUniqueHits(jobName, rules, filter);
+	final Iterable<UniqueHit> hits = dao.getUniqueHits(jobName, rules, filter);
 	for (int i = 0; i < attTypes.length; i++) {
 	    final String attType = attTypes[i];
 	    final int attTypeId = Attribute.typeStrToTypeId(attType);
@@ -247,12 +246,12 @@ public class InformationAlgorithm implements SuggestionsAlgorithm {
 
     private class InformationAlgoRunner implements Runnable {
 
-	private final Set<UniqueHit> hits;
+	private final Iterable<UniqueHit> hits;
 	private final int attTypeId;
 	private final int amount;
 	private List<Suggestion> result;
 
-	private InformationAlgoRunner(final Set<UniqueHit> hits, final int amount, final int attTypeId) {
+	private InformationAlgoRunner(final Iterable<UniqueHit> hits, final int amount, final int attTypeId) {
 	    this.hits = hits;
 	    this.attTypeId = attTypeId;
 	    this.amount = amount;

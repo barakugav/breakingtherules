@@ -2,6 +2,7 @@ package breakingtherules.utilities;
 
 import java.lang.ref.ReferenceQueue;
 import java.lang.ref.SoftReference;
+import java.util.Objects;
 import java.util.function.Function;
 
 /**
@@ -30,7 +31,6 @@ import java.util.function.Function;
  * @author Yishai Gronich
  * 
  * @see SoftReference
- * @see WeakHashCache
  * 
  * @param <K>
  *            type of key of the cache
@@ -64,11 +64,10 @@ public class SoftHashCache<K, E> implements Cache<K, E> {
      * 
      * The 'soft' behavior of the elements is obtained by the following
      * mechanism: When one of the elements doesn't get held anymore by external
-     * strong reference and there is a demand for memory (as described in the
-     * SoftReference documentations), the entry push itself to a queue
-     * (SoftReference support this behavior). The queue of the 'dead' elements
-     * get scanned in the beginning of every public method and the 'dead' entry
-     * get removed from the table.
+     * strong reference, the entry push itself to a queue (SoftReference support
+     * this behavior). The queue of the 'dead' elements get scanned in the
+     * beginning of every public method and the 'dead' entry get removed from
+     * the table.
      */
 
     /**
@@ -76,7 +75,20 @@ public class SoftHashCache<K, E> implements Cache<K, E> {
      * <p>
      * The table length MUST be a power of 2. See {@link #mask}.
      */
-    private Entry[] table;
+    private Entry<K, E>[] table;
+
+    /**
+     * Flag that indicate if an element with a null key is contained in the
+     * cache.
+     */
+    private boolean containsNull;
+
+    /**
+     * The reference to the element with the null key.
+     * <p>
+     * Always null if {@link #containsNull} is false.
+     */
+    private SoftReference<E> nullElement;
 
     /**
      * Number of elements in the cache
@@ -137,7 +149,7 @@ public class SoftHashCache<K, E> implements Cache<K, E> {
      * Queue used to determine which elements was queued and needed to be
      * removed from the table.
      */
-    private final ReferenceQueue<Object> queue;
+    private final ReferenceQueue<E> queue;
 
     /**
      * Minimum capacity which the table will not be shrinking less then.
@@ -145,13 +157,6 @@ public class SoftHashCache<K, E> implements Cache<K, E> {
      * MUST be a power of 2.
      */
     private static final int MINIMUM_SHRINK_CAPACITY = 8;
-
-    /**
-     * Object used to mask null keys.
-     * 
-     * @see #maskNull(Object)
-     */
-    private static final Object NULL = new Object();
 
     /**
      * Construct new SoftHashCache with default init capacity and default load
@@ -193,34 +198,34 @@ public class SoftHashCache<K, E> implements Cache<K, E> {
 	    throw new IllegalArgumentException("load factor must be greater then 0 and not NaN: " + loadFactor);
 
 	final int capacity = Hashs.nextPowerOfTwo((int) (initCapacity / loadFactor));
-	table = new Entry[capacity];
+	table = newTable(capacity);
 	mask = capacity - 1;
 	growThreshold = (int) (capacity * loadFactor);
 	shrinkThreshold = growThreshold >> 2;
 	this.loadFactor = loadFactor;
 	queue = new ReferenceQueue<>();
+	containsNull = false;
     }
 
-    /**
-     * Get a cached element by it's key.
+    /*
+     * (non-Javadoc)
      * 
-     * @param key
-     *            the element's key
-     * @return the cached element or null if non found.
+     * @see breakingtherules.utilities.Cache#get(java.lang.Object)
      */
     @Override
-    @SuppressWarnings("unchecked")
     public E get(final K key) {
+	if (key == null)
+	    return getNull();
+
 	// Compute hash
-	final Object k = maskNull(key);
-	final int hash = Hashs.hash(k);
+	final int hash = hash(key);
 
 	// Clean cache, delayed as possible, so GC have more time to act.
 	cleanCache();
 
 	// Search entry
-	for (Entry p = table[hash & mask]; p != null; p = p.next)
-	    if (hash == p.hash && k.equals(p.key))
+	for (Entry<K, E> p = table[hash & mask]; p != null; p = p.next)
+	    if (hash == p.hash && determineEquals(key, p.key))
 		/*
 		 * Entry found, no need to check if it's element is a dead
 		 * reference because two reasons. First of all, if there are
@@ -237,34 +242,26 @@ public class SoftHashCache<K, E> implements Cache<K, E> {
 		 * reference are eliminated, so for each key is guaranteed that
 		 * there is at most one entry that match it).
 		 */
-		return (E) p.get();
+		return p.get();
 
 	// No entry found with same key
 	return null;
     }
 
     /**
-     * Add new element to cache
+     * {@inheritDoc}
      * 
-     * @param key
-     *            the element key
-     * @param element
-     *            the element
      * @throws NullPointerException
-     *             if element is null. Null elements are not allowed in soft
-     *             cache because the cache will not be able to determinate when
-     *             to remove them, see {@link SoftReference}.
-     * @throws IllegalArgumentException
-     *             if an element with the same key is already in the cache.
+     *             if the element is null. Nulls elements are no allowed in soft
+     *             cache.
      */
     @Override
     public E add(final K key, final E element) {
-	if (element == null)
-	    throw new NullPointerException("Nulls elements are not allowed in soft cache");
+	if (key == null)
+	    return addNull(element);
 
 	// Compute hash
-	final Object k = maskNull(key);
-	final int hash = Hashs.hash(k);
+	final int hash = hash(key);
 
 	// Clean cache, delayed as possible, so GC have more time to act.
 	cleanCache();
@@ -273,13 +270,12 @@ public class SoftHashCache<K, E> implements Cache<K, E> {
 	// may be caused and may change the mask.
 	final int index = hash & mask;
 
-	// Check that such key doesn't already exist
-	final Entry firstEntry = table[index];
-	for (Entry p = firstEntry; p != null; p = p.next) {
-	    if (hash == p.hash && k.equals(p.key)) {
-		@SuppressWarnings("unchecked")
-		final E existing = (E) p.get();
-		if (p.get() != null)
+	// Check if an element with the same key is already in cache.
+	final Entry<K, E> firstEntry = table[index];
+	for (Entry<K, E> p = firstEntry; p != null; p = p.next) {
+	    if (hash == p.hash && determineEquals(key, p.key)) {
+		final E existing = p.get();
+		if (existing != null)
 		    return existing;
 		/*
 		 * If the program reached this part of the code, that mean that
@@ -296,50 +292,29 @@ public class SoftHashCache<K, E> implements Cache<K, E> {
 	}
 
 	// Insert new entry as first entry in list
-	table[index] = new Entry(k, element, queue, hash, firstEntry);
-	grow();
-	return element;
-    }
-
-    @Override
-    public E getOrAdd(final K key, final Function<? super K, ? extends E> supplier) {
-	// Compute hash
-	final Object k = maskNull(key);
-	final int hash = Hashs.hash(k);
-	final int index = hash & mask;
-
-	// Clean cache, delayed as possible, so GC have more time to act.
-	cleanCache();
-
-	// Search entry
-	final Entry firstEntry = table[index];
-	for (Entry p = firstEntry; p != null; p = p.next) {
-	    if (hash == p.hash && k.equals(p.key)) {
-		@SuppressWarnings("unchecked")
-		final E elm = (E) p.get();
-		if (elm != null)
-		    return elm;
-	    }
-	}
-
-	// Not found, insert new entry as first entry in list
-	final E element = supplier.apply(key);
-	table[index] = new Entry(k, element, queue, hash, firstEntry);
+	table[index] = new Entry<>(key, element, queue, hash, firstEntry);
 	grow();
 	return element;
     }
 
     /**
-     * Remove a cashed element by it's key.
+     * This implementation provide a faster alternative over the default
+     * implementation.
+     * <p>
      * 
-     * @param key
-     *            the element's key
+     * @see Cache#getOrAdd(Object, Function) for full documentation of the
+     *      method.
+     * @throws NullPointerException
+     *             if the element provided by supplier (if needed) is null.
+     *             Nulls elements are no allowed in soft cache.
      */
     @Override
-    public void remove(final K key) {
+    public E getOrAdd(final K key, final Function<? super K, ? extends E> supplier) {
+	if (key == null)
+	    return getOrAddNull(supplier);
+
 	// Compute hash
-	final Object k = maskNull(key);
-	final int hash = Hashs.hash(k);
+	final int hash = hash(key);
 
 	// Clean cache, delayed as possible, so GC have more time to act.
 	cleanCache();
@@ -348,39 +323,74 @@ public class SoftHashCache<K, E> implements Cache<K, E> {
 	// may be caused and may change the mask.
 	final int index = hash & mask;
 
-	// Check if element is first in his list
-	Entry p = table[index];
-	if (p == null)
-	    return;
-	if (hash == p.hash && k.equals(p.key)) {
-	    // Element is first in this list, remove and shrink
-	    table[index] = p.next;
-	    p.next = null; // Help GC
-	    p.key = null; // Help GC
-	    shrink();
+	// Search entry
+	final Entry<K, E> firstEntry = table[index];
+	for (Entry<K, E> p = firstEntry; p != null; p = p.next) {
+	    if (hash == p.hash && determineEquals(key, p.key)) {
+		final E elm = p.get();
+		if (elm != null)
+		    return elm;
+	    }
+	}
+
+	// Not found, supply element
+	final E element = supplier.apply(key);
+
+	// Insert new entry as first entry in list
+	table[index] = new Entry<>(key, element, queue, hash, firstEntry);
+	grow();
+	return element;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see breakingtherules.utilities.Cache#remove(java.lang.Object)
+     */
+    @Override
+    public void remove(final K key) {
+	if (key == null) {
+	    removeNull();
 	    return;
 	}
 
-	// Element is not first in his list, search it
-	Entry prev;
-	while ((p = (prev = p).next) != null) {
-	    if (hash == p.hash && k.equals(p.key)) {
-		// Element found, remove and shrink
-		prev.next = p.next;
-		p.next = null; // Help GC
-		p.key = null; // Help GC
+	// Compute hash
+	final int hash = hash(key);
+
+	// Clean cache, delayed as possible, so GC have more time to act.
+	cleanCache();
+
+	// Compute index in table, MUST happen after clearCache() because shrink
+	// may be caused and may change the mask.
+	final int index = hash & mask;
+
+	// Search and remove
+	Entry<K, E> p = table[index];
+	Entry<K, E> prev = null;
+	while (p != null) {
+	    final Entry<K, E> next = p.next;
+	    if (hash == p.hash && determineEquals(key, p.key)) {
+		if (prev == null) {
+		    // First element
+		    table[index] = next;
+		} else {
+		    // Not first element
+		    prev.next = next;
+		}
+		p.next = null; // help GC
+		p.key = null; // help GC
 		shrink();
-		return;
+		break;
 	    }
+	    prev = p;
+	    p = next;
 	}
     }
 
-    /**
-     * Get the number of cached elements.
-     * <p>
-     * Used mostly for testing.
+    /*
+     * (non-Javadoc)
      * 
-     * @return number of cached elements.
+     * @see breakingtherules.utilities.Cache#size()
      */
     @Override
     public int size() {
@@ -388,8 +398,10 @@ public class SoftHashCache<K, E> implements Cache<K, E> {
 	return size;
     }
 
-    /**
-     * Clear the entire cache from all elements.
+    /*
+     * (non-Javadoc)
+     * 
+     * @see breakingtherules.utilities.Cache#clear()
      */
     @Override
     public void clear() {
@@ -398,13 +410,13 @@ public class SoftHashCache<K, E> implements Cache<K, E> {
 	}
 
 	// Clear table
-	final Entry[] tab = table;
+	final Entry<K, E>[] tab = table;
 	for (int index = tab.length; index-- != 0;) {
-	    for (Entry entry = tab[index]; entry != null;) {
-		final Entry next = entry.next;
+	    for (Entry<K, E> entry = tab[index]; entry != null;) {
+		final Entry<K, E> next = entry.next;
 		entry.clear();
-		entry.next = null; // Help GC
-		entry.key = null; // Help GC
+		entry.next = null; // help GC
+		entry.key = null; // help GC
 		entry = next;
 	    }
 	    tab[index] = null;
@@ -434,50 +446,57 @@ public class SoftHashCache<K, E> implements Cache<K, E> {
     public void cleanCache() {
 	// Poll from dead entries queue until it's empty. Remove each entry of
 	// dead element from the table.
-	for (Entry entry; (entry = (Entry) queue.poll()) != null;) {
-	    synchronized (queue) {
-		final int index = entry.hash & mask;
-		Entry p = table[index];
-		/*
-		 * Search the entry in it's list. If found, remove it, if not,
-		 * do nothing. The scenario that the entry is not found means
-		 * that it was already removed, this can happen if the dead
-		 * element's entry was detected already during other operation,
-		 * for example, during resize.
-		 */
-		if (p == entry) {
-		    // Entry is the first one in it's list, remove and shrink.
-		    table[index] = p.next;
-		    shrink();
+	for (Object o; (o = queue.poll()) != null;) {
 
-		} else if (p == null) {
-		    // Already removed.
-		    continue;
+	    if (o instanceof Entry) {
 
-		} else {
-		    // The entry is not the first entry in it's list, search it
-		    Entry prev;
-		    while ((p = (prev = p).next) != null) {
+		@SuppressWarnings("unchecked")
+		final Entry<K, E> entry = (Entry<K, E>) o;
+
+		synchronized (queue) {
+		    /*
+		     * Search the entry in it's list. If found, remove it, if
+		     * not, do nothing. The scenario that the entry is not found
+		     * means that it was already removed, this can happen if the
+		     * dead element's entry was detected already during other
+		     * operation, for example, during resize.
+		     */
+		    final int index = entry.hash & mask;
+		    Entry<K, E> p = table[index];
+		    Entry<K, E> prev = null;
+		    while (p != null) {
+			final Entry<K, E> next = p.next;
 			if (p == entry) {
-			    // Entry found, remove and shrink
-			    prev.next = p.next;
+			    if (prev == null) {
+				// First element
+				table[index] = next;
+			    } else {
+				// Not first element
+				prev.next = next;
+			    }
+			    entry.key = null; // help GC
+			    entry.next = null; // help GC
 			    shrink();
 			    break;
 			}
+			prev = p;
+			p = next;
 		    }
-		    // Entry was not found, already removed.
 		}
-
-		entry.key = null; // Help GC
-		entry.next = null; // Help GC
+	    } else {
+		if (containsNull && o == nullElement) {
+		    containsNull = false;
+		    nullElement = null;
+		    shrink();
+		}
 	    }
 	}
     }
 
-    /**
-     * Get a string representation of all elements in cache.
+    /*
+     * (non-Javadoc)
      * 
-     * @return String representation of all elements in cache.
+     * @see java.lang.Object#toString()
      */
     @Override
     public String toString() {
@@ -489,24 +508,138 @@ public class SoftHashCache<K, E> implements Cache<K, E> {
 	cleanCache();
 
 	// Iterate over all elements and append them
-	final Entry[] tab = table;
+	final Entry<K, E>[] tab = table;
+	E element;
 	for (int i = tab.length; i-- != 0;) {
-	    for (Entry entry = tab[i]; entry != null; entry = entry.next) {
-		final Object element = entry.get();
+	    for (Entry<K, E> entry = tab[i]; entry != null; entry = entry.next) {
+		element = entry.get();
 		if (element == null)
-		    // If element is already dead reference, ignore it
+		    // If element is already dead reference, ignore him
 		    continue;
 		builder.append(element);
 		builder.append(separator);
 	    }
 	}
-	if (builder.lastIndexOf(separator) >= 0) {
+	if (containsNull && (element = nullElement.get()) != null) {
+	    builder.append(element);
+	} else if (builder.lastIndexOf(separator) >= 0) {
 	    // Had any elements, delete last separator
 	    final int length = builder.length();
 	    builder.delete(length - 2, length);
 	}
 	builder.append(']');
 	return builder.toString();
+    }
+
+    /**
+     * Determines if two (non nulls) keys are equal.
+     * 
+     * @param k1
+     *            first key (non null).
+     * @param k2
+     *            second key (non null).
+     * @return true if {@code k1} is equals to {@code k2}, else - false.
+     */
+    boolean determineEquals(final K k1, final K k2) {
+	return k1.equals(k2);
+    }
+
+    /**
+     * Compute hash code of a (non null) key.
+     * 
+     * @param key
+     *            the key (non null).
+     * @return hash code of the key.
+     */
+    int computeHashCode(final K key) {
+	return key.hashCode();
+    }
+
+    /**
+     * Compute hash code of a (non null) key and mix the result.
+     * 
+     * @param key
+     *            the key (non null).
+     * @return mixed hash code of the key.
+     */
+    private int hash(final K key) {
+	return Hashs.mix(computeHashCode(key));
+    }
+
+    /**
+     * Get the element with the null key.
+     * 
+     * @return element that it;s key is null or null if one doesn't exist.
+     */
+    private E getNull() {
+	cleanCache();
+	return containsNull ? nullElement.get() : null;
+    }
+
+    /**
+     * Add an element with null key.
+     * 
+     * @param element
+     *            the added element.
+     * @return the existing element or the added if one doesn't already exist.
+     */
+    private E addNull(final E element) {
+	cleanCache();
+
+	if (containsNull) {
+	    final E existingElement = nullElement.get();
+	    if (existingElement != null)
+		return existingElement;
+	}
+	nullElement = new SoftReference<>(
+		Objects.requireNonNull(element, "Nulls elements are not allowed in soft cache"), queue);
+
+	if (!containsNull) {
+	    containsNull = true;
+	    grow();
+	}
+	return element;
+    }
+
+    /**
+     * Get or add element with null key.
+     * 
+     * @param supplier
+     *            the supplier of the element. Used only if element is null in
+     *            the cache.
+     * @return the existing element or the supplier element if one doesn't
+     *         exist.
+     */
+    private E getOrAddNull(final Function<? super K, ? extends E> supplier) {
+	cleanCache();
+
+	if (containsNull) {
+	    final E existingElement = nullElement.get();
+	    if (existingElement != null)
+		return existingElement;
+	}
+	final E element = supplier.apply(null);
+	nullElement = new SoftReference<>(
+		Objects.requireNonNull(element, "Nulls elements are not allowed in soft cache"), queue);
+
+	if (!containsNull) {
+	    containsNull = true;
+	    grow();
+	}
+	return element;
+    }
+
+    /**
+     * Remove the element that his key is null.
+     */
+    private void removeNull() {
+	cleanCache();
+	if (containsNull) {
+	    containsNull = false;
+	    nullElement.clear();
+	    nullElement = null;
+	    shrink();
+	}
     }
 
     /**
@@ -535,8 +668,8 @@ public class SoftHashCache<K, E> implements Cache<K, E> {
      *            new table capacity. MUST be a power of 2.
      */
     private void resize(final int newCapacity) {
-	final Entry[] oldTable = table;
-	final Entry[] newTable = table = new Entry[newCapacity];
+	final Entry<K, E>[] oldTable = table;
+	final Entry<K, E>[] newTable = table = newTable(newCapacity);
 
 	// Update thresholds and mask
 	growThreshold = (int) (newCapacity * loadFactor);
@@ -545,19 +678,19 @@ public class SoftHashCache<K, E> implements Cache<K, E> {
 
 	// transfer all elements to newTable
 	for (int oldIndex = oldTable.length; oldIndex-- != 0;) {
-	    for (Entry entry = oldTable[oldIndex]; entry != null;) {
+	    for (Entry<K, E> entry = oldTable[oldIndex]; entry != null;) {
 
 		// Hold next entry before transferring entry. entry.next will be
 		// irrelevant for the iteration after transferring current entry
 		// to new table.
-		final Entry next = entry.next;
+		final Entry<K, E> next = entry.next;
 
 		if (entry.get() == null) {
 		    // If we encounter dead reference, don't transfer it to new
 		    // table - use the opportunity to remove it.
 		    entry.clear();
-		    entry.next = null; // Help GC
-		    entry.key = null; // Help GC
+		    entry.next = null; // help GC
+		    entry.key = null; // help GC
 		    size--;
 
 		} else {
@@ -595,36 +728,47 @@ public class SoftHashCache<K, E> implements Cache<K, E> {
     }
 
     /**
-     * Mask object by replacing null will non null object.
+     * Create new table of entries.
      * <p>
-     * Used to mask null keys.
      * 
-     * @param o
-     *            masked object
-     * @return object quarantined to be not null.
+     * @param <K>
+     *            type of keys of the table's entries.
+     * @param <E>
+     *            type of elements of the table's entries.
+     * @param capacity
+     *            the desire capacity of the table.
+     * @return new table with the specified capacity.
      */
-    private static Object maskNull(final Object o) {
-	return o == null ? NULL : o;
+    @SuppressWarnings("unchecked")
+    private static <K, E> Entry<K, E>[] newTable(final int capacity) {
+	return new Entry[capacity];
     }
 
     /**
      * Entry of cached element in the {@link SoftHashCache}.
      * <p>
-     * The entries are stored as a bin (one way linked list) in each table cell,
+     * The entries are save as a bin (one way linked list) in each table cell,
      * and last entry at the list {@link #next} field is null.
      * <p>
      * The key is saved as a field and the element itself is saved via the super
-     * class {@link SoftReference}. When there is demand for memory and no more
-     * strong references to the element the {@link SoftHashCache} will remove
-     * the entry from the table.
+     * class {@link SoftReference}. When there is no more strong references to
+     * the element the {@link SoftHashCache} will remove the entry from the
+     * table.
      *
+     * @author Barak Ugav
+     * @author Yishai Gronich
+     * 
+     * @param <K>
+     *            type of key.
+     * @param <E>
+     *            type of element.
      */
-    private static class Entry extends SoftReference<Object> {
+    private static class Entry<K, E> extends SoftReference<E> {
 
 	/**
 	 * The entry key.
 	 */
-	private Object key;
+	private K key;
 
 	/**
 	 * Cache for the key hash.
@@ -635,7 +779,7 @@ public class SoftHashCache<K, E> implements Cache<K, E> {
 	 * The next entry at the entry linked list, or null if this entry is the
 	 * last entry in the list.
 	 */
-	private Entry next;
+	private Entry<K, E> next;
 
 	/**
 	 * Construct new entry
@@ -650,11 +794,13 @@ public class SoftHashCache<K, E> implements Cache<K, E> {
 	 * @param hash
 	 *            hash of the key
 	 * @param next
-	 *            next entry
+	 *            next entry.
+	 * @throws NullPointerException
+	 *             if the element is null.
 	 */
-	public Entry(final Object key, final Object element, final ReferenceQueue<Object> queue, final int hash,
-		final Entry next) {
-	    super(element, queue);
+	public Entry(final K key, final E element, final ReferenceQueue<? super E> queue, final int hash,
+		final Entry<K, E> next) {
+	    super(Objects.requireNonNull(element, "Nulls elements are not allowed in soft cache"), queue);
 	    this.key = key;
 	    this.hash = hash;
 	    this.next = next;

@@ -41,7 +41,7 @@ public class CSVHitsDao implements HitsDao {
     /**
      * Cache for loaded unique hits.
      */
-    private final Cache<String, Set<UniqueHit>> m_cacheHits;
+    private final Cache<String, List<UniqueHit>> m_cacheHits;
 
     /**
      * Cache for hits number by filter and rules.
@@ -95,9 +95,9 @@ public class CSVHitsDao implements HitsDao {
      * {@inheritDoc}
      */
     @Override
-    public Set<UniqueHit> getUniqueHits(final String jobName, final List<Rule> rules, final Filter filter)
+    public Iterable<UniqueHit> getUniqueHits(final String jobName, final List<Rule> rules, final Filter filter)
 	    throws CSVParseException, IOException {
-	final Set<UniqueHit> uniqueHits = getUniqueHitsInternal(CSVDaoConfig.getHitsFile(jobName));
+	final List<UniqueHit> uniqueHits = getUniqueHitsInternal(CSVDaoConfig.getHitsFile(jobName));
 
 	if (rules.isEmpty() && Filter.ANY_FILTER.equals(filter)) {
 	    // No filter is needed.
@@ -105,7 +105,7 @@ public class CSVHitsDao implements HitsDao {
 	}
 
 	// Filter hits by the rules and filter.
-	final Set<UniqueHit> filteredHits = new HashSet<>();
+	final List<UniqueHit> filteredHits = new ArrayList<>();
 	for (final UniqueHit hit : uniqueHits) {
 	    if (DaoUtilities.isMatch(hit, rules, filter)) {
 		filteredHits.add(hit);
@@ -143,7 +143,7 @@ public class CSVHitsDao implements HitsDao {
      * @throws IOException
      *             if any I/O errors occurs.
      */
-    private Set<UniqueHit> getUniqueHitsInternal(final String fileName) throws CSVParseException, IOException {
+    private List<UniqueHit> getUniqueHitsInternal(final String fileName) throws CSVParseException, IOException {
 	try {
 	    return m_cacheHits.getOrAdd(fileName, UNIQUE_HITS_SUPPLIER);
 	} catch (final UncheckedIOException e) {
@@ -159,13 +159,12 @@ public class CSVHitsDao implements HitsDao {
      * 
      * @see #getHitsNumber(String, List, Filter)
      */
-    private final Function<Triple<String, Set<Rule>, Filter>, Integer> HITS_NUMBER_SUPPLIER = (
-	    final Triple<String, Set<Rule>, Filter> triple) -> {
+    private final Function<Triple<String, Set<Rule>, Filter>, Integer> HITS_NUMBER_SUPPLIER = triple -> {
 	try {
 	    final String jobName = triple.getFirst();
 	    final Set<Rule> rules = triple.getSecond();
 	    final Filter filter = triple.getThird();
-	    final Set<UniqueHit> uniqueHits = getUniqueHitsInternal(CSVDaoConfig.getHitsFile(jobName));
+	    final List<UniqueHit> uniqueHits = getUniqueHitsInternal(CSVDaoConfig.getHitsFile(jobName));
 	    int hitsNumber = 0;
 	    for (final UniqueHit hit : uniqueHits) {
 		if (DaoUtilities.isMatch(hit, rules, filter)) {
@@ -186,7 +185,7 @@ public class CSVHitsDao implements HitsDao {
      * 
      * @see CSVHitsDao#getUniqueHitsInternal(String)
      */
-    private static final Function<String, Set<UniqueHit>> UNIQUE_HITS_SUPPLIER = (final String fileName) -> {
+    private static final Function<String, List<UniqueHit>> UNIQUE_HITS_SUPPLIER = fileName -> {
 	final Map<Hit, MutableInteger> hitsCount = new HashMap<>();
 	try {
 	    CSVParser.fromCSV(CSVParser.DEFAULT_COLUMNS_TYPES, fileName, Collections.emptyList(), Filter.ANY_FILTER,
@@ -194,13 +193,7 @@ public class CSVHitsDao implements HitsDao {
 
 		@Override
 		public boolean add(final Hit hit) {
-		    MutableInteger count = hitsCount.get(hit);
-		    if (count == null) {
-			count = new MutableInteger(1);
-			hitsCount.put(hit, count);
-		    } else {
-			count.value++;
-		    }
+		    hitsCount.computeIfAbsent(hit, MutableInteger.zeroInitializerFunction).value++;
 		    return true;
 		}
 
@@ -221,7 +214,7 @@ public class CSVHitsDao implements HitsDao {
 	    throw new UncheckedCSVParseException(e);
 	}
 
-	final Set<UniqueHit> uniqueHits = new HashSet<>();
+	final List<UniqueHit> uniqueHits = new ArrayList<>(hitsCount.size());
 	for (final Iterator<Map.Entry<Hit, MutableInteger>> it = hitsCount.entrySet().iterator(); it.hasNext();) {
 	    final Map.Entry<Hit, MutableInteger> entry = it.next();
 	    final Hit hit = entry.getKey();
@@ -229,7 +222,7 @@ public class CSVHitsDao implements HitsDao {
 	    it.remove();
 	}
 	// Don't let anyone change the cache
-	return Collections.unmodifiableSet(uniqueHits);
+	return Collections.unmodifiableList(uniqueHits);
     };
 
 }

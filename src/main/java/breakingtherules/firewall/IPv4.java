@@ -1,7 +1,6 @@
 package breakingtherules.firewall;
 
 import java.util.List;
-import java.util.function.Function;
 
 import breakingtherules.utilities.Cache;
 import breakingtherules.utilities.Caches;
@@ -537,10 +536,7 @@ public final class IPv4 extends IP {
 
 	static {
 	    final Cache<Integer, IPv4> c = Caches.synchronizedCache(new SoftHashCache<>());
-	    final Function<Integer, IPv4> supplier = (final Integer address) -> {
-		return new IPv4(address.intValue(), SIZE);
-	    };
-	    cache = Caches.cacheSupplierPair(c, supplier);
+	    cache = Caches.cacheSupplierPair(c, address -> new IPv4(address.intValue(), SIZE));
 	}
 
     }

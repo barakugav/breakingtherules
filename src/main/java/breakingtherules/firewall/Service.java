@@ -692,7 +692,7 @@ public class Service extends Attribute {
 	    for (int i = caches.length; i-- != 0;) {
 		final int protocolCode = i;
 		final Cache<Integer, Service> cache = Caches.synchronizedCache(new SoftHashCache<>());
-		final Function<Integer, Service> supplier = (final Integer portInteger) -> {
+		final Function<Integer, Service> supplier = portInteger -> {
 		    final int port = portInteger.intValue();
 		    return new Service(protocolCode, (port << 16) | port);
 		};

@@ -1,8 +1,14 @@
 package breakingtherules.dao.xml;
 
 import java.io.IOException;
+import java.util.AbstractSet;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -25,6 +31,7 @@ import breakingtherules.firewall.Hit;
 import breakingtherules.firewall.Rule;
 import breakingtherules.firewall.Service;
 import breakingtherules.firewall.Source;
+import breakingtherules.utilities.MutableInteger;
 
 /**
  * Implementation of {@link HitsDao} by XML repository.
@@ -81,34 +88,47 @@ public class XMLHitsDao implements HitsDao {
      */
     public ListDto<Hit> getHitsByPath(final String fileName, final List<Rule> rules, final Filter filter)
 	    throws IOException, XMLParseException {
-
-	// Load from file
-	final Document repositoryDoc = XMLUtilities.readFile(fileName);
-
-	// Get all hits from repository
-	final NodeList hitsList = repositoryDoc.getElementsByTagName(XMLDaoConfig.HIT);
-
-	// Extract all hits that match the filter
-	final int length = hitsList.getLength();
-	final ArrayList<Hit> hits = new ArrayList<>(length);
-	for (int i = 0; i < length; i++) {
-	    final Node hitNode = hitsList.item(i);
-	    if (hitNode.getNodeType() == Node.ELEMENT_NODE) {
-		final Element hitElm = (Element) hitNode;
-		final Hit hit = createHit(hitElm);
-		if (DaoUtilities.isMatch(hit, rules, filter)) {
-		    hits.add(hit);
-		}
-	    }
-	}
+	final ArrayList<Hit> hits = new ArrayList<>();
+	parseHits(fileName, rules, filter, hits);
 	hits.trimToSize();
 	final int size = hits.size();
 	return new ListDto<>(hits, 0, size, size);
     }
 
     @Override
-    public Set<UniqueHit> getUniqueHits(final String jobName, final List<Rule> rules, final Filter filter) {
-	return null;
+    public Set<UniqueHit> getUniqueHits(final String jobName, final List<Rule> rules, final Filter filter)
+	    throws XMLParseException, IOException {
+
+	final Map<Hit, MutableInteger> hitsCount = new HashMap<>();
+	parseHits(XMLDaoConfig.getHitsFile(jobName), rules, filter, new AbstractSet<Hit>() {
+
+	    @Override
+	    public boolean add(final Hit hit) {
+		hitsCount.computeIfAbsent(hit, MutableInteger.zeroInitializerFunction).value++;
+		return true;
+	    }
+
+	    @Override
+	    public Iterator<Hit> iterator() {
+		return hitsCount.keySet().iterator();
+	    }
+
+	    @Override
+	    public int size() {
+		return hitsCount.size();
+	    }
+
+	});
+
+	final Set<UniqueHit> uniqueHits = new HashSet<>();
+	for (final Iterator<Map.Entry<Hit, MutableInteger>> it = hitsCount.entrySet().iterator(); it.hasNext();) {
+	    final Map.Entry<Hit, MutableInteger> entry = it.next();
+	    final Hit hit = entry.getKey();
+	    final int amount = entry.getValue().value;
+	    uniqueHits.add(new UniqueHit(hit, amount));
+	    it.remove();
+	}
+	return uniqueHits;
     }
 
     @Override
@@ -142,6 +162,28 @@ public class XMLHitsDao implements HitsDao {
 	    XMLUtilities.writeFile(filePath, doc);
 	} catch (final ParserConfigurationException e) {
 	    throw new IOException(e);
+	}
+    }
+
+    private static void parseHits(final String fileName, final List<Rule> rules, final Filter filter,
+	    final Collection<? super Hit> destination) throws XMLParseException, IOException {
+	// Load from file
+	final Document repositoryDoc = XMLUtilities.readFile(fileName);
+
+	// Get all hits from repository
+	final NodeList hitsList = repositoryDoc.getElementsByTagName(XMLDaoConfig.HIT);
+
+	// Extract all hits that match the filter
+	final int length = hitsList.getLength();
+	for (int i = 0; i < length; i++) {
+	    final Node hitNode = hitsList.item(i);
+	    if (hitNode.getNodeType() == Node.ELEMENT_NODE) {
+		final Element hitElm = (Element) hitNode;
+		final Hit hit = createHit(hitElm);
+		if (DaoUtilities.isMatch(hit, rules, filter)) {
+		    destination.add(hit);
+		}
+	    }
 	}
     }
 

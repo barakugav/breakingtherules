@@ -46,12 +46,14 @@ public interface Cache<K, E> {
      * Remove a cashed element by its key.
      * 
      * @param key
-     *            the element's key
+     *            the element's key.
      */
     public void remove(K key);
 
     /**
      * Get the number of cached elements in the cache.
+     * <p>
+     * Used mostly for testing.
      * 
      * @return number of cached elements.
      */
@@ -63,16 +65,36 @@ public interface Cache<K, E> {
     public void clear();
 
     /**
-     * Get an element from the cache or add one if one doesn't exists in the
-     * cache.
+     * Get an element from the cache by it's key or add one if one doesn't
+     * exist.
+     * <p>
+     * This method should be used for two reasons:
+     * <ol>
+     * <li>It can improve performance, instead of calling {@link #get(Object)}
+     * and if null is returned call {@link #add(Object, Object)}, the operation
+     * combined to one, and can be overridden by a faster implementation.</li>
+     * <li>Thread safety, if all the cache methods are synchronized, calling
+     * this method ensure that no other threads used the cache between the
+     * element search and it's insertion (if needed). If this method wasn't
+     * exist, and the alternative is to call {@link #get(Object)} and if
+     * returned null call {@link #add(Object, Object)}, another thread could add
+     * the desire element between the two calls, duplication the creation effort
+     * of the element.</li>
+     * </ol>
+     * <p>
+     * This method is similar to {@link Map#computeIfAbsent(Object, Function)}.
+     * <p>
      * 
      * @param key
-     *            the element key
+     *            the key of the element.
      * @param supplier
-     *            a supplier of the element, which will be used only if the
-     *            element doesn't exist in the cache.
-     * @return the element that exists in the cache or the ones supplied from
-     *         the supplier if needed.
+     *            the supplier of the element if one doesn't exist in the cache.
+     * @return the existing element or the one created from the supplier (if
+     *         needed).
+     * @throws NullPointerException
+     *             if the supplier is needed and it's null or the supplied
+     *             element is null (null elements are not allowed in weak
+     *             cache).
      */
     default E getOrAdd(final K key, final Function<? super K, ? extends E> supplier) {
 	E elm = get(key);

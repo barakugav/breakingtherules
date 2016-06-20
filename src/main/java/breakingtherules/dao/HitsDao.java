@@ -12,6 +12,7 @@ import breakingtherules.dto.ListDto;
 import breakingtherules.firewall.Filter;
 import breakingtherules.firewall.Hit;
 import breakingtherules.firewall.Rule;
+import breakingtherules.utilities.MutableInteger;
 import breakingtherules.utilities.Utility;
 
 /**
@@ -65,10 +66,10 @@ public interface HitsDao {
      */
     default ListDto<UniqueHit> getHits(String jobName, List<Rule> rules, Filter filter, int startIndex, int endIndex)
 	    throws IOException, ParseException {
-	final Set<UniqueHit> allHits = getUniqueHits(jobName, rules, filter);
-	final int size = allHits.size();
+	final Iterable<UniqueHit> allHits = getUniqueHits(jobName, rules, filter);
+	final int totalSize = getHitsNumber(jobName, rules, filter);
 	final List<UniqueHit> hits = Utility.subList(allHits, startIndex, endIndex - startIndex);
-	return new ListDto<>(hits, Math.min(startIndex, size), Math.min(endIndex, size), size);
+	return new ListDto<>(hits, Math.min(startIndex, totalSize), Math.min(endIndex, totalSize), totalSize);
     }
 
     /**
@@ -79,27 +80,25 @@ public interface HitsDao {
      * @param rules
      *            list of current rules.
      * @param filter
-     *            current filter/
-     * @return set of unique hits.
+     *            current filter.
+     * @return iterable object of all unique hits.
      * @throws IOException
      *             if failed to read from memory.
      * @throws ParseException
      *             if any parse errors occurs in the data.
      */
-    default Set<UniqueHit> getUniqueHits(final String jobName, final List<Rule> rules, final Filter filter)
+    default Iterable<UniqueHit> getUniqueHits(final String jobName, final List<Rule> rules, final Filter filter)
 	    throws IOException, ParseException {
 	final List<Hit> hits = getHits(jobName, rules, filter).getData();
-	final Map<Hit, Integer> hitsCount = new HashMap<>();
+	final Map<Hit, MutableInteger> hitsCount = new HashMap<>();
 	for (final Hit hit : hits) {
-	    Integer count = hitsCount.get(hit);
-	    count = Integer.valueOf(count == null ? 1 : count.intValue() + 1);
-	    hitsCount.put(hit, count);
+	    hitsCount.computeIfAbsent(hit, MutableInteger.zeroInitializerFunction).value++;
 	}
 	final Set<UniqueHit> uniqueHits = new HashSet<>();
-	for (final Iterator<Map.Entry<Hit, Integer>> it = hitsCount.entrySet().iterator(); it.hasNext();) {
-	    final Map.Entry<Hit, Integer> entry = it.next();
+	for (final Iterator<Map.Entry<Hit, MutableInteger>> it = hitsCount.entrySet().iterator(); it.hasNext();) {
+	    final Map.Entry<Hit, MutableInteger> entry = it.next();
 	    final Hit hit = entry.getKey();
-	    final int amount = entry.getValue().intValue();
+	    final int amount = entry.getValue().value;
 	    uniqueHits.add(new UniqueHit(hit, amount));
 	    it.remove();
 	}

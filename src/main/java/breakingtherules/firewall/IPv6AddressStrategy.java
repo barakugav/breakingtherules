@@ -1,8 +1,7 @@
 package breakingtherules.firewall;
 
-import breakingtherules.utilities.SoftCustomHashCache;
-import breakingtherules.utilities.WeakCustomHashCache;
 import breakingtherules.utilities.Hashs.Strategy;
+import breakingtherules.utilities.SoftCustomHashCache;
 
 /**
  * A strategy the treats only to the address of an IPv6.
@@ -16,7 +15,6 @@ import breakingtherules.utilities.Hashs.Strategy;
  * @author Barak Ugav
  * @author Yishai Gronich
  * 
- * @see WeakCustomHashCache
  * @see SoftCustomHashCache
  *
  */

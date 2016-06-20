@@ -4,7 +4,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import breakingtherules.dao.HitsDao;
 import breakingtherules.dao.UniqueHit;
@@ -43,7 +42,7 @@ public class SimpleAlgorithm implements SuggestionsAlgorithm {
 	return getSuggestions(dao.getUniqueHits(jobName, rules, filter), amount, attTypeId);
     }
 
-    List<Suggestion> getSuggestions(final Set<UniqueHit> hits, final int amount, final int attTypeId) {
+    List<Suggestion> getSuggestions(final Iterable<UniqueHit> hits, final int amount, final int attTypeId) {
 	SimpleAlgorithmRunner runner = new SimpleAlgorithmRunner(hits, amount, attTypeId);
 	runner.run();
 	return runner.result;
@@ -51,12 +50,12 @@ public class SimpleAlgorithm implements SuggestionsAlgorithm {
 
     static class SimpleAlgorithmRunner implements Runnable {
 
-	private final Set<UniqueHit> hits;
+	private final Iterable<UniqueHit> hits;
 	private final int amount;
 	private final int attTypeId;
 	private List<Suggestion> result;
 
-	SimpleAlgorithmRunner(final Set<UniqueHit> hits, final int amount, final int attTypeId) {
+	SimpleAlgorithmRunner(final Iterable<UniqueHit> hits, final int amount, final int attTypeId) {
 	    this.hits = hits;
 	    this.amount = amount;
 	    this.attTypeId = attTypeId;

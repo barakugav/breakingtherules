@@ -9,10 +9,10 @@ import java.util.NoSuchElementException;
  * @author Barak Ugav
  * @author Yishai Gronich
  * 
- * @param <T>
+ * @param <E>
  *            type of elements the iterator will iterate over
  */
-public class ArrayIterator<T> implements Iterator<T> {
+public class ArrayIterator<E> implements Iterator<E> {
 
     /**
      * The length of the array.
@@ -22,7 +22,7 @@ public class ArrayIterator<T> implements Iterator<T> {
     /**
      * The array the iterator is iterating on.
      */
-    private final T[] array;
+    private final E[] array;
 
     /**
      * The next index of the next element to return.
@@ -44,7 +44,7 @@ public class ArrayIterator<T> implements Iterator<T> {
      * @throws NullPointerException
      *             if the array is null.
      */
-    public ArrayIterator(final T[] array) {
+    public ArrayIterator(final E[] array) {
 	this(array, false);
     }
 
@@ -61,7 +61,7 @@ public class ArrayIterator<T> implements Iterator<T> {
      * @throws NullPointerException
      *             if the array is null.
      */
-    public ArrayIterator(final T[] array, final boolean skipNull) {
+    public ArrayIterator(final E[] array, final boolean skipNull) {
 	this.array = array;
 	length = array.length;
 	this.skipNull = skipNull;
@@ -84,7 +84,7 @@ public class ArrayIterator<T> implements Iterator<T> {
      * @see java.util.Iterator#next()
      */
     @Override
-    public T next() {
+    public E next() {
 	final int i = nextIndex;
 	if (i >= length)
 	    throw new NoSuchElementException();

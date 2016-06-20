@@ -3,13 +3,12 @@ package breakingtherules.firewall;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.function.Function;
 
 import breakingtherules.utilities.Cache;
 import breakingtherules.utilities.Caches;
 import breakingtherules.utilities.Caches.CacheSupplierPair;
-import breakingtherules.utilities.SoftCustomHashCache;
 import breakingtherules.utilities.IntArrayStrategy;
+import breakingtherules.utilities.SoftCustomHashCache;
 import breakingtherules.utilities.Utility;
 
 /**
@@ -671,10 +670,7 @@ public final class IPv6 extends IP {
 
 	static {
 	    final Cache<int[], IPv6> c = Caches.synchronizedCache(new SoftCustomHashCache<>(IntArrayStrategy.INSTANCE));
-	    final Function<int[], IPv6> supplier = (final int[] array) -> {
-		return new IPv6(array, SIZE);
-	    };
-	    cache = Caches.cacheSupplierPair(c, supplier);
+	    cache = Caches.cacheSupplierPair(c, address -> new IPv6(address, SIZE));
 	}
 
     }
