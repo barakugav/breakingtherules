@@ -4,8 +4,10 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.elasticsearch.action.bulk.BulkItemResponse;
 import org.elasticsearch.action.bulk.BulkRequestBuilder;
@@ -31,6 +33,7 @@ import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
 
 import breakingtherules.dao.HitsDao;
+import breakingtherules.dao.ParseException;
 import breakingtherules.dto.ListDto;
 import breakingtherules.firewall.Attribute;
 import breakingtherules.firewall.Filter;
@@ -41,6 +44,8 @@ import breakingtherules.utilities.Triple.UnmodifiableTriple;
 import breakingtherules.utilities.Utility;
 
 public class ElasticHitsDao implements HitsDao {
+
+    // TODO extends from AbstractCachedHitsDao
 
     private final Node m_elasticNode;
 
@@ -206,13 +211,14 @@ public class ElasticHitsDao implements HitsDao {
 	if (cachedSize != null) {
 	    return cachedSize.intValue();
 	} else {
-	    return getHits(jobName, rules, filter).getSize();
+	    return getHitsList(jobName, rules, filter).getSize();
 	}
     }
 
     @Override
-    public ListDto<Hit> getHits(final String jobName, final List<Rule> rules, final Filter filter) throws IOException {
-	final List<Hit> hits = getHits(jobName, rules, filter, true, 0, 0);
+    public ListDto<Hit> getHitsList(final String jobName, final List<Rule> rules, final Filter filter)
+	    throws IOException {
+	final List<Hit> hits = Utility.newArrayList(getHits(jobName, rules, filter, true, 0, 0));
 
 	// Create new list of the rules to clone the list - so modifications on
 	// the original list will not change the list saved in the cache
@@ -222,7 +228,12 @@ public class ElasticHitsDao implements HitsDao {
 		Integer.valueOf(hits.size()));
 	return new ListDto<>(hits, 0, hits.size(), hits.size());
     }
-    
+
+    public Iterable<Hit> getHits(final String jobName, final List<Rule> rules, final Filter filter)
+	    throws IOException, ParseException {
+	return getHits(jobName, rules, filter, true, 0, 0);
+    }
+
     @Override
     public void initJob(String jobName, List<Hit> hits) throws IllegalArgumentException, IOException {
 	addHits(hits, jobName);
@@ -264,7 +275,7 @@ public class ElasticHitsDao implements HitsDao {
      * @return A ListDto of the relevant hits, from the given range, if such
      *         exists
      */
-    private List<Hit> getHits(final String jobName, final List<Rule> rules, final Filter filter, final boolean all,
+    private Set<Hit> getHits(final String jobName, final List<Rule> rules, final Filter filter, final boolean all,
 	    int startIndex, final int endIndex) {
 	final QueryBuilder query = QueryBuilders.termQuery(ElasticDaoConfig.FIELD_JOB_NAME, jobName);
 
@@ -276,7 +287,7 @@ public class ElasticHitsDao implements HitsDao {
 
 	SearchResponse scrollResp = srchRequest.execute().actionGet();
 
-	final List<Hit> relevantHits = new ArrayList<>();
+	final Set<Hit> relevantHits = new HashSet<>();
 	int i = 0; // to only take the relevant indices.
 	if (all) {
 	    startIndex = 0;

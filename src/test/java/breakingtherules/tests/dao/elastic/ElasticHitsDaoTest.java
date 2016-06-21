@@ -13,7 +13,6 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import breakingtherules.dao.ParseException;
-import breakingtherules.dao.UniqueHit;
 import breakingtherules.dao.elastic.ElasticHitsDao;
 import breakingtherules.dto.ListDto;
 import breakingtherules.firewall.Attribute;
@@ -75,7 +74,7 @@ public class ElasticHitsDaoTest extends TestBase {
 	checkJob();
 	Hit newHit = createHit();
 	hitsDao.addHit(newHit, JOB_NAME);
-	ListDto<Hit> hits = hitsDao.getHits(JOB_NAME, new ArrayList<Rule>(), Filter.ANY_FILTER);
+	ListDto<Hit> hits = hitsDao.getHitsList(JOB_NAME, new ArrayList<Rule>(), Filter.ANY_FILTER);
 	assertTrue(hits.getSize() > 0);
     }
 
@@ -88,7 +87,7 @@ public class ElasticHitsDaoTest extends TestBase {
 	    newHits.add(createHit());
 	}
 	hitsDao.addHits(newHits, JOB_NAME);
-	ListDto<Hit> hits = hitsDao.getHits(JOB_NAME, new ArrayList<Rule>(), Filter.ANY_FILTER);
+	ListDto<Hit> hits = hitsDao.getHitsList(JOB_NAME, new ArrayList<Rule>(), Filter.ANY_FILTER);
 	assertTrue(hits.getSize() >= SIZE);
     }
 
@@ -103,8 +102,7 @@ public class ElasticHitsDaoTest extends TestBase {
 	hitsDao.addHits(newHits, JOB_NAME);
 	int beginIndex = 2;
 	int endIndex = 4;
-	ListDto<UniqueHit> hits = hitsDao.getHits(JOB_NAME, new ArrayList<Rule>(), Filter.ANY_FILTER, beginIndex,
-		endIndex);
+	ListDto<Hit> hits = hitsDao.getHitsList(JOB_NAME, new ArrayList<Rule>(), Filter.ANY_FILTER, beginIndex, endIndex);
 	assertEquals(endIndex - beginIndex, hits.getData().size());
     }
 

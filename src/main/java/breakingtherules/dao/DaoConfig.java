@@ -10,6 +10,8 @@ import java.io.IOException;
  * @author Barak Ugav
  * @author Yishai Gronich
  * 
+ * @see HitsDao
+ * @see RulesDao
  */
 public class DaoConfig {
 
@@ -45,14 +47,14 @@ public class DaoConfig {
      *             If the directory write was unsuccessful
      */
     public static boolean initRepository(final String jobName) throws IOException {
-	File directory = new File(getRepoRoot(jobName));
-	if (directory.exists())
+	final File directory = new File(getRepoRoot(jobName));
+	if (directory.exists()) {
 	    return false;
+	}
 	if (directory.mkdir()) {
 	    return true;
-	} else {
-	    throw new IOException();
 	}
+	throw new IOException();
     }
 
 }

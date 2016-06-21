@@ -12,6 +12,7 @@ import breakingtherules.firewall.Rule;
  * @author Barak Ugav
  * @author Yishai Gronich
  * 
+ * @see Rule
  */
 public interface RulesDao {
 

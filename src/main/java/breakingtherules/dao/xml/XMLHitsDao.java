@@ -1,15 +1,14 @@
 package breakingtherules.dao.xml;
 
 import java.io.IOException;
-import java.util.AbstractSet;
+import java.io.UncheckedIOException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
+import java.util.Collections;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -20,10 +19,9 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
+import breakingtherules.dao.AbstractCachedHitsDao;
 import breakingtherules.dao.DaoUtilities;
 import breakingtherules.dao.HitsDao;
-import breakingtherules.dao.UniqueHit;
-import breakingtherules.dto.ListDto;
 import breakingtherules.firewall.Attribute;
 import breakingtherules.firewall.Destination;
 import breakingtherules.firewall.Filter;
@@ -31,7 +29,6 @@ import breakingtherules.firewall.Hit;
 import breakingtherules.firewall.Rule;
 import breakingtherules.firewall.Service;
 import breakingtherules.firewall.Source;
-import breakingtherules.utilities.MutableInteger;
 
 /**
  * Implementation of {@link HitsDao} by XML repository.
@@ -44,24 +41,33 @@ import breakingtherules.utilities.MutableInteger;
  * @author Yishai Gronich
  * 
  */
-public class XMLHitsDao implements HitsDao {
+public class XMLHitsDao extends AbstractCachedHitsDao {
+
+    /**
+     * Supplier function of hits.
+     * <p>
+     * 
+     * @see #getHitsSupplier()
+     */
+    private static final Function<String, Set<Hit>> HITS_SUPPLIER = jobName -> {
+	try {
+	    final Set<Hit> hits = new HashSet<>();
+	    parseHits(XMLDaoConfig.getHitsFile(jobName), Collections.emptyList(), Filter.ANY_FILTER, hits);
+	    return hits;
+
+	} catch (final IOException e) {
+	    throw new UncheckedIOException(e);
+	} catch (final XMLParseException e) {
+	    throw new UncheckedXMLParseException(e);
+	}
+    };
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public int getHitsNumber(final String jobName, final List<Rule> rules, final Filter filter)
-	    throws IOException, XMLParseException {
-	return getHits(jobName, rules, filter).getSize();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public ListDto<Hit> getHits(final String jobName, final List<Rule> rules, final Filter filter)
-	    throws IOException, XMLParseException {
-	return getHitsByPath(XMLDaoConfig.getHitsFile(jobName), rules, filter);
+    public void initJob(String jobName, List<Hit> hits) throws IOException {
+	writeHits(hits, XMLDaoConfig.getHitsFile(jobName));
     }
 
     /**
@@ -80,57 +86,11 @@ public class XMLHitsDao implements HitsDao {
      * @throws XMLParseException
      *             if any XML parse error occurs in the data.
      */
-    public ListDto<Hit> getHitsByPath(final String fileName, final List<Rule> rules, final Filter filter)
+    public static List<Hit> parseHits(final String fileName, final List<Rule> rules, final Filter filter)
 	    throws IOException, XMLParseException {
 	final ArrayList<Hit> hits = new ArrayList<>();
 	parseHits(fileName, rules, filter, hits);
-	hits.trimToSize();
-	final int size = hits.size();
-	return new ListDto<>(hits, 0, size, size);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Set<UniqueHit> getUniqueHits(final String jobName, final List<Rule> rules, final Filter filter)
-	    throws XMLParseException, IOException {
-
-	final Map<Hit, MutableInteger> hitsCount = new HashMap<>();
-	parseHits(XMLDaoConfig.getHitsFile(jobName), rules, filter, new AbstractSet<Hit>() {
-
-	    @Override
-	    public boolean add(final Hit hit) {
-		hitsCount.computeIfAbsent(hit, MutableInteger.zeroInitializerFunction).value++;
-		return true;
-	    }
-
-	    @Override
-	    public Iterator<Hit> iterator() {
-		return hitsCount.keySet().iterator();
-	    }
-
-	    @Override
-	    public int size() {
-		return hitsCount.size();
-	    }
-
-	});
-
-	final Set<UniqueHit> uniqueHits = new HashSet<>();
-	for (final Iterator<Map.Entry<Hit, MutableInteger>> it = hitsCount.entrySet().iterator(); it.hasNext();) {
-	    final Map.Entry<Hit, MutableInteger> entry = it.next();
-	    final Hit hit = entry.getKey();
-	    final int amount = entry.getValue().value;
-	    uniqueHits.add(new UniqueHit(hit, amount));
-	    it.remove();
-	}
-	return uniqueHits;
-    }
-
-    @Override
-    public void initJob(String jobName, List<Hit> hits) throws IOException {
-	toXml(hits, XMLDaoConfig.getHitsFile(jobName));
+	return hits;
     }
 
     /**
@@ -138,12 +98,12 @@ public class XMLHitsDao implements HitsDao {
      * 
      * @param hits
      *            list of the hits
-     * @param filePath
+     * @param fileName
      *            output file path
      * @throws IOException
      *             if fails to write to file
      */
-    public static void toXml(final List<Hit> hits, final String filePath) throws IOException {
+    public static void writeHits(final List<Hit> hits, final String fileName) throws IOException {
 	try {
 	    final DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 	    final DocumentBuilder builder = factory.newDocumentBuilder();
@@ -156,10 +116,72 @@ public class XMLHitsDao implements HitsDao {
 	    }
 	    doc.appendChild(repoElm);
 
-	    XMLUtilities.writeFile(filePath, doc);
+	    XMLUtilities.writeFile(fileName, doc);
 	} catch (final ParserConfigurationException e) {
 	    throw new IOException(e);
 	}
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected Function<String, Set<Hit>> getHitsSupplier() {
+	return HITS_SUPPLIER;
+    }
+
+    /**
+     * Unchecked version of {@link XMLParseException}.
+     * <p>
+     * The UncheckedXMLParseException is a wrapper for a checked
+     * {@link XMLParseException}.
+     * <p>
+     * Used when implementing or overriding a method that doesn't throw super
+     * class exception of {@link XMLParseException}.
+     * <p>
+     * This exception is similar to {@link UncheckedIOException}.
+     * <p>
+     * 
+     * @author Barak Ugav
+     * @author Yishai Gronich
+     *
+     */
+    protected static class UncheckedXMLParseException extends UncheckedParseException {
+
+	@SuppressWarnings("javadoc")
+	private static final long serialVersionUID = 6371272539188428352L;
+
+	/**
+	 * Construct new UncheckedXMLParseException without a message.
+	 * 
+	 * @param cause
+	 *            the original checked {@link XMLParseException}.
+	 */
+	protected UncheckedXMLParseException(final XMLParseException cause) {
+	    super(cause);
+	}
+
+	/**
+	 * Construct new UncheckedXMLParseException with a message.
+	 * 
+	 * @param message
+	 *            the exception's message.
+	 * @param cause
+	 *            the original checked {@link XMLParseException}.
+	 */
+	protected UncheckedXMLParseException(final String message, final XMLParseException cause) {
+	    super(message, cause);
+	}
+
+	/**
+	 * Get the {@link XMLParseException} cause of this unchecked exception.
+	 * <p>
+	 */
+	@Override
+	public synchronized XMLParseException getCause() {
+	    return (XMLParseException) super.getCause();
+	}
+
     }
 
     /**

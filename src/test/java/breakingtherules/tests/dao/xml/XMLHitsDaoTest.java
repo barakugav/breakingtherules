@@ -15,8 +15,8 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 import breakingtherules.dao.xml.XMLHitsDao;
-import breakingtherules.dao.xml.XMLUtilities;
 import breakingtherules.dao.xml.XMLParseException;
+import breakingtherules.dao.xml.XMLUtilities;
 import breakingtherules.firewall.Filter;
 import breakingtherules.firewall.Rule;
 import breakingtherules.tests.TestBase;
@@ -37,8 +37,7 @@ public class XMLHitsDaoTest extends TestBase {
 	    doc.addElement(hitElm);
 	}
 
-	XMLHitsDao dao = new XMLHitsDao();
-	dao.getHitsByPath(doc.getPath(), new ArrayList<Rule>(), Filter.ANY_FILTER);
+	XMLHitsDao.parseHits(doc.getPath(), new ArrayList<Rule>(), Filter.ANY_FILTER);
 
 	doc.destroy();
     }

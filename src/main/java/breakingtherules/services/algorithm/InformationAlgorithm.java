@@ -14,10 +14,10 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import breakingtherules.dao.HitsDao;
-import breakingtherules.dao.UniqueHit;
 import breakingtherules.firewall.Attribute;
 import breakingtherules.firewall.Destination;
 import breakingtherules.firewall.Filter;
+import breakingtherules.firewall.Hit;
 import breakingtherules.firewall.IP;
 import breakingtherules.firewall.IPAttribute;
 import breakingtherules.firewall.Rule;
@@ -110,7 +110,7 @@ public class InformationAlgorithm implements SuggestionsAlgorithm {
 
 	@Override
 	public int compare(final SubnetSuggestion s1, final SubnetSuggestion s2) {
-	    return s1.uniqueHitsCount - s2.uniqueHitsCount;
+	    return s1.size - s2.size;
 	}
     };
 
@@ -181,7 +181,7 @@ public class InformationAlgorithm implements SuggestionsAlgorithm {
 	if (attTypeId == Attribute.UNKOWN_ATTRIBUTE_ID) {
 	    throw new IllegalArgumentException("Unkown attribute: " + attType);
 	}
-	final Iterable<UniqueHit> hits = dao.getUniqueHits(jobName, rules, filter);
+	final Iterable<Hit> hits = dao.getHits(jobName, rules, filter);
 	final InformationAlgoRunner runner = new InformationAlgoRunner(hits, amount, attTypeId);
 	runner.run();
 	return runner.result;
@@ -198,7 +198,7 @@ public class InformationAlgorithm implements SuggestionsAlgorithm {
 	    final Filter filter, final int amount, final String[] attTypes) throws Exception {
 
 	final InformationAlgoRunner[] runners = new InformationAlgoRunner[attTypes.length];
-	final Iterable<UniqueHit> hits = dao.getUniqueHits(jobName, rules, filter);
+	final Iterable<Hit> hits = dao.getHits(jobName, rules, filter);
 	for (int i = 0; i < attTypes.length; i++) {
 	    final String attType = attTypes[i];
 	    final int attTypeId = Attribute.typeStrToTypeId(attType);
@@ -255,12 +255,12 @@ public class InformationAlgorithm implements SuggestionsAlgorithm {
 
     private class InformationAlgoRunner implements Runnable {
 
-	private final Iterable<UniqueHit> hits;
+	private final Iterable<Hit> hits;
 	private final int attTypeId;
 	private final int amount;
 	private List<Suggestion> result;
 
-	InformationAlgoRunner(final Iterable<UniqueHit> hits, final int amount, final int attTypeId) {
+	InformationAlgoRunner(final Iterable<Hit> hits, final int amount, final int attTypeId) {
 	    this.hits = hits;
 	    this.attTypeId = attTypeId;
 	    this.amount = amount;
@@ -309,7 +309,7 @@ public class InformationAlgorithm implements SuggestionsAlgorithm {
 	    final List<Suggestion> suggestions = new ArrayList<>(subnets.size());
 	    for (final SubnetSuggestion subnet : subnets) {
 		suggestions
-			.add(new Suggestion(Destination.create(subnet.ip), subnet.totalHitsCount, subnet.getScore()));
+			.add(new Suggestion(Destination.create(subnet.ip), subnet.size, subnet.getScore()));
 	    }
 
 	    return suggestions;
@@ -338,7 +338,7 @@ public class InformationAlgorithm implements SuggestionsAlgorithm {
 
 	    final List<Suggestion> suggestions = new ArrayList<>(subnets.size());
 	    for (final SubnetSuggestion subnet : subnets) {
-		suggestions.add(new Suggestion(Source.create(subnet.ip), subnet.totalHitsCount, subnet.getScore()));
+		suggestions.add(new Suggestion(Source.create(subnet.ip), subnet.size, subnet.getScore()));
 	    }
 	    return suggestions;
 	}
@@ -527,7 +527,7 @@ public class InformationAlgorithm implements SuggestionsAlgorithm {
 	 */
 	private IPNode[] toIPNodes() {
 	    final Map<IP, IPNode> uniqueIPNodes = new HashMap<>();
-	    for (final UniqueHit hit : hits) {
+	    for (final Hit hit : hits) {
 		final IPAttribute att = (IPAttribute) hit.getAttribute(attTypeId);
 		if (att == null) {
 		    throw new IllegalArgumentException("One of the hits doesn't have the desire attribute");
@@ -538,11 +538,9 @@ public class InformationAlgorithm implements SuggestionsAlgorithm {
 		    final IPNode newNode = new IPNode(ip);
 		    newNode.compressSize = m_ruleWeight;
 		    newNode.size = 1;
-		    newNode.totalHitsCount = hit.getAmount();
 		    uniqueIPNodes.put(ip, newNode);
 		} else {
 		    existingNode.size++;
-		    existingNode.totalHitsCount += hit.getAmount();
 		}
 	    }
 	    for (final IPNode node : uniqueIPNodes.values()) {
@@ -610,7 +608,6 @@ public class InformationAlgorithm implements SuggestionsAlgorithm {
 
 		    // The number of hits in the constructed parent node
 		    final int size = parent.size = current.size + brother.size;
-		    parent.totalHitsCount = current.totalHitsCount + brother.totalHitsCount;
 
 		    // The optimal compress size if the parent node chosen as a
 		    // union single subnetwork:
@@ -657,7 +654,6 @@ public class InformationAlgorithm implements SuggestionsAlgorithm {
 		    // Current node and the candidate brother are not brothers.
 		    // Copy all values from current node to parent node
 		    parent.size = current.size;
-		    parent.totalHitsCount = current.totalHitsCount;
 		    parent.compressSize = current.compressSize;
 		    parent.bestSubnets = current.bestSubnets;
 		}
@@ -677,7 +673,6 @@ public class InformationAlgorithm implements SuggestionsAlgorithm {
 	    if (!beforeLast.ip.isBrother(ip)) {
 		final IPNode parent = new IPNode(ip.getParent());
 		parent.size = last.size;
-		parent.totalHitsCount = last.totalHitsCount;
 		parent.compressSize = last.compressSize;
 		parent.bestSubnets = last.bestSubnets;
 		nextLayer[nextLayerSize++] = parent;
@@ -734,8 +729,6 @@ public class InformationAlgorithm implements SuggestionsAlgorithm {
 
 	int size;
 
-	int totalHitsCount;
-
 	double compressSize;
 
 	UnionList<SubnetSuggestion> bestSubnets;
@@ -773,10 +766,8 @@ public class InformationAlgorithm implements SuggestionsAlgorithm {
 	public String toString() {
 	    final StringBuilder builder = new StringBuilder();
 	    builder.append(ip);
-	    builder.append(" uniqueSize=");
+	    builder.append(" size=");
 	    builder.append(size);
-	    builder.append(" totalSize=");
-	    builder.append(totalHitsCount);
 	    builder.append(" compressSize=");
 	    builder.append(compressSize);
 	    builder.append(" nets=");
@@ -807,16 +798,13 @@ public class InformationAlgorithm implements SuggestionsAlgorithm {
 
 	private final IP ip;
 
-	private final int uniqueHitsCount;
-
-	private final int totalHitsCount;
+	private final int size;
 
 	private final double compressSize;
 
 	SubnetSuggestion(final IPNode node) {
 	    ip = node.ip;
-	    uniqueHitsCount = node.size;
-	    totalHitsCount = node.totalHitsCount;
+	    size = node.size;
 	    compressSize = node.compressSize;
 	}
 
@@ -826,7 +814,7 @@ public class InformationAlgorithm implements SuggestionsAlgorithm {
 
 	@Override
 	public String toString() {
-	    return ip.toString() + " uniqueSize=" + uniqueHitsCount + " totalSize=" + totalHitsCount + " score="
+	    return ip.toString() + " size=" + size + " score="
 		    + getScore();
 	}
 

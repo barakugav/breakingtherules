@@ -97,13 +97,13 @@ public class Utility {
 	return newArrayList(list.subList(offset, Math.min(list.size(), offset + size)));
     }
 
-    public static <T> List<T> subList(final Iterable<? extends T> iterable, final int offset, final int size) {
+    public static <E> List<E> subList(final Iterable<? extends E> iterable, final int offset, final int size) {
 	if (offset < 0 || size < 0) {
 	    throw new IllegalArgumentException("offset and size should be positive (" + offset + ", " + size + ")");
 	}
-	final List<T> list = new ArrayList<>();
+	final List<E> list = new ArrayList<>();
 	int index;
-	final Iterator<? extends T> it = iterable.iterator();
+	final Iterator<? extends E> it = iterable.iterator();
 	for (index = 0; it.hasNext() && index < offset; index++) {
 	    it.next();
 	}
@@ -113,28 +113,44 @@ public class Utility {
 	return list;
     }
 
+    public static <E> List<E> subListView(final List<E> list, final int offset, final int size) {
+	if (offset < 0 || size < 0) {
+	    throw new IllegalArgumentException("offset and size should be positive (" + offset + ", " + size + ")");
+	}
+	return list.subList(Math.min(offset, list.size()) - 1, Math.min(offset + size, list.size()));
+    }
+
     /**
-     * Create new array list and initialize it with elements from another
-     * collection.
+     * Create new array list and initialize it with elements from an iterable
+     * object.
      * <p>
      * This method is preferred over
-     * {@link ArrayList#ArrayList(java.util.Collection)} because it won't call
-     * <code>coll.toArray()<code>.
+     * {@link ArrayList#ArrayList(java.util.Collection)} for collection iterable
+     * because it won't call {@link Collection#toArray()};
      * 
      * @param <T>
      *            the type of the elements in the new array list.
-     * @param coll
-     *            the collections that contains the initialize elements of the
+     * @param iterable
+     *            the iterable that contains the initialize elements of the
      *            array list.
      * @return new array list with the collection elements.
      * @throws NullPointerException
      *             if the collection is null.
      */
-    public static <T> ArrayList<T> newArrayList(final Collection<? extends T> coll) {
-	int size = coll.size();
-	ArrayList<T> arrayList = new ArrayList<>(size);
-	for (final Iterator<? extends T> it = coll.iterator(); size-- != 0;) {
-	    arrayList.add(it.next());
+    public static <T> ArrayList<T> newArrayList(final Iterable<? extends T> iterable) {
+	final ArrayList<T> arrayList;
+	if (iterable instanceof Collection) {
+	    final Collection<? extends T> coll = (Collection<? extends T>) iterable;
+	    int size = coll.size();
+	    arrayList = new ArrayList<>(size);
+	    for (final Iterator<? extends T> it = coll.iterator(); size-- != 0;) {
+		arrayList.add(it.next());
+	    }
+	} else {
+	    arrayList = new ArrayList<>();
+	    for (final Iterator<? extends T> it = iterable.iterator(); it.hasNext();) {
+		arrayList.add(it.next());
+	    }
 	}
 	return arrayList;
     }

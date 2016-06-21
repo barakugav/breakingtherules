@@ -8,8 +8,8 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import breakingtherules.dao.ParseException;
-import breakingtherules.dao.UniqueHit;
 import breakingtherules.dto.ListDto;
+import breakingtherules.firewall.Hit;
 import breakingtherules.session.Job;
 import breakingtherules.session.NoCurrentJobException;
 
@@ -37,8 +37,7 @@ public class HitsController {
      * @throws ParseException
      */
     @RequestMapping(value = "/hits", method = RequestMethod.GET)
-    public ListDto<UniqueHit> hits(int startIndex, int endIndex)
-	    throws NoCurrentJobException, IOException, ParseException {
+    public ListDto<Hit> hits(int startIndex, int endIndex) throws NoCurrentJobException, IOException, ParseException {
 	try {
 	    return m_job.getHits(startIndex, endIndex);
 

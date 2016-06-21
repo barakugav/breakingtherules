@@ -77,8 +77,8 @@ public class Suggestion implements Comparable<Suggestion> {
     /**
      * Join this suggestion - add a new hit to it
      */
-    void join(int amount) {
-	m_size += amount;
+    void join() {
+	m_size++;
     }
 
     /**

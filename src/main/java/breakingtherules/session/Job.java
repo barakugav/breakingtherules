@@ -19,10 +19,8 @@ import breakingtherules.dao.DaoConfig;
 import breakingtherules.dao.HitsDao;
 import breakingtherules.dao.ParseException;
 import breakingtherules.dao.RulesDao;
-import breakingtherules.dao.UniqueHit;
 import breakingtherules.dao.csv.CSVDaoConfig;
 import breakingtherules.dao.csv.CSVHitsDao;
-import breakingtherules.dao.csv.CSVParseException;
 import breakingtherules.dao.xml.XMLRulesDao;
 import breakingtherules.dto.ListDto;
 import breakingtherules.dto.SuggestionsDto;
@@ -130,15 +128,15 @@ public class Job {
      * @param columnTypes
      *            The order of the columns in the CSV file
      * @throws IOException
-     * @throws CSVParseException
+     * @throws ParseException
      */
     public void createJob(String jobName, MultipartFile hitsFile, List<Integer> columnTypes)
-	    throws CSVParseException, IOException {
+	    throws IOException, ParseException {
 	DaoConfig.initRepository(jobName);
 
 	File fileDestination = new File(new File(CSVDaoConfig.getHitsFile(jobName)).getAbsolutePath());
 	hitsFile.transferTo(fileDestination);
-	List<Hit> hits = new CSVHitsDao().getHits(jobName, new ArrayList<Rule>(), Filter.ANY_FILTER).getData();
+	List<Hit> hits = new CSVHitsDao().getHitsList(jobName, new ArrayList<Rule>(), Filter.ANY_FILTER).getData();
 	m_hitsDao.initJob(jobName, hits);
 
 	Job job = new Job();
@@ -282,9 +280,9 @@ public class Job {
      * @throws ParseException
      *             if any parse errors occurs in the data.
      */
-    public ListDto<UniqueHit> getHits(int startIndex, int endIndex) throws IOException, ParseException {
+    public ListDto<Hit> getHits(int startIndex, int endIndex) throws IOException, ParseException {
 	checkJobState();
-	return m_hitsDao.getHits(m_name, getRules(), m_filter, startIndex, endIndex);
+	return m_hitsDao.getHitsList(m_name, getRules(), m_filter, startIndex, endIndex);
     }
 
     /**

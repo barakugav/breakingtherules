@@ -11,6 +11,7 @@ import breakingtherules.firewall.Rule;
  * @author Barak Ugav
  * @author Yishai Gronich
  *
+ * @see HitsDao
  */
 public class DaoUtilities {
 

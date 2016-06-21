@@ -1,31 +1,29 @@
 package breakingtherules.dao;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 import breakingtherules.dto.ListDto;
 import breakingtherules.firewall.Filter;
 import breakingtherules.firewall.Hit;
 import breakingtherules.firewall.Rule;
-import breakingtherules.utilities.MutableInteger;
 import breakingtherules.utilities.Utility;
 
 /**
  * Component that supply hits from repository.
+ * <p>
+ * The supplied hits are always unique hits.
  * 
  * @author Barak Ugav
  * @author Yishai Gronich
  * 
+ * @see Hit
  */
 public interface HitsDao {
 
     /**
-     * Get hits from repository that match all rules and filter
+     * Get list of (unique) hits from repository that match all rules and
+     * filter.
      * 
      * @param jobName
      *            id of the hits' job
@@ -33,19 +31,22 @@ public interface HitsDao {
      *            list of the current rules, act like additional filter
      * @param filter
      *            filter of the hits
-     * @return all hits that match all rules and filter
+     * @return all (unique) hits that match all rules and filter
      * @throws IOException
      *             if failed to read from memory
      * @throws ParseException
      *             if any parse errors occurs in the data.
-     * @deprecated non practical when working on large data. Use
-     *             {@link #getUniqueHits(String, List, Filter)}.
      */
-    @Deprecated
-    public ListDto<Hit> getHits(String jobName, List<Rule> rules, Filter filter) throws IOException, ParseException;
+    default ListDto<Hit> getHitsList(String jobName, List<Rule> rules, Filter filter)
+	    throws IOException, ParseException {
+	final List<Hit> hits = Utility.newArrayList(getHits(jobName, rules, filter));
+	final int size = hits.size();
+	return new ListDto<>(hits, 0, size, size);
+    }
 
     /**
-     * Get all hits from repository that match all rules and filter
+     * Get list of all (unique) hits from repository that match all rules and
+     * filter
      * 
      * @param jobName
      *            Name of the hits' job
@@ -57,18 +58,18 @@ public interface HitsDao {
      *            list of the current rules, act like additional filter
      * @param filter
      *            filter of the hits
-     * @return all hits that match all rules and filter in range [startIndex,
-     *         endIndex]
+     * @return all (unique) hits that match all rules and filter in range
+     *         [startIndex, endIndex]
      * @throws IOException
      *             if failed to read from memory
      * @throws ParseException
      *             if any parse errors occurs in the data.
      */
-    default ListDto<UniqueHit> getHits(String jobName, List<Rule> rules, Filter filter, int startIndex, int endIndex)
-	    throws IOException, ParseException {
-	final Iterable<UniqueHit> allHits = getUniqueHits(jobName, rules, filter);
+    default ListDto<Hit> getHitsList(final String jobName, final List<Rule> rules, final Filter filter,
+	    final int startIndex, final int endIndex) throws IOException, ParseException {
+	final Iterable<Hit> allHits = getHits(jobName, rules, filter);
 	final int totalSize = getHitsNumber(jobName, rules, filter);
-	final List<UniqueHit> hits = Utility.subList(allHits, startIndex, endIndex - startIndex);
+	final List<Hit> hits = Utility.subList(allHits, startIndex, endIndex - startIndex);
 	return new ListDto<>(hits, Math.min(startIndex, totalSize), Math.min(endIndex, totalSize), totalSize);
     }
 
@@ -87,27 +88,12 @@ public interface HitsDao {
      * @throws ParseException
      *             if any parse errors occurs in the data.
      */
-    default Iterable<UniqueHit> getUniqueHits(final String jobName, final List<Rule> rules, final Filter filter)
-	    throws IOException, ParseException {
-	final List<Hit> hits = getHits(jobName, rules, filter).getData();
-	final Map<Hit, MutableInteger> hitsCount = new HashMap<>();
-	for (final Hit hit : hits) {
-	    hitsCount.computeIfAbsent(hit, MutableInteger.zeroInitializerFunction).value++;
-	}
-	final Set<UniqueHit> uniqueHits = new HashSet<>();
-	for (final Iterator<Map.Entry<Hit, MutableInteger>> it = hitsCount.entrySet().iterator(); it.hasNext();) {
-	    final Map.Entry<Hit, MutableInteger> entry = it.next();
-	    final Hit hit = entry.getKey();
-	    final int amount = entry.getValue().value;
-	    uniqueHits.add(new UniqueHit(hit, amount));
-	    it.remove();
-	}
-	return uniqueHits;
-    }
+    public Iterable<Hit> getHits(final String jobName, final List<Rule> rules, final Filter filter)
+	    throws IOException, ParseException;
 
     /**
-     * Get the number of hits in the job, that pass all the rules and are under
-     * filter
+     * Get the number of (unique) hits in the job, that pass all the rules and
+     * are under filter
      * 
      * @param jobName
      *            Name of the hits' job
@@ -136,6 +122,6 @@ public interface HitsDao {
      * @throws IOException
      *             If there was an error writing to IO
      */
-    public void initJob(String jobName, List<Hit> hits) throws IllegalArgumentException, IOException;
+    public void initJob(String jobName, List<Hit> hits) throws IOException;
 
 }

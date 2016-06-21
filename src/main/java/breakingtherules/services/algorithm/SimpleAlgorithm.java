@@ -6,9 +6,9 @@ import java.util.List;
 import java.util.Map;
 
 import breakingtherules.dao.HitsDao;
-import breakingtherules.dao.UniqueHit;
 import breakingtherules.firewall.Attribute;
 import breakingtherules.firewall.Filter;
+import breakingtherules.firewall.Hit;
 import breakingtherules.firewall.Rule;
 import breakingtherules.utilities.Utility;
 
@@ -39,10 +39,10 @@ public class SimpleAlgorithm implements SuggestionsAlgorithm {
 	if (attTypeId == Attribute.UNKOWN_ATTRIBUTE_ID) {
 	    throw new IllegalArgumentException("Unknown attribute: " + attType);
 	}
-	return getSuggestions(dao.getUniqueHits(jobName, rules, filter), amount, attTypeId);
+	return getSuggestions(dao.getHits(jobName, rules, filter), amount, attTypeId);
     }
 
-    List<Suggestion> getSuggestions(final Iterable<UniqueHit> hits, final int amount, final int attTypeId) {
+    List<Suggestion> getSuggestions(final Iterable<Hit> hits, final int amount, final int attTypeId) {
 	SimpleAlgorithmRunner runner = new SimpleAlgorithmRunner(hits, amount, attTypeId);
 	runner.run();
 	return runner.result;
@@ -50,12 +50,12 @@ public class SimpleAlgorithm implements SuggestionsAlgorithm {
 
     static class SimpleAlgorithmRunner implements Runnable {
 
-	private final Iterable<UniqueHit> hits;
+	private final Iterable<Hit> hits;
 	private final int amount;
 	private final int attTypeId;
 	private List<Suggestion> result;
 
-	SimpleAlgorithmRunner(final Iterable<UniqueHit> hits, final int amount, final int attTypeId) {
+	SimpleAlgorithmRunner(final Iterable<Hit> hits, final int amount, final int attTypeId) {
 	    this.hits = hits;
 	    this.amount = amount;
 	    this.attTypeId = attTypeId;
@@ -74,7 +74,7 @@ public class SimpleAlgorithm implements SuggestionsAlgorithm {
 	    // Create a suggestion for every attribute, count the number of hits
 	    // that apply to it
 	    int numberOfHits = 0;
-	    for (final UniqueHit hit : hits) {
+	    for (final Hit hit : hits) {
 		numberOfHits++;
 		final Attribute att = hit.getAttribute(attTypeId);
 		if (att == null) {
@@ -87,7 +87,7 @@ public class SimpleAlgorithm implements SuggestionsAlgorithm {
 		    suggestion = new Suggestion(att);
 		    allSuggestionsMap.put(att, suggestion);
 		}
-		suggestion.join(hit.getAmount());
+		suggestion.join();
 	    }
 
 	    // Calculate scores
