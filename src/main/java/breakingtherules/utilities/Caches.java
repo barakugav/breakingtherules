@@ -5,6 +5,7 @@ import java.util.function.Function;
 
 /**
  * Utilities class for caches.
+ * <p>
  * 
  * @author Barak Ugav
  * @author Yishai Gronich
@@ -80,7 +81,7 @@ public class Caches {
      *            object the cache will synchronize on.
      * @return synchronized cache view on the existing cache.
      * @throws NullPointerException
-     *             if the cache is null.
+     *             if the cache is null, or the sync object is null.
      */
     public static <K, E> Cache<K, E> synchronizedCache(final Cache<K, E> cache, final Object sync) {
 	return new SynchronizedCache<>(cache, sync);

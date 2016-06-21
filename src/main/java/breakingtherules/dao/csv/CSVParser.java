@@ -238,7 +238,7 @@ public class CSVParser {
      *             if the columns types list is null, or one of the elements in
      *             it is null.
      */
-    public static void toCSV(final List<Integer> columnsTypes, final List<Hit> hits, final String outputPath)
+    public static void toCSV(final List<Integer> columnsTypes, final Iterable<Hit> hits, final String outputPath)
 	    throws IOException, CSVParseException {
 	final File outputFile = new File(outputPath);
 	if (outputFile.exists() && !outputFile.canWrite()) {

@@ -17,6 +17,14 @@ import breakingtherules.services.algorithm.InformationAlgorithm;
 import breakingtherules.services.algorithm.SimpleAlgorithm;
 import breakingtherules.services.algorithm.SuggestionsAlgorithm;
 
+/**
+ * TODO
+ * 
+ * @author Barak Ugav
+ * @author Yishai Gronich
+ *
+ */
+@SuppressWarnings("javadoc")
 @Configuration
 @ComponentScan({ "breakingtherules" })
 public class Config {
@@ -58,8 +66,7 @@ public class Config {
 
     @Bean
     public MultipartResolver uploadSettings() {
-	MultipartResolver resolver = new StandardServletMultipartResolver();
-	return resolver;
+	return new StandardServletMultipartResolver();
     }
 
 }

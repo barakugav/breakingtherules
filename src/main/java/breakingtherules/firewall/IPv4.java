@@ -60,6 +60,16 @@ public final class IPv4 extends IP {
     public static final int MAX_BLOCK_VALUE = 255;
 
     /**
+     * String representation of any IPv4.
+     */
+    private static final String ANY_IPv4_STR = "AnyIPv4";
+
+    /**
+     * 'Any' IPv4, contains all others,
+     */
+    private static final IPv4 ANY_IPv4 = new IPv4(0, 0);
+
+    /**
      * Construct new IPv4 with the specified address and maskSize.
      * 
      * @param address
@@ -123,7 +133,10 @@ public final class IPv4 extends IP {
     @Override
     public IPv4 getParent() {
 	final int m = m_maskSize;
-	if (m == 0) {
+	if (m <= 1) {
+	    if (m == 1) {
+		return ANY_IPv4;
+	    }
 	    throw new IllegalStateException("No parent");
 	}
 	final int mask = ~(1 << (SIZE - m));
@@ -247,7 +260,7 @@ public final class IPv4 extends IP {
     public String toString() {
 	final int m = m_maskSize;
 	if (m == 0) {
-	    return ANY;
+	    return ANY_IPv4_STR;
 	}
 
 	final int[] a = getAddress();
@@ -336,9 +349,12 @@ public final class IPv4 extends IP {
 	    a = (a << BLOCK_SIZE) + address[i];
 	}
 
-	if (!(0 <= maskSize && maskSize < SIZE)) {
+	if (!(0 < maskSize && maskSize < SIZE)) {
 	    if (maskSize == SIZE) {
 		return createFullIPInternal(a);
+	    }
+	    if (maskSize == 0) {
+		return ANY_IPv4;
 	    }
 	    throw new IllegalArgumentException("IPv4 subnetwork mask: " + Utility.formatRange(0, SIZE, maskSize));
 	}
@@ -366,6 +382,10 @@ public final class IPv4 extends IP {
      *             if the format is illegal or the values are out of range.
      */
     public static IPv4 createFromString(final String ip) {
+	if (ip.equals(ANY_IPv4_STR)) {
+	    return ANY_IPv4;
+	}
+
 	int address = 0;
 	int maskSize;
 
@@ -403,9 +423,12 @@ public final class IPv4 extends IP {
 	    throw new IllegalArgumentException("IPv4 subnetwork mask", e);
 	}
 
-	if (!(0 <= maskSize && maskSize < SIZE)) {
+	if (!(0 < maskSize && maskSize < SIZE)) {
 	    if (maskSize == SIZE) {
 		return createFullIPInternal(address);
+	    }
+	    if (maskSize == 0) {
+		return ANY_IPv4;
 	    }
 	    throw new IllegalArgumentException("IPv4 subnetwork mask: " + Utility.formatRange(0, SIZE, maskSize));
 	}
@@ -439,9 +462,12 @@ public final class IPv4 extends IP {
      *             if the mask size is out of range (0 to 32).
      */
     public static IPv4 createFromBits(final int addressBits, final int maskSize) {
-	if (!(0 <= maskSize && maskSize < SIZE)) {
+	if (!(0 < maskSize && maskSize < SIZE)) {
 	    if (maskSize == SIZE) {
 		return createFullIPInternal(addressBits);
+	    }
+	    if (maskSize == 0) {
+		return ANY_IPv4;
 	    }
 	    throw new IllegalArgumentException("IPv4 subnetwork mask: " + Utility.formatRange(0, SIZE, maskSize));
 	}

@@ -17,7 +17,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 public abstract class IP implements Comparable<IP> {
 
     /**
-     * Any IP, contains all other.
+     * Any IP, contains all others.
      */
     public static final IP ANY_IP = new AnyIP();
 
@@ -29,7 +29,7 @@ public abstract class IP implements Comparable<IP> {
     /**
      * String representation of any IP.
      */
-    static final String ANY = "Any";
+    private static final String ANY_IP_STR = "Any";
 
     /**
      * The mask size separator in the string representation of the IP.
@@ -249,7 +249,7 @@ public abstract class IP implements Comparable<IP> {
      *             if the string is invalid.
      */
     public static IP createFromString(final String ip) {
-	if (ip.equals(ANY)) {
+	if (ip.equals(ANY_IP_STR)) {
 	    return ANY_IP;
 	}
 
@@ -432,7 +432,7 @@ public abstract class IP implements Comparable<IP> {
 	 */
 	@Override
 	public String toString() {
-	    return ANY;
+	    return ANY_IP_STR;
 	}
 
 	/**

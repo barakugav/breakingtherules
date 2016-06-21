@@ -122,6 +122,6 @@ public interface HitsDao {
      * @throws IOException
      *             If there was an error writing to IO
      */
-    public void initJob(String jobName, List<Hit> hits) throws IOException;
+    public void initJob(String jobName, Iterable<Hit> hits) throws IOException;
 
 }

@@ -67,7 +67,7 @@ public class XMLHitsDao extends AbstractCachedHitsDao {
      * {@inheritDoc}
      */
     @Override
-    public void initJob(String jobName, List<Hit> hits) throws IOException {
+    public void initJob(final String jobName, final Iterable<Hit> hits) throws IOException {
 	writeHits(hits, XMLDaoConfig.getHitsFile(jobName));
     }
 
@@ -104,7 +104,7 @@ public class XMLHitsDao extends AbstractCachedHitsDao {
      * @throws IOException
      *             if fails to write to file
      */
-    public static void writeHits(final List<Hit> hits, final String fileName) throws IOException {
+    public static void writeHits(final Iterable<Hit> hits, final String fileName) throws IOException {
 	try {
 	    final DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 	    final DocumentBuilder builder = factory.newDocumentBuilder();

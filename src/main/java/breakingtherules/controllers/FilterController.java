@@ -17,25 +17,66 @@ import breakingtherules.firewall.Filter;
 import breakingtherules.firewall.Service;
 import breakingtherules.firewall.Source;
 import breakingtherules.session.Job;
+import breakingtherules.session.NoCurrentJobException;
 
+/**
+ * Controller that allows setting and getting the current job's filter.
+ * <p>
+ * 
+ * @author Barak Ugav
+ * @author Yishai Gronich
+ *
+ * @see Filter
+ * @see Job
+ */
 @RestController
 public class FilterController {
 
+    /**
+     * The session job.
+     */
     @Autowired
     private Job m_job;
 
+    /**
+     * Set the filter to a new one.
+     * 
+     * @param source
+     *            the new source filter.
+     * @param destination
+     *            the new destination filter.
+     * @param service
+     *            the new service filter
+     * @throws IllegalArgumentException
+     *             if the filter's attributes strings are invalid.
+     * @throws IOException
+     *             if any I/O errors occurs when trying to update the
+     *             statistics.
+     * @throws ParseException
+     *             if any parse errors occurs when trying to update the
+     *             statistics.
+     * @throws NoCurrentJobException
+     *             if the job wasn't set yet.
+     */
     @RequestMapping(value = "/filter", method = RequestMethod.PUT, params = { "source", "destination", "service" })
-    public void setFilter(@RequestParam(value = "source") String source,
-	    @RequestParam(value = "destination") String destination, @RequestParam(value = "service") String service)
-		    throws IllegalArgumentException, IOException, ParseException {
-	List<Attribute> filterAtts = new ArrayList<>();
+    public void setFilter(@RequestParam(value = "source") final String source,
+	    @RequestParam(value = "destination") final String destination,
+	    @RequestParam(value = "service") final String service) throws IOException, ParseException {
+	final List<Attribute> filterAtts = new ArrayList<>();
 	filterAtts.add(Source.createFromString(source));
 	filterAtts.add(Destination.createFromString(destination));
 	filterAtts.add(Service.createFromString(service));
-	Filter newFilter = new Filter(filterAtts);
+	final Filter newFilter = new Filter(filterAtts);
 	m_job.setFilter(newFilter);
     }
 
+    /**
+     * Get the current job's filter.
+     * 
+     * @return the filter of the current job.
+     * @throws NoCurrentJobException
+     *             if the job wasn't set yet.
+     */
     @RequestMapping(value = "/filter", method = RequestMethod.GET)
     public Filter getFilter() {
 	return m_job.getFilter();

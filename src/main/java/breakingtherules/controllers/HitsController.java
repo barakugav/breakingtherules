@@ -13,11 +13,21 @@ import breakingtherules.firewall.Hit;
 import breakingtherules.session.Job;
 import breakingtherules.session.NoCurrentJobException;
 
+/**
+ * Controller that allows requests of hits.
+ * <p>
+ * 
+ * @author Barak Ugav
+ * @author Yishai Gronich
+ * 
+ * @see Hit
+ * @see Job
+ */
 @RestController
 public class HitsController {
 
     /**
-     * Has the current job that is being worked on
+     * The session job.
      */
     @Autowired
     private Job m_job;
@@ -29,22 +39,20 @@ public class HitsController {
      *            Index of the first hit wanted, inclusive
      * @param endIndex
      *            Index of the last hit wanted, exclusive
-     * @return List of all the appropriate hits
+     * @return List of all the requested hits.
      * @throws IOException
-     *             if failed
-     * @throws NoCurrentJobException
-     *             if job wasn't initialize
+     *             if any I/O errors occurs when trying to update the
+     *             statistics.
      * @throws ParseException
+     *             if any parse errors occurs when trying to update the
+     *             statistics.
+     * @throws NoCurrentJobException
+     *             if the job wasn't set yet.
      */
     @RequestMapping(value = "/hits", method = RequestMethod.GET)
-    public ListDto<Hit> hits(int startIndex, int endIndex) throws NoCurrentJobException, IOException, ParseException {
-	try {
-	    return m_job.getHits(startIndex, endIndex);
-
-	} catch (NoCurrentJobException e) {
-	    System.err.println("Tried recieving hits without initializing job.");
-	    throw e;
-	}
+    public ListDto<Hit> hits(final int startIndex, final int endIndex) throws IOException, ParseException {
+	// TODO - change method name to 'getHits'
+	return m_job.getHits(startIndex, endIndex);
     }
 
 }

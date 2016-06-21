@@ -7,6 +7,15 @@ import java.util.function.Function;
  * Cache for reusable objects.
  * <p>
  * Allowing search element by key, insertion by key and remove.
+ * <p>
+ * This interface is similar to the {@link Map} interface, but is more minimal
+ * and have big different in the {@link #add(Object, Object)} method (analogous
+ * to {@link Map#put(Object, Object)}): The {@link #add(Object, Object)} method
+ * will have no effect if an element with the same key is already in the cache.
+ * This behavior is expected because the cache treat elements with the same key
+ * as the same element (different from {@link Map} where the mapping between
+ * keys to values can change), and the user of the cache should not change the
+ * mapping function.
  * 
  * @author Barak Ugav
  * @author Yishai Gronich

@@ -31,6 +31,13 @@ import breakingtherules.firewall.Rule;
 import breakingtherules.services.algorithm.Suggestion;
 import breakingtherules.services.algorithm.SuggestionsAlgorithm;
 
+/**
+ * TODO
+ * 
+ * @author Barak Ugav
+ * @author Yishai Gronich
+ *
+ */
 @Component
 @Scope(value = "session", proxyMode = ScopedProxyMode.TARGET_CLASS)
 public class Job {
@@ -106,8 +113,6 @@ public class Job {
      */
     private static final String NO_CURRENT_JOB = null;
 
-    /************************************************/
-
     /**
      * Construct new rule.
      * <p>
@@ -128,18 +133,25 @@ public class Job {
      * @param columnTypes
      *            The order of the columns in the CSV file
      * @throws IOException
+     *             if any I/O errors occurs.
      * @throws ParseException
+     *             if failed to parse file.
+     * @throws NullPointerException
+     *             if the file is null.
      */
-    public void createJob(String jobName, MultipartFile hitsFile, List<Integer> columnTypes)
+    public void createJob(final String jobName, final MultipartFile hitsFile, final List<Integer> columnTypes)
 	    throws IOException, ParseException {
+
+	// TODO - treat return value from initRepository.
 	DaoConfig.initRepository(jobName);
 
-	File fileDestination = new File(new File(CSVDaoConfig.getHitsFile(jobName)).getAbsolutePath());
+	final File fileDestination = new File(new File(CSVDaoConfig.getHitsFile(jobName)).getAbsolutePath());
 	hitsFile.transferTo(fileDestination);
-	List<Hit> hits = new CSVHitsDao().getHitsList(jobName, new ArrayList<Rule>(), Filter.ANY_FILTER).getData();
+	final CSVHitsDao csvDao = new CSVHitsDao();
+	final Iterable<Hit> hits = csvDao.getHits(jobName, Collections.emptyList(), Filter.ANY_FILTER);
 	m_hitsDao.initJob(jobName, hits);
 
-	Job job = new Job();
+	final Job job = new Job();
 	job.m_name = jobName;
 	job.m_originalRule = new Rule(Filter.ANY_FILTER);
 	job.m_rules = new ArrayList<>();
@@ -178,6 +190,8 @@ public class Job {
      * Get the name of the job
      * 
      * @return the job's name
+     * @throws NoCurrentJobException
+     *             if the job wasn't set yet.
      */
     public String getName() {
 	checkJobState();
@@ -188,6 +202,8 @@ public class Job {
      * Get the current filter of this job
      * 
      * @return current filter of this job
+     * @throws NoCurrentJobException
+     *             if the job wasn't set yet.
      */
     public Filter getFilter() {
 	checkJobState();
@@ -198,6 +214,8 @@ public class Job {
      * Get the original rule of this job
      * 
      * @return The original rule of the job
+     * @throws NoCurrentJobException
+     *             if the job wasn't set yet.
      */
     public Rule getOriginalRule() {
 	checkJobState();
@@ -207,7 +225,9 @@ public class Job {
     /**
      * Get a list of all the rules that are active in this job
      * 
-     * @return All the rules for the current job
+     * @return All the rules for the current job.
+     * @throws NoCurrentJobException
+     *             if the job wasn't set yet.
      */
     public List<Rule> getRules() {
 	checkJobState();
@@ -227,11 +247,14 @@ public class Job {
      * @throws IndexOutOfBoundsException
      *             if index of rule is out of bounds
      * @throws IOException
-     *             if any I/O error occurs
+     *             if any I/O error occurs.
      * @throws ParseException
      *             if any parse errors occurs in the data.
+     * @throws NoCurrentJobException
+     *             if the job wasn't set yet.
      */
     public void deleteRule(final int ruleIndex) throws IOException, ParseException {
+	checkJobState();
 	synchronized (this) {
 	    if (ruleIndex < 0 || ruleIndex >= m_rules.size()) {
 		throw new IndexOutOfBoundsException("rule index=" + ruleIndex + ", numer of rules=" + m_rules.size());
@@ -279,6 +302,8 @@ public class Job {
      *             if DAO failed to load data
      * @throws ParseException
      *             if any parse errors occurs in the data.
+     * @throws NoCurrentJobException
+     *             if the job wasn't set yet.
      */
     public ListDto<Hit> getHits(int startIndex, int endIndex) throws IOException, ParseException {
 	checkJobState();
@@ -298,6 +323,8 @@ public class Job {
      *             if any I/O errors occurs in DAO.
      * @throws ParseException
      *             if any parse errors occurs in DAO.
+     * @throws NoCurrentJobException
+     *             if the job wasn't set yet.
      */
     public List<SuggestionsDto> getSuggestions(final int amount) throws IOException, ParseException {
 	checkJobState();
@@ -322,6 +349,8 @@ public class Job {
      *             if any I/O error occurs
      * @throws ParseException
      *             if any parse errors occurs in the data.
+     * @throws NoCurrentJobException
+     *             if the job wasn't set yet.
      */
     public void setFilter(final Filter filter) throws IOException, ParseException {
 	checkJobState();
@@ -356,6 +385,8 @@ public class Job {
      *             if any I/O errors occurs in the data.
      * @throws ParseException
      *             if any parse errors occurs in the data.
+     * @throws NoCurrentJobException
+     *             if the job wasn't set yet.
      */
     public void addCurrentFilterToRules() throws IOException, ParseException {
 	checkJobState();
@@ -364,6 +395,16 @@ public class Job {
 	addRule(new StatisticedRule(newRule, m_filteredHitsCount));
     }
 
+    /**
+     * Add a rule to the job's rules list.
+     * 
+     * @param newRule
+     *            the added rule.
+     * @throws IOException
+     *             if any I/O errors occurs when trying to update statistics.
+     * @throws ParseException
+     *             if any parse errors occurs when trying to update statistics.
+     */
     private void addRule(final Rule newRule) throws IOException, ParseException {
 	synchronized (this) {
 	    List<Rule> newRules = getRules();
@@ -376,6 +417,16 @@ public class Job {
 	}
     }
 
+    /**
+     * Add a rule (already with calculated statistics) to the job's rules list.
+     * 
+     * @param newRule
+     *            the added rule (already with calculated statistics).
+     * @throws IOException
+     *             if any I/O errors occurs when trying to update statistics.
+     * @throws ParseException
+     *             if any parse errors occurs when trying to update statistics.
+     */
     private void addRule(final StatisticedRule newRule) throws IOException, ParseException {
 	synchronized (this) {
 	    m_coveredHitsCount += newRule.m_coveredHits;
@@ -388,7 +439,9 @@ public class Job {
     /**
      * Get the total number of hits that was given as input for this job
      * 
-     * @return The number of hits given as input for the job
+     * @return The number of hits given as input for the job.
+     * @throws NoCurrentJobException
+     *             if the job wasn't set yet.
      */
     public int getTotalHitsCount() {
 	checkJobState();
@@ -398,7 +451,9 @@ public class Job {
     /**
      * Get the number of hits covered by the created rules
      * 
-     * @return The number of hits covered by the created rules
+     * @return The number of hits covered by the created rules.
+     * @throws NoCurrentJobException
+     *             if the job wasn't set yet.
      */
     public int getCoveredHitsCount() {
 	checkJobState();
@@ -410,7 +465,9 @@ public class Job {
      * created rule
      * 
      * @return The number of hits that pass the current filter (and don't match
-     *         any created rule)
+     *         any created rule).
+     * @throws NoCurrentJobException
+     *             if the job wasn't set yet.
      */
     public int getFilteredHitsCount() {
 	checkJobState();
@@ -422,30 +479,71 @@ public class Job {
      * Can be downloaded by the user.
      * 
      * @return A file of XML format with this job's rules.
+     * @throws NoCurrentJobException
+     *             if the job wasn't set yet.
      */
     public FileSystemResource getRulesFile() {
 	checkJobState();
 	return new FileSystemResource(DaoConfig.getRepoRoot(m_name) + XMLRulesDao.REPOSITORY_NAME);
     }
 
+    /**
+     * Update the rules file to match the current rules list in the job.
+     * 
+     * @throws IOException
+     *             if any I/O errors occurs during the file update.
+     */
     private void updateRulesFile() throws IOException {
 	String repositoryPath = DaoConfig.getRepoRoot(m_name) + XMLRulesDao.REPOSITORY_NAME;
 	final List<Rule> rules = getRules();
 	XMLRulesDao.writeRules(repositoryPath, rules, m_originalRule);
     }
 
+    /**
+     * Check that the current state of the job is ready to be used.
+     * 
+     * @throws NoCurrentJobException
+     *             if the state is invalid.
+     */
     private void checkJobState() {
 	if (Objects.equals(m_name, NO_CURRENT_JOB)) {
 	    throw new NoCurrentJobException("Job wasn't set yet");
 	}
     }
 
+    /**
+     * Wrapper to a rule, save some statistics about the rule.
+     * 
+     * @author Barak Ugav
+     * @author Yishai Gronich
+     *
+     * @see Rule
+     */
     private static class StatisticedRule {
 
-	private final Rule m_rule;
-	private final int m_coveredHits;
+	/**
+	 * The rule itself.
+	 */
+	final Rule m_rule;
 
-	public StatisticedRule(final Rule rule, final int coveredHits) {
+	/**
+	 * Number of covered hits by the rule.
+	 */
+	final int m_coveredHits;
+
+	/**
+	 * Construct new StatisticedRule.
+	 * 
+	 * @param rule
+	 *            a rule.
+	 * @param coveredHits
+	 *            number of covered hits by the rule.
+	 * @throws NullPointerException
+	 *             if the rule is null.
+	 * @throws IllegalArgumentException
+	 *             if the {@code coveredHits} is negative.
+	 */
+	StatisticedRule(final Rule rule, final int coveredHits) {
 	    if (coveredHits < 0) {
 		throw new IllegalArgumentException("coveredHits < 0: " + coveredHits);
 	    }
@@ -453,6 +551,9 @@ public class Job {
 	    m_coveredHits = coveredHits;
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	public boolean equals(final Object o) {
 	    if (o == this) {
@@ -466,11 +567,17 @@ public class Job {
 	    return m_rule.equals(other.m_rule);
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	public int hashCode() {
 	    return m_rule.hashCode();
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	public String toString() {
 	    return m_rule.toString() + " (covered hits=" + m_coveredHits + ")";

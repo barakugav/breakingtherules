@@ -12,6 +12,8 @@ import breakingtherules.session.Job;
 @RestController
 public class JobStatusController {
 
+    // TODO - move to JobController (?)
+
     @Autowired
     private Job m_job;
 

@@ -2,6 +2,7 @@ package breakingtherules.utilities;
 
 /**
  * Utility class for hash tables.
+ * <p>
  * 
  * @author Barak Ugav
  * @author Yishai Gronich
@@ -54,11 +55,7 @@ public class Hashs {
     /**
      * Compute first power of 2 equal or greater then a number.
      * <p>
-     * Implementation notes:<br>
-     * The method fill the number's lower bits with ones, for example:<br>
-     * <code>0b010011</code> to <code>0b011111</code><br>
-     * and then and one, so:<br>
-     * <code>0b011111</code> to <code>0b100000</code>
+     * 
      * 
      * @param x
      *            the number
@@ -67,6 +64,17 @@ public class Hashs {
     static int nextPowerOfTwo(int x) {
 	if (x == 0)
 	    return 1;
+	/*
+	 * Implementation notes:
+	 * 
+	 * The method fill the number's lower bits with ones, for example:
+	 * 
+	 * 0b010011 to 0b011111
+	 * 
+	 * and then add one, so:
+	 * 
+	 * 0b011111 to 0b100000
+	 */
 	x--;
 	x |= x >> 1;
 	x |= x >> 2;
@@ -126,9 +134,9 @@ public class Hashs {
      * 
      * @author Barak Ugav
      * @author Yishai Gronich
+     * 
      * @param <K>
      *            type of object the strategy is working on.
-     * 
      */
     public static interface Strategy<K> {
 

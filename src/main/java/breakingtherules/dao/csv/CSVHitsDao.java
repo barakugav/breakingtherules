@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
 
@@ -54,7 +53,7 @@ public class CSVHitsDao extends AbstractCachedHitsDao {
      * {@inheritDoc}
      */
     @Override
-    public void initJob(final String jobName, final List<Hit> hits) throws IOException {
+    public void initJob(final String jobName, final Iterable<Hit> hits) throws IOException {
 	try {
 	    CSVParser.toCSV(CSVParser.DEFAULT_COLUMNS_TYPES, hits, CSVDaoConfig.getHitsFile(jobName));
 	} catch (final CSVParseException e) {

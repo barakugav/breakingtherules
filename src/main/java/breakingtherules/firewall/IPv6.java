@@ -73,6 +73,16 @@ public final class IPv6 extends IP {
     private static final int MASK_OFFSET_IN_BLOCK = 0x1f; // 31
 
     /**
+     * String representation of Any IPv6.
+     */
+    private static final String ANY_IPv6_STR = "AnyIPv6";
+
+    /**
+     * 'Any' IPv6, contains all others.
+     */
+    private static final IPv6 ANY_IPv6 = new IPv6(new int[ADDRESS_ARRAY_SIZE], 0);
+
+    /**
      * Construct new IPv6 with the specified address and maskSize.
      * 
      * @param address
@@ -122,7 +132,10 @@ public final class IPv6 extends IP {
     @Override
     public IPv6 getParent() {
 	final int m = m_maskSize;
-	if (m == 0) {
+	if (m <= 1) {
+	    if (m == 1) {
+		return ANY_IPv6;
+	    }
 	    throw new IllegalStateException("no parent");
 	}
 
@@ -305,7 +318,7 @@ public final class IPv6 extends IP {
     public String toString() {
 	final int m = m_maskSize;
 	if (m == 0) {
-	    return ANY;
+	    return ANY_IPv6_STR;
 	}
 
 	final int[] a = getAddress();
@@ -391,14 +404,12 @@ public final class IPv6 extends IP {
      *             if the blocks values are out of range (0 to 65535) or the
      *             maskSize is out of range (0 to 128).
      */
-    public static IPv6 create(int[] address, int maskSize) {
+    public static IPv6 create(final int[] address, final int maskSize) {
 	if (address.length != BLOCK_NUMBER) {
 	    throw new IllegalArgumentException(
 		    "IPv6 block number: " + Utility.formatEqual(BLOCK_NUMBER, address.length));
 	}
-	if (!(0 <= maskSize && maskSize <= SIZE)) {
-	    throw new IllegalArgumentException("IPv6 subnetwork mask size: " + Utility.formatRange(0, SIZE, maskSize));
-	}
+
 	final int[] a = new int[ADDRESS_ARRAY_SIZE];
 	for (int blockNum = BLOCK_NUMBER; blockNum-- > 0;) {
 	    int blockValue = address[blockNum];
@@ -411,9 +422,14 @@ public final class IPv6 extends IP {
 	    }
 	    a[blockNum >> 1] |= blockValue;
 	}
-
-	if (maskSize == SIZE) {
-	    createFullIPInternal(a);
+	if (!(0 < maskSize && maskSize < SIZE)) {
+	    if (maskSize == SIZE) {
+		createFullIPInternal(a);
+	    }
+	    if (maskSize == 0) {
+		return ANY_IPv6;
+	    }
+	    throw new IllegalArgumentException("IPv6 subnetwork mask size: " + Utility.formatRange(0, SIZE, maskSize));
 	}
 
 	// Reset suffix
@@ -441,6 +457,9 @@ public final class IPv6 extends IP {
      *             if the format is illegal or the values are out of range.
      */
     public static IPv6 createFromString(String ip) {
+	if (ip.equals(ANY_IPv6_STR)) {
+	    return ANY_IPv6;
+	}
 	// TODO - better implementation like IPv4.create(String) using
 	// Utility.breakToWords(String).
 	int maskSize;
@@ -570,9 +589,12 @@ public final class IPv6 extends IP {
 	// Must clone addressBits to be safe that the address won't be changed
 	// in the future.
 	addressBits = addressBits.clone();
-	if (!(0 <= maskSize && maskSize < SIZE)) {
+	if (!(0 < maskSize && maskSize < SIZE)) {
 	    if (maskSize == SIZE) {
 		return createFullIPInternal(addressBits);
+	    }
+	    if (maskSize == 0) {
+		return ANY_IPv6;
 	    }
 	    throw new IllegalArgumentException("IPv6 subnetwork mask size: " + Utility.formatRange(0, SIZE, maskSize));
 	}

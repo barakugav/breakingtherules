@@ -2,26 +2,32 @@ package breakingtherules.session;
 
 /**
  * Exception that get thrown when trying to operate an operation that require a
- * job, and one isn't set
+ * job, and one isn't set.
+ * 
+ * @author Barak Ugav
+ * @author Yishai Gronich
+ * 
+ * @see Job
  */
 public class NoCurrentJobException extends IllegalStateException {
 
+    @SuppressWarnings("javadoc")
     private static final long serialVersionUID = 7787453734717147987L;
 
     /**
-     * Constructor
+     * Construct new NoCurrentJobException.
      */
     public NoCurrentJobException() {
 	super();
     }
 
     /**
-     * Constructor with a message
+     * Construct new NoCurrentJobException with a message
      * 
      * @param message
      *            massage of the exception
      */
-    public NoCurrentJobException(String message) {
+    public NoCurrentJobException(final String message) {
 	super(message);
     }
 

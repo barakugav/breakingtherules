@@ -8,8 +8,9 @@ import java.io.PrintStream;
  * 
  * @author Barak Ugav
  * @author Yishai Gronich
- * @see TextBuilder
  * 
+ * @see TextBuilder
+ * @see PrintStream
  */
 public class TextPrinter {
 

@@ -170,7 +170,7 @@ public class ElasticHitsDao implements HitsDao {
      * @throws IOException
      *             If ElasticSearch cannot save the data
      */
-    public void addHits(final List<Hit> hits, final String jobName) throws IOException {
+    public void addHits(final Iterable<Hit> hits, final String jobName) throws IOException {
 	final BulkRequestBuilder bulkRequest = m_elasticClient.prepareBulk();
 	for (final Hit hit : hits) {
 
@@ -235,7 +235,7 @@ public class ElasticHitsDao implements HitsDao {
     }
 
     @Override
-    public void initJob(String jobName, List<Hit> hits) throws IllegalArgumentException, IOException {
+    public void initJob(final String jobName, final Iterable<Hit> hits) throws IllegalArgumentException, IOException {
 	addHits(hits, jobName);
     }
 

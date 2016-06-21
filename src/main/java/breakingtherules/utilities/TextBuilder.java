@@ -7,6 +7,7 @@ package breakingtherules.utilities;
  * @author Barak Ugav
  * @author Yishai Gronich
  * 
+ * @see StringBuilder
  */
 public class TextBuilder {
 
