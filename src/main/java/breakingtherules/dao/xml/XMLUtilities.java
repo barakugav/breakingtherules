@@ -45,29 +45,24 @@ public class XMLUtilities {
      * @return document with the file data
      * @throws IOException
      *             if reading from file failed
-     * @throws XMLParseException
+     * @throws SAXException
      *             if failed to parse the file.
      */
-    public static Document readFile(final String fileName) throws IOException, XMLParseException {
-	try {
-	    final File repoFile = new File(fileName);
-	    if (!repoFile.exists()) {
-		throw new FileNotFoundException(fileName);
-	    }
-	    final DocumentBuilder builder;
-	    try {
-		final DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-		builder = factory.newDocumentBuilder();
-	    } catch (ParserConfigurationException e) {
-		// Shouldn't happen.
-		throw new InternalError(e);
-	    }
-	    final Document fileDocument = builder.parse(repoFile);
-	    return fileDocument;
-
-	} catch (SAXException e) {
-	    throw new IOException("Unable to load file", e);
+    public static Document readFile(final String fileName) throws IOException, SAXException {
+	final File repoFile = new File(fileName);
+	if (!repoFile.exists()) {
+	    throw new FileNotFoundException(fileName);
 	}
+	final DocumentBuilder builder;
+	try {
+	    final DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+	    builder = factory.newDocumentBuilder();
+	} catch (ParserConfigurationException e) {
+	    // Shouldn't happen.
+	    throw new InternalError(e);
+	}
+	final Document fileDocument = builder.parse(repoFile);
+	return fileDocument;
     }
 
     /**

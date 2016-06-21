@@ -13,6 +13,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
 
 import breakingtherules.dao.RulesDao;
 import breakingtherules.dto.ListDto;
@@ -60,8 +61,14 @@ public class XMLRulesDao implements RulesDao {
     @Override
     public Rule getOriginalRule(final String jobName) throws IOException, XMLParseException {
 	final String path = XMLDaoConfig.getRulesFile(jobName);
+
 	// Load from file
-	final Document repositoryDoc = XMLUtilities.readFile(path);
+	final Document repositoryDoc;
+	try {
+	    repositoryDoc = XMLUtilities.readFile(path);
+	} catch (final SAXException e) {
+	    throw new XMLParseException(e);
+	}
 
 	// Get all rules from repository
 	final Element ruleElem = (Element) repositoryDoc.getElementsByTagName(ORIGINAL_RULE_TAG).item(0);
@@ -199,7 +206,12 @@ public class XMLRulesDao implements RulesDao {
     private static List<Rule> loadRules(final String repoPath) throws IOException, XMLParseException {
 	// Check if this repository is already loaded
 	// Load from file
-	final Document repositoryDoc = XMLUtilities.readFile(repoPath);
+	final Document repositoryDoc;
+	try {
+	    repositoryDoc = XMLUtilities.readFile(repoPath);
+	} catch (final SAXException e) {
+	    throw new XMLParseException(e);
+	}
 
 	// Get all rules from repository
 	final NodeList rulesList = repositoryDoc.getElementsByTagName(RULE_TAG);

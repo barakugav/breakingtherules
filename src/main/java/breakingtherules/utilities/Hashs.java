@@ -9,7 +9,9 @@ package breakingtherules.utilities;
  */
 public class Hashs {
 
-    // Suppresses default constructor, ensuring non-instantiability.
+    /**
+     * Suppresses default constructor, ensuring non-instantiability.
+     */
     private Hashs() {
     }
 

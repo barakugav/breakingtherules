@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
+import java.util.Objects;
 
 /**
  * The UnionList is a basic linked list that provide minimal interface used only
@@ -124,16 +125,6 @@ public class UnionList<E> implements Iterable<E> {
 	return this;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see java.lang.Iterable#iterator()
-     */
-    @Override
-    public Iterator<E> iterator() {
-	return new LinkedListIterator<>(first);
-    }
-
     /**
      * Get all elements of this list to new array list.
      * 
@@ -147,10 +138,52 @@ public class UnionList<E> implements Iterable<E> {
 	return l;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see java.lang.Object#toString()
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Iterator<E> iterator() {
+	return new LinkedListIterator<>(first);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean equals(final Object o) {
+	if (o == this) {
+	    return true;
+	}
+	if (!(o instanceof UnionList)) {
+	    return false;
+	}
+
+	final UnionList<?> other = (UnionList<?>) o;
+
+	Node<?> cursor1 = first, cursor2;
+	for (cursor1 = first, cursor2 = other.first; cursor1 != null
+		&& cursor2 != null; cursor1 = cursor1.next, cursor2 = cursor2.next) {
+	    if (!Objects.equals(cursor1.data, cursor2.data)) {
+		return false;
+	    }
+	}
+	return cursor1 == null && cursor2 == null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int hashCode() {
+	int h = 17;
+	for (Node<E> cursor = first; cursor != null; cursor = cursor.next) {
+	    h = h * 31 + Objects.hashCode(cursor.data);
+	}
+	return h;
+    }
+
+    /**
+     * {@inheritDoc}
      */
     @Override
     public String toString() {
@@ -211,6 +244,7 @@ public class UnionList<E> implements Iterable<E> {
      * 
      * @author Barak Ugav
      * @author Yishai Gronich
+     * 
      * @param <E>
      *            type of elements the nodes contained
      */
@@ -232,20 +266,16 @@ public class UnionList<E> implements Iterable<E> {
 	    cursor = begin;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see java.util.Iterator#hasNext()
+	/**
+	 * {@inheritDoc}
 	 */
 	@Override
 	public boolean hasNext() {
 	    return cursor != null;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see java.util.Iterator#next()
+	/**
+	 * {@inheritDoc}
 	 */
 	@Override
 	public E next() {

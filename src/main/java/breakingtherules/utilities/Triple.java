@@ -7,13 +7,13 @@ import java.util.Objects;
  *
  * @author Barak Ugav
  * @author Yishai Gronich
+ * 
  * @param <A>
  *            type of first element
  * @param <B>
  *            type of second element
  * @param <C>
  *            type of third element
- * 
  */
 public class Triple<A, B, C> {
 
@@ -111,16 +111,15 @@ public class Triple<A, B, C> {
 	m_third = third;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see java.lang.Object#equals(java.lang.Object)
+    /**
+     * {@inheritDoc}
      */
     @Override
     public boolean equals(final Object o) {
 	if (o == this) {
 	    return true;
-	} else if (!(o instanceof Triple)) {
+	}
+	if (!(o instanceof Triple)) {
 	    return false;
 	}
 
@@ -129,20 +128,16 @@ public class Triple<A, B, C> {
 		&& Objects.equals(m_third, other.m_third);
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see java.lang.Object#hashCode()
+    /**
+     * {@inheritDoc}
      */
     @Override
     public int hashCode() {
 	return Objects.hash(m_first, m_second, m_third);
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see java.lang.Object#toString()
+    /**
+     * {@inheritDoc}
      */
     @Override
     public String toString() {
@@ -180,6 +175,7 @@ public class Triple<A, B, C> {
 
 	/**
 	 * @throws UnsupportedOperationException
+	 *             (always)
 	 */
 	@Override
 	public void setFirst(final A first) {
@@ -188,6 +184,7 @@ public class Triple<A, B, C> {
 
 	/**
 	 * @throws UnsupportedOperationException
+	 *             (always)
 	 */
 	@Override
 	public void setSecond(final B second) {
@@ -196,6 +193,7 @@ public class Triple<A, B, C> {
 
 	/**
 	 * @throws UnsupportedOperationException
+	 *             (always)
 	 */
 	@Override
 	public void setThird(final C third) {

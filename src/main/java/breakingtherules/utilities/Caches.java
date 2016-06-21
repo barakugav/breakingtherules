@@ -13,7 +13,9 @@ import java.util.function.Function;
  */
 public class Caches {
 
-    // Suppresses default constructor, ensuring non-instantiability.
+    /**
+     * Suppresses default constructor, ensuring non-instantiability.
+     */
     private Caches() {
     }
 
@@ -119,6 +121,7 @@ public class Caches {
 
 	/**
 	 * @throws UnsupportedOperationException
+	 *             (always)
 	 */
 	@Override
 	public E add(final K key, final E element) {
@@ -130,6 +133,7 @@ public class Caches {
 	 */
 	@Override
 	public void remove(final K key) {
+	    // Do nothing
 	}
 
 	/**
@@ -145,6 +149,7 @@ public class Caches {
 	 */
 	@Override
 	public void clear() {
+	    // Do nothing
 	}
 
 	/**
@@ -203,10 +208,8 @@ public class Caches {
 	    this.cache = Objects.requireNonNull(cache);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see breakingtherules.utilities.Cache#get(java.lang.Object)
+	/**
+	 * {@inheritDoc}
 	 */
 	@Override
 	public E get(final K key) {
@@ -215,6 +218,7 @@ public class Caches {
 
 	/**
 	 * @throws UnsupportedOperationException
+	 *             (always)
 	 */
 	@Override
 	public E add(final K key, final E element) {
@@ -223,16 +227,15 @@ public class Caches {
 
 	/**
 	 * @throws UnsupportedOperationException
+	 *             (always)
 	 */
 	@Override
 	public void remove(final K key) {
 	    throw new UnsupportedOperationException();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see breakingtherules.utilities.Cache#size()
+	/**
+	 * {@inheritDoc}
 	 */
 	@Override
 	public int size() {
@@ -241,36 +244,31 @@ public class Caches {
 
 	/**
 	 * @throws UnsupportedOperationException
+	 *             (always)
 	 */
 	@Override
 	public void clear() {
 	    throw new UnsupportedOperationException();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see java.lang.Object#equals(java.lang.Object)
+	/**
+	 * {@inheritDoc}
 	 */
 	@Override
 	public boolean equals(final Object o) {
 	    return o == this || cache.equals(o);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see java.lang.Object#hashCode()
+	/**
+	 * {@inheritDoc}
 	 */
 	@Override
 	public int hashCode() {
 	    return cache.hashCode();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see java.lang.Object#toString()
+	/**
+	 * {@inheritDoc}
 	 */
 	@Override
 	public String toString() {

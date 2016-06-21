@@ -796,12 +796,8 @@ public class SoftHashCache<K, E> implements Cache<K, E> {
 	    this.next = next;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see java.lang.Object#toString()
-	 * 
-	 * This method is not called at all. Used to debug.
+	/**
+	 * {@inheritDoc}
 	 */
 	@Override
 	public String toString() {

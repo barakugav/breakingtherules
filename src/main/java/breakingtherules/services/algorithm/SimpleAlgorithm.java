@@ -1,11 +1,12 @@
 package breakingtherules.services.algorithm;
 
-import java.util.Collections;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import breakingtherules.dao.HitsDao;
+import breakingtherules.dao.ParseException;
 import breakingtherules.firewall.Attribute;
 import breakingtherules.firewall.Filter;
 import breakingtherules.firewall.Hit;
@@ -21,20 +22,16 @@ import breakingtherules.utilities.Utility;
  * 
  * @author Barak Ugav
  * @author Yishai Gronich
+ * 
  */
 public class SimpleAlgorithm implements SuggestionsAlgorithm {
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * breakingtherules.services.algorithm.SuggestionsAlgorithm#getSuggestions(
-     * breakingtherules.dao.HitsDao, java.lang.String, java.util.List,
-     * breakingtherules.firewall.Filter, int, java.lang.String)
+    /**
+     * {@inheritDoc}
      */
     @Override
     public List<Suggestion> getSuggestions(final HitsDao dao, final String jobName, final List<Rule> rules,
-	    final Filter filter, final int amount, final String attType) throws Exception {
+	    final Filter filter, final int amount, final String attType) throws IOException, ParseException {
 	final int attTypeId = Attribute.typeStrToTypeId(attType);
 	if (attTypeId == Attribute.UNKOWN_ATTRIBUTE_ID) {
 	    throw new IllegalArgumentException("Unknown attribute: " + attType);
@@ -42,29 +39,72 @@ public class SimpleAlgorithm implements SuggestionsAlgorithm {
 	return getSuggestions(dao.getHits(jobName, rules, filter), amount, attTypeId);
     }
 
+    /**
+     * Get suggestions for hits (from iterable).
+     * 
+     * @param hits
+     *            the hits iterable object.
+     * @param amount
+     *            the number of suggestions is requested.
+     * @param attTypeId
+     *            the type of the suggestions.
+     * @return suggestions for the hits for the attribute type.
+     */
     List<Suggestion> getSuggestions(final Iterable<Hit> hits, final int amount, final int attTypeId) {
-	SimpleAlgorithmRunner runner = new SimpleAlgorithmRunner(hits, amount, attTypeId);
+	final SimpleAlgorithmRunner runner = new SimpleAlgorithmRunner(hits, amount, attTypeId);
 	runner.run();
-	return runner.result;
+	return runner.m_result;
     }
 
+    /**
+     * The runnable used by the {@link SimpleAlgorithm}.
+     * <p>
+     * 
+     * @author Barak Ugav
+     * @author Yishai Gronich
+     *
+     */
     static class SimpleAlgorithmRunner implements Runnable {
 
-	private final Iterable<Hit> hits;
-	private final int amount;
-	private final int attTypeId;
-	private List<Suggestion> result;
+	/**
+	 * The input hits.
+	 */
+	private final Iterable<Hit> m_hits;
 
+	/**
+	 * The number of requested suggestions.
+	 */
+	private final int m_amount;
+
+	/**
+	 * The type of requested suggestions.
+	 */
+	private final int m_attTypeId;
+
+	/**
+	 * The result buffer. This value is relevant only after the runner was
+	 * run.
+	 */
+	private List<Suggestion> m_result;
+
+	/**
+	 * Construct new SimpleAlgorithmRunner.
+	 * 
+	 * @param hits
+	 *            the input hits.
+	 * @param amount
+	 *            the number of requested suggestions.
+	 * @param attTypeId
+	 *            the type of requested suggestions.
+	 */
 	SimpleAlgorithmRunner(final Iterable<Hit> hits, final int amount, final int attTypeId) {
-	    this.hits = hits;
-	    this.amount = amount;
-	    this.attTypeId = attTypeId;
+	    m_hits = hits;
+	    m_amount = amount;
+	    m_attTypeId = attTypeId;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see java.lang.Runnable#run()
+	/**
+	 * {@inheritDoc}
 	 */
 	@Override
 	public void run() {
@@ -74,9 +114,9 @@ public class SimpleAlgorithm implements SuggestionsAlgorithm {
 	    // Create a suggestion for every attribute, count the number of hits
 	    // that apply to it
 	    int numberOfHits = 0;
-	    for (final Hit hit : hits) {
+	    for (final Hit hit : m_hits) {
 		numberOfHits++;
-		final Attribute att = hit.getAttribute(attTypeId);
+		final Attribute att = hit.getAttribute(m_attTypeId);
 		if (att == null) {
 		    // No attribute
 		    continue;
@@ -98,11 +138,9 @@ public class SimpleAlgorithm implements SuggestionsAlgorithm {
 	    allSuggestionsMap = null; // Free memory
 
 	    // Sort by score
-	    allSuggestionsList.sort(null); // Sort with null comparator for
-					   // regular compareTo sort.
-	    Collections.reverse(allSuggestionsList);
+	    allSuggestionsList.sort(Suggestion.SCORE_COMPARATOR_GREATER_TO_SMALLER);
 
-	    result = Utility.subList(allSuggestionsList, 0, amount);
+	    m_result = Utility.subList(allSuggestionsList, 0, m_amount);
 	}
 
     }

@@ -14,8 +14,9 @@ import breakingtherules.utilities.Hashs.Strategy;
  * @see Strategy
  *
  * @param <K>
- *            type of keys
+ *            type of cache keys
  * @param <E>
+ *            type of the cache elements.
  */
 public class SoftCustomHashCache<K, E> extends SoftHashCache<K, E> {
 

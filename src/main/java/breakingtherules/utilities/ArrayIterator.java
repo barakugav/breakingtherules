@@ -68,20 +68,16 @@ public class ArrayIterator<E> implements Iterator<E> {
 	advanceIndex();
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see java.util.Iterator#hasNext()
+    /**
+     * {@inheritDoc}
      */
     @Override
     public boolean hasNext() {
 	return nextIndex < length;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see java.util.Iterator#next()
+    /**
+     * {@inheritDoc}
      */
     @Override
     public E next() {

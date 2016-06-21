@@ -1,5 +1,7 @@
 package breakingtherules.services.algorithm;
 
+import java.util.Comparator;
+
 import breakingtherules.firewall.Attribute;
 
 /**
@@ -8,7 +10,7 @@ import breakingtherules.firewall.Attribute;
  * Hold the number of hits that match the attribute. Is comparable, but
  * comparison is inconsistent with equals.
  */
-public class Suggestion implements Comparable<Suggestion> {
+public class Suggestion {
 
     /**
      * The attribute of this suggestion
@@ -24,6 +26,16 @@ public class Suggestion implements Comparable<Suggestion> {
      * Score of this suggestion, given by the suggestion algorithm
      */
     private double m_score;
+
+    /**
+     * Comparator of suggestions by their score.
+     * <p>
+     * Sore by greater to smaller.
+     */
+    public static final Comparator<Suggestion> SCORE_COMPARATOR_GREATER_TO_SMALLER = (final Suggestion o1,
+	    final Suggestion o2) -> {
+	return Double.compare(o1.m_score, o2.m_score);
+    };
 
     /**
      * Constructor
@@ -75,25 +87,18 @@ public class Suggestion implements Comparable<Suggestion> {
     }
 
     /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String toString() {
+	return m_attribute.toString() + " size=" + m_size + " score:" + m_score;
+    }
+
+    /**
      * Join this suggestion - add a new hit to it
      */
     void join() {
 	m_size++;
-    }
-
-    /**
-     * Compare two Suggestions objects.
-     * 
-     * Is inconsistent with x.equals(y)
-     */
-    @Override
-    public int compareTo(final Suggestion other) {
-	return Double.compare(m_score, other.m_score);
-    }
-
-    @Override
-    public String toString() {
-	return m_attribute.toString() + " size=" + m_size + " score:" + m_score;
     }
 
     /**
@@ -102,7 +107,7 @@ public class Suggestion implements Comparable<Suggestion> {
      * @param score
      *            score of this suggestion
      */
-    protected void setScore(final double score) {
+    void setScore(final double score) {
 	m_score = score;
     }
 

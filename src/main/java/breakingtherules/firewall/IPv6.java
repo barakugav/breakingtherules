@@ -67,8 +67,10 @@ public final class IPv6 extends IP {
      */
     static final int ADDRESS_ARRAY_SIZE = SIZE / Integer.SIZE; // 4
 
-    // TODO - javadoc
-    private static final int OFFSET_IN_BLOCK_MASK = 0x1f; // 31
+    /**
+     * The mask used to calculate the offset of a bit number in a block.
+     */
+    private static final int MASK_OFFSET_IN_BLOCK = 0x1f; // 31
 
     /**
      * Construct new IPv6 with the specified address and maskSize.
@@ -126,7 +128,7 @@ public final class IPv6 extends IP {
 
 	final int[] parentAddress = m_address.clone();
 	final int blockNum = (m - 1) / Integer.SIZE;
-	final int mask = ~(1 << (Integer.SIZE - (m & OFFSET_IN_BLOCK_MASK)));
+	final int mask = ~(1 << (Integer.SIZE - (m & MASK_OFFSET_IN_BLOCK)));
 	parentAddress[blockNum] &= mask;
 
 	return new IPv6(parentAddress, m - 1);
@@ -152,7 +154,7 @@ public final class IPv6 extends IP {
 
 	// Set helper variable
 	int[][] childrenAddresses = new int[][] { m_address.clone(), m_address.clone() };
-	final int helper = 1 << (Integer.SIZE - (m & OFFSET_IN_BLOCK_MASK));
+	final int helper = 1 << (Integer.SIZE - (m & MASK_OFFSET_IN_BLOCK));
 	final int blockNum = m_maskSize * ADDRESS_ARRAY_SIZE / SIZE;
 	childrenAddresses[0][blockNum] &= ~helper;
 	childrenAddresses[1][blockNum] |= helper;
@@ -193,7 +195,7 @@ public final class IPv6 extends IP {
 	}
 
 	return ((m_address[blockNum] ^ o.m_address[blockNum])
-		& ~((1 << (Integer.SIZE - (m & OFFSET_IN_BLOCK_MASK))) - 1)) == 0;
+		& ~((1 << (Integer.SIZE - (m & MASK_OFFSET_IN_BLOCK))) - 1)) == 0;
     }
 
     /**
@@ -245,7 +247,7 @@ public final class IPv6 extends IP {
 		return false;
 	    }
 	}
-	final int shiftSize = Integer.SIZE - ((p - 1) & OFFSET_IN_BLOCK_MASK);
+	final int shiftSize = Integer.SIZE - ((p - 1) & MASK_OFFSET_IN_BLOCK);
 	return (aAddress[lastEqualBlock] >> shiftSize) == (bAddress[lastEqualBlock] >> shiftSize);
     }
 
@@ -417,7 +419,7 @@ public final class IPv6 extends IP {
 	// Reset suffix
 	for (int blockNum = ADDRESS_ARRAY_SIZE; blockNum-- > 0 && maskSize < ((blockNum + 1) << 5);) {
 	    a[blockNum] &= maskSize <= (blockNum << 5) ? 0
-		    : ~((1 << (Integer.SIZE - (maskSize & OFFSET_IN_BLOCK_MASK))) - 1);
+		    : ~((1 << (Integer.SIZE - (maskSize & MASK_OFFSET_IN_BLOCK))) - 1);
 
 	}
 	return new IPv6(a, maskSize);
@@ -522,7 +524,7 @@ public final class IPv6 extends IP {
 	// Reset by mask
 	for (int blockNum = ADDRESS_ARRAY_SIZE; blockNum-- > 0 && maskSize < ((blockNum + 1) << 5);) {
 	    a[blockNum] &= maskSize <= (blockNum << 5) ? 0
-		    : ~((1 << (Integer.SIZE - (maskSize & OFFSET_IN_BLOCK_MASK))) - 1);
+		    : ~((1 << (Integer.SIZE - (maskSize & MASK_OFFSET_IN_BLOCK))) - 1);
 	}
 
 	return new IPv6(a, maskSize);

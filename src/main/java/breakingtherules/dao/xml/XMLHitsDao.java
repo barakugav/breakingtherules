@@ -18,6 +18,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
 
 import breakingtherules.dao.AbstractCachedHitsDao;
 import breakingtherules.dao.DaoUtilities;
@@ -204,7 +205,12 @@ public class XMLHitsDao extends AbstractCachedHitsDao {
     private static void parseHits(final String fileName, final List<Rule> rules, final Filter filter,
 	    final Collection<? super Hit> destination) throws XMLParseException, IOException {
 	// Load from file
-	final Document repositoryDoc = XMLUtilities.readFile(fileName);
+	final Document repositoryDoc;
+	try {
+	    repositoryDoc = XMLUtilities.readFile(fileName);
+	} catch (final SAXException e) {
+	    throw new XMLParseException(e);
+	}
 
 	// Get all hits from repository
 	final NodeList hitsList = repositoryDoc.getElementsByTagName(XMLDaoConfig.TAG_HIT);

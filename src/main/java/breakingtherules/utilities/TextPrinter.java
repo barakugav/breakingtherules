@@ -69,50 +69,52 @@ public class TextPrinter {
 	m_alreadyPrinted = "";
     }
 
-    /*
-     * (non-Javadoc)
+    /**
+     * Print a string.
      * 
-     * @see java.lang.PrintStream#print(String)
+     * @param s
+     *            the string.
      */
     public void print(final String s) {
 	m_builder.append(s);
 	print();
     }
 
-    /*
-     * (non-Javadoc)
+    /**
+     * Print a string and go down a line.
      * 
-     * @see java.lang.PrintStream#println(String)
+     * @param s
+     *            the string.
      */
     public void println(final String s) {
 	m_builder.appendln(s);
 	print();
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see java.lang.PrintStream#println()
+    /**
+     * Go down a line.
      */
     public void println() {
 	m_builder.appendln();
 	print();
     }
 
-    /*
-     * (non-Javadoc)
+    /**
+     * Print a string in indented mode.
      * 
-     * @see breakingtherules.utilities.TextBuilder#appedIndented(String)
+     * @param s
+     *            the string.
      */
     public void printIndented(final String s) {
 	m_builder.appedIndented(s);
 	print();
     }
 
-    /*
-     * (non-Javadoc)
+    /**
+     * Print a string in indented mode and go down a line.
      * 
-     * @see breakingtherules.utilities.TextBuilder#appedIndentedln(String)
+     * @param s
+     *            the string.
      */
     public void printIndentedln(final String s) {
 	m_builder.appedIndentedln(s);

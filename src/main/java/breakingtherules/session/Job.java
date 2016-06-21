@@ -294,10 +294,12 @@ public class Job {
      *            type
      * 
      * @return Current job's suggestions.
-     * @throws Exception
-     *             if any error occurs
+     * @throws IOException
+     *             if any I/O errors occurs in DAO.
+     * @throws ParseException
+     *             if any parse errors occurs in DAO.
      */
-    public List<SuggestionsDto> getSuggestions(final int amount) throws Exception {
+    public List<SuggestionsDto> getSuggestions(final int amount) throws IOException, ParseException {
 	checkJobState();
 
 	final String[] allAttributesType = getAllAttributeTypes();

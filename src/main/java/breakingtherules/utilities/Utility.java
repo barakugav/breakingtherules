@@ -13,6 +13,7 @@ import java.util.List;
  * 
  * @author Barak Ugav
  * @author Yishai Gronich
+ * 
  */
 public class Utility {
 
@@ -36,7 +37,9 @@ public class Utility {
      */
     static final String TAB_STR = String.valueOf(TAB);
 
-    // Suppresses default constructor, ensuring non-instantiability.
+    /**
+     * Suppresses default constructor, ensuring non-instantiability.
+     */
     private Utility() {
     }
 
@@ -47,9 +50,8 @@ public class Utility {
      * the list wasn't grown naturally by <code>List.add(E e)</code>. The list
      * will be appended by nulls up to the desire index if needed
      * 
-     * @param <T>
+     * @param <E>
      *            type of list elements
-     * 
      * @param list
      *            the list
      * @param index
@@ -57,7 +59,7 @@ public class Utility {
      * @param value
      *            new value in the list
      */
-    public static <T> void put(final List<? super T> list, final int index, T value) {
+    public static <E> void put(final List<? super E> list, final int index, E value) {
 	if (index < 0) {
 	    throw new IndexOutOfBoundsException("index must be positive " + index);
 	}
@@ -68,39 +70,36 @@ public class Utility {
     }
 
     /**
-     * Get a sub list of a list by offset and size
+     * Create a new sub list of an iterable.
      * 
-     * @param <T>
-     *            type of list elements
-     * 
-     * @param list
-     *            the list
+     * @param <E>
+     *            type of element.
+     * @param iterable
+     *            the iterable source.
      * @param offset
-     *            the offset of the desire sub list
+     *            the offset in the iterable.
      * @param size
-     *            the size of the desire sub list
-     * @return sub list of the list in range [offset, min(list.size, offset +
-     *         size))
+     *            the requested sub list size.
+     * @return new sub list of the iterable source.
      * @throws IllegalArgumentException
-     *             if list is null, offset < 0, size < 0
+     *             if the offset or the size are negative.
      */
-    public static <T> List<T> subList(final List<? extends T> list, final int offset, final int size) {
-	if (offset < 0 || size < 0) {
-	    throw new IllegalArgumentException("offset and size should be positive (" + offset + ", " + size + ")");
-	}
-	if (offset >= list.size()) {
-	    return new ArrayList<>();
-	}
-
-	// Clone sub list because List.SubList(...) save a reference to the
-	// original list and therefore, the whole list is always kept in memory.
-	return newArrayList(list.subList(offset, Math.min(list.size(), offset + size)));
-    }
-
     public static <E> List<E> subList(final Iterable<? extends E> iterable, final int offset, final int size) {
 	if (offset < 0 || size < 0) {
 	    throw new IllegalArgumentException("offset and size should be positive (" + offset + ", " + size + ")");
 	}
+	if (iterable instanceof List) {
+	    List<? extends E> list = (List<? extends E>) iterable;
+	    if (offset >= list.size()) {
+		return new ArrayList<>();
+	    }
+
+	    // Clone sub list because List.SubList(...) save a reference to the
+	    // original list and therefore, the whole list is always kept in
+	    // memory.
+	    return newArrayList(list.subList(offset, Math.min(list.size(), offset + size)));
+	}
+
 	final List<E> list = new ArrayList<>();
 	int index;
 	final Iterator<? extends E> it = iterable.iterator();
@@ -113,6 +112,24 @@ public class Utility {
 	return list;
     }
 
+    /**
+     * Create a sub list view on existing list.
+     * <p>
+     * The user of this method should know that this method doesn't create new
+     * list and modifies on the returned list will modified the input list. Also
+     * the return list will keep the original list in the memory as long as the
+     * sublist is in use.
+     * 
+     * @param <E>
+     *            type of the list elements.
+     * @param list
+     *            the input list.
+     * @param offset
+     *            offset in the original list.
+     * @param size
+     *            requested size of the sublist view.
+     * @return sublist view on the original list.
+     */
     public static <E> List<E> subListView(final List<E> list, final int offset, final int size) {
 	if (offset < 0 || size < 0) {
 	    throw new IllegalArgumentException("offset and size should be positive (" + offset + ", " + size + ")");
@@ -180,14 +197,23 @@ public class Utility {
      * 
      * @param text
      *            the text to break
-     * @return list of all words in the text with spaces or tabs between them
-     * @throws IllegalArgumentException
+     * @return all words in the text with spaces or tabs between them
+     * @throws NullPointerException
      *             if line is null
      */
     public static String[] breakToWords(final String text) {
 	return breakToWords(text, SPACE, TAB);
     }
 
+    /**
+     * Break string text to words and separate the words by the input separator.
+     * 
+     * @param text
+     *            the text to break.
+     * @param separator
+     *            the char separator used to separate between words.
+     * @return all words in the text with the separator between them.
+     */
     public static String[] breakToWords(final String text, final char separator) {
 	String[] words = new String[4];
 	int wordsCount = 0;
@@ -215,6 +241,15 @@ public class Utility {
 	return words.length == wordsCount ? words : trim(words, wordsCount);
     }
 
+    /**
+     * Break string text to words and separate the words by the input separator.
+     * 
+     * @param text
+     *            the text to break.
+     * @param separator
+     *            the string separator used to separate between words.
+     * @return all words in the text with the separator between them.
+     */
     public static String[] breakToWords(final String text, final String separator) {
 	String[] words = new String[4];
 	int wordsCount = 0;
@@ -243,11 +278,21 @@ public class Utility {
 	return words.length == wordsCount ? words : trim(words, wordsCount);
     }
 
-    public static String[] breakToWords(final String text, final char... separatorCharss) {
+    /**
+     * Break string text to words and separate the words by the input
+     * separators.
+     * 
+     * @param text
+     *            the text to break.
+     * @param separatorChars
+     *            the chars separator used to separate between words.
+     * @return all words in the text with one of the separators between them.
+     */
+    public static String[] breakToWords(final String text, final char... separatorChars) {
 	String[] words = new String[4];
 	int wordsCount = 0;
 
-	int separatorIndex = indexOf(text, separatorCharss);
+	int separatorIndex = indexOf(text, separatorChars);
 	int fromIndex = 0;
 
 	while (separatorIndex >= 0) {
@@ -258,7 +303,7 @@ public class Utility {
 		words[wordsCount++] = text.substring(fromIndex, separatorIndex);
 	    }
 	    fromIndex = separatorIndex + 1;
-	    separatorIndex = indexOf(text, fromIndex, separatorCharss);
+	    separatorIndex = indexOf(text, fromIndex, separatorChars);
 	}
 	// Last word
 	if (fromIndex != text.length()) {
@@ -470,6 +515,9 @@ public class Utility {
      */
     private static final double LOG2 = StrictMath.log(2);
 
+    /**
+     * The inverse of {@link #LOG2}.
+     */
     private static final double LOG2_INVERSE = (1 + 1e-10) / LOG2;
 
     /**
@@ -483,6 +531,15 @@ public class Utility {
 	return StrictMath.log(num) * LOG2_INVERSE;
     }
 
+    /**
+     * Find the first index of one of the input chars.
+     * 
+     * @param text
+     *            the text.
+     * @param chars
+     *            the searched chars.
+     * @return the first index of one of the characters or -1 if non found.
+     */
     public static int indexOf(final String text, final char... chars) {
 	int index = -1;
 	for (final char ch : chars) {
@@ -494,6 +551,18 @@ public class Utility {
 	return index;
     }
 
+    /**
+     * Find the first index of one of the input chars, starting the search from
+     * a specified index.
+     * 
+     * @param text
+     *            the text.
+     * @param fromIndex
+     *            the first index to start the search from.
+     * @param chars
+     *            the searched chars.
+     * @return the first index of one of the characters or -1 if non found.
+     */
     public static int indexOf(final String text, final int fromIndex, final char... chars) {
 	int index = -1;
 	for (final char ch : chars) {
@@ -556,6 +625,19 @@ public class Utility {
 	return new int[] { index, length };
     }
 
+    /**
+     * Return pair of index and length of the last sequence out of the input
+     * sequences, starting the search from specified index.
+     * 
+     * @param text
+     *            the searched text
+     * @param fromIndex
+     *            the index to start the search from.
+     * @param sequences
+     *            list of searched sequences
+     * @return pair of index and length of the found sequence or -1 in the index
+     *         field if non found
+     */
     public static int[] positionOf(final String text, final int fromIndex, final String... sequences) {
 	int index = -1;
 	int length = -1;
@@ -593,12 +675,30 @@ public class Utility {
 	return new int[] { index, length };
     }
 
+    /**
+     * Doubling the input array length and copy the date to the new array.
+     * 
+     * @param array
+     *            the original array.
+     * @return new array with twice the size of the original array, with the
+     *         data copied from the original array.
+     */
     private static String[] expand(final String[] array) {
 	final String[] newArray = new String[array.length * 2 + 1];
 	System.arraycopy(array, 0, newArray, 0, array.length);
 	return newArray;
     }
 
+    /**
+     * Trim an array to a new length.
+     * 
+     * @param array
+     *            the original array.
+     * @param newLength
+     *            the new length of the array.
+     * @return smaller array with the specified length and first
+     *         {@code newLength} elements from the original array copied.
+     */
     private static String[] trim(final String[] array, final int newLength) {
 	final String[] newArray = new String[newLength];
 	System.arraycopy(array, 0, newArray, 0, newLength);

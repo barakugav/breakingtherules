@@ -15,6 +15,9 @@ public class TextBuilder {
      */
     private StringBuilder m_builder;
 
+    /**
+     * Cache for the indent string.
+     */
     private final String m_indent;
 
     /**
@@ -32,6 +35,9 @@ public class TextBuilder {
      */
     private final String[] m_separatorSequences;
 
+    /**
+     * The line separator in the system.
+     */
     private static final String LINE_SEPARATOR = System.lineSeparator();
 
     /**
@@ -196,10 +202,8 @@ public class TextBuilder {
 	m_builder = new StringBuilder();
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see java.lang.Object#toString()
+    /**
+     * {@inheritDoc}
      */
     @Override
     public String toString() {
@@ -209,6 +213,8 @@ public class TextBuilder {
     /**
      * Get string that represent a indent
      * 
+     * @param indentSize
+     *            the number of spaces in the indent.
      * @return the indent's string
      */
     private static String indent(final int indentSize) {

@@ -43,6 +43,9 @@ import java.util.function.Function;
  */
 public class HeavySynchronizedHashCache<K, E> implements Cache<K, E> {
 
+    // TODO - remove null mask and change to similar implementation as
+    // SoftHashCache.
+
     /*
      * Implementation notes.
      * 
@@ -208,10 +211,8 @@ public class HeavySynchronizedHashCache<K, E> implements Cache<K, E> {
 	lock = new ReentrantLock();
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see bugav.util.containers.Cache#get(java.lang.Object)
+    /**
+     * {@inheritDoc}
      */
     @Override
     public E get(final K key) {
@@ -241,10 +242,8 @@ public class HeavySynchronizedHashCache<K, E> implements Cache<K, E> {
 	}
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see bugav.util.containers.Cache#add(java.lang.Object, java.lang.Object)
+    /**
+     * {@inheritDoc}
      */
     @Override
     public E add(final K key, final E element) {
@@ -340,10 +339,8 @@ public class HeavySynchronizedHashCache<K, E> implements Cache<K, E> {
 	}
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see bugav.util.containers.Cache#remove(java.lang.Object)
+    /**
+     * {@inheritDoc}
      */
     @Override
     public void remove(final K key) {
@@ -381,10 +378,8 @@ public class HeavySynchronizedHashCache<K, E> implements Cache<K, E> {
 	}
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see bugav.util.containers.Cache#size()
+    /**
+     * {@inheritDoc}
      */
     @Override
     public int size() {
@@ -398,10 +393,8 @@ public class HeavySynchronizedHashCache<K, E> implements Cache<K, E> {
 	}
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see bugav.util.containers.Cache#clear()
+    /**
+     * {@inheritDoc}
      */
     @Override
     public void clear() {
@@ -434,10 +427,8 @@ public class HeavySynchronizedHashCache<K, E> implements Cache<K, E> {
 	}
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see java.lang.Object#toString()
+    /**
+     * {@inheritDoc}
      */
     @Override
     public String toString() {
@@ -566,19 +557,65 @@ public class HeavySynchronizedHashCache<K, E> implements Cache<K, E> {
 	return o == NULL ? null : o;
     }
 
+    /**
+     * An entry that holds a key and value pair in the hash table.
+     * 
+     * @author Barak Ugav
+     * @author Yishai Gronich
+     *
+     * @param <E>
+     *            type of element of the entry.
+     */
     private static class Entry<E> {
 
+	/**
+	 * The entry key. Can be {@link HeavySynchronizedHashCache#NULL}.
+	 */
 	Object key;
+
+	/**
+	 * The hash of the key.
+	 */
 	final int hash;
-	private E element;
+
+	/**
+	 * The element.
+	 */
+	E element;
+
+	/**
+	 * The next entry in the linked list of the entries.
+	 */
 	Entry<E> next;
 
+	/**
+	 * Construct new Entry.
+	 * 
+	 * @param key
+	 *            the entry key.
+	 * @param hash
+	 *            the key hash.
+	 * @param next
+	 *            the next entry in the entries linked list.
+	 */
 	Entry(final Object key, final int hash, final Entry<E> next) {
 	    this.key = key;
 	    this.hash = hash;
 	    this.next = next;
 	}
 
+	/**
+	 * Construct new Entry.
+	 * 
+	 * @param key
+	 *            the entry key.
+	 * @param hash
+	 *            the key hash.
+	 * @param element
+	 *            the element of the entry.
+	 * @param next
+	 *            the next entry in the entries linked list.
+	 */
 	Entry(final Object key, final int hash, final E element, final Entry<E> next) {
 	    this.key = key;
 	    this.hash = hash;
@@ -586,6 +623,9 @@ public class HeavySynchronizedHashCache<K, E> implements Cache<K, E> {
 	    this.next = next;
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	public String toString() {
 	    synchronized (this) {
