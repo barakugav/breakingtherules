@@ -318,9 +318,9 @@ public class Utility {
 	    if (digit < 0 || digit > 9) {
 		throw new IllegalArgumentException("invalid string: " + s.substring(fromIndex, toIndex));
 	    }
-	    result = result * 10 - digit;
+	    result = result * 10 + digit;
 	}
-	return -result;
+	return result;
     }
 
     /**

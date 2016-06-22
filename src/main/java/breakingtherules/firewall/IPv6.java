@@ -431,7 +431,7 @@ public final class IPv6 extends IP {
      *             if the format is illegal or the values are out of range.
      */
     public static IPv6 valueOf(final String s) {
-	return valueOf(s, true);
+	return valueOf(s, s.indexOf(BLOCKS_SEPARATOR), true);
     }
 
     /**
@@ -587,15 +587,12 @@ public final class IPv6 extends IP {
      * @throws IllegalArgumentException
      *             if the format is illegal or the values are out of range.
      */
-    static IPv6 valueOf(final String s, final boolean useCache) {
+    static IPv6 valueOf(final String s, int separatorIndex, final boolean useCache) {
 	final int[] address = new int[ADDRESS_ARRAY_SIZE];
 	int fromIndex = 0;
 	int blockNumber = 0;
 
-	for (int separatorIndex; (separatorIndex = s.indexOf(BLOCKS_SEPARATOR, fromIndex)) >= 0;) {
-	    if (fromIndex == separatorIndex) {
-		throw new IllegalArgumentException("Empty block. " + s);
-	    }
+	for (; separatorIndex >= 0; separatorIndex = s.indexOf(BLOCKS_SEPARATOR, fromIndex)) {
 	    if (blockNumber == BLOCK_NUMBER - 1) {
 		throw new IllegalArgumentException("Too many IPv6 blocks, expected " + BLOCK_NUMBER);
 	    }
@@ -606,7 +603,6 @@ public final class IPv6 extends IP {
 	    address[blockNumber >> 1] |= blockVal;
 	    blockNumber++;
 	    fromIndex = separatorIndex + 1;
-	    separatorIndex = s.indexOf(BLOCKS_SEPARATOR, fromIndex);
 	}
 	if (blockNumber != BLOCK_NUMBER - 1) {
 	    if (s.equals(ANY_IPv6_STR)) {

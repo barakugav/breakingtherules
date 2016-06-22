@@ -4,12 +4,14 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
+import java.util.function.IntFunction;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import breakingtherules.utilities.Cache;
-import breakingtherules.utilities.Caches;
-import breakingtherules.utilities.SoftHashCache;
+import breakingtherules.utilities.Int2ObjectCache;
+import breakingtherules.utilities.Int2ObjectCaches;
+import breakingtherules.utilities.Int2ObjectSoftHashCache;
 import breakingtherules.utilities.Utility;
 
 /**
@@ -671,8 +673,7 @@ public class Service extends Attribute {
      */
     private static Service valueOfSinglePortServiceInternal(final int protocolCode, final int port) {
 	// Intentionally using 'new Integer(int)' and not 'Integer.valueOf(int)'
-	return ServiceCache.caches[protocolCode + 1].getOrAdd(new Integer(port),
-		ServiceCache.suppliers[protocolCode + 1]);
+	return ServiceCache.caches[protocolCode + 1].getOrAdd(port, ServiceCache.suppliers[protocolCode + 1]);
     }
 
     /**
@@ -720,7 +721,7 @@ public class Service extends Attribute {
 	 * range) of specific protocol. Services with protocol 'x' are in cache
 	 * number x.
 	 */
-	static final Cache<Integer, Service>[] caches;
+	static final Int2ObjectCache<Service>[] caches;
 
 	/**
 	 * Array of suppliers for each service cache.
@@ -729,26 +730,26 @@ public class Service extends Attribute {
 	 * <p>
 	 * Used by {@link Cache#getOrAdd(Object, Function)}.
 	 */
-	static final Function<Integer, Service>[] suppliers;
+	static final IntFunction<Service>[] suppliers;
 
 	static {
 	    final int numberOfCaches = 257; // 256 and 1 for 'any protocol'
 
 	    // Used dummy to suppress warnings
 	    @SuppressWarnings({ "unchecked", "unused" })
-	    Object dummy = caches = new Cache[numberOfCaches];
+	    Object dummy = caches = new Int2ObjectCache[numberOfCaches];
 
 	    // Used dummy to suppress warnings
 	    @SuppressWarnings({ "unchecked", "unused" })
-	    Object dummy2 = suppliers = new Function[numberOfCaches];
+	    Object dummy2 = suppliers = new IntFunction[numberOfCaches];
 
 	    for (int i = caches.length; i-- != 0;) {
-		caches[i] = Caches.synchronizedCache(new SoftHashCache<>());
+		caches[i] = Int2ObjectCaches.synchronizedCache(new Int2ObjectSoftHashCache<>());
 	    }
 
 	    for (int i = suppliers.length; i-- != 0;) {
 		final int protocolCode = i - 1;
-		suppliers[i] = portInteger -> new Service(protocolCode, toPortsRange(portInteger.intValue()));
+		suppliers[i] = portInteger -> new Service(protocolCode, toPortsRange(portInteger));
 	    }
 	}
 

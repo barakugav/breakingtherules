@@ -2,9 +2,13 @@ package breakingtherules.firewall;
 
 import java.util.Objects;
 import java.util.function.Function;
+import java.util.function.IntFunction;
 
 import breakingtherules.utilities.Cache;
 import breakingtherules.utilities.Caches;
+import breakingtherules.utilities.Int2ObjectCache;
+import breakingtherules.utilities.Int2ObjectCaches;
+import breakingtherules.utilities.Int2ObjectSoftHashCache;
 import breakingtherules.utilities.SoftCustomHashCache;
 
 /**
@@ -87,10 +91,10 @@ public class Source extends IPAttribute {
 	final IP ip = IP.valueOf(s, false);
 	if (ip.m_maskSize == ip.getSize()) {
 	    if (ip instanceof IPv4) {
-		return SourceCache.IPv4Cache.getOrAdd((IPv4) ip, SourceCache.uncachedIPToSourceSupplier);
+		return SourceCache.IPv4Cache.getOrAdd(((IPv4) ip).m_address, SourceCache.IPv4AddressToSourceSupplier);
 	    }
 	    if (ip instanceof IPv6) {
-		return SourceCache.IPv6Cache.getOrAdd((IPv6) ip, SourceCache.uncachedIPToSourceSupplier);
+		return SourceCache.IPv6Cache.getOrAdd((IPv6) ip, SourceCache.uncachedIPv6ToSourceSupplier);
 	    }
 	}
 	return new Source(ip);
@@ -121,10 +125,10 @@ public class Source extends IPAttribute {
 	    // If ip is a full IP (most common source objects) search it in
 	    // cache, or add one if one doesn't exist.
 	    if (ip instanceof IPv4) {
-		return SourceCache.IPv4Cache.getOrAdd((IPv4) ip, SourceCache.cachedIPToSourceSupplier);
+		return SourceCache.IPv4Cache.getOrAdd(((IPv4) ip).m_address, SourceCache.IPv4AddressToSourceSupplier);
 	    }
 	    if (ip instanceof IPv6) {
-		return SourceCache.IPv6Cache.getOrAdd((IPv6) ip, SourceCache.cachedIPToSourceSupplier);
+		return SourceCache.IPv6Cache.getOrAdd((IPv6) ip, SourceCache.cachedIPv6ToSourceSupplier);
 	    }
 	}
 	return new Source(ip);
@@ -144,7 +148,7 @@ public class Source extends IPAttribute {
 	/**
 	 * Cache of source objects with full(not subnetwork) IPv4 ips.
 	 */
-	static final Cache<IPv4, Source> IPv4Cache;
+	static final Int2ObjectCache<Source> IPv4Cache;
 
 	/**
 	 * Cache of source objects with full(not subnetwork) IPv6 ips.
@@ -159,7 +163,7 @@ public class Source extends IPAttribute {
 	 * <p>
 	 * Used by {@link Cache#getOrAdd(Object, Function)}.
 	 */
-	static final Function<IP, Source> cachedIPToSourceSupplier;
+	static final Function<IPv6, Source> cachedIPv6ToSourceSupplier;
 
 	/**
 	 * Supplier used to supply new source objects to the cache in case they
@@ -169,13 +173,16 @@ public class Source extends IPAttribute {
 	 * <p>
 	 * Used by {@link Cache#getOrAdd(Object, Function)}.
 	 */
-	static final Function<IP, Source> uncachedIPToSourceSupplier;
+	static final Function<IPv6, Source> uncachedIPv6ToSourceSupplier;
+
+	static final IntFunction<Source> IPv4AddressToSourceSupplier;
 
 	static {
-	    IPv4Cache = Caches.synchronizedCache(new SoftCustomHashCache<>(IPv4AddressStrategy.INSTANCE));
+	    IPv4Cache = Int2ObjectCaches.synchronizedCache(new Int2ObjectSoftHashCache<>());
 	    IPv6Cache = Caches.synchronizedCache(new SoftCustomHashCache<>(IPv6AddressStrategy.INSTANCE));
-	    cachedIPToSourceSupplier = ip -> new Source(ip);
-	    uncachedIPToSourceSupplier = ip -> new Source(ip.cache());
+	    cachedIPv6ToSourceSupplier = ip -> new Source(ip);
+	    uncachedIPv6ToSourceSupplier = ip -> new Source(ip.cache());
+	    IPv4AddressToSourceSupplier = address -> new Source(IPv4.valueOfBits(address));
 	}
 
     }

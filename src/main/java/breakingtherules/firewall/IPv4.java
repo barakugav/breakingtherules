@@ -2,10 +2,12 @@ package breakingtherules.firewall;
 
 import java.util.List;
 import java.util.function.Function;
+import java.util.function.IntFunction;
 
 import breakingtherules.utilities.Cache;
-import breakingtherules.utilities.Caches;
-import breakingtherules.utilities.SoftHashCache;
+import breakingtherules.utilities.Int2ObjectCache;
+import breakingtherules.utilities.Int2ObjectCaches;
+import breakingtherules.utilities.Int2ObjectSoftHashCache;
 import breakingtherules.utilities.Utility;
 
 /**
@@ -313,7 +315,7 @@ public final class IPv4 extends IP {
      */
     @Override
     IPv4 cache() {
-	return m_maskSize == SIZE ? IPv4Cache.cache.add(new Integer(m_address), this) : this;
+	return m_maskSize == SIZE ? IPv4Cache.cache.add(m_address, this) : this;
     }
 
     /**
@@ -362,7 +364,7 @@ public final class IPv4 extends IP {
      *             if the format is illegal or the values are out of range.
      */
     public static IPv4 valueOf(final String s) {
-	return valueOf(s, true);
+	return valueOf(s, s.indexOf(BLOCKS_SEPARATOR), true);
     }
 
     /**
@@ -444,7 +446,7 @@ public final class IPv4 extends IP {
      * @return IPv4 object with specified address
      */
     public static IPv4 valueOfBits(final int addressBits) {
-	return valueOfBits(addressBits, SIZE);
+	return valueOfFullIPv4Internal(addressBits);
     }
 
     /**
@@ -491,17 +493,15 @@ public final class IPv4 extends IP {
      * @throws IllegalArgumentException
      *             if the format is illegal or the values are out of range.
      */
-    static IPv4 valueOf(final String s, final boolean useCache) {
+    static IPv4 valueOf(final String s, int separatorIndex, final boolean useCache) {
 	int address = 0;
 
 	int fromIndex = 0;
 	int numberOfSeparators = 0;
-	for (int separatorIndex; (separatorIndex = s.indexOf(BLOCKS_SEPARATOR, fromIndex)) >= 0;) {
-	    final int blockVal = parseBlockValue(s, fromIndex, separatorIndex);
-	    address = (address << BLOCK_SIZE) + blockVal;
+	for (; separatorIndex >= 0; separatorIndex = s.indexOf(BLOCKS_SEPARATOR, fromIndex)) {
+	    address = (address + parseBlockValue(s, fromIndex, separatorIndex)) << BLOCK_SIZE;
 	    numberOfSeparators++;
 	    fromIndex = separatorIndex + 1;
-	    separatorIndex = s.indexOf(BLOCKS_SEPARATOR, fromIndex);
 	}
 	if (numberOfSeparators != BLOCK_NUMBER - 1) {
 	    if (s.equals(ANY_IPv4_STR)) {
@@ -515,14 +515,12 @@ public final class IPv4 extends IP {
 	final int maskSeparatorIndex = s.indexOf(MASK_SIZE_SEPARATOR, fromIndex);
 	if (maskSeparatorIndex < 0) {
 	    // No mask size specification
-	    final int lastBlockVal = parseBlockValue(s, fromIndex, s.length());
-	    address = (address << BLOCK_SIZE) + lastBlockVal;
+	    address += parseBlockValue(s, fromIndex, s.length());
 	    return useCache ? valueOfFullIPv4Internal(address) : new IPv4(address, SIZE);
 	}
 
 	// Has mask size specification
-	final int lastBlockVal = parseBlockValue(s, fromIndex, maskSeparatorIndex);
-	address = (address << BLOCK_SIZE) + lastBlockVal;
+	address += parseBlockValue(s, fromIndex, maskSeparatorIndex);
 
 	// Read subnetwork mask
 	final int maskSize = Utility.parsePositiveIntUncheckedOverflow(s, maskSeparatorIndex + 1, s.length(),
@@ -553,7 +551,7 @@ public final class IPv4 extends IP {
      * @return IPv4 object with the specified address and maskSize.
      */
     private static IPv4 valueOfFullIPv4Internal(final int address) {
-	return IPv4Cache.cache.getOrAdd(new Integer(address), IPv4Cache.supplier);
+	return IPv4Cache.cache.getOrAdd(address, IPv4Cache.supplier);
     }
 
     /**
@@ -569,18 +567,18 @@ public final class IPv4 extends IP {
 	/**
 	 * Cache of full (maskSize = {@link IPv4#SIZE}) IPv4 objects.
 	 */
-	static final Cache<Integer, IPv4> cache;
+	static final Int2ObjectCache<IPv4> cache;
 
 	/**
 	 * Supplier of new IPv4 objects by integer address.
 	 * <p>
 	 * Used by {@link Cache#getOrAdd(Object, Function)}.
 	 */
-	static final Function<Integer, IPv4> supplier;
+	static final IntFunction<IPv4> supplier;
 
 	static {
-	    cache = Caches.synchronizedCache(new SoftHashCache<>());
-	    supplier = address -> new IPv4(address.intValue(), SIZE);
+	    cache = Int2ObjectCaches.synchronizedCache(new Int2ObjectSoftHashCache<>());
+	    supplier = address -> new IPv4(address, SIZE);
 	}
 
     }

@@ -2,9 +2,13 @@ package breakingtherules.firewall;
 
 import java.util.Objects;
 import java.util.function.Function;
+import java.util.function.IntFunction;
 
 import breakingtherules.utilities.Cache;
 import breakingtherules.utilities.Caches;
+import breakingtherules.utilities.Int2ObjectCache;
+import breakingtherules.utilities.Int2ObjectCaches;
+import breakingtherules.utilities.Int2ObjectSoftHashCache;
 import breakingtherules.utilities.SoftCustomHashCache;
 
 /**
@@ -89,7 +93,8 @@ public class Destination extends IPAttribute {
 	final IP ip = IP.valueOf(s, false);
 	if (ip.m_maskSize == ip.getSize()) {
 	    if (ip instanceof IPv4) {
-		return DestinationCache.IPv4Cache.getOrAdd((IPv4) ip, DestinationCache.uncachedIPToDestinationSupplier);
+		return DestinationCache.IPv4Cache.getOrAdd(((IPv4) ip).m_address,
+			DestinationCache.IPv4AddressToDestinationSupplier);
 	    }
 	    if (ip instanceof IPv6) {
 		return DestinationCache.IPv6Cache.getOrAdd((IPv6) ip, DestinationCache.uncachedIPToDestinationSupplier);
@@ -121,7 +126,8 @@ public class Destination extends IPAttribute {
 	    // If ip is a full IP (most common destination objects) search it in
 	    // cache, or add one if one doesn't exist.
 	    if (ip instanceof IPv4) {
-		return DestinationCache.IPv4Cache.getOrAdd((IPv4) ip, DestinationCache.cachedIPToDestinationSupplier);
+		return DestinationCache.IPv4Cache.getOrAdd(((IPv4) ip).m_address,
+			DestinationCache.IPv4AddressToDestinationSupplier);
 	    }
 	    if (ip instanceof IPv6) {
 		return DestinationCache.IPv6Cache.getOrAdd((IPv6) ip, DestinationCache.cachedIPToDestinationSupplier);
@@ -143,7 +149,7 @@ public class Destination extends IPAttribute {
 	/**
 	 * Cache of destination objects with full(not subnetwork) IPv4 ips.
 	 */
-	static final Cache<IPv4, Destination> IPv4Cache;
+	static final Int2ObjectCache<Destination> IPv4Cache;
 
 	/**
 	 * Cache of destination objects with full(not subnetwork) IPv6 ips.
@@ -170,11 +176,14 @@ public class Destination extends IPAttribute {
 	 */
 	static final Function<IP, Destination> uncachedIPToDestinationSupplier;
 
+	static final IntFunction<Destination> IPv4AddressToDestinationSupplier;
+
 	static {
-	    IPv4Cache = Caches.synchronizedCache(new SoftCustomHashCache<>(IPv4AddressStrategy.INSTANCE));
+	    IPv4Cache = Int2ObjectCaches.synchronizedCache(new Int2ObjectSoftHashCache<>());
 	    IPv6Cache = Caches.synchronizedCache(new SoftCustomHashCache<>(IPv6AddressStrategy.INSTANCE));
 	    cachedIPToDestinationSupplier = ip -> new Destination(ip);
 	    uncachedIPToDestinationSupplier = ip -> new Destination(ip.cache());
+	    IPv4AddressToDestinationSupplier = address -> new Destination(IPv4.valueOfBits(address));
 	}
 
     }

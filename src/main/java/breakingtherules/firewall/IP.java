@@ -311,33 +311,29 @@ public abstract class IP implements Comparable<IP> {
      *             if the string is invalid.
      */
     static IP valueOf(final String s, final boolean useCache) {
+	int separator;
+	if ((separator = s.indexOf(IPv4.BLOCKS_SEPARATOR)) >= 0) {
+	    return IPv4.valueOf(s, separator, useCache);
+	}
+	if ((separator = s.indexOf(IPv6.BLOCKS_SEPARATOR)) >= 0) {
+	    return IPv6.valueOf(s, separator, useCache);
+	}
 	if (s.startsWith(ANY_IP_STR)) {
+	    if (s.length() == 7 && s.startsWith("IPv", 3)) {
+		if (s.charAt(6) == '4') {
+		    return IPv4.ANY_IPv4;
+		}
+		if (s.charAt(6) == '6') {
+		    return IPv6.ANY_IPv6;
+		}
+	    }
 	    if (s.length() == 3) {
 		return ANY_IP;
 	    }
-	    if (s.startsWith("IPv4", 3)) {
-		return IPv4.ANY_IPv4;
-	    }
-	    if (s.startsWith("IPv6", 3)) {
-		return IPv6.ANY_IPv6;
-	    }
 	    throw new IllegalArgumentException("Unkown format: " + s);
 	}
+	throw new IllegalArgumentException("Unknown format: " + s);
 
-	final boolean isIPv4 = s.indexOf(IPv4.BLOCKS_SEPARATOR) >= 0;
-	final boolean isIPv6 = s.indexOf(IPv6.BLOCKS_SEPARATOR) >= 0;
-	if (!(isIPv4 ^ isIPv6)) {
-	    throw new IllegalArgumentException("Unknown format: " + s);
-	}
-	if (isIPv4) {
-	    return IPv4.valueOf(s, useCache);
-	}
-	if (isIPv6) {
-	    return IPv6.valueOf(s, useCache);
-	}
-
-	// Impossible flow.
-	throw new InternalError();
     }
 
     /**
