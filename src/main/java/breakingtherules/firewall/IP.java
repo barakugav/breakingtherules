@@ -235,6 +235,14 @@ public abstract class IP implements Comparable<IP> {
     public abstract int getSize();
 
     /**
+     * Cache the IP or get a cached clone of this one.
+     * 
+     * @return cached exact clone of this one or this one if there is no such
+     *         cached one.
+     */
+    abstract IP cache();
+
+    /**
      * Parses an IP from bits list.
      * <p>
      * This method create IPs of type IPv4, IPv6 and AnyIP only.
@@ -280,8 +288,40 @@ public abstract class IP implements Comparable<IP> {
      *             if the string is invalid.
      */
     public static IP valueOf(final String s) {
-	if (s.equals(ANY_IP_STR)) {
-	    return ANY_IP;
+	return valueOf(s, true);
+    }
+
+    /**
+     * Get IP object parsed from string.
+     * 
+     * Get IP object parsed from string.
+     * <p>
+     * This method detect formats of IPv4 and IPv6 only.
+     * <p>
+     * 
+     * @param s
+     *            string representation of an IP.
+     * @param useCache
+     *            if true, the cache will be searched for existing IP, else it
+     *            won't.
+     * @return IP object based on the String IP
+     * @throws NullPointerException
+     *             if the string is null.
+     * @throws IllegalArgumentException
+     *             if the string is invalid.
+     */
+    static IP valueOf(final String s, final boolean useCache) {
+	if (s.startsWith(ANY_IP_STR)) {
+	    if (s.length() == 3) {
+		return ANY_IP;
+	    }
+	    if (s.startsWith("IPv4", 3)) {
+		return IPv4.ANY_IPv4;
+	    }
+	    if (s.startsWith("IPv6", 3)) {
+		return IPv6.ANY_IPv6;
+	    }
+	    throw new IllegalArgumentException("Unkown format: " + s);
 	}
 
 	final boolean isIPv4 = s.indexOf(IPv4.BLOCKS_SEPARATOR) >= 0;
@@ -290,10 +330,10 @@ public abstract class IP implements Comparable<IP> {
 	    throw new IllegalArgumentException("Unknown format: " + s);
 	}
 	if (isIPv4) {
-	    return IPv4.valueOf(s);
+	    return IPv4.valueOf(s, useCache);
 	}
 	if (isIPv6) {
-	    return IPv6.valueOf(s);
+	    return IPv6.valueOf(s, useCache);
 	}
 
 	// Impossible flow.
@@ -443,6 +483,14 @@ public abstract class IP implements Comparable<IP> {
 	@Override
 	public int compareTo(final IP o) {
 	    return o instanceof AnyIP ? 0 : 1;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	AnyIP cache() {
+	    return this;
 	}
 
     }

@@ -86,7 +86,16 @@ public class Destination extends IPAttribute {
      * @return destination object of the IP
      */
     public static Destination valueOf(final String s) {
-	return valueOfInternal(IP.valueOf(s));
+	final IP ip = IP.valueOf(s, false);
+	if (ip.m_maskSize == ip.getSize()) {
+	    if (ip instanceof IPv4) {
+		return DestinationCache.IPv4Cache.getOrAdd((IPv4) ip, DestinationCache.uncachedIPToDestinationSupplier);
+	    }
+	    if (ip instanceof IPv6) {
+		return DestinationCache.IPv6Cache.getOrAdd((IPv6) ip, DestinationCache.uncachedIPToDestinationSupplier);
+	    }
+	}
+	return new Destination(ip);
     }
 
     /**
@@ -112,10 +121,10 @@ public class Destination extends IPAttribute {
 	    // If ip is a full IP (most common destination objects) search it in
 	    // cache, or add one if one doesn't exist.
 	    if (ip instanceof IPv4) {
-		return DestinationCache.IPv4Cache.getOrAdd((IPv4) ip, DestinationCache.supplier);
+		return DestinationCache.IPv4Cache.getOrAdd((IPv4) ip, DestinationCache.cachedIPToDestinationSupplier);
 	    }
 	    if (ip instanceof IPv6) {
-		return DestinationCache.IPv6Cache.getOrAdd((IPv6) ip, DestinationCache.supplier);
+		return DestinationCache.IPv6Cache.getOrAdd((IPv6) ip, DestinationCache.cachedIPToDestinationSupplier);
 	    }
 	}
 	return new Destination(ip);
@@ -145,14 +154,27 @@ public class Destination extends IPAttribute {
 	 * Supplier used to supply new destination objects if need to the cache
 	 * in case they are missing.
 	 * <p>
+	 * The supplier is used when the IP key is cached IP.
+	 * <p>
 	 * Used when using {@link Cache#getOrAdd(Object, Function)}.
 	 */
-	static final Function<IP, Destination> supplier;
+	static final Function<IP, Destination> cachedIPToDestinationSupplier;
+
+	/**
+	 * Supplier used to supply new destination objects if need to the cache
+	 * in case they are missing.
+	 * <p>
+	 * The supplier is used when the IP key is uncached IP.
+	 * <p>
+	 * Used when using {@link Cache#getOrAdd(Object, Function)}.
+	 */
+	static final Function<IP, Destination> uncachedIPToDestinationSupplier;
 
 	static {
 	    IPv4Cache = Caches.synchronizedCache(new SoftCustomHashCache<>(IPv4AddressStrategy.INSTANCE));
 	    IPv6Cache = Caches.synchronizedCache(new SoftCustomHashCache<>(IPv6AddressStrategy.INSTANCE));
-	    supplier = ip -> new Destination(ip);
+	    cachedIPToDestinationSupplier = ip -> new Destination(ip);
+	    uncachedIPToDestinationSupplier = ip -> new Destination(ip.cache());
 	}
 
     }

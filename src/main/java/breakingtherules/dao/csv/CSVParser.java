@@ -398,20 +398,8 @@ public class CSVParser {
      *             if fails to parse service
      */
     private static Service parseService(final String port, final String protocol) throws CSVParseException {
-	int portNum, protocolInt;
 	try {
-	    portNum = Integer.parseInt(port);
-	} catch (final NumberFormatException e) {
-	    throw new CSVParseException("Unable to parse port to integer: ", e);
-	}
-	try {
-	    protocolInt = Integer.parseInt(protocol);
-	} catch (final NumberFormatException e) {
-	    throw new CSVParseException("Unable to parse protocol code to integer: ", e);
-	}
-
-	try {
-	    return Service.valueOf(protocolInt, portNum);
+	    return Service.valueOf(Service.parseProtocolCode(protocol), Service.parsePort(port));
 	} catch (final IllegalArgumentException e) {
 	    throw new CSVParseException("Unable to parse service: ", e);
 	}

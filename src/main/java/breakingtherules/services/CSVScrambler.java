@@ -516,7 +516,7 @@ public class CSVScrambler implements Runnable {
 	 * 
 	 * @param flags
 	 *            flags map
-	 * @return CSVScrambler configurated by the flags
+	 * @return CSVScrambler configured by the flags
 	 * @throws IOException
 	 *             if IO error occurs
 	 */

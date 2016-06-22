@@ -84,7 +84,16 @@ public class Source extends IPAttribute {
      * @see IP#valueOf(String)
      */
     public static Source valueOf(final String s) {
-	return valueOfInternal(IP.valueOf(s));
+	final IP ip = IP.valueOf(s, false);
+	if (ip.m_maskSize == ip.getSize()) {
+	    if (ip instanceof IPv4) {
+		return SourceCache.IPv4Cache.getOrAdd((IPv4) ip, SourceCache.uncachedIPToSourceSupplier);
+	    }
+	    if (ip instanceof IPv6) {
+		return SourceCache.IPv6Cache.getOrAdd((IPv6) ip, SourceCache.uncachedIPToSourceSupplier);
+	    }
+	}
+	return new Source(ip);
     }
 
     /**
@@ -112,10 +121,10 @@ public class Source extends IPAttribute {
 	    // If ip is a full IP (most common source objects) search it in
 	    // cache, or add one if one doesn't exist.
 	    if (ip instanceof IPv4) {
-		return SourceCache.IPv4Cache.getOrAdd((IPv4) ip, SourceCache.supplier);
+		return SourceCache.IPv4Cache.getOrAdd((IPv4) ip, SourceCache.cachedIPToSourceSupplier);
 	    }
 	    if (ip instanceof IPv6) {
-		return SourceCache.IPv6Cache.getOrAdd((IPv6) ip, SourceCache.supplier);
+		return SourceCache.IPv6Cache.getOrAdd((IPv6) ip, SourceCache.cachedIPToSourceSupplier);
 	    }
 	}
 	return new Source(ip);
@@ -146,14 +155,27 @@ public class Source extends IPAttribute {
 	 * Supplier used to supply new source objects to the cache in case they
 	 * are missing.
 	 * <p>
+	 * The supplier is used when the IP key is cached IP.
+	 * <p>
 	 * Used by {@link Cache#getOrAdd(Object, Function)}.
 	 */
-	static final Function<IP, Source> supplier;
+	static final Function<IP, Source> cachedIPToSourceSupplier;
+
+	/**
+	 * Supplier used to supply new source objects to the cache in case they
+	 * are missing.
+	 * <p>
+	 * The supplier is used when the IP key is uncached IP.
+	 * <p>
+	 * Used by {@link Cache#getOrAdd(Object, Function)}.
+	 */
+	static final Function<IP, Source> uncachedIPToSourceSupplier;
 
 	static {
 	    IPv4Cache = Caches.synchronizedCache(new SoftCustomHashCache<>(IPv4AddressStrategy.INSTANCE));
 	    IPv6Cache = Caches.synchronizedCache(new SoftCustomHashCache<>(IPv6AddressStrategy.INSTANCE));
-	    supplier = ip -> new Source(ip);
+	    cachedIPToSourceSupplier = ip -> new Source(ip);
+	    uncachedIPToSourceSupplier = ip -> new Source(ip.cache());
 	}
 
     }

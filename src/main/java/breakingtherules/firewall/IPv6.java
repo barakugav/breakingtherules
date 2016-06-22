@@ -52,19 +52,14 @@ public final class IPv6 extends IP {
     static final char BLOCKS_SEPARATOR = ':';
 
     /**
-     * Bit mask for a block in an int.
-     */
-    private static final int BLOCK_MASK = 0xffff; // 65535
-
-    /**
-     * Maximum value for a block.
-     */
-    private static final int MAX_BLOCK_VALUE = 65535;
-
-    /**
      * Number of ints needed to represent the address.
      */
     static final int ADDRESS_ARRAY_SIZE = SIZE / Integer.SIZE; // 4
+
+    /**
+     * Bit mask for a block in an int.
+     */
+    private static final int BLOCK_MASK = 0xffff; // 65535
 
     /**
      * The mask used to calculate the offset of a bit number in a block.
@@ -72,14 +67,29 @@ public final class IPv6 extends IP {
     private static final int MASK_OFFSET_IN_BLOCK = 0x1f; // 31
 
     /**
+     * Maximum value for a block.
+     */
+    private static final int MAX_BLOCK_VALUE = 65535;
+
+    /**
+     * Max number of digits of a block value in base 10.
+     */
+    private static final int MAX_BLOCK_DIGITS_NUMBER = Utility.digitsCount(MAX_BLOCK_VALUE);
+
+    /**
+     * Max number of digits of a mask size in base 10.
+     */
+    private static final int MAX_MASK_SIZE_DIGITS_NUMBER = Utility.digitsCount(SIZE);
+
+    /**
      * String representation of Any IPv6.
      */
-    private static final String ANY_IPv6_STR = "AnyIPv6";
+    static final String ANY_IPv6_STR = "AnyIPv6";
 
     /**
      * 'Any' IPv6, contains all others.
      */
-    private static final IPv6 ANY_IPv6 = new IPv6(new int[ADDRESS_ARRAY_SIZE], 0);
+    static final IPv6 ANY_IPv6 = new IPv6(new int[ADDRESS_ARRAY_SIZE], 0);
 
     /**
      * Construct new IPv6 with the specified address and maskSize.
@@ -363,6 +373,14 @@ public final class IPv6 extends IP {
     }
 
     /**
+     * {@inheritDoc}
+     */
+    @Override
+    IPv6 cache() {
+	return m_maskSize == SIZE ? IPv6Cache.cache.add(m_address, this) : this;
+    }
+
+    /**
      * Get IPv6 object parsed from boolean bits list.
      * 
      * @param addressBits
@@ -413,73 +431,7 @@ public final class IPv6 extends IP {
      *             if the format is illegal or the values are out of range.
      */
     public static IPv6 valueOf(final String s) {
-	if (s.equals(ANY_IPv6_STR)) {
-	    return ANY_IPv6;
-	}
-
-	final int[] address = new int[ADDRESS_ARRAY_SIZE];
-
-	int fromIndex = 0;
-	int blockNumber = 0;
-	int separatorIndex = s.indexOf(BLOCKS_SEPARATOR);
-
-	while (separatorIndex >= 0) {
-	    if (fromIndex == separatorIndex) {
-		throw new IllegalArgumentException("Empty block. " + s);
-	    }
-	    if (blockNumber == BLOCK_NUMBER - 1) {
-		throw new IllegalArgumentException("Too many IPv6 blocks, expected " + BLOCK_NUMBER);
-	    }
-	    int blockVal = parseBlockValue(s, fromIndex, separatorIndex);
-	    if ((blockNumber & 1) == 0)
-		blockVal <<= 16;
-	    address[blockNumber >> 1] |= blockVal;
-	    blockNumber++;
-	    fromIndex = separatorIndex + 1;
-	    separatorIndex = s.indexOf(BLOCKS_SEPARATOR, fromIndex);
-	}
-	if (blockNumber != BLOCK_NUMBER - 1) {
-	    throw new IllegalArgumentException(
-		    "IPv6 blocks number: " + Utility.formatEqual(BLOCK_NUMBER, blockNumber + 1));
-	}
-
-	final int maskSeparatorIndex = s.indexOf(MASK_SIZE_SEPARATOR, fromIndex);
-	if (maskSeparatorIndex < 0) {
-	    // No mask size specification
-	    final int lastBlockVal = parseBlockValue(s, fromIndex, s.length());
-	    address[ADDRESS_ARRAY_SIZE - 1] |= lastBlockVal;
-	    return valueOfFullIPv6Internal(address);
-	}
-
-	// Has mask size specification
-	final int lastBlockVal = parseBlockValue(s, fromIndex, maskSeparatorIndex);
-	address[ADDRESS_ARRAY_SIZE - 1] |= lastBlockVal;
-
-	// Read subnetwork mask
-	final int maskSize;
-	try {
-	    maskSize = Integer.parseInt(s.substring(maskSeparatorIndex + 1, s.length()));
-	} catch (NumberFormatException e) {
-	    throw new IllegalArgumentException("IPv6 subnetwork mask", e);
-	}
-
-	if (!(0 < maskSize && maskSize < SIZE)) {
-	    if (maskSize == SIZE) {
-		return valueOfFullIPv6Internal(address);
-	    }
-	    if (maskSize == 0) {
-		return ANY_IPv6;
-	    }
-	    throw new IllegalArgumentException("IPv6 subnetwork mask: " + Utility.formatRange(0, SIZE, maskSize));
-	}
-
-	// Reset by mask
-	for (int blockNum = ADDRESS_ARRAY_SIZE; blockNum-- > 0 && maskSize < ((blockNum + 1) << 5);) {
-	    address[blockNum] &= maskSize <= (blockNum << 5) ? 0
-		    : ~((1 << (Integer.SIZE - (maskSize & MASK_OFFSET_IN_BLOCK))) - 1);
-	}
-
-	return new IPv6(address, maskSize);
+	return valueOf(s, true);
     }
 
     /**
@@ -618,6 +570,88 @@ public final class IPv6 extends IP {
     }
 
     /**
+     * Get IPv6 object parsed from string.
+     * <p>
+     * The expected format is: A:B:C:D:E:F:G:H or A:B:C:D:E:F:G:H/M when A, B,
+     * C, D, E, F, G and H are the blocks value (in range 0 to 65535) and M is
+     * the subnetwork mask size (in range 0 to 128).
+     * 
+     * @param s
+     *            string representation of IPv6.
+     * @param useCache
+     *            if true, the cache will be searched for existing IP, else it
+     *            won't.
+     * @return IPv6 object parsed from string.
+     * @throws NullPointerException
+     *             if the string is null.
+     * @throws IllegalArgumentException
+     *             if the format is illegal or the values are out of range.
+     */
+    static IPv6 valueOf(final String s, final boolean useCache) {
+	final int[] address = new int[ADDRESS_ARRAY_SIZE];
+	int fromIndex = 0;
+	int blockNumber = 0;
+
+	for (int separatorIndex; (separatorIndex = s.indexOf(BLOCKS_SEPARATOR, fromIndex)) >= 0;) {
+	    if (fromIndex == separatorIndex) {
+		throw new IllegalArgumentException("Empty block. " + s);
+	    }
+	    if (blockNumber == BLOCK_NUMBER - 1) {
+		throw new IllegalArgumentException("Too many IPv6 blocks, expected " + BLOCK_NUMBER);
+	    }
+	    int blockVal = parseBlockValue(s, fromIndex, separatorIndex);
+	    if ((blockNumber & 1) == 0) {
+		blockVal <<= 16;
+	    }
+	    address[blockNumber >> 1] |= blockVal;
+	    blockNumber++;
+	    fromIndex = separatorIndex + 1;
+	    separatorIndex = s.indexOf(BLOCKS_SEPARATOR, fromIndex);
+	}
+	if (blockNumber != BLOCK_NUMBER - 1) {
+	    if (s.equals(ANY_IPv6_STR)) {
+		return ANY_IPv6;
+	    }
+	    throw new IllegalArgumentException(
+		    "IPv6 blocks number: " + Utility.formatEqual(BLOCK_NUMBER, blockNumber + 1));
+	}
+
+	final int maskSeparatorIndex = s.indexOf(MASK_SIZE_SEPARATOR, fromIndex);
+	if (maskSeparatorIndex < 0) {
+	    // No mask size specification
+	    final int lastBlockVal = parseBlockValue(s, fromIndex, s.length());
+	    address[ADDRESS_ARRAY_SIZE - 1] |= lastBlockVal;
+	    return useCache ? valueOfFullIPv6Internal(address) : new IPv6(address, SIZE);
+	}
+
+	// Has mask size specification
+	final int lastBlockVal = parseBlockValue(s, fromIndex, maskSeparatorIndex);
+	address[ADDRESS_ARRAY_SIZE - 1] |= lastBlockVal;
+
+	// Read subnetwork mask
+	final int maskSize = Utility.parsePositiveIntUncheckedOverflow(s, maskSeparatorIndex + 1, s.length(),
+		MAX_MASK_SIZE_DIGITS_NUMBER);
+
+	if (!(0 < maskSize && maskSize < SIZE)) {
+	    if (maskSize == SIZE) {
+		return useCache ? valueOfFullIPv6Internal(address) : new IPv6(address, SIZE);
+	    }
+	    if (maskSize == 0) {
+		return ANY_IPv6;
+	    }
+	    throw new IllegalArgumentException("IPv6 subnetwork mask: " + Utility.formatRange(0, SIZE, maskSize));
+	}
+
+	// Reset by mask
+	for (int blockNum = ADDRESS_ARRAY_SIZE; blockNum-- > 0 && maskSize < ((blockNum + 1) << 5);) {
+	    address[blockNum] &= maskSize <= (blockNum << 5) ? 0
+		    : ~((1 << (Integer.SIZE - (maskSize & MASK_OFFSET_IN_BLOCK))) - 1);
+	}
+
+	return new IPv6(address, maskSize);
+    }
+
+    /**
      * Get full (maskSize = {@value #SIZE}) IPv6 object with the specified
      * address, used internally.
      * 
@@ -718,7 +752,7 @@ public final class IPv6 extends IP {
     /**
      * Parse a block of IPv6 and check if it's range is valid.
      * 
-     * @param str
+     * @param s
      *            the full string.
      * @param fromIndex
      *            the start index of the value in the text.
@@ -730,13 +764,9 @@ public final class IPv6 extends IP {
      *             in range of valid block value [0,
      *             {@link IPv6#MAX_BLOCK_VALUE}].
      */
-    private static int parseBlockValue(final String str, final int fromIndex, final int toIndex) {
-	final int blockVal;
-	try {
-	    blockVal = Integer.parseInt(str.substring(fromIndex, toIndex));
-	} catch (final NumberFormatException e) {
-	    throw new IllegalArgumentException(e);
-	}
+    private static int parseBlockValue(final String s, final int fromIndex, final int toIndex) {
+	final int blockVal = Utility.parsePositiveIntUncheckedOverflow(s, fromIndex, toIndex, MAX_BLOCK_DIGITS_NUMBER);
+
 	if (!(0 <= blockVal && blockVal <= MAX_BLOCK_VALUE)) {
 	    throw new IllegalArgumentException(
 		    "IPv6 block value: " + Utility.formatRange(0, MAX_BLOCK_VALUE, blockVal));

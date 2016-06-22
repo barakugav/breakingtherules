@@ -89,7 +89,7 @@ public class ServiceTest extends TestBase {
 
     @Test
     public void contructorTestFromStringOnePortAnyProtocol() {
-	Service.valueOf("Port 80");
+	Service.valueOf("Any 80");
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -119,7 +119,7 @@ public class ServiceTest extends TestBase {
 
     @Test
     public void contructorTestFromStringPortRangeAnyProtocol() {
-	Service.valueOf("Ports 80-100");
+	Service.valueOf("Any 80-100");
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -149,7 +149,7 @@ public class ServiceTest extends TestBase {
 
     @Test
     public void contructorTestFromStringAnyPort() {
-	Service.valueOf("Any TCP");
+	Service.valueOf("TCP Any");
     }
 
     @Test
@@ -323,14 +323,14 @@ public class ServiceTest extends TestBase {
 
     @Test
     public void toStringTestSinglePortAnyProtocol() {
-	Service s = Service.valueOf("Port 80");
-	assertEquals("Port 80", s.toString());
+	Service s = Service.valueOf("Any 80");
+	assertEquals("Any 80", s.toString());
     }
 
     @Test
     public void toStringTestAnyPortSingleProtocol() {
-	Service s = Service.valueOf("Any TCP");
-	assertEquals("Any TCP", s.toString());
+	Service s = Service.valueOf("TCP Any");
+	assertEquals("TCP Any", s.toString());
     }
 
     @Test
@@ -347,8 +347,8 @@ public class ServiceTest extends TestBase {
 
     @Test
     public void toStringTestPortRangeAnyProtocol() {
-	Service s = Service.valueOf("Ports 80-90");
-	assertEquals("Ports 80-90", s.toString());
+	Service s = Service.valueOf("Any 80-90");
+	assertEquals("Any 80-90", s.toString());
     }
 
     @Test
@@ -362,8 +362,8 @@ public class ServiceTest extends TestBase {
     @Test
     public void equalsTestFalse() {
 	Service s1, s2;
-	s1 = Service.valueOf("Any TCP");
-	s2 = Service.valueOf("Any UDP");
+	s1 = Service.valueOf("TCP Any");
+	s2 = Service.valueOf("UDP Any");
 	assertNotEquals(s1, s2);
     }
 

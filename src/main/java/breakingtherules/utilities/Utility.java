@@ -192,6 +192,184 @@ public class Utility {
     }
 
     /**
+     * Parses positive integer from a string.
+     * 
+     * @param s
+     *            the string.
+     * @return integer parse from the string.
+     * @throws IllegalArgumentException
+     *             if can't parse to integer.
+     */
+    public static int parsePositiveInt(final String s) {
+	return parsePositiveInt(s, 0, s.length());
+    }
+
+    /**
+     * Parses positive integer from a string.
+     * 
+     * @param s
+     *            the string.
+     * @param fromIndex
+     *            the index from which to start the search.
+     * @param toIndex
+     *            the index where to end the search.
+     * @return integer parse from the specified interval in the text.
+     * @throws IllegalArgumentException
+     *             if can't parse to integer.
+     */
+    public static int parsePositiveInt(final String s, final int fromIndex, final int toIndex) {
+	if (fromIndex >= toIndex) {
+	    throw new IllegalArgumentException("Empty number. " + s);
+	}
+
+	/*
+	 * Most of this method's code is copied from Integer.parseInt(String),
+	 * but this code is essential for fast parsing of large strings without
+	 * using the String.substring(int, int) method which create new string
+	 * and can slow the parsing. Also this method is less generic then
+	 * Integer.parseInt(String) therefore can be faster.
+	 */
+
+	int result = 0;
+	int i = fromIndex;
+
+	while (i < toIndex) {
+	    final int digit = s.charAt(i++) - '0';
+	    if (digit < 0 || digit > 9) {
+		throw new IllegalArgumentException("invalid string: " + s.substring(fromIndex, toIndex));
+	    }
+	    if (result < -214748364) {
+		throw new IllegalArgumentException("invalid string: " + s.substring(fromIndex, toIndex));
+	    }
+	    result *= 10;
+	    if (result < -Integer.MAX_VALUE + digit) {
+		throw new IllegalArgumentException("invalid string: " + s.substring(fromIndex, toIndex));
+	    }
+	    result -= digit;
+	}
+	return -result;
+    }
+
+    /**
+     * Parses positive integer from a string without checking overflows, but
+     * with limitation on the number digits count.
+     * <p>
+     * This method is safer then
+     * {@link #parsePositiveIntUncheckedOverflow(String, int, int)} because it's
+     * limits the number of digits of the number, therefore can avoid overflows.
+     * This method still needs to be used carefully because if the
+     * {@code maxDitigs} is more then 9, then overflow still can happen.
+     * 
+     * @param s
+     *            the string.
+     * @param fromIndex
+     *            the index from which to start the search.
+     * @param toIndex
+     *            the index where to end the search.
+     * @param maxDigits
+     *            max allowed digits. Should be less or equal to 9.
+     * @return integer parse from the specified interval in the text.
+     * @throws IllegalArgumentException
+     *             if {@code maxDigits} is greater then 9, or the specified
+     *             interval is bigger then {@code maxDigits} or failed to parse
+     *             to integer.
+     */
+    public static int parsePositiveIntUncheckedOverflow(final String s, final int fromIndex, final int toIndex,
+	    final int maxDigits) {
+	if (toIndex - fromIndex > maxDigits) {
+	    throw new IllegalArgumentException("Invalid string: " + s.substring(fromIndex, toIndex));
+	}
+	return parsePositiveIntUncheckedOverflow(s, fromIndex, toIndex);
+    }
+
+    /**
+     * Parses positive integer from a string without checking overflows.
+     * <p>
+     * An <b>UNSAFE</b> parsing method of positive integers that doesn't checks
+     * for overflows of the result value.
+     * 
+     * @param s
+     *            the string.
+     * @param fromIndex
+     *            the index from which to start the search.
+     * @param toIndex
+     *            the index where to end the search.
+     * @return integer parse from the specified interval in the text.
+     * @throws IllegalArgumentException
+     *             if can't parse to integer.
+     * @deprecated this method is not safe for the general use of parsing
+     *             integers. This method should be used carefully and only if
+     *             the input string length is known and it's doesn't overflow.
+     *             Use
+     *             {@link #parsePositiveIntUncheckedOverflow(String, int, int, int)}
+     *             for safer parsing with less checks.
+     */
+    @Deprecated
+    public static int parsePositiveIntUncheckedOverflow(final String s, final int fromIndex, final int toIndex) {
+	if (fromIndex >= toIndex) {
+	    throw new IllegalArgumentException("Empty number. " + s);
+	}
+
+	int result = 0;
+	int i = fromIndex;
+
+	while (i < toIndex) {
+	    final int digit = s.charAt(i++) - '0';
+	    if (digit < 0 || digit > 9) {
+		throw new IllegalArgumentException("invalid string: " + s.substring(fromIndex, toIndex));
+	    }
+	    result = result * 10 - digit;
+	}
+	return -result;
+    }
+
+    /**
+     * Get the count of digits of a <b>positive</b> number.
+     * 
+     * @param x
+     *            a positive number.
+     * @return the number of digits on base 10 of {@code x}.
+     */
+    public static int digitsCount(final int x) {
+
+	/*
+	 * This implementation is not readable, but it's the fastest one we
+	 * found.
+	 */
+
+	if (x < 100000) {
+	    // 5 or less
+	    if (x < 100) {
+		// 1 or 2
+		if (x < 10)
+		    return 1;
+		return 2;
+	    }
+	    // 3 or 4 or 5
+	    if (x < 1000)
+		return 3;
+	    // 4 or 5
+	    if (x < 10000)
+		return 4;
+	    return 5;
+	}
+	// 6 or more
+	if (x < 10000000) {
+	    // 6 or 7
+	    if (x < 1000000)
+		return 6;
+	    return 7;
+	}
+	// 8 to 10
+	if (x < 100000000)
+	    return 8;
+	// 9 or 10
+	if (x < 1000000000)
+	    return 9;
+	return 10;
+    }
+
+    /**
      * Break string text to words (treat tabs as spaces, ignore multiple spaces
      * and tabs in a row)
      * 

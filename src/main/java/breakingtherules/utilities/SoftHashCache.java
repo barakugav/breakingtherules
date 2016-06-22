@@ -216,14 +216,14 @@ public class SoftHashCache<K, E> implements Cache<K, E> {
 	    return getNull();
 
 	// Compute hash
-	final int hash = hash(key);
+	final int hash = Hashs.hash(key);
 
 	// Clean cache, delayed as possible, so GC have more time to act.
 	cleanCache();
 
 	// Search entry
 	for (Entry<K, E> p = table[hash & mask]; p != null; p = p.next)
-	    if (hash == p.hash && determineEquals(key, p.key))
+	    if (hash == p.hash && key.equals(p.key))
 		/*
 		 * Entry found, no need to check if it's element is a dead
 		 * reference because two reasons. First of all, if there are
@@ -259,7 +259,7 @@ public class SoftHashCache<K, E> implements Cache<K, E> {
 	    return addNull(element);
 
 	// Compute hash
-	final int hash = hash(key);
+	final int hash = Hashs.hash(key);
 
 	// Clean cache, delayed as possible, so GC have more time to act.
 	cleanCache();
@@ -271,7 +271,7 @@ public class SoftHashCache<K, E> implements Cache<K, E> {
 	// Check if an element with the same key is already in cache.
 	final Entry<K, E> firstEntry = table[index];
 	for (Entry<K, E> p = firstEntry; p != null; p = p.next) {
-	    if (hash == p.hash && determineEquals(key, p.key)) {
+	    if (hash == p.hash && key.equals(p.key)) {
 		final E existing = p.get();
 		if (existing != null)
 		    return existing;
@@ -312,7 +312,7 @@ public class SoftHashCache<K, E> implements Cache<K, E> {
 	    return getOrAddNull(supplier);
 
 	// Compute hash
-	final int hash = hash(key);
+	final int hash = Hashs.hash(key);
 
 	// Clean cache, delayed as possible, so GC have more time to act.
 	cleanCache();
@@ -324,7 +324,7 @@ public class SoftHashCache<K, E> implements Cache<K, E> {
 	// Search entry
 	final Entry<K, E> firstEntry = table[index];
 	for (Entry<K, E> p = firstEntry; p != null; p = p.next) {
-	    if (hash == p.hash && determineEquals(key, p.key)) {
+	    if (hash == p.hash && key.equals(p.key)) {
 		final E elm = p.get();
 		if (elm != null)
 		    return elm;
@@ -351,7 +351,7 @@ public class SoftHashCache<K, E> implements Cache<K, E> {
 	}
 
 	// Compute hash
-	final int hash = hash(key);
+	final int hash = Hashs.hash(key);
 
 	// Clean cache, delayed as possible, so GC have more time to act.
 	cleanCache();
@@ -365,7 +365,7 @@ public class SoftHashCache<K, E> implements Cache<K, E> {
 	Entry<K, E> prev = null;
 	while (p != null) {
 	    final Entry<K, E> next = p.next;
-	    if (hash == p.hash && determineEquals(key, p.key)) {
+	    if (hash == p.hash && key.equals(p.key)) {
 		if (prev == null) {
 		    // First element
 		    table[index] = next;
@@ -519,41 +519,6 @@ public class SoftHashCache<K, E> implements Cache<K, E> {
 	}
 	builder.append(']');
 	return builder.toString();
-    }
-
-    /**
-     * Determines if two (non nulls) keys are equal.
-     * 
-     * @param k1
-     *            first key (non null).
-     * @param k2
-     *            second key (non null).
-     * @return true if {@code k1} is equals to {@code k2}, else - false.
-     */
-    boolean determineEquals(final K k1, final K k2) {
-	return k1.equals(k2);
-    }
-
-    /**
-     * Compute hash code of a (non null) key.
-     * 
-     * @param key
-     *            the key (non null).
-     * @return hash code of the key.
-     */
-    int computeHashCode(final K key) {
-	return key.hashCode();
-    }
-
-    /**
-     * Compute hash code of a (non null) key and mix the result.
-     * 
-     * @param key
-     *            the key (non null).
-     * @return mixed hash code of the key.
-     */
-    private int hash(final K key) {
-	return Hashs.mix(computeHashCode(key));
     }
 
     /**
