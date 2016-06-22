@@ -8,6 +8,7 @@ import breakingtherules.firewall.Attribute;
 import breakingtherules.firewall.Hit;
 import breakingtherules.tests.TestBase;
 
+@SuppressWarnings("javadoc")
 public class HitTest extends TestBase {
 
     @Test

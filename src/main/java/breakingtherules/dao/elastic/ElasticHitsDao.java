@@ -36,9 +36,12 @@ import breakingtherules.dao.HitsDao;
 import breakingtherules.dao.ParseException;
 import breakingtherules.dto.ListDto;
 import breakingtherules.firewall.Attribute;
+import breakingtherules.firewall.Destination;
 import breakingtherules.firewall.Filter;
 import breakingtherules.firewall.Hit;
 import breakingtherules.firewall.Rule;
+import breakingtherules.firewall.Service;
+import breakingtherules.firewall.Source;
 import breakingtherules.utilities.Triple;
 import breakingtherules.utilities.Triple.UnmodifiableTriple;
 import breakingtherules.utilities.Utility;
@@ -377,14 +380,29 @@ public class ElasticHitsDao implements HitsDao {
 	if (!(allAtributes instanceof ArrayList)) {
 	    throw new IllegalArgumentException("The searchHit it not in valid hit format");
 	}
-	for (final Object attribute : (ArrayList<?>) allAtributes) {
-	    if (!(attribute instanceof Map)) {
+	for (final Object attributeObj : (ArrayList<?>) allAtributes) {
+	    if (!(attributeObj instanceof Map)) {
 		throw new IllegalArgumentException("The searchHit it not in valid hit format");
 	    }
-	    final Map<?, ?> attributeHash = (Map<?, ?>) attribute;
+	    final Map<?, ?> attributeHash = (Map<?, ?>) attributeObj;
 	    final int attrTypeID = ((Integer) attributeHash.get(ElasticDaoConfig.FIELD_ATTR_TYPEID)).intValue();
 	    final String attrValue = (String) attributeHash.get(ElasticDaoConfig.FIELD_ATTR_VALUE);
-	    attrs.add(Attribute.createFromString(attrTypeID, attrValue));
+
+	    Attribute attribute;
+	    switch (attrTypeID) {
+	    case Attribute.SOURCE_TYPE_ID:
+		attribute = Source.valueOf(attrValue);
+		break;
+	    case Attribute.DESTINATION_TYPE_ID:
+		attribute = Destination.valueOf(attrValue);
+		break;
+	    case Attribute.SERVICE_TYPE_ID:
+		attribute = Service.valueOf(attrValue);
+		break;
+	    default:
+		throw new IllegalArgumentException("Unkown type id: " + attrTypeID);
+	    }
+	    attrs.add(attribute);
 	}
 	return new Hit(attrs);
     }

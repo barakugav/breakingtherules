@@ -12,6 +12,7 @@ import breakingtherules.firewall.Service;
 import breakingtherules.firewall.Source;
 import breakingtherules.tests.TestBase;
 
+@SuppressWarnings("javadoc")
 public class FirewallTestsUtility extends TestBase {
 
     /**
@@ -73,9 +74,9 @@ public class FirewallTestsUtility extends TestBase {
 	int prefixLength = rand.nextInt(ipID * 48 - 160); // 32 or 128
 
 	if (ipID == 4) {
-	    return IPv4.create(address, prefixLength);
+	    return IPv4.valueOf(address, prefixLength);
 	} else if (ipID == 6) {
-	    return IPv6.create(address, prefixLength);
+	    return IPv6.valueOf(address, prefixLength);
 	} else {
 	    return null;
 	}
@@ -94,11 +95,11 @@ public class FirewallTestsUtility extends TestBase {
     }
 
     static Source getRandomSource() {
-	return Source.create(FirewallTestsUtility.getRandomIP());
+	return Source.valueOf(FirewallTestsUtility.getRandomIP());
     }
 
     static Destination getRandomDestination() {
-	return Destination.create(FirewallTestsUtility.getRandomIP());
+	return Destination.valueOf(FirewallTestsUtility.getRandomIP());
     }
 
     static Service getRandomService() {
@@ -115,7 +116,7 @@ public class FirewallTestsUtility extends TestBase {
 	    portRangeEnd = rand.nextInt(1 << 16);
 	} while (portRangeStart > portRangeEnd);
 
-	return Service.create(protocol, portRangeStart, portRangeEnd);
+	return Service.valueOf(protocol, portRangeStart, portRangeEnd);
     }
 
     static int getRandomPort() {
@@ -136,7 +137,7 @@ public class FirewallTestsUtility extends TestBase {
     static IPv4 getRandomIPv4() {
 	int[] address = getRandomAddressIPv4();
 	int prefixLength = getRandomMaskSizeIPv4();
-	return IPv4.create(address, prefixLength);
+	return IPv4.valueOf(address, prefixLength);
     }
 
     static int[] getRandomAddressIPv4() {
@@ -154,7 +155,7 @@ public class FirewallTestsUtility extends TestBase {
     static IPv6 getRandomIPv6() {
 	int[] address = getRandomAddressIPv6();
 	int prefixLength = getRandomMaskSizeIPv6();
-	return IPv6.create(address, prefixLength);
+	return IPv6.valueOf(address, prefixLength);
     }
 
     static int[] getRandomAddressIPv6() {

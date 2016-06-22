@@ -17,24 +17,24 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 public abstract class IP implements Comparable<IP> {
 
     /**
-     * Any IP, contains all others.
-     */
-    public static final IP ANY_IP = new AnyIP();
-
-    /**
      * Size of the subnetwork mask.
      */
     final int m_maskSize;
 
     /**
-     * String representation of any IP.
+     * Any IP, contains all others.
      */
-    private static final String ANY_IP_STR = "Any";
+    public static final IP ANY_IP = new AnyIP();
 
     /**
      * The mask size separator in the string representation of the IP.
      */
     static final char MASK_SIZE_SEPARATOR = '/';
+
+    /**
+     * String representation of any IP.
+     */
+    private static final String ANY_IP_STR = "Any";
 
     /**
      * Construct new IP.
@@ -235,42 +235,7 @@ public abstract class IP implements Comparable<IP> {
     public abstract int getSize();
 
     /**
-     * Create new IP from String IP.
-     * <p>
-     * This method detect formats of IPv4 and IPv6 only.
-     * <p>
-     * 
-     * @param ip
-     *            String IP
-     * @return IP object based on the String IP
-     * @throws NullPointerException
-     *             if the string is null.
-     * @throws IllegalArgumentException
-     *             if the string is invalid.
-     */
-    public static IP createFromString(final String ip) {
-	if (ip.equals(ANY_IP_STR)) {
-	    return ANY_IP;
-	}
-
-	final boolean isIPv4 = ip.indexOf(IPv4.BLOCKS_SEPARATOR) >= 0;
-	final boolean isIPv6 = ip.indexOf(IPv6.BLOCKS_SEPARATOR) >= 0;
-	if (!(isIPv4 ^ isIPv6)) {
-	    throw new IllegalArgumentException("Unknown format: " + ip);
-	}
-	if (isIPv4) {
-	    return IPv4.createFromString(ip);
-	}
-	if (isIPv6) {
-	    return IPv6.createFromString(ip);
-	}
-
-	// Impossible flow.
-	throw new InternalError();
-    }
-
-    /**
-     * Create new IP from bits list.
+     * Parses an IP from bits list.
      * <p>
      * This method create IPs of type IPv4, IPv6 and AnyIP only.
      * <p>
@@ -284,17 +249,55 @@ public abstract class IP implements Comparable<IP> {
      *             if the given class is not IPv4, IPv6 or AnyIP, or if the bits
      *             list is invalid.
      */
-    public static IP createFromBits(final List<Boolean> ip, final Class<?> clazz) {
+    public static IP parseIPFromBits(final List<Boolean> ip, final Class<?> clazz) {
+
+	// TODO - remove this method
+
 	if (clazz.equals(IPv4.class)) {
-	    return IPv4.createFromBits(ip);
+	    return IPv4.parseIPv4FromBits(ip);
 	} else if (clazz.equals(IPv6.class)) {
-	    return IPv6.createFromBits(ip);
+	    return IPv6.parseIPv6FromBits(ip);
 	} else if (clazz.equals(AnyIP.class)) {
 	    return ANY_IP;
 	} else {
 	    throw new IllegalArgumentException(
 		    "Choosen class in unkwon. Expected IPv4, IPv6 or AnyIP. Actual: " + clazz.getSimpleName());
 	}
+    }
+
+    /**
+     * Get IP object parsed from string.
+     * <p>
+     * This method detect formats of IPv4 and IPv6 only.
+     * <p>
+     * 
+     * @param s
+     *            string representation of an IP.
+     * @return IP object based on the String IP
+     * @throws NullPointerException
+     *             if the string is null.
+     * @throws IllegalArgumentException
+     *             if the string is invalid.
+     */
+    public static IP valueOf(final String s) {
+	if (s.equals(ANY_IP_STR)) {
+	    return ANY_IP;
+	}
+
+	final boolean isIPv4 = s.indexOf(IPv4.BLOCKS_SEPARATOR) >= 0;
+	final boolean isIPv6 = s.indexOf(IPv6.BLOCKS_SEPARATOR) >= 0;
+	if (!(isIPv4 ^ isIPv6)) {
+	    throw new IllegalArgumentException("Unknown format: " + s);
+	}
+	if (isIPv4) {
+	    return IPv4.valueOf(s);
+	}
+	if (isIPv6) {
+	    return IPv6.valueOf(s);
+	}
+
+	// Impossible flow.
+	throw new InternalError();
     }
 
     /**
@@ -415,7 +418,6 @@ public abstract class IP implements Comparable<IP> {
 	 */
 	@Override
 	public boolean equals(final Object o) {
-	    // TODO why
 	    return o instanceof AnyIP;
 	}
 
@@ -440,7 +442,6 @@ public abstract class IP implements Comparable<IP> {
 	 */
 	@Override
 	public int compareTo(final IP o) {
-	    // TODO why
 	    return o instanceof AnyIP ? 0 : 1;
 	}
 

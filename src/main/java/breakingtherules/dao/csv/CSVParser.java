@@ -363,7 +363,7 @@ public class CSVParser {
      */
     private static Source parseSource(final String source) throws CSVParseException {
 	try {
-	    return Source.createFromString(source);
+	    return Source.valueOf(source);
 	} catch (final IllegalArgumentException e) {
 	    throw new CSVParseException("Unable to parse source: ", e);
 	}
@@ -380,7 +380,7 @@ public class CSVParser {
      */
     private static Destination parseDestination(final String destination) throws CSVParseException {
 	try {
-	    return Destination.createFromString(destination);
+	    return Destination.valueOf(destination);
 	} catch (final IllegalArgumentException e) {
 	    throw new CSVParseException("Unable to parse destination: ", e);
 	}
@@ -411,7 +411,7 @@ public class CSVParser {
 	}
 
 	try {
-	    return Service.create(protocolInt, portNum);
+	    return Service.valueOf(protocolInt, portNum);
 	} catch (final IllegalArgumentException e) {
 	    throw new CSVParseException("Unable to parse service: ", e);
 	}

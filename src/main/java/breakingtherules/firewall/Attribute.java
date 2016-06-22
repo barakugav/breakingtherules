@@ -145,30 +145,4 @@ public abstract class Attribute {
 	}
     }
 
-    /**
-     * Factory method to create an attribute, of the given type.
-     * 
-     * @param typeId
-     *            The type of the attribute, for example
-     *            Attribute.DESTINATION_TYPE
-     * @param str
-     *            The String representing the attribute, for example "127.0.0.1"
-     * @return An attribute, of the wanted class, with the given value. If the
-     *         class is unknown, returns null.
-     * @throws IllegalArgumentException
-     *             if the attribute type is unknown.
-     */
-    public static Attribute createFromString(final int typeId, final String str) {
-	switch (typeId) {
-	case SOURCE_TYPE_ID:
-	    return Source.createFromString(str);
-	case DESTINATION_TYPE_ID:
-	    return Destination.createFromString(str);
-	case SERVICE_TYPE_ID:
-	    return Service.createFromString(str);
-	default:
-	    throw new IllegalArgumentException("Unkown type id: " + typeId);
-	}
-    }
-
 }

@@ -13,6 +13,7 @@ import breakingtherules.dao.csv.CSVParser;
 import breakingtherules.firewall.Hit;
 import breakingtherules.tests.TestBase;
 
+@SuppressWarnings("javadoc")
 public class CSVParserTest extends TestBase {
 
     private static final String JOB_NAME = "0";

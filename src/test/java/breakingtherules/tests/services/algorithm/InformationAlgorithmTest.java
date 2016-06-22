@@ -16,6 +16,7 @@ import breakingtherules.services.algorithm.InformationAlgorithm;
 import breakingtherules.services.algorithm.Suggestion;
 import breakingtherules.tests.TestBase;
 
+@SuppressWarnings("javadoc")
 public class InformationAlgorithmTest extends TestBase {
 
     private static final int RULE_WEIGHT = 25;

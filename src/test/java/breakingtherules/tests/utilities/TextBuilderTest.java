@@ -6,6 +6,7 @@ import org.junit.Test;
 
 import breakingtherules.utilities.TextBuilder;
 
+@SuppressWarnings("javadoc")
 public class TextBuilderTest {
 
     private static final String LoremIpsum = "Lorem ipsum dolor sit amet, "

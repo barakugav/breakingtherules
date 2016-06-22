@@ -163,7 +163,7 @@ public final class IPv4 extends IP {
 	final int a = m_address;
 	final int mask = 1 << (SIZE - m);
 	if (m == SIZE) {
-	    return new IPv4[] { createFullIPInternal(a & ~mask), createFullIPInternal(a | mask) };
+	    return new IPv4[] { valueOfFullIPv4Internal(a & ~mask), valueOfFullIPv4Internal(a | mask) };
 	}
 	return new IPv4[] { new IPv4(a & ~mask, m), new IPv4(a | mask, m) };
     }
@@ -299,90 +299,52 @@ public final class IPv4 extends IP {
     }
 
     /**
-     * Create an IP from array of the address' blocks values.
-     * <p>
-     * The address array should be at the length as IPv4 number of blocks(4).
-     * <p>
-     * For example:<br>
-     * To create the IP 12.78.94.65 the array should be [12, 78, 94, 65].<br>
+     * Parses IPv4 from boolean bits list.
      * 
-     * @param address
-     *            the address blocks
-     * @return IPv4 object with the desire address
+     * @param addressBits
+     *            the bits list
+     * @return IPv4 with address built from the bits.
      * @throws NullPointerException
-     *             if the address is null
+     *             if the bits list is null, or one of the Boolean objects in
+     *             the list is null.
      * @throws IllegalArgumentException
-     *             if the blocks values are out of range (0 to 255)
+     *             if number of bits is unequal to {@value #SIZE}.
      */
-    public static IPv4 create(final int[] address) {
-	return create(address, SIZE);
+    public static IPv4 parseIPv4FromBits(final List<Boolean> addressBits) {
+
+	// TODO- remove this method
+
+	if (addressBits.size() != SIZE) {
+	    throw new IllegalArgumentException("IPv4 size: " + Utility.formatEqual(SIZE, addressBits.size()));
+	}
+	int address = 0;
+	for (Boolean bit : addressBits) {
+	    address <<= 1;
+	    if (bit.booleanValue()) {
+		address += 1;
+	    }
+	}
+	return valueOfFullIPv4Internal(address);
     }
 
     /**
-     * Create an IP from array of the address' blocks values.
-     * <p>
-     * The address array should be at the length as IPv4 number of blocks(4).
-     * <p>
-     * For example:<br>
-     * To create the IP 12.78.94.64/26 the array should be [12, 78, 94, 64] and
-     * the maskSize should be 16.<br>
-     * 
-     * @param address
-     *            the address blocks
-     * @param maskSize
-     *            the size of the subnetwork mask
-     * @return IPv4 object with the desire address and maskSize
-     * @throws NullPointerException
-     *             if the address is null
-     * @throws IllegalArgumentException
-     *             if the blocks values are out of range (0 to 255) or the
-     *             maskSize is out of range (0 to 32).
-     */
-    public static IPv4 create(final int[] address, final int maskSize) {
-	if (address.length != BLOCK_NUMBER) {
-	    throw new IllegalArgumentException(
-		    "IPv4 blocks number: " + Utility.formatEqual(BLOCK_NUMBER, address.length));
-	}
-
-	int a = 0;
-	for (int i = 0; i < address.length; i++) {
-	    a = (a << BLOCK_SIZE) + address[i];
-	}
-
-	if (!(0 < maskSize && maskSize < SIZE)) {
-	    if (maskSize == SIZE) {
-		return createFullIPInternal(a);
-	    }
-	    if (maskSize == 0) {
-		return ANY_IPv4;
-	    }
-	    throw new IllegalArgumentException("IPv4 subnetwork mask: " + Utility.formatRange(0, SIZE, maskSize));
-	}
-
-	// Reset suffix
-	a &= maskSize != 0 ? ~((1 << (SIZE - maskSize)) - 1) : 0;
-
-	return new IPv4(a, maskSize);
-    }
-
-    /**
-     * Create an IPv4 from string.
+     * Get IPv4 object parsed from string.
      * <p>
      * The expected format is: A.B.C.D or A.B.C.D/M when A, B, C, and D are the
      * blocks values (in range 0 to 255) and M is the subnetwork mask size (in
      * range 0 to 32).
      * <p>
      * 
-     * @param ip
-     *            string of IP
+     * @param s
+     *            string representation of an IPv4.
      * @return IPv4 object parsed from string
      * @throws NullPointerException
      *             if the string is null
      * @throws IllegalArgumentException
      *             if the format is illegal or the values are out of range.
      */
-    public static IPv4 createFromString(final String ip) {
-	if (ip.equals(ANY_IPv4_STR)) {
+    public static IPv4 valueOf(final String s) {
+	if (s.equals(ANY_IPv4_STR)) {
 	    return ANY_IPv4;
 	}
 
@@ -390,15 +352,17 @@ public final class IPv4 extends IP {
 	int maskSize;
 
 	int fromIndex = 0;
-	int separatorIndex = ip.indexOf(BLOCKS_SEPARATOR);
+	int separatorIndex = s.indexOf(BLOCKS_SEPARATOR);
 	int numberOfSeparators = 0;
 	while (separatorIndex >= 0) {
-	    if (fromIndex != separatorIndex) {
-		address = (address << BLOCK_SIZE) + parseBlockValue(ip, fromIndex, separatorIndex);
-		numberOfSeparators++;
+	    if (fromIndex == separatorIndex) {
+		throw new IllegalArgumentException("Empty block. " + s);
 	    }
+	    final int blockVal = parseBlockValue(s, fromIndex, separatorIndex);
+	    address = (address << BLOCK_SIZE) + blockVal;
+	    numberOfSeparators++;
 	    fromIndex = separatorIndex + 1;
-	    separatorIndex = ip.indexOf(BLOCKS_SEPARATOR, fromIndex);
+	    separatorIndex = s.indexOf(BLOCKS_SEPARATOR, fromIndex);
 	}
 	if (numberOfSeparators != BLOCK_NUMBER - 1) {
 	    throw new IllegalArgumentException(
@@ -406,26 +370,28 @@ public final class IPv4 extends IP {
 	}
 
 	// Read suffix of IP - last block
-	final int maskSeparatorIndex = ip.indexOf(MASK_SIZE_SEPARATOR, fromIndex);
+	final int maskSeparatorIndex = s.indexOf(MASK_SIZE_SEPARATOR, fromIndex);
 	if (maskSeparatorIndex < 0) {
 	    // No mask size specification
-	    address = (address << BLOCK_SIZE) + parseBlockValue(ip, fromIndex, ip.length());
-	    return createFullIPInternal(address);
+	    final int lastBlockVal = parseBlockValue(s, fromIndex, s.length());
+	    address = (address << BLOCK_SIZE) + lastBlockVal;
+	    return valueOfFullIPv4Internal(address);
 	}
 
 	// Has mask size specification
-	address = (address << BLOCK_SIZE) + parseBlockValue(ip, fromIndex, maskSeparatorIndex);
+	final int lastBlockVal = parseBlockValue(s, fromIndex, maskSeparatorIndex);
+	address = (address << BLOCK_SIZE) + lastBlockVal;
 
 	// Read subnetwork mask
 	try {
-	    maskSize = Integer.parseInt(ip.substring(maskSeparatorIndex + 1, ip.length()));
+	    maskSize = Integer.parseInt(s.substring(maskSeparatorIndex + 1, s.length()));
 	} catch (NumberFormatException e) {
 	    throw new IllegalArgumentException("IPv4 subnetwork mask", e);
 	}
 
 	if (!(0 < maskSize && maskSize < SIZE)) {
 	    if (maskSize == SIZE) {
-		return createFullIPInternal(address);
+		return valueOfFullIPv4Internal(address);
 	    }
 	    if (maskSize == 0) {
 		return ANY_IPv4;
@@ -440,18 +406,90 @@ public final class IPv4 extends IP {
     }
 
     /**
-     * Create an IPv4 from 32 bits (int).
+     * Get IPv4 object with the specified address.
+     * <p>
+     * The input address is an array of the address' blocks values. The array
+     * should be one with of length as IPv4 number of blocks(
+     * {@value #BLOCK_NUMBER}).
+     * <p>
+     * For example:<br>
+     * To create the IPv4 12.78.94.65 the array should be [12, 78, 94, 65].<br>
+     * 
+     * @param address
+     *            the address blocks
+     * @return IPv4 object with the desire address
+     * @throws NullPointerException
+     *             if the address is null
+     * @throws IllegalArgumentException
+     *             if the blocks values are out of range (0 to 255)
+     */
+    public static IPv4 valueOf(final int[] address) {
+	return valueOf(address, SIZE);
+    }
+
+    /**
+     * Get IPv4 object with the specified address and subnetwork mask size.
+     * <p>
+     * The input address is an array of the address' blocks values. The array
+     * should be one with of length as IPv4 number of blocks(
+     * {@value #BLOCK_NUMBER}).
+     * <p>
+     * For example:<br>
+     * To create the IPv4 12.78.94.64/26 the array should be [12, 78, 94, 64]
+     * and the maskSize should be 16.<br>
+     * 
+     * @param address
+     *            the address blocks
+     * @param maskSize
+     *            the size of the subnetwork mask
+     * @return IPv4 object with the desire address and maskSize
+     * @throws NullPointerException
+     *             if the address is null
+     * @throws IllegalArgumentException
+     *             if the blocks values are out of range (0 to 255) or the
+     *             maskSize is out of range (0 to 32).
+     */
+    public static IPv4 valueOf(final int[] address, final int maskSize) {
+	if (address.length != BLOCK_NUMBER) {
+	    throw new IllegalArgumentException(
+		    "IPv4 blocks number: " + Utility.formatEqual(BLOCK_NUMBER, address.length));
+	}
+
+	int a = 0;
+	for (int i = 0; i < address.length; i++) {
+	    a = (a << BLOCK_SIZE) + address[i];
+	}
+
+	if (!(0 < maskSize && maskSize < SIZE)) {
+	    if (maskSize == SIZE) {
+		return valueOfFullIPv4Internal(a);
+	    }
+	    if (maskSize == 0) {
+		return ANY_IPv4;
+	    }
+	    throw new IllegalArgumentException("IPv4 subnetwork mask: " + Utility.formatRange(0, SIZE, maskSize));
+	}
+
+	// Reset suffix
+	a &= maskSize != 0 ? ~((1 << (SIZE - maskSize)) - 1) : 0;
+
+	return new IPv4(a, maskSize);
+    }
+
+    /**
+     * Get IPv4 object with the specified 32 bits(int) address.
      * 
      * @param addressBits
      *            the 32 bits of the address
      * @return IPv4 object with specified address
      */
-    public static IPv4 createFromBits(final int addressBits) {
-	return createFromBits(addressBits, SIZE);
+    public static IPv4 valueOfBits(final int addressBits) {
+	return valueOfBits(addressBits, SIZE);
     }
 
     /**
-     * Create an IPv4 from 32 bits (int) and specified subnetwork mask size.
+     * Get IPv4 object with the specified 32 bits(int) address and subnetwork
+     * mask size.
      * 
      * @param addressBits
      *            the 32 bits of the address.
@@ -461,10 +499,10 @@ public final class IPv4 extends IP {
      * @throws IllegalArgumentException
      *             if the mask size is out of range (0 to 32).
      */
-    public static IPv4 createFromBits(final int addressBits, final int maskSize) {
+    public static IPv4 valueOfBits(final int addressBits, final int maskSize) {
 	if (!(0 < maskSize && maskSize < SIZE)) {
 	    if (maskSize == SIZE) {
-		return createFullIPInternal(addressBits);
+		return valueOfFullIPv4Internal(addressBits);
 	    }
 	    if (maskSize == 0) {
 		return ANY_IPv4;
@@ -475,39 +513,14 @@ public final class IPv4 extends IP {
     }
 
     /**
-     * Create an IPv4 from boolean bits list.
-     * 
-     * @param addressBitss
-     *            the bits list
-     * @return IPv4 with address built from the bits.
-     * @throws NullPointerException
-     *             if the bits list is null, or one of the Boolean objects in
-     *             the list is null.
-     * @throws IllegalArgumentException
-     *             if number of bits is unequal to {@value #SIZE}.
-     */
-    public static IPv4 createFromBits(final List<Boolean> addressBitss) {
-	if (addressBitss.size() != SIZE) {
-	    throw new IllegalArgumentException("IPv4 size: " + Utility.formatEqual(SIZE, addressBitss.size()));
-	}
-	int address = 0;
-	for (Boolean bit : addressBitss) {
-	    address <<= 1;
-	    if (bit.booleanValue()) {
-		address += 1;
-	    }
-	}
-	return createFullIPInternal(address);
-    }
-
-    /**
-     * Create full (maskSize = {@value #SIZE}) IPv4, used internally.
+     * Get full (maskSize = {@value #SIZE}) IPv4 object with the specified
+     * address, used internally.
      * 
      * @param address
      *            the 32 bits of the address.
      * @return IPv4 object with the specified address and maskSize.
      */
-    private static IPv4 createFullIPInternal(final int address) {
+    private static IPv4 valueOfFullIPv4Internal(final int address) {
 	return IPv4Cache.cache.getOrAdd(new Integer(address), IPv4Cache.supplier);
     }
 
@@ -543,8 +556,8 @@ public final class IPv4 extends IP {
     /**
      * Parse a block of IPv4 and check if it's range is valid.
      * 
-     * @param text
-     *            the full text.
+     * @param str
+     *            the full string.
      * @param fromIndex
      *            the start index of the value in the text.
      * @param toIndex
@@ -555,12 +568,12 @@ public final class IPv4 extends IP {
      *             in range of valid block value [0,
      *             {@link IPv4#MAX_BLOCK_VALUE}].
      */
-    private static int parseBlockValue(final String text, final int fromIndex, final int toIndex) {
+    private static int parseBlockValue(final String str, final int fromIndex, final int toIndex) {
 	final int blockVal;
 	try {
-	    blockVal = Integer.parseInt(text.substring(fromIndex, toIndex));
+	    blockVal = Integer.parseInt(str.substring(fromIndex, toIndex));
 	} catch (NumberFormatException e) {
-	    throw new IllegalArgumentException("In block last block", e);
+	    throw new IllegalArgumentException(e);
 	}
 	if (!(0 <= blockVal && blockVal <= MAX_BLOCK_VALUE)) {
 	    throw new IllegalArgumentException(

@@ -436,7 +436,7 @@ public class InformationAlgorithm implements SuggestionsAlgorithm {
 
 	    final List<Suggestion> suggestions = new ArrayList<>(subnets.size());
 	    for (final IPNode subnet : subnets) {
-		suggestions.add(new Suggestion(Destination.create(subnet.m_ip), subnet.m_size, subnet.getScore()));
+		suggestions.add(new Suggestion(Destination.valueOf(subnet.m_ip), subnet.m_size, subnet.getScore()));
 	    }
 
 	    return suggestions;
@@ -463,7 +463,7 @@ public class InformationAlgorithm implements SuggestionsAlgorithm {
 
 	    final List<Suggestion> suggestions = new ArrayList<>(subnets.size());
 	    for (final IPNode subnet : subnets) {
-		suggestions.add(new Suggestion(Source.create(subnet.m_ip), subnet.m_size, subnet.getScore()));
+		suggestions.add(new Suggestion(Source.valueOf(subnet.m_ip), subnet.m_size, subnet.getScore()));
 	    }
 	    return suggestions;
 	}

@@ -70,11 +70,25 @@ public class Source extends IPAttribute {
      */
     @Override
     public Source createMutation(final IP ip) {
-	return Source.create(ip);
+	return Source.valueOf(ip);
     }
 
     /**
-     * Create a source from an IP.
+     * Get Source object parsed from string.
+     * 
+     * TODO - specified expected input format.
+     * 
+     * @param s
+     *            string representation of a source.
+     * @return Source object with the IP parsed from the string.
+     * @see IP#valueOf(String)
+     */
+    public static Source valueOf(final String s) {
+	return valueOfInternal(IP.valueOf(s));
+    }
+
+    /**
+     * Get Source object with the specified IP.
      * 
      * @param ip
      *            an IP
@@ -82,30 +96,18 @@ public class Source extends IPAttribute {
      * @throws NullPointerException
      *             if the IP is null.
      */
-    public static Source create(final IP ip) {
-	return createInternal(Objects.requireNonNull(ip));
+    public static Source valueOf(final IP ip) {
+	return valueOfInternal(Objects.requireNonNull(ip));
     }
 
     /**
-     * Create a source from a string representation of an I
-     * 
-     * @param ip
-     *            string IP
-     * @return Source object with the IP parsed from the string.
-     * @see IP#createFromString(String)
-     */
-    public static Source createFromString(final String ip) {
-	return createInternal(IP.createFromString(ip));
-    }
-
-    /**
-     * Create a source, used internally.
+     * Get Source object with the specified IP, used internally.
      * 
      * @param ip
      *            an IP.
      * @return Source object with the specified IP.
      */
-    private static Source createInternal(final IP ip) {
+    private static Source valueOfInternal(final IP ip) {
 	if (ip.m_maskSize == ip.getSize()) {
 	    // If ip is a full IP (most common source objects) search it in
 	    // cache, or add one if one doesn't exist.

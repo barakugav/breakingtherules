@@ -11,29 +11,47 @@ import org.junit.Test;
 import breakingtherules.tests.TestBase;
 import breakingtherules.utilities.ArrayIterator;
 
+@SuppressWarnings("javadoc")
 public class ArrayIteratorTest extends TestBase {
 
-    @Test(expected = NoSuchElementException.class)
+    @Test
+    public void arrayIteratorTest() {
+	final int size = 50;
+	final Integer[] array = randomIntegerArray(size);
+	final Iterator<Integer> it = new ArrayIterator<>(array);
+	for (int i = 0; i < array.length; i++) {
+	    assertTrue(it.hasNext());
+	    assertEquals(array[i], it.next());
+	}
+	assertFalse(it.hasNext());
+    }
+
+    @Test
     public void arrayIteratorTestEmptyArray() {
+	Integer[] array = new Integer[] {};
+	Iterator<Integer> it = new ArrayIterator<>(array);
+	assertFalse(it.hasNext());
+    }
+
+    @Test(expected = NoSuchElementException.class)
+    public void arrayIteratorTestEmptyArrayAdvanceOverLimitation() {
 	Integer[] array = new Integer[] {};
 	Iterator<Integer> it = new ArrayIterator<>(array);
 	assertFalse(it.hasNext());
 	it.next();
     }
 
-    @Test
-    public void arrayIteratorTest() {
-	final int size = 50;
-	Integer[] array = new Integer[size];
-	for (int i = 0; i < array.length; i++)
-	    array[i] = Integer.valueOf(rand.nextInt());
-	Iterator<Integer> it = new ArrayIterator<>(array);
-
-	for (int i = 0; i < array.length; i++) {
+    @Test(expected = NoSuchElementException.class)
+    public void arrayIteratorTestAdvanceOverLimitation() {
+	final int SIZE = rand.nextInt(100) + 100;
+	final Integer[] array = randomIntegerArray(SIZE);
+	final Iterator<Integer> it = new ArrayIterator<>(array);
+	for (int i = 0; i < SIZE; i++) {
 	    assertTrue(it.hasNext());
-	    assertEquals(array[i], it.next());
+	    it.next();
 	}
 	assertFalse(it.hasNext());
+	it.next();
     }
 
     @Test
@@ -55,6 +73,13 @@ public class ArrayIteratorTest extends TestBase {
 	assertTrue(it.hasNext());
 	assertEquals(array[array.length - 1], it.next());
 	assertFalse(it.hasNext());
+    }
+
+    private static Integer[] randomIntegerArray(final int size) {
+	final Integer[] array = new Integer[size];
+	for (int i = 0; i < array.length; i++)
+	    array[i] = Integer.valueOf(rand.nextInt());
+	return array;
     }
 
 }

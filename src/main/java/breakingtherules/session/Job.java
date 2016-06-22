@@ -21,6 +21,7 @@ import breakingtherules.dao.ParseException;
 import breakingtherules.dao.RulesDao;
 import breakingtherules.dao.csv.CSVDaoConfig;
 import breakingtherules.dao.csv.CSVHitsDao;
+import breakingtherules.dao.xml.XMLDaoConfig;
 import breakingtherules.dao.xml.XMLRulesDao;
 import breakingtherules.dto.ListDto;
 import breakingtherules.dto.SuggestionsDto;
@@ -32,7 +33,7 @@ import breakingtherules.services.algorithm.Suggestion;
 import breakingtherules.services.algorithm.SuggestionsAlgorithm;
 
 /**
- * TODO
+ * TODO javadoc
  * 
  * @author Barak Ugav
  * @author Yishai Gronich
@@ -484,7 +485,7 @@ public class Job {
      */
     public FileSystemResource getRulesFile() {
 	checkJobState();
-	return new FileSystemResource(DaoConfig.getRepoRoot(m_name) + XMLRulesDao.REPOSITORY_NAME);
+	return new FileSystemResource(XMLDaoConfig.getRulesFile(m_name));
     }
 
     /**
@@ -494,9 +495,9 @@ public class Job {
      *             if any I/O errors occurs during the file update.
      */
     private void updateRulesFile() throws IOException {
-	String repositoryPath = DaoConfig.getRepoRoot(m_name) + XMLRulesDao.REPOSITORY_NAME;
+	final String fileName = XMLDaoConfig.getRulesFile(m_name);
 	final List<Rule> rules = getRules();
-	XMLRulesDao.writeRules(repositoryPath, rules, m_originalRule);
+	XMLRulesDao.writeRules(fileName, rules, m_originalRule);
     }
 
     /**

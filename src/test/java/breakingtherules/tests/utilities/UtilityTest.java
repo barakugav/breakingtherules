@@ -13,6 +13,7 @@ import org.junit.Test;
 import breakingtherules.tests.TestBase;
 import breakingtherules.utilities.Utility;
 
+@SuppressWarnings("javadoc")
 public class UtilityTest extends TestBase {
 
     @Test

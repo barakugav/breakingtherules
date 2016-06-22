@@ -50,10 +50,6 @@ public class XMLRulesDao implements RulesDao {
      */
     private static final String ORIGINAL_RULE_TAG = "original-rule";
 
-    /**
-     * TODO
-     */
-    public static final String REPOSITORY_NAME = "repository.xml";
 
     /**
      * {@inheritDoc}
@@ -252,9 +248,9 @@ public class XMLRulesDao implements RulesDao {
 
 	final List<Attribute> attributes = new ArrayList<>();
 	try {
-	    attributes.add(Source.createFromString(source));
-	    attributes.add(Destination.createFromString(destination));
-	    attributes.add(Service.createFromString(service));
+	    attributes.add(Source.valueOf(source));
+	    attributes.add(Destination.valueOf(destination));
+	    attributes.add(Service.valueOf(service));
 	} catch (Exception e) {
 	    throw new XMLParseException(e);
 	}

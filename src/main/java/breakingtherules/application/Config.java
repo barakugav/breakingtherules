@@ -18,8 +18,8 @@ import breakingtherules.services.algorithm.SimpleAlgorithm;
 import breakingtherules.services.algorithm.SuggestionsAlgorithm;
 
 /**
- * TODO
- * 
+ * TODO javadoc
+ *  
  * @author Barak Ugav
  * @author Yishai Gronich
  *

@@ -27,14 +27,14 @@ public class DaoConfig {
     }
 
     /**
-     * Get root path to repository by a job id.
+     * Get root path to repository by a job name.
      * 
      * @param jobName
      *            name of the job.
      * @return string path to repository root.
      */
     public static String getRepoRoot(final String jobName) {
-	return new StringBuilder().append(REPOS_ROOT).append('/').append(jobName).append('/').toString();
+	return new StringBuilder().append(REPOS_ROOT).append('/').append(jobName).toString();
     }
 
     /**
@@ -47,7 +47,7 @@ public class DaoConfig {
      *             If the directory write was unsuccessful
      */
     public static boolean initRepository(final String jobName) throws IOException {
-	final File directory = new File(getRepoRoot(jobName));
+	final File directory = new File(getRepoRoot(jobName) + '/');
 	if (directory.exists()) {
 	    return false;
 	}

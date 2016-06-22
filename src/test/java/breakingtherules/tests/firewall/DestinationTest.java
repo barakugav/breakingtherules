@@ -12,44 +12,45 @@ import breakingtherules.firewall.Service;
 import breakingtherules.firewall.Source;
 import breakingtherules.tests.TestBase;
 
+@SuppressWarnings("javadoc")
 public class DestinationTest extends TestBase {
 
     @Test
     public void constructorTest() {
 	IP ip = FirewallTestsUtility.getRandomIP();
-	Destination.create(ip);
+	Destination.valueOf(ip);
     }
 
     @Test(expected = NullPointerException.class)
     public void constructorTestNullIP() {
 	IP ip = null;
-	Destination.create(ip);
+	Destination.valueOf(ip);
     }
 
     @Test
     public void constructorStringTest() {
 	String ip = "2.12.45.7/21";
-	Destination.createFromString(ip);
+	Destination.valueOf(ip);
     }
 
     @Test(expected = NullPointerException.class)
     public void constructorStringTestNullIP() {
 	String ip = null;
-	Destination.createFromString(ip);
+	Destination.valueOf(ip);
     }
 
     @Test
     public void getIPTest() {
 	IP ip = FirewallTestsUtility.getRandomIP();
-	Destination des = Destination.create(ip);
+	Destination des = Destination.valueOf(ip);
 	assertEquals(ip, des.getIp());
     }
 
     @Test
     public void containsTestContainsItsef() {
 	IP ip = FirewallTestsUtility.getRandomIP();
-	Destination des1 = Destination.create(ip);
-	Destination des2 = Destination.create(ip);
+	Destination des1 = Destination.valueOf(ip);
+	Destination des2 = Destination.valueOf(ip);
 	assertTrue(des1.contains(des1));
 	assertTrue(des1.contains(des2));
 	assertTrue(des2.contains(des1));
@@ -58,7 +59,7 @@ public class DestinationTest extends TestBase {
     @Test
     public void containsTestNotContainsNull() {
 	IP ip = FirewallTestsUtility.getRandomIP();
-	Destination des1 = Destination.create(ip);
+	Destination des1 = Destination.valueOf(ip);
 	Destination des2 = null;
 	assertFalse(des1.contains(des2));
     }
@@ -66,12 +67,12 @@ public class DestinationTest extends TestBase {
     @Test
     public void containsTestNotContainsOtherAttributes() {
 	IP ip = FirewallTestsUtility.getRandomIP();
-	Destination des = Destination.create(ip);
+	Destination des = Destination.valueOf(ip);
 
-	Source source = Source.create(ip);
+	Source source = Source.valueOf(ip);
 	assertFalse(des.contains(source));
 
-	Service service = Service.create("TCP", 80);
+	Service service = Service.valueOf("TCP", 80);
 	assertFalse(des.contains(service));
     }
 
@@ -79,31 +80,31 @@ public class DestinationTest extends TestBase {
     public void containsTestOtherDestination() {
 	IP ip1 = FirewallTestsUtility.getRandomIP();
 	IP ip2 = FirewallTestsUtility.getRandomIP();
-	Destination des1 = Destination.create(ip1);
-	Destination des2 = Destination.create(ip2);
+	Destination des1 = Destination.valueOf(ip1);
+	Destination des2 = Destination.valueOf(ip2);
 	assertEquals(ip1.contains(ip2), des1.contains(des2));
     }
 
     @Test
     public void toStringTest() {
 	IP ip = FirewallTestsUtility.getRandomIP();
-	Destination des = Destination.create(ip);
+	Destination des = Destination.valueOf(ip);
 	assertTrue(ip.toString().equals(des.toString()));
     }
 
     @Test
     public void equalsTestTrue() {
 	Destination s1, s2;
-	s1 = Destination.createFromString("2.12.45.7/21");
-	s2 = Destination.createFromString("2.12.45.7/21");
+	s1 = Destination.valueOf("2.12.45.7/21");
+	s2 = Destination.valueOf("2.12.45.7/21");
 	assertEquals(s1, s2);
     }
 
     @Test
     public void equalsTestFalse() {
 	Destination s1, s2;
-	s1 = Destination.createFromString("2.12.45.7/21");
-	s2 = Destination.createFromString("2.13.45.7/21");
+	s1 = Destination.valueOf("2.12.45.7/21");
+	s2 = Destination.valueOf("2.13.45.7/21");
 	assertNotEquals(s1, s2);
     }
 

@@ -21,6 +21,7 @@ import breakingtherules.firewall.Filter;
 import breakingtherules.firewall.Rule;
 import breakingtherules.tests.TestBase;
 
+@SuppressWarnings("javadoc")
 public class XMLHitsDaoTest extends TestBase {
 
     @Test

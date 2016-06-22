@@ -63,9 +63,9 @@ public class FilterController {
 	    @RequestParam(value = "destination") final String destination,
 	    @RequestParam(value = "service") final String service) throws IOException, ParseException {
 	final List<Attribute> filterAtts = new ArrayList<>();
-	filterAtts.add(Source.createFromString(source));
-	filterAtts.add(Destination.createFromString(destination));
-	filterAtts.add(Service.createFromString(service));
+	filterAtts.add(Source.valueOf(source));
+	filterAtts.add(Destination.valueOf(destination));
+	filterAtts.add(Service.valueOf(service));
 	final Filter newFilter = new Filter(filterAtts);
 	m_job.setFilter(newFilter);
     }

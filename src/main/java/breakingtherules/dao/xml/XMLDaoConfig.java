@@ -15,7 +15,7 @@ import breakingtherules.dao.DaoConfig;
  * @see XMLHitsDao
  * @see XMLRulesDao
  */
-class XMLDaoConfig {
+public class XMLDaoConfig {
 
     /**
      * Name of the hits file in each repository.
@@ -76,7 +76,7 @@ class XMLDaoConfig {
      *            name of the job.
      * @return name of the XML rules file associated with the job.
      */
-    static String getRulesFile(final String jobName) {
+    public static String getRulesFile(final String jobName) {
 	return new StringBuilder().append(DaoConfig.getRepoRoot(jobName)).append('/').append(RULES_FILE).toString();
     }
 

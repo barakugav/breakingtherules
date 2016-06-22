@@ -257,9 +257,9 @@ public class XMLHitsDao extends AbstractCachedHitsDao {
 	// Convert strings to attributes
 	final List<Attribute> attributes = new ArrayList<>();
 	try {
-	    attributes.add(Source.createFromString(source));
-	    attributes.add(Destination.createFromString(destination));
-	    attributes.add(Service.createFromString(service));
+	    attributes.add(Source.valueOf(source));
+	    attributes.add(Destination.valueOf(destination));
+	    attributes.add(Service.valueOf(service));
 
 	} catch (final Exception e) {
 	    throw new XMLParseException(e);

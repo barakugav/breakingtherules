@@ -25,6 +25,7 @@ import breakingtherules.firewall.Source;
 import breakingtherules.tests.TestBase;
 import breakingtherules.tests.firewall.FirewallTestsUtility;
 
+@SuppressWarnings("javadoc")
 public class ElasticHitsDaoTest extends TestBase {
 
     private static ElasticHitsDao hitsDao;
@@ -63,9 +64,9 @@ public class ElasticHitsDaoTest extends TestBase {
 
     private static Hit createHit() {
 	List<Attribute> attributes = new ArrayList<>();
-	attributes.add(Source.create(FirewallTestsUtility.getRandomIP()));
-	attributes.add(Destination.create(FirewallTestsUtility.getRandomIP()));
-	attributes.add(Service.create(rand.nextInt(256), rand.nextInt(1 << 16)));
+	attributes.add(Source.valueOf(FirewallTestsUtility.getRandomIP()));
+	attributes.add(Destination.valueOf(FirewallTestsUtility.getRandomIP()));
+	attributes.add(Service.valueOf(rand.nextInt(256), rand.nextInt(1 << 16)));
 	return new Hit(attributes);
     }
 

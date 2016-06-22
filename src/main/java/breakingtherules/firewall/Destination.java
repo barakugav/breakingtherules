@@ -73,39 +73,41 @@ public class Destination extends IPAttribute {
      */
     @Override
     public Destination createMutation(final IP ip) {
-	return Destination.create(ip);
+	return Destination.valueOf(ip);
     }
 
     /**
-     * Create a destination from an IP
+     * Get Destination object parsed from string.
+     * 
+     * TODO - specified expected input format.
+     * 
+     * @param s
+     *            string representation of a destination.
+     * @return destination object of the IP
+     */
+    public static Destination valueOf(final String s) {
+	return valueOfInternal(IP.valueOf(s));
+    }
+
+    /**
+     * Get Destination object with the specified IP.
      * 
      * @param ip
      *            an IP
      * @return destination object of the IP
      */
-    public static Destination create(final IP ip) {
-	return createInternal(Objects.requireNonNull(ip));
+    public static Destination valueOf(final IP ip) {
+	return valueOfInternal(Objects.requireNonNull(ip));
     }
 
     /**
-     * Create a destination from a string of IP
-     * 
-     * @param ip
-     *            a string IP
-     * @return destination object of the IP
-     */
-    public static Destination createFromString(final String ip) {
-	return createInternal(IP.createFromString(ip));
-    }
-
-    /**
-     * Create a destination, used internally
+     * Get Destination object with the specified IP, used internally
      * 
      * @param ip
      *            an IP
      * @return destination object of the IP
      */
-    private static Destination createInternal(final IP ip) {
+    private static Destination valueOfInternal(final IP ip) {
 	if (ip.m_maskSize == ip.getSize()) {
 	    // If ip is a full IP (most common destination objects) search it in
 	    // cache, or add one if one doesn't exist.

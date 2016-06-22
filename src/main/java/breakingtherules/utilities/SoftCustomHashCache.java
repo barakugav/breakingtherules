@@ -5,7 +5,7 @@ import java.util.Objects;
 import breakingtherules.utilities.Hashs.Strategy;
 
 /**
- * TODO
+ * TODO javadoc
  * 
  * @author Barak Ugav
  * @author Yishai Gronich
