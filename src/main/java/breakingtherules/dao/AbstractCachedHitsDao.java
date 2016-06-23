@@ -79,7 +79,7 @@ public abstract class AbstractCachedHitsDao implements HitsDao {
 	    return new ListDto<>(Collections.emptyList(), 0, 0, totalSize);
 	}
 	final List<Hit> hits = Utility.subListView(allHits, startIndex, endIndex - startIndex);
-	return new ListDto<>(hits, Math.min(startIndex, totalSize) - 1, Math.min(endIndex, totalSize), totalSize);
+	return new ListDto<>(hits, Math.min(startIndex, totalSize - 1), Math.min(endIndex, totalSize), totalSize);
     }
 
     /**

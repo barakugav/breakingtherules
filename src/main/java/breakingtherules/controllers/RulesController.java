@@ -38,8 +38,18 @@ public class RulesController {
     @Autowired
     private Job m_job;
 
+    /**
+     * Get the current job's rules file, in XML format.
+     * 
+     * @param request
+     *            The HTTP request
+     * @param response
+     *            The HTTP response
+     * @return A file that holds all of the current job's rules
+     */
     @RequestMapping(value = "/rulesFile", method = RequestMethod.GET, produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
-    public FileSystemResource rulesFile(final HttpServletRequest request, final HttpServletResponse response) {
+    public FileSystemResource rulesFile(@SuppressWarnings("unused") final HttpServletRequest request,
+	    final HttpServletResponse response) {
 	response.setHeader("Content-Disposition", "attachment; filename=\"rules.xml\"");
 	// TODO - remove 'request' parameter (?) - unused
 	return m_job.getRulesFile();

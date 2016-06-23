@@ -1,6 +1,5 @@
 package breakingtherules.session;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -9,18 +8,15 @@ import java.util.ListIterator;
 import java.util.Objects;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Scope;
 import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.stereotype.Component;
-import org.springframework.web.multipart.MultipartFile;
 
-import breakingtherules.dao.DaoConfig;
 import breakingtherules.dao.HitsDao;
 import breakingtherules.dao.ParseException;
 import breakingtherules.dao.RulesDao;
-import breakingtherules.dao.csv.CSVDaoConfig;
-import breakingtherules.dao.csv.CSVHitsDao;
 import breakingtherules.dao.xml.XMLDaoConfig;
 import breakingtherules.dao.xml.XMLRulesDao;
 import breakingtherules.dto.ListDto;
@@ -47,13 +43,14 @@ public class Job {
      * DAO of the job's hits
      */
     @Autowired
+    @Qualifier("hitsDao")
     private HitsDao m_hitsDao;
 
     /**
      * DAO of the job's rules
      */
     @Autowired
-    private RulesDao m_rulesDao;
+    protected RulesDao m_rulesDao;
 
     /**
      * Algorithm for suggesting rules suggestions
@@ -67,7 +64,7 @@ public class Job {
      * Every job has a unique name. In the start of the session, there is no
      * active job, so the name is set to NO_CURRENT_JOB in the constructor.
      */
-    private String m_name;
+    protected String m_name;
 
     /**
      * The current hit filter.
@@ -75,17 +72,17 @@ public class Job {
      * This is the filter that the user inputs, and receives only the hits that
      * match this filter.
      */
-    private Filter m_filter;
+    protected Filter m_filter;
 
     /**
      * The original rule that needs to be broken down to smaller rules
      */
-    private Rule m_originalRule;
+    protected Rule m_originalRule;
 
     /**
      * The rules that were created by the user throughout the program usage.
      */
-    private List<StatisticedRule> m_rules;
+    protected List<StatisticedRule> m_rules;
 
     /**
      * A list of all the attributes that this job holds for each hit/rule. To be
@@ -121,42 +118,6 @@ public class Job {
      */
     public Job() {
 	m_name = NO_CURRENT_JOB;
-    }
-
-    /**
-     * Create a new job, with the given job name and the given hits
-     * 
-     * @param jobName
-     *            The name of the new job. Must be different from existing names
-     * @param hitsFile
-     *            A CSV file with all of the hits that should be processed in
-     *            this job
-     * @param columnTypes
-     *            The order of the columns in the CSV file
-     * @throws IOException
-     *             if any I/O errors occurs.
-     * @throws ParseException
-     *             if failed to parse file.
-     * @throws NullPointerException
-     *             if the file is null.
-     */
-    public void createJob(final String jobName, final MultipartFile hitsFile, final List<Integer> columnTypes)
-	    throws IOException, ParseException {
-
-	// TODO - treat return value from initRepository.
-	DaoConfig.initRepository(jobName);
-
-	final File fileDestination = new File(new File(CSVDaoConfig.getHitsFile(jobName)).getAbsolutePath());
-	hitsFile.transferTo(fileDestination);
-	final CSVHitsDao csvDao = new CSVHitsDao();
-	final Iterable<Hit> hits = csvDao.getHits(jobName, Collections.emptyList(), Filter.ANY_FILTER);
-	m_hitsDao.initJob(jobName, hits);
-
-	final Job job = new Job();
-	job.m_name = jobName;
-	job.m_originalRule = new Rule(Filter.ANY_FILTER);
-	job.m_rules = new ArrayList<>();
-	job.updateRulesFile();
     }
 
     /**
@@ -494,7 +455,7 @@ public class Job {
      * @throws IOException
      *             if any I/O errors occurs during the file update.
      */
-    private void updateRulesFile() throws IOException {
+    protected void updateRulesFile() throws IOException {
 	final String fileName = XMLDaoConfig.getRulesFile(m_name);
 	final List<Rule> rules = getRules();
 	XMLRulesDao.writeRules(fileName, rules, m_originalRule);

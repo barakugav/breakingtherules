@@ -1,11 +1,8 @@
 package breakingtherules.application;
 
-import javax.sql.DataSource;
-
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.springframework.web.multipart.MultipartResolver;
 import org.springframework.web.multipart.support.StandardServletMultipartResolver;
 
@@ -18,8 +15,10 @@ import breakingtherules.services.algorithm.SimpleAlgorithm;
 import breakingtherules.services.algorithm.SuggestionsAlgorithm;
 
 /**
- * TODO javadoc
- *  
+ * Configuring Of the Spring Application. Specifically, what algorithm to use to
+ * get suggestions for rules, what DAO to use to get hits and rules, and how to
+ * handle file uploads
+ * 
  * @author Barak Ugav
  * @author Yishai Gronich
  *
@@ -29,30 +28,7 @@ import breakingtherules.services.algorithm.SuggestionsAlgorithm;
 @ComponentScan({ "breakingtherules" })
 public class Config {
 
-    @Bean
-    public DataSource jdbcDataSource() {
-	DriverManagerDataSource ds = new DriverManagerDataSource();
-	ds.setDriverClassName("org.postgresql.Driver");
-	ds.setUrl("jdbc:posgresql://localhost:3306/TEST");
-	ds.setUsername("root");
-	ds.setPassword("admin");
-	return ds;
-    }
-
-    // @Bean
-    public HitsDao hitsXmlDao() {
-	return new XMLHitsDao();
-    }
-
-    @Bean
-    public HitsDao hitsCSVDao() {
-	return new CSVHitsDao();
-    }
-
-    // @Bean(destroyMethod = "cleanup")
-    public HitsDao hitsElasticDao() {
-	return new ElasticHitsDao();
-    }
+    // -------------- Algorithm ---------------
 
     @Bean
     public SuggestionsAlgorithm infoAlgorithm() {
@@ -64,9 +40,34 @@ public class Config {
 	return new SimpleAlgorithm();
     }
 
+    // ------------ Upload Settings ---------------
+
     @Bean
-    public MultipartResolver uploadSettings() {
+    public MultipartResolver fileResolver() {
 	return new StandardServletMultipartResolver();
+    }
+
+    // ---------- Data Access Objects -------------
+
+    // Choose one of the following three options
+    @Bean
+    public HitsDao hitsDao() {
+	return new CSVHitsDao();
+    }
+
+    // @Bean(destroyMethod = "cleanup")
+    public ElasticHitsDao esHitsDao() {
+	return new ElasticHitsDao();
+    }
+
+    @Bean
+    public CSVHitsDao csvHitsDao() {
+	return new CSVHitsDao();
+    }
+
+    @Bean
+    public XMLHitsDao hitsXmlDao() {
+	return new XMLHitsDao();
     }
 
 }

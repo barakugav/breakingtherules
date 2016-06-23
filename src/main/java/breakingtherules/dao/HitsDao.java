@@ -70,7 +70,7 @@ public interface HitsDao {
 	final Iterable<Hit> allHits = getHits(jobName, rules, filter);
 	final int totalSize = getHitsNumber(jobName, rules, filter);
 	final List<Hit> hits = Utility.subList(allHits, startIndex, endIndex - startIndex);
-	return new ListDto<>(hits, Math.min(startIndex, totalSize), Math.min(endIndex, totalSize), totalSize);
+	return new ListDto<>(hits, Math.min(startIndex, totalSize - 1), Math.min(endIndex, totalSize), totalSize);
     }
 
     /**

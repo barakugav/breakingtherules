@@ -46,12 +46,27 @@ import breakingtherules.utilities.Triple;
 import breakingtherules.utilities.Triple.UnmodifiableTriple;
 import breakingtherules.utilities.Utility;
 
+/**
+ * A Data Access Object that connects to an existing ElasticSearch cluster, and
+ * allows reading, writing, and deleting hits, to and from the ElasticSearch
+ * cluster.
+ */
 public class ElasticHitsDao implements HitsDao {
 
     // TODO extends from AbstractCachedHitsDao
 
+    /**
+     * This object is used to manage the connection with the active
+     * ElasticSearch cluster. The Node is used to connect, get a Client object,
+     * and finally close the connection to ElasticSearch.
+     */
     private final Node m_elasticNode;
 
+    /**
+     * This object gives the API to Elastic Search. Through the client, we can
+     * read and write to the ElasticSearch database, delete from it, or make
+     * bulk requests.
+     */
     private final Client m_elasticClient;
 
     /**
@@ -61,6 +76,9 @@ public class ElasticHitsDao implements HitsDao {
      */
     private final Map<UnmodifiableTriple<Integer, List<Rule>, Filter>, Integer> m_totalHitsCache;
 
+    /**
+     * Create an ElasticHitsDao
+     */
     public ElasticHitsDao() {
 	final NodeBuilder nodeBuilder = NodeBuilder.nodeBuilder();
 	final Builder settingsBuilder = Settings.settingsBuilder();
@@ -177,24 +195,24 @@ public class ElasticHitsDao implements HitsDao {
 	final BulkRequestBuilder bulkRequest = m_elasticClient.prepareBulk();
 	for (final Hit hit : hits) {
 
-	    final XContentBuilder hitJson = XContentFactory.jsonBuilder();
-	    hitJson.startObject();
-	    hitJson.field(ElasticDaoConfig.FIELD_JOB_NAME, jobName);
-	    hitJson.startArray(ElasticDaoConfig.FIELD_ATTRIBUTES);
-	    for (final Attribute attr : hit) {
+	    try (final XContentBuilder hitJson = XContentFactory.jsonBuilder()) {
 		hitJson.startObject();
-		hitJson.field(ElasticDaoConfig.FIELD_ATTR_TYPEID, attr.getTypeId());
-		hitJson.field(ElasticDaoConfig.FIELD_ATTR_VALUE, attr.toString());
-		hitJson.endObject();
+		hitJson.field(ElasticDaoConfig.FIELD_JOB_NAME, jobName);
+		hitJson.startArray(ElasticDaoConfig.FIELD_ATTRIBUTES);
+		for (final Attribute attr : hit) {
+		    hitJson.startObject();
+		    hitJson.field(ElasticDaoConfig.FIELD_ATTR_TYPEID, attr.getTypeId());
+		    hitJson.field(ElasticDaoConfig.FIELD_ATTR_VALUE, attr.toString());
+		    hitJson.endObject();
+		}
+		hitJson.endArray().endObject();
+
+		final IndexRequestBuilder indexRequest = m_elasticClient.prepareIndex(ElasticDaoConfig.INDEX_NAME,
+			ElasticDaoConfig.TYPE_HIT);
+		indexRequest.setSource(hitJson);
+		bulkRequest.add(indexRequest);
 	    }
-	    hitJson.endArray().endObject();
 
-	    final IndexRequestBuilder indexRequest = m_elasticClient.prepareIndex(ElasticDaoConfig.INDEX_NAME,
-		    ElasticDaoConfig.TYPE_HIT);
-	    indexRequest.setSource(hitJson);
-	    bulkRequest.add(indexRequest);
-
-	    hitJson.close();
 	}
 	final BulkResponse bulkResponse = bulkRequest.execute().actionGet();
 	if (bulkResponse.hasFailures()) {
@@ -208,16 +226,21 @@ public class ElasticHitsDao implements HitsDao {
 	refreshIndex();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public int getHitsNumber(final String jobName, final List<Rule> rules, final Filter filter) throws IOException {
 	final Integer cachedSize = m_totalHitsCache.get(new Triple<>(Integer.valueOf(jobName), rules, filter));
 	if (cachedSize != null) {
 	    return cachedSize.intValue();
-	} else {
-	    return getHitsList(jobName, rules, filter).getSize();
 	}
+	return getHitsList(jobName, rules, filter).getSize();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public ListDto<Hit> getHitsList(final String jobName, final List<Rule> rules, final Filter filter)
 	    throws IOException {
@@ -232,11 +255,18 @@ public class ElasticHitsDao implements HitsDao {
 	return new ListDto<>(hits, 0, hits.size(), hits.size());
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public Iterable<Hit> getHits(final String jobName, final List<Rule> rules, final Filter filter)
 	    throws IOException, ParseException {
 	return getHits(jobName, rules, filter, true, 0, 0);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void initJob(final String jobName, final Iterable<Hit> hits) throws IllegalArgumentException, IOException {
 	addHits(hits, jobName);

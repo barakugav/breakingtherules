@@ -41,6 +41,7 @@ public class TextBuilderTest {
 	assertEquals(expected, actual);
     }
 
+    @SuppressWarnings("unused")
     @Test(expected = IllegalArgumentException.class)
     public void setMaxLineTestNegative() {
 	new TextBuilder(-1);

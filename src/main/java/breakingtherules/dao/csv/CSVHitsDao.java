@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
 
@@ -24,15 +25,21 @@ import breakingtherules.firewall.Hit;
 public class CSVHitsDao extends AbstractCachedHitsDao {
 
     /**
+     * This DAO writes and reads from a CSV DAO. The columnTypes parameter tells
+     * the CSVParser the other of the column - what attributes are where
+     */
+    private List<Integer> m_columnTypes;
+
+    /**
      * Supplier function of hits.
      * <p>
      * 
      * @see #getHitsSupplier()
      */
-    private static final Function<String, Set<Hit>> HITS_SUPPLIER = jobName -> {
+    private final Function<String, Set<Hit>> m_hitsSupplier = jobName -> {
 	try {
 	    final Set<Hit> hits = new HashSet<>();
-	    CSVParser.parseHits(CSVParser.DEFAULT_COLUMNS_TYPES, CSVDaoConfig.getHitsFile(jobName),
+	    CSVParser.parseHits(m_columnTypes, CSVDaoConfig.getHitsFile(jobName),
 		    Collections.emptyList(), Filter.ANY_FILTER, hits);
 	    return hits;
 
@@ -47,6 +54,17 @@ public class CSVHitsDao extends AbstractCachedHitsDao {
      * Construct new CSVHitsDao.
      */
     public CSVHitsDao() {
+	m_columnTypes = CSVParser.DEFAULT_COLUMNS_TYPES;
+    }
+
+    /**
+     * Change the type of each column
+     * 
+     * @param columnTypes
+     *            New column types
+     */
+    public void setColumnTypes(List<Integer> columnTypes) {
+	m_columnTypes = columnTypes;
     }
 
     /**
@@ -55,7 +73,7 @@ public class CSVHitsDao extends AbstractCachedHitsDao {
     @Override
     public void initJob(final String jobName, final Iterable<Hit> hits) throws IOException {
 	try {
-	    CSVParser.toCSV(CSVParser.DEFAULT_COLUMNS_TYPES, hits, CSVDaoConfig.getHitsFile(jobName));
+	    CSVParser.toCSV(m_columnTypes, hits, CSVDaoConfig.getHitsFile(jobName));
 	} catch (final CSVParseException e) {
 	    throw new IllegalArgumentException(e);
 	}
@@ -66,7 +84,7 @@ public class CSVHitsDao extends AbstractCachedHitsDao {
      */
     @Override
     protected Function<String, Set<Hit>> getHitsSupplier() {
-	return HITS_SUPPLIER;
+	return m_hitsSupplier;
     }
 
     /**

@@ -131,10 +131,11 @@ public class Utility {
      * @return sublist view on the original list.
      */
     public static <E> List<E> subListView(final List<E> list, final int offset, final int size) {
+
 	if (offset < 0 || size < 0) {
 	    throw new IllegalArgumentException("offset and size should be positive (" + offset + ", " + size + ")");
 	}
-	return list.subList(Math.min(offset, list.size()) - 1, Math.min(offset + size, list.size()));
+	return list.subList(Math.min(offset, list.size() - 1), Math.min(offset + size, list.size()));
     }
 
     /**

@@ -50,8 +50,7 @@ public class HitsController {
      *             if the job wasn't set yet.
      */
     @RequestMapping(value = "/hits", method = RequestMethod.GET)
-    public ListDto<Hit> hits(final int startIndex, final int endIndex) throws IOException, ParseException {
-	// TODO - change method name to 'getHits'
+    public ListDto<Hit> getHits(final int startIndex, final int endIndex) throws IOException, ParseException {
 	return m_job.getHits(startIndex, endIndex);
     }
 

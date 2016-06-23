@@ -11,12 +11,14 @@ import breakingtherules.tests.TestBase;
 @SuppressWarnings("javadoc")
 public class HitTest extends TestBase {
 
+    @SuppressWarnings("unused")
     @Test
     public void constructorTest() {
 	List<Attribute> attributes = FirewallTestsUtility.getRandomAttributes();
 	new Hit(attributes);
     }
 
+    @SuppressWarnings("unused")
     @Test(expected = NullPointerException.class)
     public void constructorTestNullAttributes() {
 	List<Attribute> attributes = null;
