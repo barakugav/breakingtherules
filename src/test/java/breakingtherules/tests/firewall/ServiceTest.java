@@ -23,7 +23,7 @@ public class ServiceTest extends TestBase {
 
     @Test
     public void constructorTestOnePortAnyProtocol() {
-	int protocol = Service.ANY_PROTOCOL;
+	short protocol = Service.ANY_PROTOCOL;
 	int port = FirewallTestsUtility.getRandomPort();
 	Service.valueOf(protocol, port);
     }
@@ -51,7 +51,7 @@ public class ServiceTest extends TestBase {
 
     @Test
     public void contructorTestPortRangeAnyProtocol() {
-	int protocol = Service.ANY_PROTOCOL;
+	short protocol = Service.ANY_PROTOCOL;
 	int range[] = FirewallTestsUtility.getRandomPortRange();
 	Service.valueOf(protocol, range[0], range[1]);
     }
@@ -176,7 +176,7 @@ public class ServiceTest extends TestBase {
 
     @Test
     public void getProtocolTestAnyProtocol() {
-	int protocol = Service.ANY_PROTOCOL;
+	short protocol = Service.ANY_PROTOCOL;
 	Service service;
 
 	int port = FirewallTestsUtility.getRandomPort();
@@ -274,7 +274,7 @@ public class ServiceTest extends TestBase {
 
     @Test
     public void containsTestPortRangeContainsPortRangeAnyProtocol() {
-	int protocol1 = Service.ANY_PROTOCOL;
+	short protocol1 = Service.ANY_PROTOCOL;
 	String protocol2 = "UDP";
 	Service service1 = Service.valueOf(protocol1, 1, 18);
 	Service service2 = Service.valueOf(Service.protocolCode(protocol2), 5, 10);

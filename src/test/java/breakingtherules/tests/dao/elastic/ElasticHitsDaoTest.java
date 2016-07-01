@@ -66,7 +66,7 @@ public class ElasticHitsDaoTest extends TestBase {
 	List<Attribute> attributes = new ArrayList<>();
 	attributes.add(Source.valueOf(FirewallTestsUtility.getRandomIP()));
 	attributes.add(Destination.valueOf(FirewallTestsUtility.getRandomIP()));
-	attributes.add(Service.valueOf(rand.nextInt(256), rand.nextInt(1 << 16)));
+	attributes.add(Service.valueOf((short) rand.nextInt(256), rand.nextInt(1 << 16)));
 	return new Hit(attributes);
     }
 
@@ -103,7 +103,8 @@ public class ElasticHitsDaoTest extends TestBase {
 	hitsDao.addHits(newHits, JOB_NAME);
 	int beginIndex = 2;
 	int endIndex = 4;
-	ListDto<Hit> hits = hitsDao.getHitsList(JOB_NAME, new ArrayList<Rule>(), Filter.ANY_FILTER, beginIndex, endIndex);
+	ListDto<Hit> hits = hitsDao.getHitsList(JOB_NAME, new ArrayList<Rule>(), Filter.ANY_FILTER, beginIndex,
+		endIndex);
 	assertEquals(endIndex - beginIndex, hits.getData().size());
     }
 

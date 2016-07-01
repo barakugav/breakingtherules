@@ -11,8 +11,14 @@ import breakingtherules.session.Job;
 
 /**
  * This controller allows the user to get the status of the current working job.
+ * <p>
  * The status is the number of hits in every category, the amount of work
  * achieved and left, etc.
+ * 
+ * @author Barak Ugav
+ * @author Yishai Gronich
+ * 
+ * @see Job
  */
 @RestController
 public class JobStatusController {

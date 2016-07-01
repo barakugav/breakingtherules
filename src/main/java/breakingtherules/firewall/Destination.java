@@ -77,6 +77,15 @@ public class Destination extends IPAttribute {
 	return Destination.valueOf(ip, null);
     }
 
+    /**
+     * Get Destination object parsed from string.
+     * 
+     * TODO - specified expected input format.
+     * 
+     * @param s
+     *            string representation of a destination.
+     * @return destination object of the IP
+     */
     public static Destination valueOf(final String s) {
 	return new Destination(IP.valueOf(s, null));
     }

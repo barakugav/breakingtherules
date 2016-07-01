@@ -6,43 +6,30 @@ import java.util.List;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
+import breakingtherules.dao.AbstractParser;
 import breakingtherules.firewall.Attribute;
 import breakingtherules.firewall.Destination;
 import breakingtherules.firewall.Rule;
 import breakingtherules.firewall.Service;
 import breakingtherules.firewall.Source;
 
-public class XMLRulesParser {
+/**
+ * Parser that parses rules from {@link Element}.
+ * <p>
+ * Caches can be set to reduce object creations and memory use.
+ * <p>
+ * 
+ * @author Barak Ugav
+ * @author Yishai Gronich
+ * 
+ * @see Rule
+ */
+public class XMLRulesParser extends AbstractParser {
 
-    private Source.Cache sourceCache;
-    private Destination.Cache destinationCache;
-    private Service.Cache serviceCache;
-
+    /**
+     * Construct new parser.
+     */
     XMLRulesParser() {
-    }
-
-    Source.Cache getSourceCache() {
-	return sourceCache;
-    }
-
-    Destination.Cache getDestinationCache() {
-	return destinationCache;
-    }
-
-    Service.Cache getServiceCache() {
-	return serviceCache;
-    }
-
-    void setSourceCache(final Source.Cache cache) {
-	sourceCache = cache;
-    }
-
-    void setDestinationCache(final Destination.Cache cache) {
-	destinationCache = cache;
-    }
-
-    void setServiceCache(final Service.Cache cache) {
-	serviceCache = cache;
     }
 
     /**
@@ -76,6 +63,15 @@ public class XMLRulesParser {
 	return new Rule(attributes);
     }
 
+    /**
+     * Create an XML element from rule.
+     * 
+     * @param doc
+     *            the root document of the element.
+     * @param rule
+     *            the rules to parse.
+     * @return element with the rules attributes.
+     */
     Element createElement(final Document doc, final Rule rule) {
 	final Element ruleElm = doc.createElement(XMLDaoConfig.RULE_TAG);
 	for (final Attribute attribute : rule) {

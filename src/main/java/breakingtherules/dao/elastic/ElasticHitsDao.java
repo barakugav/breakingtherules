@@ -50,6 +50,10 @@ import breakingtherules.utilities.Utility;
  * A Data Access Object that connects to an existing ElasticSearch cluster, and
  * allows reading, writing, and deleting hits, to and from the ElasticSearch
  * cluster.
+ * 
+ * @author Barak Ugav
+ * @author Yishai Gronich
+ * 
  */
 public class ElasticHitsDao implements HitsDao {
 
@@ -115,7 +119,7 @@ public class ElasticHitsDao implements HitsDao {
 	    final SearchResponse response = srchRequest.get();
 	    return response.getHits().totalHits() > 0;
 
-	} catch (final IndexNotFoundException e) {
+	} catch (@SuppressWarnings("unused") final IndexNotFoundException e) {
 	    return false;
 	}
     }

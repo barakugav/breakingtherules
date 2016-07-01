@@ -50,7 +50,7 @@ public class Job {
      * DAO of the job's rules
      */
     @Autowired
-    protected RulesDao m_rulesDao;
+    private RulesDao m_rulesDao;
 
     /**
      * Algorithm for suggesting rules suggestions

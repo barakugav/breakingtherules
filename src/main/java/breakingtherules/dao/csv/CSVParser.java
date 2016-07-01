@@ -12,6 +12,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
+import breakingtherules.dao.AbstractParser;
 import breakingtherules.dao.DaoUtilities;
 import breakingtherules.firewall.Attribute;
 import breakingtherules.firewall.Destination;
@@ -26,17 +27,16 @@ import breakingtherules.utilities.Utility;
 /**
  * The CSVParser used to read and write CSV file to and from hits.
  * <p>
+ * Caches can be set to reduce object creations and memory use.
+ * <p>
  * 
  * @author Barak Ugav
  * @author Yishai Gronich
  * 
+ * @see Hit
  * @see CSVHitsDao
  */
-public class CSVParser {
-
-    private Source.Cache sourceCache;
-    private Destination.Cache destinationCache;
-    private Service.Cache serviceCache;
+public class CSVParser extends AbstractParser {
 
     /**
      * The column index of source attribute in the CSV file or -1 if doesn't
@@ -142,30 +142,6 @@ public class CSVParser {
 	destinationIndex = columnsTypes.indexOf(DESTINATION);
 	serviceProtocolIndex = columnsTypes.indexOf(SERVICE_PROTOCOL);
 	servicePortIndex = columnsTypes.indexOf(SERVICE_PORT);
-    }
-
-    public Source.Cache getSourceCache() {
-	return sourceCache;
-    }
-
-    public Destination.Cache getDestinationCache() {
-	return destinationCache;
-    }
-
-    public Service.Cache getServiceCache() {
-	return serviceCache;
-    }
-
-    public void setSourceCache(final Source.Cache cache) {
-	sourceCache = cache;
-    }
-
-    public void setDestinationCache(final Destination.Cache cache) {
-	destinationCache = cache;
-    }
-
-    public void setServiceCache(final Service.Cache cache) {
-	serviceCache = cache;
     }
 
     /**

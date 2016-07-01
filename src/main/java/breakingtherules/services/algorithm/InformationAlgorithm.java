@@ -24,7 +24,7 @@ import breakingtherules.firewall.IP;
 import breakingtherules.firewall.IPAttribute;
 import breakingtherules.firewall.Rule;
 import breakingtherules.firewall.Source;
-import breakingtherules.utilities.UnionList;
+import breakingtherules.utilities.UntionGroup;
 import breakingtherules.utilities.Utility;
 
 /**
@@ -643,7 +643,7 @@ public class InformationAlgorithm implements SuggestionsAlgorithm {
 
 	    // Only one element in layer, it is the parent node of all others
 	    IPNode root = currentLayer[0];
-	    return root.m_bestSubnets.toArrayList();
+	    return root.m_bestSubnets.toList();
 	}
 
 	/**
@@ -674,7 +674,7 @@ public class InformationAlgorithm implements SuggestionsAlgorithm {
 		}
 	    }
 	    for (final IPNode node : uniqueIPNodes.values()) {
-		node.m_bestSubnets = new UnionList<>(node);
+		node.m_bestSubnets = new UntionGroup<>(node);
 	    }
 	    return uniqueIPNodes.values().toArray(new IPNode[uniqueIPNodes.size()]);
 	}
@@ -834,7 +834,7 @@ public class InformationAlgorithm implements SuggestionsAlgorithm {
 			parent.m_compressSize = union;
 
 			// Subnetwork is the parent subnetwork
-			parent.m_bestSubnets = new UnionList<>(parent);
+			parent.m_bestSubnets = new UntionGroup<>(parent);
 		    } else {
 			// Using separated small subnetworks
 			parent.m_compressSize = separated;
@@ -937,7 +937,7 @@ public class InformationAlgorithm implements SuggestionsAlgorithm {
 	/**
 	 * The best subnetworks that this IPNode suggests.
 	 */
-	UnionList<IPNode> m_bestSubnets;
+	UntionGroup<IPNode> m_bestSubnets;
 
 	/**
 	 * Comparator of IPNodes, comparing them by their IPs.
@@ -1012,7 +1012,7 @@ public class InformationAlgorithm implements SuggestionsAlgorithm {
 		builder.append("null");
 	    } else {
 		builder.append('[');
-		final Iterator<IPNode> it = m_bestSubnets.iterator();
+		final Iterator<IPNode> it = m_bestSubnets.toList().iterator();
 		final String spacer = ", ";
 
 		if (it.hasNext()) { // Have at least one elements

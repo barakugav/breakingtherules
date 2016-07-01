@@ -6,43 +6,30 @@ import java.util.List;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
+import breakingtherules.dao.AbstractParser;
 import breakingtherules.firewall.Attribute;
 import breakingtherules.firewall.Destination;
 import breakingtherules.firewall.Hit;
 import breakingtherules.firewall.Service;
 import breakingtherules.firewall.Source;
 
-class XMLHitsParser {
+/**
+ * Parser that parses hits from {@link Element}.
+ * <p>
+ * Caches can be set to reduce object creations and memory use.
+ * <p>
+ * 
+ * @author Barak Ugav
+ * @author Yishai Gronich
+ *
+ * @see Hit
+ */
+class XMLHitsParser extends AbstractParser {
 
-    private Source.Cache sourceCache;
-    private Destination.Cache destinationCache;
-    private Service.Cache serviceCache;
-
+    /**
+     * Construct new parser.
+     */
     XMLHitsParser() {
-    }
-
-    Source.Cache getSourceCache() {
-	return sourceCache;
-    }
-
-    Destination.Cache getDestinationCache() {
-	return destinationCache;
-    }
-
-    Service.Cache getServiceCache() {
-	return serviceCache;
-    }
-
-    void setSourceCache(final Source.Cache cache) {
-	sourceCache = cache;
-    }
-
-    void setDestinationCache(final Destination.Cache cache) {
-	destinationCache = cache;
-    }
-
-    void setServiceCache(final Service.Cache cache) {
-	serviceCache = cache;
     }
 
     /**
@@ -96,6 +83,7 @@ class XMLHitsParser {
     Element createElement(final Document doc, final Hit hit) {
 	final Element elm = doc.createElement(XMLDaoConfig.HIT_TAG);
 	for (final Attribute attribute : hit) {
+	    // TODO - remove '.toLowerCase()' and update existing XML files.
 	    elm.setAttribute(attribute.getType().toLowerCase(), attribute.toString());
 	}
 	return elm;

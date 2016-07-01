@@ -6,43 +6,31 @@ import java.util.Map;
 
 import org.elasticsearch.search.SearchHit;
 
+import breakingtherules.dao.AbstractParser;
 import breakingtherules.firewall.Attribute;
 import breakingtherules.firewall.Destination;
 import breakingtherules.firewall.Hit;
 import breakingtherules.firewall.Service;
 import breakingtherules.firewall.Source;
 
-class ElasticHitsParser {
+/**
+ * Parser that parses firewall hits from {@link SearchHit}.
+ * <p>
+ * Caches can be set to reduce object creations and memory use.
+ * <p>
+ * 
+ * @author Barak Ugav
+ * @author Yishai Gronich
+ *
+ * @see Hit
+ * @see ElasticHitsDao
+ */
+class ElasticHitsParser extends AbstractParser {
 
-    private Source.Cache sourceCache;
-    private Destination.Cache destinationCache;
-    private Service.Cache serviceCache;
-
+    /**
+     * Construct new parser.
+     */
     ElasticHitsParser() {
-    }
-
-    Source.Cache getSourceCache() {
-	return sourceCache;
-    }
-
-    Destination.Cache getDestinationCache() {
-	return destinationCache;
-    }
-
-    Service.Cache getServiceCache() {
-	return serviceCache;
-    }
-
-    void setSourceCache(final Source.Cache cache) {
-	sourceCache = cache;
-    }
-
-    void setDestinationCache(final Destination.Cache cache) {
-	destinationCache = cache;
-    }
-
-    void setServiceCache(final Service.Cache cache) {
-	serviceCache = cache;
     }
 
     /**

@@ -26,7 +26,7 @@ public class Service extends Attribute {
      * <p>
      * Value in range [{@value #MIN_PORT}, {@value #MAX_PORT}].
      */
-    private final int m_protocolCode;
+    private final short m_protocolCode;
 
     /**
      * The range of the ports of this service.
@@ -39,17 +39,17 @@ public class Service extends Attribute {
     /**
      * The minimum protocol code.
      */
-    private static final int MIN_PROTOCOL = 0;
+    private static final short MIN_PROTOCOL = 0;
 
     /**
      * The maximum protocol code.
      */
-    private static final int MAX_PROTOCOL = 255;
+    private static final short MAX_PROTOCOL = 255;
 
     /**
      * Protocol code that represent 'AnyProtocol'
      */
-    public static final int ANY_PROTOCOL = -1;
+    public static final short ANY_PROTOCOL = -1;
 
     /**
      * Service that represents 'Any' service (contains all others)
@@ -91,7 +91,7 @@ public class Service extends Attribute {
     /**
      * Map from protocol names to their codes
      */
-    private static final Map<String, Integer> PROTOCOL_CODES;
+    private static final Map<String, Short> PROTOCOL_CODES;
 
     static {
 	PROTOCOL_NAMES = new String[256];
@@ -247,14 +247,14 @@ public class Service extends Attribute {
 	PROTOCOL_NAMES[254] = "[experimentation and testing]";
 	PROTOCOL_NAMES[255] = "Reserved";
 
-	final Map<String, Integer> map = new HashMap<>();
-	for (int protocolCode = PROTOCOL_NAMES.length; protocolCode-- > 0;) {
+	final Map<String, Short> map = new HashMap<>();
+	for (short protocolCode = (short) PROTOCOL_NAMES.length; protocolCode-- > 0;) {
 	    final String protocolName = PROTOCOL_NAMES[protocolCode];
 	    if (protocolName != null) {
-		map.put(protocolName, Integer.valueOf(protocolCode));
+		map.put(protocolName, Short.valueOf(protocolCode));
 	    }
 	}
-	map.put(ANY, Integer.valueOf(ANY_PROTOCOL));
+	map.put(ANY, Short.valueOf(ANY_PROTOCOL));
 	PROTOCOL_CODES = Collections.unmodifiableMap(map);
     }
 
@@ -266,7 +266,7 @@ public class Service extends Attribute {
      * @param portsRange
      *            the ports range. see {@link #m_portsRange}
      */
-    private Service(final int protocolCode, final int portsRange) {
+    private Service(final short protocolCode, final int portsRange) {
 	m_protocolCode = protocolCode;
 	m_portsRange = portsRange;
     }
@@ -286,7 +286,7 @@ public class Service extends Attribute {
      * @return the protocol's code
      */
     @JsonIgnore
-    public int getProtocolCode() {
+    public short getProtocolCode() {
 	return m_protocolCode;
     }
 
@@ -350,14 +350,14 @@ public class Service extends Attribute {
      * {@inheritDoc}
      */
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(final Object o) {
 	if (o == this) {
 	    return true;
 	} else if (!(o instanceof Service)) {
 	    return false;
 	}
 
-	Service other = (Service) o;
+	final Service other = (Service) o;
 	return m_portsRange == other.m_portsRange && m_protocolCode == other.m_protocolCode;
     }
 
@@ -410,12 +410,12 @@ public class Service extends Attribute {
      * @throws IllegalArgumentException
      *             if there is no such protocol
      */
-    public static int protocolCode(final String protocolName) {
-	final Integer code;
+    public static short protocolCode(final String protocolName) {
+	final Short code;
 	if (protocolName == null || (code = PROTOCOL_CODES.get(protocolName)) == null) {
 	    throw new IllegalArgumentException("Unknown protocol: " + String.valueOf(protocolName));
 	}
-	return code.intValue();
+	return code.shortValue();
     }
 
     /**
@@ -427,7 +427,7 @@ public class Service extends Attribute {
      * @throws IllegalArgumentException
      *             if there is no such protocol code
      */
-    public static String protocolName(final int protocolCode) {
+    public static String protocolName(final short protocolCode) {
 	if (protocolCode == ANY_PROTOCOL) {
 	    return ANY;
 	}
@@ -452,8 +452,8 @@ public class Service extends Attribute {
      * @throws IllegalArgumentException
      *             if failed to parse to protocol code.
      */
-    public static int parseProtocolCode(final String s) {
-	return Utility.parsePositiveIntUncheckedOverflow(s, 0, s.length(), MAX_PROTOCOL_CODE_DIGITS_NUMBER);
+    public static short parseProtocolCode(final String s) {
+	return (short) Utility.parsePositiveIntUncheckedOverflow(s, 0, s.length(), MAX_PROTOCOL_CODE_DIGITS_NUMBER);
     }
 
     public static int parsePort(final String s) {
@@ -497,7 +497,7 @@ public class Service extends Attribute {
 	}
 
 	// Parse protocol code
-	final int protocolCode = protocolCode(s.substring(0, separatorIndex));
+	final short protocolCode = protocolCode(s.substring(0, separatorIndex));
 
 	int fromIndex = separatorIndex + 1;
 	separatorIndex = s.indexOf('-', fromIndex);
@@ -545,7 +545,7 @@ public class Service extends Attribute {
 	return new Service(protocolCode, toPortsRange(portRangeStart, portRangeEnd));
     }
 
-    public static Service valueOf(final int protocolCode, final int port) {
+    public static Service valueOf(final short protocolCode, final int port) {
 	checkProtocol(protocolCode);
 	checkPort(port);
 	return new Service(protocolCode, toPortsRange(port));
@@ -563,13 +563,13 @@ public class Service extends Attribute {
      *             if there is no such protocol code or if the port is out of
      *             range ({@link #MIN_PORT} to {@link #MAX_PORT}).
      */
-    public static Service valueOf(final int protocolCode, final int port, final Service.Cache cache) {
+    public static Service valueOf(final short protocolCode, final int port, final Service.Cache cache) {
 	checkProtocol(protocolCode);
 	checkPort(port);
 	return valueOfInternal(protocolCode, port, cache);
     }
 
-    public static Service valueOf(final int protocolCode, final int portRangeStart, final int portRangeEnd) {
+    public static Service valueOf(final short protocolCode, final int portRangeStart, final int portRangeEnd) {
 	return valueOf(protocolCode, portRangeStart, portRangeEnd, null);
     }
 
@@ -588,7 +588,7 @@ public class Service extends Attribute {
      *             are out of range ({@value #MIN_PORT} to {@value #MAX_PORT}),
      *             if upper ports bound is lower then lower ports bound.
      */
-    public static Service valueOf(final int protocolCode, final int portRangeStart, final int portRangeEnd,
+    public static Service valueOf(final short protocolCode, final int portRangeStart, final int portRangeEnd,
 	    final Service.Cache cache) {
 	checkProtocol(protocolCode);
 	checkPort(portRangeStart);
@@ -613,12 +613,12 @@ public class Service extends Attribute {
      *            the service port
      * @return Service object of the specified protocol and ports
      */
-    private static Service valueOfInternal(final int protocolCode, final int port, final Service.Cache cache) {
+    private static Service valueOfInternal(final short protocolCode, final int port, final Service.Cache cache) {
 	return cache != null ? cache.caches[protocolCode + 1].getOrAdd(port, cache.suppliers[protocolCode + 1])
 		: new Service(protocolCode, toPortsRange(port));
     }
 
-    private static void checkProtocol(final int protocolCode) {
+    private static void checkProtocol(final short protocolCode) {
 	if (protocolCode != ANY_PROTOCOL && (protocolCode < MIN_PROTOCOL || protocolCode > MAX_PROTOCOL)) {
 	    throw new IllegalArgumentException(
 		    "Service protocol: " + Utility.formatRange(MIN_PROTOCOL, MAX_PROTOCOL, protocolCode));
@@ -690,7 +690,7 @@ public class Service extends Attribute {
 	private final IntFunction<Service>[] suppliers;
 
 	public Cache() {
-	    final int numberOfCaches = 257; // 256 and 1 for 'any protocol'
+	    final short numberOfCaches = 257; // 256 and 1 for 'any protocol'
 
 	    // Used dummy to suppress warnings
 	    @SuppressWarnings({ "unchecked", "unused" })
@@ -704,8 +704,8 @@ public class Service extends Attribute {
 		caches[i] = new Int2ObjectSoftHashCache<>();
 	    }
 
-	    for (int i = suppliers.length; i-- != 0;) {
-		final int protocolCode = i - 1;
+	    for (short i = numberOfCaches; i-- != 0;) {
+		final short protocolCode = (short) (i - 1);
 		suppliers[i] = port -> new Service(protocolCode, toPortsRange(port));
 	    }
 	}
