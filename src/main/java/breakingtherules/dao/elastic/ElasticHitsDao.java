@@ -205,7 +205,7 @@ public class ElasticHitsDao implements HitsDao {
 		hitJson.startArray(ElasticDaoConfig.FIELD_ATTRIBUTES);
 		for (final Attribute attr : hit) {
 		    hitJson.startObject();
-		    hitJson.field(ElasticDaoConfig.FIELD_ATTR_TYPEID, attr.getTypeId());
+		    hitJson.field(ElasticDaoConfig.FIELD_ATTR_TYPEID, attr.getType().ordinal());
 		    hitJson.field(ElasticDaoConfig.FIELD_ATTR_VALUE, attr.toString());
 		    hitJson.endObject();
 		}

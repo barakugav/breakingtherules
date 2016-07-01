@@ -7,6 +7,7 @@ import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import breakingtherules.firewall.Attribute.AttributeType;
 import breakingtherules.utilities.ArrayIterator;
 
 /**
@@ -79,7 +80,7 @@ abstract class AttributesContainer implements Iterable<Attribute> {
      */
     @JsonProperty("attributes")
     public List<Attribute> getAttributes() {
-	final List<Attribute> attributeList = new ArrayList<>(Attribute.TYPES_COUNT);
+	final List<Attribute> attributeList = new ArrayList<>(Attribute.TYPE_COUNT);
 	for (final Attribute attribute : m_attributes) {
 	    if (attribute != null) {
 		attributeList.add(attribute);
@@ -95,26 +96,8 @@ abstract class AttributesContainer implements Iterable<Attribute> {
      *            wanted attribute type.
      * @return the wanted attribute.
      */
-    public Attribute getAttribute(final String type) {
-	final int typeId = Attribute.typeStrToTypeId(type);
-	if (typeId == Attribute.UNKOWN_ATTRIBUTE_ID)
-	    return null;
-	return getAttribute(typeId);
-    }
-
-    /**
-     * Get specific attribute by type id.
-     * <p>
-     * This method should be used carefully, it may throw
-     * {@link ArrayIndexOutOfBoundsException} if the typeId is not id of a real
-     * attribute.
-     * 
-     * @param typeId
-     *            wanted attribute type id.
-     * @return the wanted attribute.
-     */
-    public final Attribute getAttribute(final int typeId) {
-	return m_attributes[typeId];
+    public Attribute getAttribute(final AttributeType type) {
+	return m_attributes[type.ordinal()];
     }
 
     /**
@@ -138,7 +121,7 @@ abstract class AttributesContainer implements Iterable<Attribute> {
 
 	// Could use Arrays.equals but there are redundant null checks.
 	final AttributesContainer other = (AttributesContainer) o;
-	for (int i = Attribute.TYPES_COUNT; i-- != 0;) {
+	for (int i = Attribute.TYPE_COUNT; i-- != 0;) {
 	    if (!Objects.equals(m_attributes[i], other.m_attributes[i])) {
 		return false;
 	    }
@@ -153,7 +136,7 @@ abstract class AttributesContainer implements Iterable<Attribute> {
     public int hashCode() {
 	// Could use Arrays.hashCode but there are redundant null checks.
 	int h = 17;
-	for (int i = Attribute.TYPES_COUNT; i-- != 0;)
+	for (int i = Attribute.TYPE_COUNT; i-- != 0;)
 	    h = h * 31 + Objects.hashCode(m_attributes[i]);
 	return h;
     }
@@ -166,14 +149,14 @@ abstract class AttributesContainer implements Iterable<Attribute> {
 	final StringBuilder builder = new StringBuilder();
 	builder.append('[');
 	int index;
-	for (index = 0; index < Attribute.TYPES_COUNT; index++) {
+	for (index = 0; index < Attribute.TYPE_COUNT; index++) {
 	    final Attribute attribute = m_attributes[index];
 	    if (attribute != null) {
 		builder.append(attribute.toString());
 		break;
 	    }
 	}
-	for (; index < Attribute.TYPES_COUNT; index++) {
+	for (; index < Attribute.TYPE_COUNT; index++) {
 	    final Attribute attribute = m_attributes[index];
 	    if (attribute != null) {
 		builder.append(", ");
@@ -194,15 +177,15 @@ abstract class AttributesContainer implements Iterable<Attribute> {
      *             if there are more than one attributes of the same type
      */
     private static Attribute[] toArray(final List<Attribute> attributesList) {
-	final Attribute[] attributesArr = new Attribute[Attribute.TYPES_COUNT];
+	final Attribute[] attributesArr = new Attribute[Attribute.TYPE_COUNT];
 	for (final Attribute attribute : attributesList) {
 	    if (attribute != null) {
-		final int attId = attribute.getTypeId();
-		if (attributesArr[attId] != null) {
+		final int index = attribute.getType().ordinal();
+		if (attributesArr[index] != null) {
 		    throw new IllegalArgumentException(
 			    "More then one attribute of the same type (" + attribute.getType() + ")");
 		}
-		attributesArr[attId] = attribute;
+		attributesArr[index] = attribute;
 	    }
 	}
 	return attributesArr;

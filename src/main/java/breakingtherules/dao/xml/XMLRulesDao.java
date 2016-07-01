@@ -64,8 +64,7 @@ public class XMLRulesDao implements RulesDao {
      */
     @Override
     public ListDto<Rule> getRules(final String jobName) throws IOException, XMLParseException {
-	final String path = XMLDaoConfig.getRulesFile(jobName);
-	return getRulesByPath(path);
+	return getRulesByPath(XMLDaoConfig.getRulesFile(jobName));
     }
 
     /**
@@ -166,7 +165,7 @@ public class XMLRulesDao implements RulesDao {
 	}
 	final Element ruleElm = doc.createElement(XMLDaoConfig.ORIGINAL_RULE_TAG);
 	for (final Attribute attribute : originalRule) {
-	    ruleElm.setAttribute(attribute.getType(), attribute.toString());
+	    ruleElm.setAttribute(attribute.getType().toString(), attribute.toString());
 	}
 	repoElm.appendChild(ruleElm);
 

@@ -27,6 +27,7 @@ import breakingtherules.dao.xml.XMLRulesDao;
 import breakingtherules.dto.ListDto;
 import breakingtherules.dto.SuggestionsDto;
 import breakingtherules.firewall.Attribute;
+import breakingtherules.firewall.Attribute.AttributeType;
 import breakingtherules.firewall.Filter;
 import breakingtherules.firewall.Hit;
 import breakingtherules.firewall.Rule;
@@ -93,7 +94,7 @@ public class JobManager {
      * A list of all the attributes that this job holds for each hit/rule. To be
      * used ONLY by getAllAttributeTypes()
      */
-    private String[] m_allAttributeTypes;
+    private AttributeType[] m_allAttributeTypes;
 
     /**
      * The number of hits given as input for the job
@@ -112,7 +113,7 @@ public class JobManager {
     private int m_filteredHitsCount;
 
     /**
-     * Id constant that represent that the id wasn't set yet
+     * Name constant that represent that the name wasn't set yet
      */
     private static final String NO_CURRENT_JOB = null;
 
@@ -244,7 +245,7 @@ public class JobManager {
     }
 
     /**
-     * Delete a rule from the job, by its id
+     * Delete a rule from the job, by its index.
      * 
      * @param ruleIndex
      *            the index of the rule to delete, counting from 0, out of all
@@ -334,7 +335,7 @@ public class JobManager {
     public List<SuggestionsDto> getSuggestions(final int amount) throws IOException, ParseException {
 	checkJobState();
 
-	final String[] allAttributesType = getAllAttributeTypes();
+	final AttributeType[] allAttributesType = getAllAttributeTypes();
 	final List<Suggestion>[] suggestions = m_algorithm.getSuggestions(m_hitsDao, m_name, getRules(), m_filter,
 		amount, allAttributesType);
 	final List<SuggestionsDto> suggestionsDtos = new ArrayList<>();
@@ -372,13 +373,13 @@ public class JobManager {
      * 
      * @return E.x. ["Source", "Destination", "Service"]
      */
-    private String[] getAllAttributeTypes() {
+    private AttributeType[] getAllAttributeTypes() {
 	if (m_allAttributeTypes == null) {
-	    List<String> allAttributeTypes = new ArrayList<>();
+	    List<AttributeType> allAttributeTypes = new ArrayList<>();
 	    for (final Attribute att : m_originalRule) {
 		allAttributeTypes.add(att.getType());
 	    }
-	    m_allAttributeTypes = allAttributeTypes.toArray(new String[allAttributeTypes.size()]);
+	    m_allAttributeTypes = allAttributeTypes.toArray(new AttributeType[allAttributeTypes.size()]);
 	}
 	return m_allAttributeTypes;
     }

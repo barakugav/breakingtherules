@@ -5,6 +5,7 @@ import java.util.List;
 import org.junit.Test;
 
 import breakingtherules.firewall.Attribute;
+import breakingtherules.firewall.Attribute.AttributeType;
 import breakingtherules.firewall.Hit;
 import breakingtherules.tests.TestBase;
 
@@ -31,7 +32,7 @@ public class HitTest extends TestBase {
 	Hit hit = new Hit(attributes);
 
 	for (Attribute expected : attributes) {
-	    String type = expected.getType();
+	    AttributeType type = expected.getType();
 	    Attribute actual = hit.getAttribute(type);
 	    assertEquals(expected, actual);
 	}

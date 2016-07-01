@@ -12,6 +12,7 @@ import breakingtherules.firewall.Destination;
 import breakingtherules.firewall.Rule;
 import breakingtherules.firewall.Service;
 import breakingtherules.firewall.Source;
+import breakingtherules.firewall.Attribute.AttributeType;
 
 /**
  * Parser that parses rules from {@link Element}.
@@ -44,9 +45,10 @@ public class XMLRulesParser extends AbstractParser {
      */
     Rule parseRule(final Element ruleElm) throws XMLParseException {
 	// Read attributes from element
-	final String source = ruleElm.getAttribute(Attribute.SOURCE_TYPE);
-	final String destination = ruleElm.getAttribute(Attribute.DESTINATION_TYPE);
-	final String service = ruleElm.getAttribute(Attribute.SERVICE_TYPE);
+	// TODO - remove .toLowerCaser() and update repositories files.
+	final String source = ruleElm.getAttribute(AttributeType.Source.name().toLowerCase());
+	final String destination = ruleElm.getAttribute(AttributeType.Destination.name().toLowerCase());
+	final String service = ruleElm.getAttribute(AttributeType.Service.name().toLowerCase());
 
 	// Convert strings to attributes
 
@@ -75,7 +77,7 @@ public class XMLRulesParser extends AbstractParser {
     Element createElement(final Document doc, final Rule rule) {
 	final Element ruleElm = doc.createElement(XMLDaoConfig.RULE_TAG);
 	for (final Attribute attribute : rule) {
-	    ruleElm.setAttribute(attribute.getType(), attribute.toString());
+	    ruleElm.setAttribute(attribute.getType().name(), attribute.toString());
 	}
 	return ruleElm;
     }

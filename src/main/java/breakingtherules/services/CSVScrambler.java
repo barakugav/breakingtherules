@@ -21,7 +21,7 @@ import java.util.Random;
 
 import breakingtherules.dao.csv.CSVParseException;
 import breakingtherules.dao.csv.CSVParser;
-import breakingtherules.firewall.Attribute;
+import breakingtherules.firewall.Attribute.AttributeType;
 import breakingtherules.firewall.Hit;
 import breakingtherules.firewall.IP;
 import breakingtherules.firewall.IPAttribute;
@@ -581,17 +581,17 @@ public class CSVScrambler implements Runnable {
 	    final CSVParser parser = new CSVParser(columnsTypes);
 
 	    if (columnsTypes.contains(CSVParser.SOURCE)) {
-		Node tree = buildTree(inputFile, parser, Attribute.SOURCE_TYPE_ID);
+		Node tree = buildTree(inputFile, parser, AttributeType.Source);
 		scrambleTree(tree);
-		mutateHits(inputFile, tempFilePath.toString(), parser, Attribute.SOURCE_TYPE_ID, tree);
+		mutateHits(inputFile, tempFilePath.toString(), parser, AttributeType.Source, tree);
 
 		Files.copy(tempFilePath, outputPath, StandardCopyOption.REPLACE_EXISTING);
 		inputFile = outputFile;
 	    }
 	    if (columnsTypes.contains(CSVParser.DESTINATION)) {
-		Node tree = buildTree(inputFile, parser, Attribute.DESTINATION_TYPE_ID);
+		Node tree = buildTree(inputFile, parser, AttributeType.Destination);
 		scrambleTree(tree);
-		mutateHits(inputFile, tempFilePath.toString(), parser, Attribute.DESTINATION_TYPE_ID, tree);
+		mutateHits(inputFile, tempFilePath.toString(), parser, AttributeType.Destination, tree);
 
 		Files.copy(tempFilePath, outputPath, StandardCopyOption.REPLACE_EXISTING);
 		inputFile = outputFile;
@@ -611,15 +611,15 @@ public class CSVScrambler implements Runnable {
      *            path to input file
      * @param parser
      *            parser used to parse the input file.
-     * @param ipAttId
-     *            id of the IP attribute
+     * @param attType
+     *            type of the IP attribute
      * @return root node to the built tree
      * @throws IOException
      *             if an I/O errors occur
      * @throws CSVParseException
      *             if fails to parse file
      */
-    private static Node buildTree(final String inputFile, final CSVParser parser, final int ipAttId)
+    private static Node buildTree(final String inputFile, final CSVParser parser, final AttributeType attType)
 	    throws IOException, CSVParseException {
 	final Map<IP, Node> existingNodes = new HashMap<>();
 
@@ -628,7 +628,7 @@ public class CSVScrambler implements Runnable {
 	    for (String line; (line = reader.readLine()) != null;) {
 		lineNumber++;
 		final Hit hit = parser.parseHit(line);
-		IP ip = ((IPAttribute) hit.getAttribute(ipAttId)).getIp();
+		IP ip = ((IPAttribute) hit.getAttribute(attType)).getIp();
 
 		if (existingNodes.containsKey(ip)) {
 		    continue;
@@ -711,8 +711,8 @@ public class CSVScrambler implements Runnable {
      * @param parser
      *            parser used to parse the input file and to write to the output
      *            file.
-     * @param ipAttId
-     *            id of the IP attribute
+     * @param attType
+     *            type of the IP attribute
      * @param tree
      *            root node of the scrambled IP attribute tree
      * @throws IOException
@@ -721,7 +721,7 @@ public class CSVScrambler implements Runnable {
      *             if fails to parse file
      */
     private static void mutateHits(final String inputFile, final String outputFile, final CSVParser parser,
-	    final int ipAttId, final Node tree) throws IOException, CSVParseException {
+	    final AttributeType attType, final Node tree) throws IOException, CSVParseException {
 	int lineNumber = 0;
 	try (final BufferedReader reader = new BufferedReader(new FileReader(inputFile))) {
 	    try (final Writer writer = new FileWriter(outputFile)) {
@@ -730,7 +730,7 @@ public class CSVScrambler implements Runnable {
 		for (String line; (line = reader.readLine()) != null;) {
 		    lineNumber++;
 		    final Hit hit = parser.parseHit(line);
-		    final Hit mutation = mutateHit(hit, ipAttId, tree);
+		    final Hit mutation = mutateHit(hit, attType, tree);
 		    line = parser.toCSV(mutation);
 		    writer.append(line + lineSeparator);
 		}
@@ -745,14 +745,14 @@ public class CSVScrambler implements Runnable {
      * 
      * @param hit
      *            the hit
-     * @param ipAttId
-     *            id of the IP attribute
+     * @param attType
+     *            type of the IP attribute
      * @param tree
      *            root node of the scrambled IP attribute tree
      * @return the hit mutation.
      */
-    private static Hit mutateHit(final Hit hit, final int ipAttId, Node tree) {
-	IP ip = ((IPAttribute) hit.getAttribute(ipAttId)).getIp();
+    private static Hit mutateHit(final Hit hit, final AttributeType attType, Node tree) {
+	IP ip = ((IPAttribute) hit.getAttribute(attType)).getIp();
 
 	final List<Boolean> prefix = new ArrayList<>(ip.getSize());
 	while (!tree.ip.equals(ip)) {
@@ -764,7 +764,7 @@ public class CSVScrambler implements Runnable {
 		tree = tree.right;
 	    }
 	}
-	return mutateHit(hit, ipAttId, prefix);
+	return mutateHit(hit, attType, prefix);
     }
 
     /**
@@ -772,14 +772,14 @@ public class CSVScrambler implements Runnable {
      * 
      * @param hit
      *            the current hit
-     * @param ipAttId
-     *            id of IP attribute
+     * @param attType
+     *            type of IP attribute
      * @param prefix
      *            boolean array of right and left decisions until the hit's node
      * @return new hit with new IP
      */
-    private static Hit mutateHit(final Hit hit, final int ipAttId, final List<Boolean> prefix) {
-	final IPAttribute attribute = (IPAttribute) hit.getAttribute(ipAttId);
+    private static Hit mutateHit(final Hit hit, final AttributeType attType, final List<Boolean> prefix) {
+	final IPAttribute attribute = (IPAttribute) hit.getAttribute(attType);
 	final IP currentIp = attribute.getIp();
 	final IP newIp = IP.parseIPFromBits(prefix, currentIp.getClass());
 	return hit.createMutation(attribute.createMutation(newIp));

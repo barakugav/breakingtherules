@@ -84,7 +84,7 @@ class XMLHitsParser extends AbstractParser {
 	final Element elm = doc.createElement(XMLDaoConfig.HIT_TAG);
 	for (final Attribute attribute : hit) {
 	    // TODO - remove '.toLowerCase()' and update existing XML files.
-	    elm.setAttribute(attribute.getType().toLowerCase(), attribute.toString());
+	    elm.setAttribute(attribute.getType().name().toLowerCase(), attribute.toString());
 	}
 	return elm;
     }

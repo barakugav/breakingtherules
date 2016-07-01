@@ -2,7 +2,9 @@ package breakingtherules.dto;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
+import breakingtherules.firewall.Attribute.AttributeType;
 import breakingtherules.services.algorithm.Suggestion;
 
 /**
@@ -23,7 +25,7 @@ public class SuggestionsDto {
     /**
      * The type of the suggestions in the list.
      */
-    private final String m_type;
+    private final AttributeType m_type;
 
     /**
      * Construct new SuggestionsDto.
@@ -35,9 +37,9 @@ public class SuggestionsDto {
      * @throws NullPointerException
      *             if the suggestion list is null.
      */
-    public SuggestionsDto(final List<Suggestion> suggestions, final String type) {
+    public SuggestionsDto(final List<Suggestion> suggestions, final AttributeType type) {
 	m_suggestions = Collections.unmodifiableList(suggestions);
-	m_type = type;
+	m_type = Objects.requireNonNull(type);
     }
 
     /**
@@ -55,7 +57,7 @@ public class SuggestionsDto {
      * 
      * @return type of suggestions.
      */
-    public String getType() {
+    public AttributeType getType() {
 	return m_type;
     }
 

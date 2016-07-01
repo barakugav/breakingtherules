@@ -12,6 +12,7 @@ import breakingtherules.dto.ListDto;
 import breakingtherules.firewall.Attribute;
 import breakingtherules.firewall.Filter;
 import breakingtherules.firewall.Rule;
+import breakingtherules.firewall.Attribute.AttributeType;
 import breakingtherules.services.algorithm.InformationAlgorithm;
 import breakingtherules.services.algorithm.Suggestion;
 import breakingtherules.tests.TestBase;
@@ -22,7 +23,7 @@ public class InformationAlgorithmTest extends TestBase {
     private static final int RULE_WEIGHT = 25;
     private static final String JOB_NAME = "4";
     private static final int NUMBER_OF_SUGGESTIONS = 10;
-    private static final String ATTRIBUTE = Attribute.DESTINATION_TYPE;
+    private static final AttributeType ATTRIBUTE = AttributeType.Destination;
     private static final boolean PRINT_RESULTS = false;
 
     @Test

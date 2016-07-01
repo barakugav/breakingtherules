@@ -334,16 +334,8 @@ public class Service extends Attribute {
      * {@inheritDoc}
      */
     @Override
-    public String getType() {
-	return SERVICE_TYPE;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public int getTypeId() {
-	return SERVICE_TYPE_ID;
+    public AttributeType getType() {
+	return AttributeType.Service;
     }
 
     /**

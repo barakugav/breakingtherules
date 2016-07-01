@@ -49,16 +49,8 @@ public class Destination extends IPAttribute {
      * {@inheritDoc}
      */
     @Override
-    public String getType() {
-	return DESTINATION_TYPE;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public int getTypeId() {
-	return DESTINATION_TYPE_ID;
+    public AttributeType getType() {
+	return AttributeType.Destination;
     }
 
     /**

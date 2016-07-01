@@ -8,6 +8,7 @@ import org.elasticsearch.search.SearchHit;
 
 import breakingtherules.dao.AbstractParser;
 import breakingtherules.firewall.Attribute;
+import breakingtherules.firewall.Attribute.AttributeType;
 import breakingtherules.firewall.Destination;
 import breakingtherules.firewall.Hit;
 import breakingtherules.firewall.Service;
@@ -62,14 +63,14 @@ class ElasticHitsParser extends AbstractParser {
 	    final String attrValue = (String) attributeHash.get(ElasticDaoConfig.FIELD_ATTR_VALUE);
 
 	    Attribute attribute;
-	    switch (attrTypeID) {
-	    case Attribute.SOURCE_TYPE_ID:
+	    switch (AttributeType.values()[attrTypeID]) {
+	    case Source:
 		attribute = Source.valueOf(attrValue, sourceCache);
 		break;
-	    case Attribute.DESTINATION_TYPE_ID:
+	    case Destination:
 		attribute = Destination.valueOf(attrValue, destinationCache);
 		break;
-	    case Attribute.SERVICE_TYPE_ID:
+	    case Service:
 		attribute = Service.valueOf(attrValue, serviceCache);
 		break;
 	    default:

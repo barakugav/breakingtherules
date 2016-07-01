@@ -51,7 +51,7 @@ abstract class AbstractHitMatcher extends AttributesContainer {
     public boolean isMatch(final Hit hit) {
 	for (final Attribute filterAttr : m_attributes) {
 	    if (filterAttr != null) {
-		final Attribute hitAttr = hit.getAttribute(filterAttr.getTypeId());
+		final Attribute hitAttr = hit.getAttribute(filterAttr.getType());
 		if (!filterAttr.contains(hitAttr)) {
 		    return false;
 		}

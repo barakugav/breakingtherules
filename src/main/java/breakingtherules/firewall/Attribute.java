@@ -2,7 +2,6 @@ package breakingtherules.firewall;
 
 import java.util.Comparator;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
@@ -37,15 +36,7 @@ public abstract class Attribute {
      * 
      * @return the attribute's type.
      */
-    public abstract String getType();
-
-    /**
-     * Get the id of the attribute's type.
-     * 
-     * @return the attribute's type id.
-     */
-    @JsonIgnore
-    public abstract int getTypeId();
+    public abstract AttributeType getType();
 
     /**
      * {@inheritDoc}
@@ -55,51 +46,34 @@ public abstract class Attribute {
     public abstract String toString();
 
     /**
-     * Number of attributes.
-     * <p>
-     * Used by {@link AttributesContainer}.
+     * Type of an attribute.
+     * 
+     * @author Barak Ugav
+     * @author Yishai Gronich
+     *
+     * @see Attribute#getType()
      */
-    public static final int TYPES_COUNT = 3;
+    public static enum AttributeType {
+	/**
+	 * Source type.
+	 */
+	Source,
+
+	/**
+	 * Destination type.
+	 */
+	Destination,
+
+	/**
+	 * Service type.
+	 */
+	Service
+    }
 
     /**
-     * Type id of unknown attribute.
+     * The number of attributes type.
      */
-    public static final int UNKOWN_ATTRIBUTE_ID = Integer.MAX_VALUE;
-
-    /**
-     * Type id of source attribute.
-     */
-    public static final int SOURCE_TYPE_ID = 0;
-
-    /**
-     * Type id of destination attribute.
-     */
-    public static final int DESTINATION_TYPE_ID = 1;
-
-    /**
-     * Type id of service attribute.
-     */
-    public static final int SERVICE_TYPE_ID = 2;
-
-    /**
-     * Name of unknown attribute.
-     */
-    public static final String UNKOWN_ATTRIBUTE = null;
-
-    /**
-     * Name of destination attribute.
-     */
-    public static final String DESTINATION_TYPE = "destination";
-
-    /**
-     * Name of source attribute.
-     */
-    public static final String SOURCE_TYPE = "source";
-
-    /**
-     * Name of service attribute.
-     */
-    public static final String SERVICE_TYPE = "service";
+    public static int TYPE_COUNT = AttributeType.values().length;
 
     /**
      * Representation of 'Any' attribute, used by subclasses.
@@ -120,29 +94,9 @@ public abstract class Attribute {
 	 */
 	@Override
 	public int compare(final Attribute o1, final Attribute o2) {
-	    return Integer.compare(o1.getTypeId(), o2.getTypeId());
+	    return o1.getType().compareTo(o2.getType());
 	}
 
     };
-
-    /**
-     * Convert a type string to type id
-     * 
-     * @param typeStr
-     *            the type string
-     * @return the type id
-     */
-    public static int typeStrToTypeId(final String typeStr) {
-	switch (typeStr) {
-	case SOURCE_TYPE:
-	    return SOURCE_TYPE_ID;
-	case DESTINATION_TYPE:
-	    return DESTINATION_TYPE_ID;
-	case SERVICE_TYPE:
-	    return SERVICE_TYPE_ID;
-	default:
-	    return UNKOWN_ATTRIBUTE_ID;
-	}
-    }
 
 }

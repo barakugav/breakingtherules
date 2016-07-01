@@ -5,6 +5,7 @@ import java.util.List;
 
 import breakingtherules.dao.HitsDao;
 import breakingtherules.dao.ParseException;
+import breakingtherules.firewall.Attribute.AttributeType;
 import breakingtherules.firewall.Filter;
 import breakingtherules.firewall.Rule;
 
@@ -36,14 +37,15 @@ public interface SuggestionsAlgorithm {
      *             if any parse errors occurs in DAO.
      */
     public List<Suggestion> getSuggestions(HitsDao dao, String jobName, List<Rule> rules, Filter filter, int amount,
-	    String attType) throws IOException, ParseException;
+	    AttributeType attType) throws IOException, ParseException;
 
     /**
      * Get suggestions for more then one type at once.
      * <p>
      * This method allowed advance algorithms to perform faster then multiple
      * called to
-     * {@link #getSuggestions(HitsDao, String, List, Filter, int, String)}.
+     * {@link #getSuggestions(HitsDao, String, List, Filter, int, AttributeType)}
+     * .
      * 
      * @param dao
      *            hits data access object
@@ -66,7 +68,7 @@ public interface SuggestionsAlgorithm {
      *             if any parse errors occurs in DAO.
      */
     default List<Suggestion>[] getSuggestions(final HitsDao dao, final String jobName, final List<Rule> rules,
-	    final Filter filter, final int amount, final String[] attTypes) throws IOException, ParseException {
+	    final Filter filter, final int amount, final AttributeType[] attTypes) throws IOException, ParseException {
 	@SuppressWarnings("unchecked")
 	final List<Suggestion>[] suggestions = new List[attTypes.length];
 

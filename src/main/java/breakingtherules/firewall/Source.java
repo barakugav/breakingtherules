@@ -46,16 +46,8 @@ public class Source extends IPAttribute {
      * {@inheritDoc}
      */
     @Override
-    public String getType() {
-	return SOURCE_TYPE;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public int getTypeId() {
-	return SOURCE_TYPE_ID;
+    public AttributeType getType() {
+	return AttributeType.Source;
     }
 
     /**

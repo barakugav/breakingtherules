@@ -82,7 +82,7 @@ public class Hit extends AttributesContainer {
      */
     public Hit createMutation(final Attribute attribute) {
 	final Attribute[] mutatedAttribues = m_attributes.clone();
-	mutatedAttribues[attribute.getTypeId()] = attribute;
+	mutatedAttribues[attribute.getType().ordinal()] = attribute;
 	return new Hit(mutatedAttribues);
     }
 

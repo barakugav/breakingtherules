@@ -23,6 +23,7 @@ import breakingtherules.firewall.IP;
 import breakingtherules.firewall.Rule;
 import breakingtherules.firewall.Service;
 import breakingtherules.firewall.Source;
+import breakingtherules.firewall.Attribute.AttributeType;
 import breakingtherules.utilities.Utility;
 
 /**
@@ -194,19 +195,19 @@ public class CSVParser extends AbstractParser {
 	    String colomnValue;
 	    switch (colomnsType) {
 	    case SOURCE_VAL:
-		final Source source = (Source) hit.getAttribute(Attribute.SOURCE_TYPE_ID);
+		final Source source = (Source) hit.getAttribute(AttributeType.Source);
 		colomnValue = toCSVSource(source);
 		break;
 	    case DESTINATION_VAL:
-		final Destination destination = (Destination) hit.getAttribute(Attribute.DESTINATION_TYPE_ID);
+		final Destination destination = (Destination) hit.getAttribute(AttributeType.Destination);
 		colomnValue = toCSVDestination(destination);
 		break;
 	    case SERVICE_PROTOCOL_VAL:
-		Service service = (Service) hit.getAttribute(Attribute.SERVICE_TYPE_ID);
+		Service service = (Service) hit.getAttribute(AttributeType.Service);
 		colomnValue = toCSVServiceProtocol(service);
 		break;
 	    case SERVICE_PORT_VAL:
-		service = (Service) hit.getAttribute(Attribute.SERVICE_TYPE_ID);
+		service = (Service) hit.getAttribute(AttributeType.Service);
 		colomnValue = toCSVServicePort(service);
 		break;
 	    default:
@@ -249,13 +250,14 @@ public class CSVParser extends AbstractParser {
 		throw new IllegalArgumentException("Choose service port and service protocol or neither of them");
 	    }
 	    for (final Hit hit : hits) {
-		if (columnsTypes.contains(SOURCE) && hit.getAttribute(Attribute.SOURCE_TYPE_ID) == null) {
+		if (columnsTypes.contains(SOURCE) && hit.getAttribute(AttributeType.Source) == null) {
 		    throw new IllegalArgumentException("Source attribute is missing in one of the hits");
 		}
-		if (columnsTypes.contains(DESTINATION) && hit.getAttribute(Attribute.DESTINATION_TYPE_ID) == null) {
+		if (columnsTypes.contains(DESTINATION) && hit.getAttribute(AttributeType.Destination) == null) {
 		    throw new IllegalArgumentException("Destination attribute is missing in one of the hits");
 		}
-		if (columnsTypes.contains(SOURCE) && hit.getAttribute(Attribute.SOURCE_TYPE_ID) == null) {
+		if (columnsTypes.contains(SERVICE_PROTOCOL) && columnsTypes.contains(SERVICE_PORT)
+			&& hit.getAttribute(AttributeType.Service) == null) {
 		    throw new IllegalArgumentException("Source attribute is missing in one of the hits");
 		}
 	    }

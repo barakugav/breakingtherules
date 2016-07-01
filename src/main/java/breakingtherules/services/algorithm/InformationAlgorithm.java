@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -16,7 +17,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import breakingtherules.dao.HitsDao;
 import breakingtherules.dao.ParseException;
-import breakingtherules.firewall.Attribute;
+import breakingtherules.firewall.Attribute.AttributeType;
 import breakingtherules.firewall.Destination;
 import breakingtherules.firewall.Filter;
 import breakingtherules.firewall.Hit;
@@ -241,13 +242,10 @@ public class InformationAlgorithm implements SuggestionsAlgorithm {
      */
     @Override
     public List<Suggestion> getSuggestions(final HitsDao dao, final String jobName, final List<Rule> rules,
-	    final Filter filter, final int amount, final String attType) throws IOException, ParseException {
-	final int attTypeId = Attribute.typeStrToTypeId(attType);
-	if (attTypeId == Attribute.UNKOWN_ATTRIBUTE_ID) {
-	    throw new IllegalArgumentException("Unkown attribute: " + attType);
-	}
+	    final Filter filter, final int amount, final AttributeType attType) throws IOException, ParseException {
+	Objects.requireNonNull(attType);
 	final Iterable<Hit> hits = dao.getHits(jobName, rules, filter);
-	final InformationAlgorithmRunner runner = new InformationAlgorithmRunner(hits, amount, attTypeId);
+	final InformationAlgorithmRunner runner = new InformationAlgorithmRunner(hits, amount, attType);
 	runner.run();
 	return runner.m_result;
     }
@@ -260,17 +258,13 @@ public class InformationAlgorithm implements SuggestionsAlgorithm {
      */
     @Override
     public List<Suggestion>[] getSuggestions(final HitsDao dao, final String jobName, final List<Rule> rules,
-	    final Filter filter, final int amount, final String[] attTypes) throws IOException, ParseException {
+	    final Filter filter, final int amount, final AttributeType[] attTypes) throws IOException, ParseException {
 
 	final InformationAlgorithmRunner[] runners = new InformationAlgorithmRunner[attTypes.length];
 	final Iterable<Hit> hits = dao.getHits(jobName, rules, filter);
 	for (int i = 0; i < attTypes.length; i++) {
-	    final String attType = attTypes[i];
-	    final int attTypeId = Attribute.typeStrToTypeId(attType);
-	    if (attTypeId == Attribute.UNKOWN_ATTRIBUTE_ID) {
-		throw new IllegalArgumentException("Unknown attribute: " + attType);
-	    }
-	    final InformationAlgorithmRunner runner = new InformationAlgorithmRunner(hits, amount, attTypeId);
+	    final AttributeType attType = Objects.requireNonNull(attTypes[i]);
+	    final InformationAlgorithmRunner runner = new InformationAlgorithmRunner(hits, amount, attType);
 	    runners[i] = runner;
 	}
 
@@ -363,9 +357,9 @@ public class InformationAlgorithm implements SuggestionsAlgorithm {
 	private final Iterable<Hit> m_hits;
 
 	/**
-	 * Id of desire suggestions's type.
+	 * Type of desire suggestions's type.
 	 */
-	private final int m_attTypeId;
+	private final AttributeType m_attTypeId;
 
 	/**
 	 * Number of desire suggestions.
@@ -385,9 +379,9 @@ public class InformationAlgorithm implements SuggestionsAlgorithm {
 	 * @param amount
 	 *            number of desire suggestions.
 	 * @param attTypeId
-	 *            type id of desire suggestions.
+	 *            type of desire suggestions.
 	 */
-	InformationAlgorithmRunner(final Iterable<Hit> hits, final int amount, final int attTypeId) {
+	InformationAlgorithmRunner(final Iterable<Hit> hits, final int amount, final AttributeType attTypeId) {
 	    m_hits = hits;
 	    m_attTypeId = attTypeId;
 	    m_amount = amount;
@@ -398,21 +392,15 @@ public class InformationAlgorithm implements SuggestionsAlgorithm {
 	 */
 	@Override
 	public void run() {
-	    if (m_attTypeId != Attribute.DESTINATION_TYPE_ID && m_attTypeId != Attribute.SOURCE_TYPE_ID) {
-		m_result = m_simpleAlgorithm.getSuggestions(m_hits, m_amount, m_attTypeId);
-		return;
-	    }
-
 	    switch (m_attTypeId) {
-	    case Attribute.DESTINATION_TYPE_ID:
+	    case Destination:
 		m_result = getSuggestionsDestination();
 		break;
-	    case Attribute.SOURCE_TYPE_ID:
+	    case Source:
 		m_result = getSuggestionsSource();
 		break;
 	    default:
-		throw new InternalError(
-			"Attribute type wasn't destination not source after checking it was one of them.");
+		m_result = m_simpleAlgorithm.getSuggestions(m_hits, m_amount, m_attTypeId);
 	    }
 	}
 

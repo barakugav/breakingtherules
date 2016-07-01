@@ -4,10 +4,12 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import breakingtherules.dao.HitsDao;
 import breakingtherules.dao.ParseException;
 import breakingtherules.firewall.Attribute;
+import breakingtherules.firewall.Attribute.AttributeType;
 import breakingtherules.firewall.Filter;
 import breakingtherules.firewall.Hit;
 import breakingtherules.firewall.Rule;
@@ -31,12 +33,8 @@ public class SimpleAlgorithm implements SuggestionsAlgorithm {
      */
     @Override
     public List<Suggestion> getSuggestions(final HitsDao dao, final String jobName, final List<Rule> rules,
-	    final Filter filter, final int amount, final String attType) throws IOException, ParseException {
-	final int attTypeId = Attribute.typeStrToTypeId(attType);
-	if (attTypeId == Attribute.UNKOWN_ATTRIBUTE_ID) {
-	    throw new IllegalArgumentException("Unknown attribute: " + attType);
-	}
-	return getSuggestions(dao.getHits(jobName, rules, filter), amount, attTypeId);
+	    final Filter filter, final int amount, final AttributeType attType) throws IOException, ParseException {
+	return getSuggestions(dao.getHits(jobName, rules, filter), amount, Objects.requireNonNull(attType));
     }
 
     /**
@@ -50,7 +48,7 @@ public class SimpleAlgorithm implements SuggestionsAlgorithm {
      *            the type of the suggestions.
      * @return suggestions for the hits for the attribute type.
      */
-    List<Suggestion> getSuggestions(final Iterable<Hit> hits, final int amount, final int attTypeId) {
+    List<Suggestion> getSuggestions(final Iterable<Hit> hits, final int amount, final AttributeType attTypeId) {
 	final SimpleAlgorithmRunner runner = new SimpleAlgorithmRunner(hits, amount, attTypeId);
 	runner.run();
 	return runner.m_result;
@@ -79,7 +77,7 @@ public class SimpleAlgorithm implements SuggestionsAlgorithm {
 	/**
 	 * The type of requested suggestions.
 	 */
-	private final int m_attTypeId;
+	private final AttributeType m_attTypeId;
 
 	/**
 	 * The result buffer. This value is relevant only after the runner was
@@ -97,7 +95,7 @@ public class SimpleAlgorithm implements SuggestionsAlgorithm {
 	 * @param attTypeId
 	 *            the type of requested suggestions.
 	 */
-	SimpleAlgorithmRunner(final Iterable<Hit> hits, final int amount, final int attTypeId) {
+	SimpleAlgorithmRunner(final Iterable<Hit> hits, final int amount, final AttributeType attTypeId) {
 	    m_hits = hits;
 	    m_amount = amount;
 	    m_attTypeId = attTypeId;
