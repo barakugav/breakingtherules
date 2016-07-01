@@ -456,12 +456,22 @@ public class Service extends Attribute {
 	return (short) Utility.parsePositiveIntUncheckedOverflow(s, 0, s.length(), MAX_PROTOCOL_CODE_DIGITS_NUMBER);
     }
 
+    /**
+     * Parses string to port.
+     * <p>
+     * This method is faster then {@link Integer#parseInt(String)} when parsing
+     * ports.
+     * 
+     * @param s
+     *            the string.
+     * @return port parsed from string.
+     * @throws NullPointerException
+     *             if the string is null.
+     * @throws IllegalArgumentException
+     *             if the string is invalid port number.
+     */
     public static int parsePort(final String s) {
 	return Utility.parsePositiveIntUncheckedOverflow(s, 0, s.length(), MAX_PORT_DIGITIS_NUMBER);
-    }
-
-    public static Service valueOf(final String s) {
-	return valueOf(s, null);
     }
 
     /**
@@ -478,6 +488,38 @@ public class Service extends Attribute {
      * 
      * @param s
      *            string representation of a service.
+     * @return parse service from string.
+     * @throws NullPointerException
+     *             if the string is null.
+     * @throws IllegalArgumentException
+     *             if the format is invalid (as specified above), or the ports
+     *             are not in range, or there is no such protocol as specified,
+     *             or if the lower ports bound is greater then the upper ports
+     *             bound.
+     */
+    public static Service valueOf(final String s) {
+	return valueOf(s, null);
+    }
+
+    /**
+     * Get Service object parsed from string.
+     * <p>
+     * The expected format of the string is [protocol] [port/ports], where
+     * [protocol] is the protocol name (for example TCP) and the [port/ports]
+     * are the service port or ports range, which are expected to be in format
+     * [lowerPortsBound-upperPortsBound]. The protocol can be 'Any'. One of the
+     * ports can be 'Any', or both. If there only one port, and his value is
+     * 'Any' it's equivalent to 'Any-Any' value. The whole string can be 'Any',
+     * which is equivalent to 'Any Any-Any'.
+     * <p>
+     * If the cache isn't null, will used the cached Service from the cache if
+     * one exist, or will create a new one and cache it to the cache otherwise.
+     * <p>
+     * 
+     * @param s
+     *            string representation of a service.
+     * @param cache
+     *            the cached containing cached Service objects. Can be null.
      * @return parse service from string.
      * @throws NullPointerException
      *             if the string is null.
@@ -545,12 +587,6 @@ public class Service extends Attribute {
 	return new Service(protocolCode, toPortsRange(portRangeStart, portRangeEnd));
     }
 
-    public static Service valueOf(final short protocolCode, final int port) {
-	checkProtocol(protocolCode);
-	checkPort(port);
-	return new Service(protocolCode, toPortsRange(port));
-    }
-
     /**
      * Get Service object with the specified protocol and port.
      * 
@@ -563,14 +599,34 @@ public class Service extends Attribute {
      *             if there is no such protocol code or if the port is out of
      *             range ({@link #MIN_PORT} to {@link #MAX_PORT}).
      */
+    public static Service valueOf(final short protocolCode, final int port) {
+	checkProtocol(protocolCode);
+	checkPort(port);
+	return new Service(protocolCode, toPortsRange(port));
+    }
+
+    /**
+     * Get Service object with the specified protocol and port.
+     * <p>
+     * If the cache isn't null, will used the cached Service from the cache if
+     * one exist, or will create a new one and cache it to the cache otherwise.
+     * <p>
+     * 
+     * @param protocolCode
+     *            the protocol code.
+     * @param port
+     *            the service port.
+     * @param cache
+     *            the cached containing cached Service objects. Can be null.
+     * @return Service object with the specified protocol and port.
+     * @throws IllegalArgumentException
+     *             if there is no such protocol code or if the port is out of
+     *             range ({@link #MIN_PORT} to {@link #MAX_PORT}).
+     */
     public static Service valueOf(final short protocolCode, final int port, final Service.Cache cache) {
 	checkProtocol(protocolCode);
 	checkPort(port);
 	return valueOfInternal(protocolCode, port, cache);
-    }
-
-    public static Service valueOf(final short protocolCode, final int portRangeStart, final int portRangeEnd) {
-	return valueOf(protocolCode, portRangeStart, portRangeEnd, null);
     }
 
     /**
@@ -581,7 +637,32 @@ public class Service extends Attribute {
      * @param portRangeStart
      *            the lower bound for the ports range
      * @param portRangeEnd
-     *            the upper bound for the ports range
+     *            the upper bound for the ports range.
+     * @return Service object with the specified protocol and ports range
+     * @throws IllegalArgumentException
+     *             if there is no such protocol code, or the ports range bounds
+     *             are out of range ({@value #MIN_PORT} to {@value #MAX_PORT}),
+     *             if upper ports bound is lower then lower ports bound.
+     */
+    public static Service valueOf(final short protocolCode, final int portRangeStart, final int portRangeEnd) {
+	return valueOf(protocolCode, portRangeStart, portRangeEnd, null);
+    }
+
+    /**
+     * Get Service object with the specified protocol and ports range.
+     * <p>
+     * If the cache isn't null, will used the cached Service from the cache if
+     * one exist, or will create a new one and cache it to the cache otherwise.
+     * <p>
+     * 
+     * @param protocolCode
+     *            the protocol code.
+     * @param portRangeStart
+     *            the lower bound for the ports range.
+     * @param portRangeEnd
+     *            the upper bound for the ports range.
+     * @param cache
+     *            the cached containing cached Service objects. Can be null.
      * @return Service object with the specified protocol and ports range
      * @throws IllegalArgumentException
      *             if there is no such protocol code, or the ports range bounds
@@ -604,20 +685,89 @@ public class Service extends Attribute {
     }
 
     /**
+     * Cache of {@link Service} objects.
+     * 
+     * @author Barak Ugav
+     * @author Yishai Gronich
+     *
+     */
+    public final static class Cache {
+
+	/**
+	 * Array of service caches.
+	 * <p>
+	 * Each cache is contains only services with single port (not a port
+	 * range) of specific protocol. Services with protocol 'x' are in cache
+	 * number x.
+	 */
+	private final Int2ObjectCache<Service>[] caches;
+
+	/**
+	 * Array of mapping function for each service cache.
+	 * <p>
+	 * The functions supply new service of a single port.
+	 * <p>
+	 * 
+	 * Used by
+	 * {@link breakingtherules.utilities.Cache#getOrAdd(Object, Function)}
+	 */
+	private final IntFunction<Service>[] mappingFunction;
+
+	/**
+	 * Construct new Services cache.
+	 */
+	public Cache() {
+	    final short numberOfCaches = 257; // 256 and 1 for 'any protocol'
+
+	    // Used dummy to suppress warnings
+	    @SuppressWarnings({ "unchecked", "unused" })
+	    Object dummy = caches = new Int2ObjectCache[numberOfCaches];
+
+	    // Used dummy to suppress warnings
+	    @SuppressWarnings({ "unchecked", "unused" })
+	    Object dummy2 = mappingFunction = new IntFunction[numberOfCaches];
+
+	    for (int i = caches.length; i-- != 0;) {
+		caches[i] = new Int2ObjectSoftHashCache<>();
+	    }
+
+	    for (short i = numberOfCaches; i-- != 0;) {
+		final short protocolCode = (short) (i - 1);
+		mappingFunction[i] = port -> new Service(protocolCode, toPortsRange(port));
+	    }
+	}
+
+    }
+
+    /**
      * Get Service object with the specified single port (not a port range),
      * used internally.
+     * <p>
+     * If the cache isn't null, will used the cached Service from the cache if
+     * one exist, or will create a new one and cache it to the cache otherwise.
+     * <p>
      * 
      * @param protocolCode
-     *            the protocol code
+     *            the protocol code.
      * @param port
-     *            the service port
-     * @return Service object of the specified protocol and ports
+     *            the service port.
+     * @param cache
+     *            the cached containing cached Service objects. Can be null.
+     * @return Service object of the specified protocol and ports.
      */
     private static Service valueOfInternal(final short protocolCode, final int port, final Service.Cache cache) {
-	return cache != null ? cache.caches[protocolCode + 1].getOrAdd(port, cache.suppliers[protocolCode + 1])
+	return cache != null ? cache.caches[protocolCode + 1].getOrAdd(port, cache.mappingFunction[protocolCode + 1])
 		: new Service(protocolCode, toPortsRange(port));
     }
 
+    /**
+     * Checks that the protocol code is valid.
+     * 
+     * @param protocolCode
+     *            the checked protocol code.
+     * @throws IllegalArgumentException
+     *             if the protocol code is not valid.
+     */
     private static void checkProtocol(final short protocolCode) {
 	if (protocolCode != ANY_PROTOCOL && (protocolCode < MIN_PROTOCOL || protocolCode > MAX_PROTOCOL)) {
 	    throw new IllegalArgumentException(
@@ -625,6 +775,14 @@ public class Service extends Attribute {
 	}
     }
 
+    /**
+     * Checks that a port is valid.
+     * 
+     * @param port
+     *            the checked port code.
+     * @throws IllegalArgumentException
+     *             if the port is not valid.
+     */
     private static void checkPort(final int port) {
 	if (port < MIN_PORT || port > MAX_PORT) {
 	    throw new IllegalArgumentException("Service port: " + Utility.formatRange(MIN_PORT, MAX_PORT, port));
@@ -658,58 +816,6 @@ public class Service extends Attribute {
      */
     private static int toPortsRange(final int portRangeStart, final int portRangeEnd) {
 	return (portRangeEnd << 16) | portRangeStart;
-    }
-
-    /**
-     * Cache of {@link Service} objects.
-     * 
-     * @author Barak Ugav
-     * @author Yishai Gronich
-     *
-     */
-    public final static class Cache {
-
-	/**
-	 * Array of service caches.
-	 * <p>
-	 * Each cache is contains only services with single port (not a port
-	 * range) of specific protocol. Services with protocol 'x' are in cache
-	 * number x.
-	 */
-	private final Int2ObjectCache<Service>[] caches;
-
-	/**
-	 * Array of suppliers for each service cache.
-	 * <p>
-	 * The supplier supply new service of a single port.
-	 * <p>
-	 * 
-	 * Used by
-	 * {@link breakingtherules.utilities.Cache#getOrAdd(Object, Function)}
-	 */
-	private final IntFunction<Service>[] suppliers;
-
-	public Cache() {
-	    final short numberOfCaches = 257; // 256 and 1 for 'any protocol'
-
-	    // Used dummy to suppress warnings
-	    @SuppressWarnings({ "unchecked", "unused" })
-	    Object dummy = caches = new Int2ObjectCache[numberOfCaches];
-
-	    // Used dummy to suppress warnings
-	    @SuppressWarnings({ "unchecked", "unused" })
-	    Object dummy2 = suppliers = new IntFunction[numberOfCaches];
-
-	    for (int i = caches.length; i-- != 0;) {
-		caches[i] = new Int2ObjectSoftHashCache<>();
-	    }
-
-	    for (short i = numberOfCaches; i-- != 0;) {
-		final short protocolCode = (short) (i - 1);
-		suppliers[i] = port -> new Service(protocolCode, toPortsRange(port));
-	    }
-	}
-
     }
 
     /**

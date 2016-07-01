@@ -234,10 +234,6 @@ public abstract class IP implements Comparable<IP> {
      */
     public abstract short getSize();
 
-    public static IP parseIPFromBits(final List<Boolean> ip, final Class<?> clazz) {
-	return parseIPFromBits(ip, clazz, null);
-    }
-
     /**
      * Parses an IP from bits list.
      * <p>
@@ -248,6 +244,30 @@ public abstract class IP implements Comparable<IP> {
      *            bits of the IP
      * @param clazz
      *            class of the requested IP - IPv4, IPv6 or AnyIP
+     * @return IP object based on the boolean bits
+     * @throws IllegalArgumentException
+     *             if the given class is not IPv4, IPv6 or AnyIP, or if the bits
+     *             list is invalid.
+     */
+    public static IP parseIPFromBits(final List<Boolean> ip, final Class<?> clazz) {
+	return parseIPFromBits(ip, clazz, null);
+    }
+
+    /**
+     * Parses an IP from bits list.
+     * <p>
+     * This method create IPs of type IPv4, IPv6 and AnyIP only.
+     * <p>
+     * If the cache isn't null, will used the cached IP from the cache if one
+     * exist, or will create a new one and cache it to the cache otherwise.
+     * <p>
+     * 
+     * @param ip
+     *            bits of the IP.
+     * @param clazz
+     *            class of the requested IP - IPv4, IPv6 or AnyIP.
+     * @param cache
+     *            the cached containing cached IPs objects. Can be null.
      * @return IP object based on the boolean bits
      * @throws IllegalArgumentException
      *             if the given class is not IPv4, IPv6 or AnyIP, or if the bits
@@ -270,6 +290,20 @@ public abstract class IP implements Comparable<IP> {
 		"Choosen class in unkwon. Expected IPv4, IPv6 or AnyIP. Actual: " + clazz.getSimpleName());
     }
 
+    /**
+     * Get IP object parsed from string.
+     * <p>
+     * This method detect formats of IPv4 and IPv6 only.
+     * <p>
+     * 
+     * @param s
+     *            string representation of an IP.
+     * @return IP object based on the String IP
+     * @throws NullPointerException
+     *             if the string is null.
+     * @throws IllegalArgumentException
+     *             if the string is invalid.
+     */
     public static IP valueOf(final String s) {
 	return valueOf(s, null);
     }
@@ -279,9 +313,14 @@ public abstract class IP implements Comparable<IP> {
      * <p>
      * This method detect formats of IPv4 and IPv6 only.
      * <p>
+     * If the cache isn't null, will used the cached IP from the cache if one
+     * exist, or will create a new one and cache it to the cache otherwise.
+     * <p>
      * 
      * @param s
      *            string representation of an IP.
+     * @param cache
+     *            the cached containing cached IPs objects. Can be null.
      * @return IP object based on the String IP
      * @throws NullPointerException
      *             if the string is null.
@@ -319,11 +358,30 @@ public abstract class IP implements Comparable<IP> {
 
     }
 
+    /**
+     * Cache of {@link IP} objects.
+     * 
+     * @author Barak Ugav
+     * @author Yishai Gronich
+     *
+     * @see IPv4.Cache
+     * @see IPv6.Cache
+     */
     public static final class Cache {
 
+	/**
+	 * Cache of {@link IPv4} objects.
+	 */
 	final IPv4.Cache ipv4Cache;
+
+	/**
+	 * Cache of {@link IPv6} objects.
+	 */
 	final IPv6.Cache ipv6Cache;
 
+	/**
+	 * Construct new IPs cache.
+	 */
 	public Cache() {
 	    ipv4Cache = new IPv4.Cache();
 	    ipv6Cache = new IPv6.Cache();

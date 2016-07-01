@@ -22,12 +22,9 @@ import java.util.Random;
 import breakingtherules.dao.csv.CSVParseException;
 import breakingtherules.dao.csv.CSVParser;
 import breakingtherules.firewall.Attribute;
-import breakingtherules.firewall.Destination;
 import breakingtherules.firewall.Hit;
 import breakingtherules.firewall.IP;
 import breakingtherules.firewall.IPAttribute;
-import breakingtherules.firewall.Service;
-import breakingtherules.firewall.Source;
 import breakingtherules.utilities.TextPrinter;
 import breakingtherules.utilities.Utility;
 
@@ -612,8 +609,8 @@ public class CSVScrambler implements Runnable {
      * 
      * @param inputFile
      *            path to input file
-     * @param columnsTypes
-     *            orders of the attributes in the input file
+     * @param parser
+     *            parser used to parse the input file.
      * @param ipAttId
      *            id of the IP attribute
      * @return root node to the built tree
@@ -711,8 +708,9 @@ public class CSVScrambler implements Runnable {
      *            path to input file
      * @param outputFile
      *            path to output file
-     * @param columnsTypes
-     *            orders of the attributes in the input file
+     * @param parser
+     *            parser used to parse the input file and to write to the output
+     *            file.
      * @param ipAttId
      *            id of the IP attribute
      * @param tree

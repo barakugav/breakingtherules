@@ -74,10 +74,6 @@ public class Source extends IPAttribute {
 	return Source.valueOf(ip, null);
     }
 
-    public static Source valueOf(final String s) {
-	return new Source(IP.valueOf(s, null));
-    }
-
     /**
      * Get Source object parsed from string.
      * 
@@ -88,12 +84,28 @@ public class Source extends IPAttribute {
      * @return Source object with the IP parsed from the string.
      * @see IP#valueOf(String)
      */
-    public static Source valueOf(final String s, final Source.Cache cache) {
-	return valueOf(IP.valueOf(s, null), cache);
+    public static Source valueOf(final String s) {
+	return new Source(IP.valueOf(s, null));
     }
 
-    public static Source valueOf(final IP ip) {
-	return new Source(Objects.requireNonNull(ip));
+    /**
+     * Get Source object parsed from string.
+     * <p>
+     * If the cache isn't null, will used the cached source from the cache if
+     * one exist, or will create a new one and cache it to the cache otherwise.
+     * <p>
+     * 
+     * TODO - specified expected input format.
+     * 
+     * @param s
+     *            string representation of a source.
+     * @param cache
+     *            the cached containing cached source objects. Can be null.
+     * @return Source object with the IP parsed from the string.
+     * @see IP#valueOf(String)
+     */
+    public static Source valueOf(final String s, final Source.Cache cache) {
+	return valueOf(IP.valueOf(s, null), cache);
     }
 
     /**
@@ -101,6 +113,25 @@ public class Source extends IPAttribute {
      * 
      * @param ip
      *            an IP
+     * @return Source object with the specified IP.
+     * @throws NullPointerException
+     *             if the IP is null.
+     */
+    public static Source valueOf(final IP ip) {
+	return new Source(Objects.requireNonNull(ip));
+    }
+
+    /**
+     * Get Source object with the specified IP.
+     * <p>
+     * If the cache isn't null, will used the cached source from the cache if
+     * one exist, or will create a new one and cache it to the cache otherwise.
+     * <p>
+     * 
+     * @param ip
+     *            an IP.
+     * @param cache
+     *            the cached containing cached source objects. Can be null.
      * @return Source object with the specified IP.
      * @throws NullPointerException
      *             if the IP is null.
@@ -129,34 +160,57 @@ public class Source extends IPAttribute {
      */
     public static final class Cache {
 
+	/**
+	 * The IP objects cached used by this cache.
+	 */
 	private final IP.Cache ipsCache;
 
 	/**
-	 * Cache of source objects with full(not subnetwork) IPv4 ips.
+	 * Cache of source objects with IPv4 addresses.
 	 */
 	private final Int2ObjectCache<Source> IPv4Cache;
 
 	/**
-	 * Cache of source objects with full(not subnetwork) IPv6 ips.
+	 * Cache of source objects with IPv6 addresses.
 	 */
 	private final breakingtherules.utilities.Cache<int[], Source> IPv6Cache;
 
+	/**
+	 * The mapping function of source object with IPv4 addresses.
+	 */
 	private final IntFunction<Source> ipv4SourcesMappingFunction;
 
+	/**
+	 * The mapping function of source object with IPv6 addresses.
+	 */
 	private final Function<int[], Source> ipv6SourcesMapptingFunction;
 
+	/**
+	 * Construct new source cache.
+	 * <p>
+	 * If an IP cache exists, the
+	 * {@link Source.Cache#Cache(breakingtherules.firewall.IP.Cache)} should
+	 * be used.
+	 */
+	public Cache() {
+	    this(null);
+	}
+
+	/**
+	 * Construct new source cache, built on an existing IPs cache.
+	 * <p>
+	 * 
+	 * @param ipsCache
+	 *            the existing IPs cache. (can be null)
+	 */
 	public Cache(final IP.Cache ipsCache) {
 	    this.ipsCache = ipsCache != null ? ipsCache : new IP.Cache();
 	    ipv4SourcesMappingFunction = address -> new Source(
-		    ipsCache.ipv4Cache.cache.getOrAdd(address, IPv4.Cache.supplier));
+		    this.ipsCache.ipv4Cache.cache.getOrAdd(address, IPv4.Cache.supplier));
 	    ipv6SourcesMapptingFunction = address -> new Source(
-		    ipsCache.ipv6Cache.cache.getOrAdd(address, IPv6.Cache.supplier));
+		    this.ipsCache.ipv6Cache.cache.getOrAdd(address, IPv6.Cache.supplier));
 	    IPv4Cache = new Int2ObjectSoftHashCache<>();
 	    IPv6Cache = new SoftCustomHashCache<>(IPv6.Cache.IPv6AddressesStrategy.INSTANCE);
-	}
-
-	public IP.Cache getIPsCache() {
-	    return ipsCache;
 	}
 
     }

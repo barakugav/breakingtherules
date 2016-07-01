@@ -96,7 +96,7 @@ public interface Cache<K, E> {
      * 
      * @param key
      *            the key of the element.
-     * @param supplier
+     * @param cachingFunction
      *            the supplier of the element if one doesn't exist in the cache.
      * @return the existing element or the one created from the supplier (if
      *         needed).
@@ -105,10 +105,10 @@ public interface Cache<K, E> {
      *             element is null (null elements are not allowed in weak
      *             cache).
      */
-    default E getOrAdd(final K key, final Function<? super K, ? extends E> supplier) {
+    default E getOrAdd(final K key, final Function<? super K, ? extends E> cachingFunction) {
 	E elm = get(key);
 	if (elm == null) {
-	    elm = supplier.apply(key);
+	    elm = cachingFunction.apply(key);
 	    add(key, elm);
 	}
 	return elm;

@@ -366,15 +366,33 @@ public final class IPv6 extends IP {
 	return m_maskSize - other.m_maskSize;
     }
 
+    /**
+     * Get IPv6 object parsed from boolean bits list.
+     * 
+     * @param addressBits
+     *            the bits list.
+     * @return IPv6 with the address build from the bits.
+     * @throws NullPointerException
+     *             if the list is null or one of the Boolean objects in the list
+     *             is null.
+     * @throws IllegalArgumentException
+     *             if number of bits is unequal to {@value #SIZE}.
+     */
     public static IPv6 parseIPv6FromBits(final List<Boolean> addressBits) {
 	return parseIPv6FromBits(addressBits, null);
     }
 
     /**
      * Get IPv6 object parsed from boolean bits list.
+     * <p>
+     * If the cache isn't null, will used the cached IPv6 from the cache if one
+     * exist, or will create a new one and cache it to the cache otherwise.
+     * <p>
      * 
      * @param addressBits
      *            the bits list.
+     * @param cache
+     *            the cached containing cached IPv6s objects. Can be null.
      * @return IPv6 with the address build from the bits.
      * @throws NullPointerException
      *             if the list is null or one of the Boolean objects in the list
@@ -405,10 +423,6 @@ public final class IPv6 extends IP {
 	return valueOfInternal(address, cache);
     }
 
-    public static IPv6 valueOf(final String s) {
-	return valueOf(s, null, s.indexOf(BLOCKS_SEPARATOR));
-    }
-
     /**
      * Get IPv6 object parsed from string.
      * <p>
@@ -424,12 +438,33 @@ public final class IPv6 extends IP {
      * @throws IllegalArgumentException
      *             if the format is illegal or the values are out of range.
      */
-    public static IPv6 valueOf(final String s, final IPv6.Cache cache) {
-	return valueOf(s, cache, s.indexOf(BLOCKS_SEPARATOR));
+    public static IPv6 valueOf(final String s) {
+	return valueOf(s, null, s.indexOf(BLOCKS_SEPARATOR));
     }
 
-    public static IPv6 valueOf(final int[] address) {
-	return valueOf(address, SIZE, null);
+    /**
+     * Get IPv6 object parsed from string.
+     * <p>
+     * The expected format is: A:B:C:D:E:F:G:H or A:B:C:D:E:F:G:H/M when A, B,
+     * C, D, E, F, G and H are the blocks value (in range 0 to 65535) and M is
+     * the subnetwork mask size (in range 0 to 128).
+     * <p>
+     * If the cache isn't null, will used the cached IPv6 from the cache if one
+     * exist, or will create a new one and cache it to the cache otherwise.
+     * <p>
+     * 
+     * @param s
+     *            string representation of IPv6.
+     * @param cache
+     *            the cached containing cached IPv6s objects. Can be null.
+     * @return IPv6 object parsed from string.
+     * @throws NullPointerException
+     *             if the string is null.
+     * @throws IllegalArgumentException
+     *             if the format is illegal or the values are out of range.
+     */
+    public static IPv6 valueOf(final String s, final IPv6.Cache cache) {
+	return valueOf(s, cache, s.indexOf(BLOCKS_SEPARATOR));
     }
 
     /**
@@ -451,12 +486,37 @@ public final class IPv6 extends IP {
      * @throws IllegalArgumentException
      *             if the blocks values are out of range (0 to 65535).
      */
-    public static IPv6 valueOf(final int[] address, final IPv6.Cache cache) {
-	return valueOf(address, SIZE, cache);
+    public static IPv6 valueOf(final int[] address) {
+	return valueOf(address, SIZE, null);
     }
 
-    public static IPv6 valueOf(final int[] address, final short maskSize) {
-	return valueOf(address, maskSize, null);
+    /**
+     * Get IPv6 object with the specified address.
+     * <p>
+     * The input address is an array of the address' blocks values. The array
+     * should be one with of length as IPv6 number of blocks(
+     * {@value #BLOCK_NUMBER}).
+     * <p>
+     * For example:<br>
+     * To create the IPv6 128.4.5.1.0.5789.500.21 the array should be [128, 4,
+     * 5, 1, 0, 5789, 500, 21].<br>
+     * <p>
+     * If the cache isn't null, will used the cached IPv6 from the cache if one
+     * exist, or will create a new one and cache it to the cache otherwise.
+     * <p>
+     * 
+     * @param address
+     *            the address blocks.
+     * @param cache
+     *            the cached containing cached IPv6s objects. Can be null.
+     * @return IPv6 object with the desire address.
+     * @throws NullPointerException
+     *             if the address is null.
+     * @throws IllegalArgumentException
+     *             if the blocks values are out of range (0 to 65535).
+     */
+    public static IPv6 valueOf(final int[] address, final IPv6.Cache cache) {
+	return valueOf(address, SIZE, cache);
     }
 
     /**
@@ -474,6 +534,38 @@ public final class IPv6 extends IP {
      *            the address blocks.
      * @param maskSize
      *            the size of the subnetwork mask.
+     * @return IPv6 object with the desire address.
+     * @throws NullPointerException
+     *             if the address is null.
+     * @throws IllegalArgumentException
+     *             if the blocks values are out of range (0 to 65535) or the
+     *             maskSize is out of range (0 to 128).
+     */
+    public static IPv6 valueOf(final int[] address, final short maskSize) {
+	return valueOf(address, maskSize, null);
+    }
+
+    /**
+     * Get IPv6 object with the specified address and subnetwork mask size.
+     * <p>
+     * The input address is an array of the address' blocks values. The array
+     * should be one with of length as IPv6 number of blocks(
+     * {@value #BLOCK_NUMBER}).
+     * <p>
+     * For example:<br>
+     * To create the IPv6 128.4.5.1.0.5789.500.0/112 the array should be [128,
+     * 4, 5, 1, 0, 5789, 500, 0] and the maskSize should be 112.<br>
+     * <p>
+     * If the cache isn't null, will used the cached IPv6 from the cache if one
+     * exist, or will create a new one and cache it to the cache otherwise.
+     * <p>
+     * 
+     * @param address
+     *            the address blocks.
+     * @param maskSize
+     *            the size of the subnetwork mask.
+     * @param cache
+     *            the cached containing cached IPv6s objects. Can be null.
      * @return IPv6 object with the desire address.
      * @throws NullPointerException
      *             if the address is null.
@@ -518,6 +610,18 @@ public final class IPv6 extends IP {
 	return new IPv6(a, maskSize);
     }
 
+    /**
+     * Get IPv6 object with the specified 128 bits(ints array) address.
+     * 
+     * @param addressBits
+     *            the 128 bits of the address.
+     * @return IPv6 object with the specified address.
+     * @throws NullPointerException
+     *             if the address bits array is null.
+     * @throws IllegalArgumentException
+     *             if the size of the address array is not
+     *             {@value #ADDRESS_ARRAY_SIZE}.
+     */
     public static IPv6 valueOfBits(final int[] addressBits) {
 	checkAddressBits(addressBits);
 	// Must clone addressBits to be safe that the address won't be changed
@@ -527,9 +631,15 @@ public final class IPv6 extends IP {
 
     /**
      * Get IPv6 object with the specified 128 bits(ints array) address.
+     * <p>
+     * If the cache isn't null, will used the cached IPv6 from the cache if one
+     * exist, or will create a new one and cache it to the cache otherwise.
+     * <p>
      * 
      * @param addressBits
      *            the 128 bits of the address.
+     * @param cache
+     *            the cached containing cached IPv6s objects. Can be null.
      * @return IPv6 object with the specified address.
      * @throws NullPointerException
      *             if the address bits array is null.
@@ -544,10 +654,6 @@ public final class IPv6 extends IP {
 	return valueOfInternal(addressBits.clone(), cache);
     }
 
-    public static IPv6 valueOfBits(final int[] addressBits, final short maskSize) {
-	return valueOfBits(addressBits, maskSize, null);
-    }
-
     /**
      * Get IPv6 object with the specified 128 bits(ints array) address and
      * subnetwork mask size.
@@ -556,6 +662,32 @@ public final class IPv6 extends IP {
      *            the 128 bits of the address.
      * @param maskSize
      *            the size of the subnetwork mask.
+     * @return IPv6 object with the specified address and maskSize.
+     * @throws NullPointerException
+     *             if the address bits array is null.
+     * @throws IllegalArgumentException
+     *             if the size of the address array is not
+     *             {@value #ADDRESS_ARRAY_SIZE} or if the mask size is out of
+     *             range (0 to 128).
+     */
+    public static IPv6 valueOfBits(final int[] addressBits, final short maskSize) {
+	return valueOfBits(addressBits, maskSize, null);
+    }
+
+    /**
+     * Get IPv6 object with the specified 128 bits(ints array) address and
+     * subnetwork mask size.
+     * <p>
+     * If the cache isn't null, will used the cached IPv6 from the cache if one
+     * exist, or will create a new one and cache it to the cache otherwise.
+     * <p>
+     * 
+     * @param addressBits
+     *            the 128 bits of the address.
+     * @param maskSize
+     *            the size of the subnetwork mask.
+     * @param cache
+     *            the cached containing cached IPv6s objects. Can be null.
      * @return IPv6 object with the specified address and maskSize.
      * @throws NullPointerException
      *             if the address bits array is null.
@@ -609,6 +741,9 @@ public final class IPv6 extends IP {
 	    supplier = address -> new IPv6(address, SIZE);
 	}
 
+	/**
+	 * Construct new IPv6 objects.
+	 */
 	public Cache() {
 	    cache = new SoftCustomHashCache<>(IPv6AddressesStrategy.INSTANCE);
 	}
@@ -678,12 +813,17 @@ public final class IPv6 extends IP {
      * The expected format is: A:B:C:D:E:F:G:H or A:B:C:D:E:F:G:H/M when A, B,
      * C, D, E, F, G and H are the blocks value (in range 0 to 65535) and M is
      * the subnetwork mask size (in range 0 to 128).
+     * <p>
+     * If the cache isn't null, will used the cached IPv6 from the cache if one
+     * exist, or will create a new one and cache it to the cache otherwise.
+     * <p>
      * 
      * @param s
      *            string representation of IPv6.
-     * @param useCache
-     *            if true, the cache will be searched for existing IP, else it
-     *            won't.
+     * @param cache
+     *            the cached containing cached IPv6s objects. Can be null.
+     * @param separatorIndex
+     *            the first index of the separator in the string. (optimization)
      * @return IPv6 object parsed from string.
      * @throws NullPointerException
      *             if the string is null.
@@ -750,13 +890,35 @@ public final class IPv6 extends IP {
 	return new IPv6(address, maskSize);
     }
 
-    private static void checkAddressBits(final int[] addressBits) {
-	if (addressBits.length != ADDRESS_ARRAY_SIZE) {
+    /**
+     * Checks if an address is in valid.
+     * 
+     * @param address
+     *            the checked address.
+     * @throws IllegalArgumentException
+     *             if the address is not valid.
+     */
+    private static void checkAddressBits(final int[] address) {
+	if (address.length != ADDRESS_ARRAY_SIZE) {
 	    throw new IllegalArgumentException(
-		    "IPv6's address bits array: " + Utility.formatEqual(ADDRESS_ARRAY_SIZE, addressBits.length));
+		    "IPv6's address bits array: " + Utility.formatEqual(ADDRESS_ARRAY_SIZE, address.length));
 	}
     }
 
+    /**
+     * Get IPv6 object with the specified 128 bits(int array) address. Used
+     * internally.
+     * <p>
+     * If the cache isn't null, will used the cached IPv6 from the cache if one
+     * exist, or will create a new one and cache it to the cache otherwise.
+     * <p>
+     * 
+     * @param address
+     *            the IP's address.
+     * @param cache
+     *            the cached containing cached IPv6s objects. Can be null.
+     * @return IPv6 object with the specified address.
+     */
     private static IPv6 valueOfInternal(final int[] address, final IPv6.Cache cache) {
 	return cache != null ? cache.cache.getOrAdd(address, IPv6.Cache.supplier) : new IPv6(address, SIZE);
     }
