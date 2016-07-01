@@ -18,7 +18,7 @@ import breakingtherules.session.JobManager;
  * @author Barak Ugav
  * @author Yishai Gronich
  * 
- * @see Job
+ * @see JobManager
  */
 @RestController
 public class JobStatusController {

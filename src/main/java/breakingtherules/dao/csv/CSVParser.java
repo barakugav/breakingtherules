@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Function;
 
 import breakingtherules.dao.AbstractParser;
 import breakingtherules.dao.DaoUtilities;
@@ -65,6 +66,11 @@ public class CSVParser extends AbstractParser {
      * The types of each column in the CSV file.
      */
     private final int[] m_columnsTypes;
+
+    /**
+     * The parsing function. Receiving a string line and producing hits object.
+     */
+    private final Function<String, Hit> parsingFunction;
 
     /**
      * The symbol's value for source attribute column.
@@ -142,6 +148,8 @@ public class CSVParser extends AbstractParser {
 	destinationIndex = columnsTypes.indexOf(DESTINATION);
 	serviceProtocolIndex = columnsTypes.indexOf(SERVICE_PROTOCOL);
 	servicePortIndex = columnsTypes.indexOf(SERVICE_PORT);
+
+	parsingFunction = parserFunc();
     }
 
     /**
@@ -157,28 +165,14 @@ public class CSVParser extends AbstractParser {
      *             if the line is null.
      */
     public Hit parseHit(final String line) throws CSVParseException {
-	final String[] words = Utility.breakToWords(line, Utility.TAB, Utility.SPACE);
-	final List<Attribute> attributes = new ArrayList<>(Attribute.TYPES_COUNT);
-
 	try {
-	    if (sourceIndex >= 0) {
-		final String source = words[sourceIndex];
-		attributes.add(parseSource(source));
-	    }
-	    if (destinationIndex >= 0) {
-		final String destination = words[destinationIndex];
-		attributes.add(parseDestination(destination));
-	    }
-	    if (serviceProtocolIndex >= 0 && servicePortIndex >= 0) {
-		final String protocol = words[serviceProtocolIndex];
-		final String port = words[servicePortIndex];
-		attributes.add(parseService(port, protocol));
-	    }
-	} catch (ArrayIndexOutOfBoundsException e) {
+	    return parsingFunction.apply(line);
+
+	} catch (final IllegalArgumentException e) {
+	    throw new CSVParseException("Unable to parse attribute", e);
+	} catch (final ArrayIndexOutOfBoundsException e) {
 	    throw new CSVParseException("hit line didn't have enough attributes", e);
 	}
-
-	return new Hit(attributes);
     }
 
     /**
@@ -356,62 +350,145 @@ public class CSVParser extends AbstractParser {
 		    System.out.println("Reading hits from CSV: " + lineNumber + " hits have been read so far.");
 		}
 	    }
-	} catch (final CSVParseException e) {
-	    throw new CSVParseException("In line " + lineNumber + ": ", e);
 	}
     }
 
     /**
-     * Parse CSV string to source
+     * Create the parser function.
+     * <p>
+     * For more information see {@link #parsingFunction};
      * 
-     * @param source
-     *            source string in CSV format
-     * @return Source object
-     * @throws CSVParseException
-     *             if fails to parse source
+     * @return this parser's function.
      */
-    private Source parseSource(final String source) throws CSVParseException {
-	try {
-	    return Source.valueOf(source, sourceCache);
-	} catch (final IllegalArgumentException e) {
-	    throw new CSVParseException("Unable to parse source: ", e);
+    @SuppressWarnings("unused")
+    private Function<String, Hit> parserFunc() {
+	/*
+	 * We prefer using the non scalable, faster parser function. In case the
+	 * abilities of this provider will be extended in the future, the
+	 * scalable alternative should be considered (or to double the non
+	 * scalable parser function code).
+	 */
+	if (true) {
+	    return nonScalableParserFunc();
 	}
+	return scalableParserFunc();
     }
 
     /**
-     * Parse CSV string to destination
+     * Create a non scalable parser function, but it's faster then
+     * {@link #scalableParserFunc()}.
+     * <p>
+     * This method is not scalable because for each attribute type added to the
+     * CSV parser the code of this method is doubled. The alternative for this
+     * method is {@link #scalableParserFunc()} which it's code increase in
+     * linear scale to the number of parsed attributes by the parser.
+     * <p>
      * 
-     * @param destination
-     *            destination string in CSV format
-     * @return Destination object
-     * @throws CSVParseException
-     *             if fails to parse destination
+     * @return faster parser function.
      */
-    private Destination parseDestination(final String destination) throws CSVParseException {
-	try {
-	    return Destination.valueOf(destination, destinationCache);
-	} catch (final IllegalArgumentException e) {
-	    throw new CSVParseException("Unable to parse destination: ", e);
+    private Function<String, Hit> nonScalableParserFunc() {
+	boolean containsSource = sourceIndex >= 0, containsDestination = destinationIndex >= 0,
+		containsService = serviceProtocolIndex >= 0 && servicePortIndex >= 0;
+	if (containsSource && containsDestination && containsService) {
+	    return line -> {
+		final String[] words = Utility.breakToWords(line, Utility.TAB, Utility.SPACE);
+		final List<Attribute> atts = new ArrayList<>(3);
+		atts.add(Source.valueOf(words[sourceIndex], sourceCache));
+		atts.add(Destination.valueOf(words[destinationIndex], destinationCache));
+		atts.add(Service.valueOf(Service.parseProtocolCode(words[serviceProtocolIndex]),
+			Service.parsePort(words[serviceProtocolIndex]), serviceCache));
+		return new Hit(atts);
+	    };
 	}
+	if (containsSource && containsDestination && !containsService) {
+	    return line -> {
+		final String[] words = Utility.breakToWords(line, Utility.TAB, Utility.SPACE);
+		final List<Attribute> atts = new ArrayList<>(2);
+		atts.add(Source.valueOf(words[sourceIndex], sourceCache));
+		atts.add(Destination.valueOf(words[destinationIndex], destinationCache));
+		return new Hit(atts);
+	    };
+	}
+	if (containsSource && !containsDestination && containsService) {
+	    return line -> {
+		final String[] words = Utility.breakToWords(line, Utility.TAB, Utility.SPACE);
+		final List<Attribute> atts = new ArrayList<>(2);
+		atts.add(Source.valueOf(words[sourceIndex], sourceCache));
+		atts.add(Service.valueOf(Service.parseProtocolCode(words[serviceProtocolIndex]),
+			Service.parsePort(words[serviceProtocolIndex]), serviceCache));
+		return new Hit(atts);
+	    };
+	}
+	if (containsSource && !containsDestination && !containsService) {
+	    return line -> {
+		final String[] words = Utility.breakToWords(line, Utility.TAB, Utility.SPACE);
+		final List<Attribute> atts = new ArrayList<>(1);
+		atts.add(Source.valueOf(words[sourceIndex], sourceCache));
+		return new Hit(atts);
+	    };
+	}
+	if (!containsSource && containsDestination && containsService) {
+	    return line -> {
+		final String[] words = Utility.breakToWords(line, Utility.TAB, Utility.SPACE);
+		final List<Attribute> atts = new ArrayList<>(2);
+		atts.add(Destination.valueOf(words[destinationIndex], destinationCache));
+		atts.add(Service.valueOf(Service.parseProtocolCode(words[serviceProtocolIndex]),
+			Service.parsePort(words[serviceProtocolIndex]), serviceCache));
+		return new Hit(atts);
+	    };
+	}
+	if (!containsSource && containsDestination && !containsService) {
+	    return line -> {
+		final String[] words = Utility.breakToWords(line, Utility.TAB, Utility.SPACE);
+		final List<Attribute> atts = new ArrayList<>(1);
+		atts.add(Destination.valueOf(words[destinationIndex], destinationCache));
+		return new Hit(atts);
+	    };
+	}
+	if (!containsSource && !containsDestination && containsService) {
+	    return line -> {
+		final String[] words = Utility.breakToWords(line, Utility.TAB, Utility.SPACE);
+		final List<Attribute> atts = new ArrayList<>(1);
+		atts.add(Service.valueOf(Service.parseProtocolCode(words[serviceProtocolIndex]),
+			Service.parsePort(words[serviceProtocolIndex]), serviceCache));
+		return new Hit(atts);
+	    };
+	}
+
+	// if (!containsSource && !containsDestination && !containsService)
+	return line -> {
+	    return new Hit(Collections.emptyList());
+	};
     }
 
     /**
-     * Parse CSV string to service
+     * Create a scalable parser function, but slower then
+     * {@link #nonScalableParserFunc()}.
+     * <p>
+     * This method is slower then the non scalable alternative (
+     * {@link #nonScalableParserFunc()}) because it's operate a lot of checks in
+     * each parsing (which can't be eliminated by a generic coding style). This
+     * method is not fully generic to multiple attributes, but it's code can be
+     * easily modified to support more attribute.
      * 
-     * @param port
-     *            port string in CSV format
-     * @param protocol
-     *            protocol string in CSV format
-     * @return Service object
-     * @throws CSVParseException
-     *             if fails to parse service
+     * @return scalable parser function.
      */
-    private Service parseService(final String port, final String protocol) throws CSVParseException {
-	try {
-	    return Service.valueOf(Service.parseProtocolCode(protocol), Service.parsePort(port), serviceCache);
-	} catch (final IllegalArgumentException e) {
-	    throw new CSVParseException("Unable to parse service: ", e);
-	}
+    private Function<String, Hit> scalableParserFunc() {
+	final boolean containsSource = sourceIndex >= 0, containsDestination = destinationIndex >= 0,
+		containsService = serviceProtocolIndex >= 0 && servicePortIndex >= 0;
+	final int numberOfAtts = (containsSource ? 1 : 0) + (containsDestination ? 1 : 0) + (containsService ? 1 : 0);
+	return line -> {
+	    final String[] words = Utility.breakToWords(line, Utility.TAB, Utility.SPACE);
+	    final List<Attribute> atts = new ArrayList<>(numberOfAtts);
+	    if (containsSource)
+		atts.add(Source.valueOf(words[sourceIndex], sourceCache));
+	    if (containsDestination)
+		atts.add(Destination.valueOf(words[destinationIndex], destinationCache));
+	    if (containsService)
+		atts.add(Service.valueOf(Service.parseProtocolCode(words[serviceProtocolIndex]),
+			Service.parsePort(words[serviceProtocolIndex]), serviceCache));
+	    return new Hit(atts);
+	};
     }
 
     /**
@@ -427,7 +504,7 @@ public class CSVParser extends AbstractParser {
 	if (source == null) {
 	    throw new CSVParseException("Source doesn't exist");
 	}
-	return source.getIp().toString();
+	return source.toString();
     }
 
     /**
@@ -443,7 +520,7 @@ public class CSVParser extends AbstractParser {
 	if (destination == null) {
 	    throw new CSVParseException("Destination doesn't exist");
 	}
-	return destination.getIp().toString();
+	return destination.toString();
     }
 
     /**

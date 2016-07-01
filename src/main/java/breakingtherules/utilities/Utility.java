@@ -458,6 +458,46 @@ public class Utility {
     }
 
     /**
+     * Break string string to words and separate the words by two input
+     * character separator.
+     * 
+     * @param s
+     *            the string to break.
+     * @param ch1
+     *            the first separator.
+     * @param ch2
+     *            the second separator.
+     * @return all words in the text with the separators between them.
+     */
+    public static String[] breakToWords(final String s, final char ch1, final char ch2) {
+	String[] words = new String[4];
+	int wordsCount = 0;
+
+	int separatorIndex = indexOf(s, 0, ch1, ch2);
+	int fromIndex = 0;
+
+	while (separatorIndex >= 0) {
+	    if (fromIndex != separatorIndex) {
+		if (words.length <= wordsCount) {
+		    words = expand(words);
+		}
+		words[wordsCount++] = s.substring(fromIndex, separatorIndex);
+	    }
+	    fromIndex = separatorIndex + 1;
+	    separatorIndex = indexOf(s, fromIndex, ch1, ch2);
+	}
+	// Last word
+	if (fromIndex != s.length()) {
+	    if (words.length <= wordsCount) {
+		words = expand(words);
+	    }
+	    words[wordsCount++] = s.substring(fromIndex);
+	}
+
+	return words.length == wordsCount ? words : trim(words, wordsCount);
+    }
+
+    /**
      * Break string text to words and separate the words by the input
      * separators.
      * 
@@ -467,11 +507,11 @@ public class Utility {
      *            the chars separator used to separate between words.
      * @return all words in the text with one of the separators between them.
      */
-    public static String[] breakToWords(final String text, final char... separatorChars) {
+    public static String[] breakToWords(final String text, final char[] separatorChars) {
 	String[] words = new String[4];
 	int wordsCount = 0;
 
-	int separatorIndex = indexOf(text, separatorChars);
+	int separatorIndex = indexOf(text, 0, separatorChars);
 	int fromIndex = 0;
 
 	while (separatorIndex >= 0) {
@@ -715,19 +755,22 @@ public class Utility {
      * 
      * @param text
      *            the text.
-     * @param chars
-     *            the searched chars.
+     * @param fromIndex
+     *            the begin index to start the search from.
+     * @param ch1
+     *            the first searched char.
+     * @param ch2
+     *            the second searched char.
      * @return the first index of one of the characters or -1 if non found.
      */
-    public static int indexOf(final String text, final char... chars) {
-	int index = -1;
-	for (final char ch : chars) {
-	    final int seqIndex = text.indexOf(ch);
-	    if (seqIndex != -1 && (index == -1 || seqIndex < index)) {
-		index = seqIndex;
-	    }
+    public static int indexOf(final String text, final int fromIndex, final char ch1, final char ch2) {
+	final int l = text.length();
+	for (int i = fromIndex; i < l; i++) {
+	    final char ch = text.charAt(i);
+	    if (ch == ch1 || ch == ch2)
+		return i;
 	}
-	return index;
+	return -1;
     }
 
     /**
@@ -742,7 +785,7 @@ public class Utility {
      *            the searched chars.
      * @return the first index of one of the characters or -1 if non found.
      */
-    public static int indexOf(final String text, final int fromIndex, final char... chars) {
+    public static int indexOf(final String text, final int fromIndex, final char[] chars) {
 	int index = -1;
 	for (final char ch : chars) {
 	    final int seqIndex = text.indexOf(ch, fromIndex);
