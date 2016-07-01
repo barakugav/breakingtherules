@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import breakingtherules.dto.JobStatusDto;
 import breakingtherules.firewall.Rule;
-import breakingtherules.session.Job;
+import breakingtherules.session.JobManager;
 
 /**
  * This controller allows the user to get the status of the current working job.
@@ -26,10 +26,10 @@ public class JobStatusController {
     // TODO - move to JobController (?)
 
     /**
-     * The current job
+     * The session job manager
      */
     @Autowired
-    private Job m_job;
+    private JobManager m_jobManager;
 
     /**
      * Get the current status of the job - the number of hits in every category,
@@ -39,7 +39,7 @@ public class JobStatusController {
      */
     @RequestMapping(value = "/status", method = RequestMethod.GET)
     public JobStatusDto getStatus() {
-	return createStatusDto(m_job);
+	return createStatusDto(m_jobManager);
     }
 
     /**
@@ -49,7 +49,7 @@ public class JobStatusController {
      *            The job that needs to be queried
      * @return Information about the status of the given job
      */
-    private static JobStatusDto createStatusDto(Job job) {
+    private static JobStatusDto createStatusDto(JobManager job) {
 	Rule orig = job.getOriginalRule();
 	int createdRules = job.getRules().size();
 	int totalHitsCount = job.getTotalHitsCount();

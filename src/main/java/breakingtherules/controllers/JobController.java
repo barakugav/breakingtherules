@@ -13,8 +13,9 @@ import org.springframework.web.multipart.MultipartFile;
 
 import breakingtherules.dao.ParseException;
 import breakingtherules.dao.csv.CSVParser;
-import breakingtherules.session.Job;
-import breakingtherules.session.JobCreator;
+import breakingtherules.firewall.Filter;
+import breakingtherules.firewall.Rule;
+import breakingtherules.session.JobManager;
 
 /**
  * TODO - javadoc
@@ -22,23 +23,17 @@ import breakingtherules.session.JobCreator;
  * @author Barak Ugav
  * @author Yishai Gronich
  *
- * @see Job
+ * @see JobManager
  */
 @RestController
 @MultipartConfig
 public class JobController {
 
     /**
-     * The session job.
+     * The session job manager
      */
     @Autowired
-    private Job m_job;
-    
-    /**
-     * An object that can create jobs
-     */
-    @Autowired
-    private JobCreator m_jobCreator;
+    private JobManager m_jobManager;
 
     /**
      * Request to handle a new job.
@@ -59,7 +54,7 @@ public class JobController {
      */
     @RequestMapping(value = "/job", method = RequestMethod.PUT)
     public boolean setJob(@RequestParam(value = "job_name") final String jobName) throws IOException, ParseException {
-	m_job.setJob(jobName);
+	m_jobManager.setJob(jobName);
 	return true;
     }
 
@@ -80,7 +75,7 @@ public class JobController {
     @RequestMapping(value = "/job", method = RequestMethod.POST)
     public void newJob(@RequestParam(value = "job_name") final String jobName,
 	    @RequestParam(value = "hits_file") final MultipartFile hitsFile) throws IOException, ParseException {
-	m_jobCreator.createJob(jobName, hitsFile, CSVParser.DEFAULT_COLUMNS_TYPES);
+	m_jobManager.createJob(jobName, hitsFile, CSVParser.DEFAULT_COLUMNS_TYPES, new Rule(Filter.ANY_FILTER));
     }
 
 }

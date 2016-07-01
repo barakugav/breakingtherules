@@ -7,7 +7,7 @@ package breakingtherules.session;
  * @author Barak Ugav
  * @author Yishai Gronich
  * 
- * @see Job
+ * @see JobManager
  */
 public class NoCurrentJobException extends IllegalStateException {
 

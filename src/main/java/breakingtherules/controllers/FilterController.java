@@ -16,7 +16,7 @@ import breakingtherules.firewall.Destination;
 import breakingtherules.firewall.Filter;
 import breakingtherules.firewall.Service;
 import breakingtherules.firewall.Source;
-import breakingtherules.session.Job;
+import breakingtherules.session.JobManager;
 import breakingtherules.session.NoCurrentJobException;
 
 /**
@@ -27,16 +27,16 @@ import breakingtherules.session.NoCurrentJobException;
  * @author Yishai Gronich
  *
  * @see Filter
- * @see Job
+ * @see JobManager
  */
 @RestController
 public class FilterController {
 
     /**
-     * The session job.
+     * The session job manager
      */
     @Autowired
-    private Job m_job;
+    private JobManager m_jobManager;
 
     /**
      * Set the filter to a new one.
@@ -67,7 +67,7 @@ public class FilterController {
 	filterAtts.add(Destination.valueOf(destination));
 	filterAtts.add(Service.valueOf(service));
 	final Filter newFilter = new Filter(filterAtts);
-	m_job.setFilter(newFilter);
+	m_jobManager.setFilter(newFilter);
     }
 
     /**
@@ -79,7 +79,7 @@ public class FilterController {
      */
     @RequestMapping(value = "/filter", method = RequestMethod.GET)
     public Filter getFilter() {
-	return m_job.getFilter();
+	return m_jobManager.getFilter();
     }
 
 }

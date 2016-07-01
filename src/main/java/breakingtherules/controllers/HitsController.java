@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RestController;
 import breakingtherules.dao.ParseException;
 import breakingtherules.dto.ListDto;
 import breakingtherules.firewall.Hit;
-import breakingtherules.session.Job;
+import breakingtherules.session.JobManager;
 import breakingtherules.session.NoCurrentJobException;
 
 /**
@@ -21,16 +21,16 @@ import breakingtherules.session.NoCurrentJobException;
  * @author Yishai Gronich
  * 
  * @see Hit
- * @see Job
+ * @see JobManager
  */
 @RestController
 public class HitsController {
 
     /**
-     * The session job.
+     * The session job manager
      */
     @Autowired
-    private Job m_job;
+    private JobManager m_jobManager;
 
     /**
      * Answers the GET hits query
@@ -51,7 +51,7 @@ public class HitsController {
      */
     @RequestMapping(value = "/hits", method = RequestMethod.GET)
     public ListDto<Hit> getHits(final int startIndex, final int endIndex) throws IOException, ParseException {
-	return m_job.getHits(startIndex, endIndex);
+	return m_jobManager.getHits(startIndex, endIndex);
     }
 
 }

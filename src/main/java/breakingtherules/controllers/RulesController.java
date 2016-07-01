@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import breakingtherules.dao.ParseException;
 import breakingtherules.firewall.Rule;
-import breakingtherules.session.Job;
+import breakingtherules.session.JobManager;
 import breakingtherules.session.NoCurrentJobException;
 
 /**
@@ -27,16 +27,16 @@ import breakingtherules.session.NoCurrentJobException;
  * @author Yishai Gronich
  * 
  * @see Rule
- * @see Job
+ * @see JobManager
  */
 @RestController
 public class RulesController {
 
     /**
-     * The session job.
+     * The session job manager
      */
     @Autowired
-    private Job m_job;
+    private JobManager m_jobManager;
 
     /**
      * Get the current job's rules file, in XML format.
@@ -52,7 +52,7 @@ public class RulesController {
 	    final HttpServletResponse response) {
 	response.setHeader("Content-Disposition", "attachment; filename=\"rules.xml\"");
 	// TODO - remove 'request' parameter (?) - unused
-	return m_job.getRulesFile();
+	return m_jobManager.getRulesFile();
     }
 
     /**
@@ -63,9 +63,8 @@ public class RulesController {
      *             if the job wasn't set yet.
      */
     @RequestMapping(value = "/rule", method = RequestMethod.GET)
-    public List<Rule> rules() {
-	// TODO - change name to 'getRules'
-	return m_job.getRules();
+    public List<Rule> getRules() {
+	return m_jobManager.getRules();
     }
 
     /**
@@ -82,7 +81,7 @@ public class RulesController {
      */
     @RequestMapping(value = "/rule", method = RequestMethod.POST)
     public void createRule() throws IOException, ParseException {
-	m_job.addCurrentFilterToRules();
+	m_jobManager.addCurrentFilterToRules();
     }
 
     /**
@@ -101,7 +100,7 @@ public class RulesController {
      */
     @RequestMapping(value = "/rule", method = RequestMethod.DELETE)
     public void deleteRule(@RequestParam("index") final int ruleIndex) throws IOException, ParseException {
-	m_job.deleteRule(ruleIndex);
+	m_jobManager.deleteRule(ruleIndex);
     }
 
 }

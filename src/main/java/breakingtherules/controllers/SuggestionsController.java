@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 import breakingtherules.dao.ParseException;
 import breakingtherules.dto.SuggestionsDto;
 import breakingtherules.services.algorithm.Suggestion;
-import breakingtherules.session.Job;
+import breakingtherules.session.JobManager;
 import breakingtherules.session.NoCurrentJobException;
 
 /**
@@ -22,16 +22,16 @@ import breakingtherules.session.NoCurrentJobException;
  * @author Yishai Gronich
  *
  * @see Suggestion
- * @see Job
+ * @see JobManager
  */
 @RestController
 public class SuggestionsController {
 
     /**
-     * The session job.
+     * The session job manager
      */
     @Autowired
-    private Job job;
+    private JobManager m_jobManager;
 
     /**
      * Get suggestion for the current uncovered hits in the current job.
@@ -52,7 +52,7 @@ public class SuggestionsController {
     @RequestMapping(value = "/suggestions", method = RequestMethod.GET)
     public List<SuggestionsDto> getSuggestions(@RequestParam(value = "amount", defaultValue = "10") final int amount)
 	    throws IOException, ParseException {
-	return job.getSuggestions(amount);
+	return m_jobManager.getSuggestions(amount);
     }
 
 }

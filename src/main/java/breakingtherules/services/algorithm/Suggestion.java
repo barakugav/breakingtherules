@@ -34,7 +34,7 @@ public class Suggestion {
      */
     public static final Comparator<Suggestion> SCORE_COMPARATOR_GREATER_TO_SMALLER = (final Suggestion o1,
 	    final Suggestion o2) -> {
-	return Double.compare(o1.m_score, o2.m_score);
+	return Double.compare(o2.m_score, o1.m_score);
     };
 
     /**

@@ -2,7 +2,6 @@ package breakingtherules.session;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -24,7 +23,7 @@ import breakingtherules.firewall.Rule;
  * Allows creating a new job from a given CSV hits file
  */
 @Component
-public class JobCreator {
+public class JobManager {
 
     /**
      * The Hits DAO that is used to write all of the hits to memory. Might be
@@ -42,6 +41,11 @@ public class JobCreator {
     private CSVHitsDao m_csvHitsDao;
 
     /**
+     * The job that is currently being worked on in this session
+     */
+    private Job m_job;
+
+    /**
      * Create a new job, with the given job name and the given hits
      * 
      * @param jobName
@@ -51,6 +55,9 @@ public class JobCreator {
      *            this job
      * @param columnTypes
      *            The order of the columns in the CSV file
+     * @param originalRule
+     *            The original rule of the job
+     * @return A Job object representing the job that was created
      * @throws IOException
      *             if any I/O errors occurs.
      * @throws ParseException
@@ -58,8 +65,8 @@ public class JobCreator {
      * @throws NullPointerException
      *             if the file is null.
      */
-    public void createJob(final String jobName, final MultipartFile hitsFile, final List<Integer> columnTypes)
-	    throws IOException, ParseException {
+    public Job createJob(final String jobName, final MultipartFile hitsFile, final List<Integer> columnTypes,
+	    Rule originalRule) throws IOException, ParseException {
 
 	// TODO - treat return value from initRepository.
 	DaoConfig.initRepository(jobName);
@@ -68,12 +75,32 @@ public class JobCreator {
 	hitsFile.transferTo(fileDestination);
 	m_csvHitsDao.setColumnTypes(columnTypes);
 	final Iterable<Hit> hits = m_csvHitsDao.getHits(jobName, Collections.emptyList(), Filter.ANY_FILTER);
-	m_hitsDao.initJob(jobName, hits);
+	return new Job(jobName, hits, originalRule);
+    }
 
-	final Job job = new Job();
-	job.m_name = jobName;
-	job.m_originalRule = new Rule(Filter.ANY_FILTER);
-	job.m_rules = new ArrayList<>();
-	job.updateRulesFile();
+    /**
+     * @return The job that is currently being worked on in this session
+     * @throws NoCurrentJobException
+     *             If no job has been set yet
+     */
+    public Job getCurrentJob() throws NoCurrentJobException {
+	if (m_job == null) {
+	    throw new NoCurrentJobException();
+	}
+	return m_job;
+    }
+
+    /**
+     * Choose the job to work on and initialize it
+     * 
+     * @param name
+     *            The name of the job that needs to be worked on.
+     * @throws IOException
+     *             if DAO failed to load data
+     * @throws ParseException
+     *             if any parse errors occurs in the data.
+     */
+    public void setJob(final String name) throws IOException, ParseException {
+	m_job = new Job(name);
     }
 }
