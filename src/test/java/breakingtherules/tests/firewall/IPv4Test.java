@@ -34,28 +34,28 @@ public class IPv4Test extends TestBase {
     @Test
     public void constructorTestWithMaskSize() {
 	int[] address = FirewallTestsUtility.getRandomAddressIPv4();
-	int maskSize = FirewallTestsUtility.getRandomMaskSizeIPv4();
+	short maskSize = FirewallTestsUtility.getRandomMaskSizeIPv4();
 	IPv4.valueOf(address, maskSize);
     }
 
     @Test(expected = NullPointerException.class)
     public void constructorTestWithMaskSizeNullAdress() {
 	int[] address = null;
-	int maskSize = FirewallTestsUtility.getRandomMaskSizeIPv4();
+	short maskSize = FirewallTestsUtility.getRandomMaskSizeIPv4();
 	IPv4.valueOf(address, maskSize);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void constructorTestWithNegativeMaskSize() {
 	int[] address = FirewallTestsUtility.getRandomAddressIPv4();
-	int maskSize = -1;
+	short maskSize = -1;
 	IPv4.valueOf(address, maskSize);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void constructorTestWithMaskSizeOverMaxLength() {
 	int[] address = FirewallTestsUtility.getRandomAddressIPv4();
-	int maskSize = IPv4.SIZE + 1;
+	short maskSize = IPv4.SIZE + 1;
 	IPv4.valueOf(address, maskSize);
     }
 
@@ -100,7 +100,7 @@ public class IPv4Test extends TestBase {
 
     @Test
     public void constructorFromStringTestMaskSize() {
-	int maskSize = 10;
+	short maskSize = 10;
 	String ipStr = "255.2.4.46";
 	int[] address = new int[] { 255, 0, 0, 0 };
 	IP ip = IPv4.valueOf(ipStr + "/" + maskSize);
@@ -231,7 +231,7 @@ public class IPv4Test extends TestBase {
 	expected[1] = new int[] { 0b00000000, 0b00000000, 0b00000000, 0b00000000 };
 	expected[0] = new int[] { 0b00000000, 0b00000000, 0b00000000, 0b00000000 };
 
-	for (int maskSize = 32; maskSize >= 0; maskSize--) {
+	for (short maskSize = 32; maskSize >= 0; maskSize--) {
 	    IPv4 ip = IPv4.valueOf(address, maskSize);
 	    assertEquals(maskSize, ip.getMaskSize());
 	    assertEquals("Mask size " + maskSize, expected[maskSize], ip.getAddress());
@@ -246,7 +246,7 @@ public class IPv4Test extends TestBase {
 
     @Test
     public void getMaskSizeTestConstructorWithMaskSize() {
-	int maskSize = FirewallTestsUtility.getRandomMaskSizeIPv4();
+	short maskSize = FirewallTestsUtility.getRandomMaskSizeIPv4();
 	IPv4 ip = IPv4.valueOf(FirewallTestsUtility.getRandomAddressIPv4(), maskSize);
 	assertEquals(maskSize, ip.getMaskSize());
     }
@@ -291,7 +291,7 @@ public class IPv4Test extends TestBase {
 	expected[0] = new int[] { 0b00000000, 0b00000000, 0b00000000, 0b00000000 };
 
 	IPv4 ip = IPv4.valueOf(address);
-	for (int maskSize = 32; maskSize-- > 0;) {
+	for (short maskSize = 32; maskSize-- > 0;) {
 	    assertTrue("Mask size " + maskSize, ip.hasParent());
 	    IPv4 parent = ip.getParent();
 	    assertNotNull("Mask size " + maskSize, parent);
@@ -304,7 +304,7 @@ public class IPv4Test extends TestBase {
 
     @Test(expected = IllegalStateException.class)
     public void getParentTestPrefix0() {
-	IPv4 ip = IPv4.valueOf(FirewallTestsUtility.getRandomAddressIPv4(), 0);
+	IPv4 ip = IPv4.valueOf(FirewallTestsUtility.getRandomAddressIPv4(), (short) 0);
 	assertFalse(ip.hasParent());
 	ip.getParent();
     }
@@ -313,21 +313,21 @@ public class IPv4Test extends TestBase {
     public void hasChildrenTest() {
 	final int repeat = 25;
 	for (int i = 0; i < repeat; i++) {
-	    int maskSize = rand.nextInt(11) + 22;
+	    short maskSize = (short) (rand.nextInt(11) + 22);
 	    int[] address = FirewallTestsUtility.getRandomAddressIPv4();
 	    IPv4 ip = IPv4.valueOf(address, maskSize);
 	    assertEquals(ip.getMaskSize() != IPv4.SIZE, ip.hasChildren());
 	}
 
 	for (int i = 0; i < repeat; i++) {
-	    int maskSize = IPv4.SIZE;
+	    short maskSize = IPv4.SIZE;
 	    int[] address = FirewallTestsUtility.getRandomAddressIPv4();
 	    IPv4 ip = IPv4.valueOf(address, maskSize);
 	    assertFalse(ip.hasChildren());
 	}
 
 	for (int i = 0; i < repeat; i++) {
-	    for (int maskSize = 0; maskSize < IPv4.SIZE; maskSize++) {
+	    for (short maskSize = 0; maskSize < IPv4.SIZE; maskSize++) {
 		int[] address = FirewallTestsUtility.getRandomAddressIPv4();
 		IPv4 ip = IPv4.valueOf(address, maskSize);
 		assertTrue(ip.hasChildren());
@@ -408,8 +408,8 @@ public class IPv4Test extends TestBase {
 	expected[1][0] = new int[] { 0b00000000, 0b00000000, 0b00000000, 0b00000000 };
 	int[] address = new int[] { 0b00000000, 0b00000000, 0b00000000, 0b00000000 };
 
-	IPv4 ip = IPv4.valueOf(address, 0);
-	for (int maskSize = 0; maskSize < 32; maskSize++) {
+	IPv4 ip = IPv4.valueOf(address, (short) 0);
+	for (short maskSize = 0; maskSize < 32; maskSize++) {
 
 	    assertTrue("maskSize=" + maskSize + ", has no children", ip.hasChildren());
 	    IPv4[] children = null;
@@ -449,7 +449,7 @@ public class IPv4Test extends TestBase {
     @Test
     public void containsTestNotContainsNull() {
 	int[] address = FirewallTestsUtility.getRandomAddressIPv4();
-	int maskSize = FirewallTestsUtility.getRandomMaskSizeIPv4();
+	short maskSize = FirewallTestsUtility.getRandomMaskSizeIPv4();
 	IPv4 ip1 = IPv4.valueOf(address, maskSize);
 	IPv4 ip2 = null;
 	assertFalse(ip1.contains(ip2));
@@ -465,7 +465,7 @@ public class IPv4Test extends TestBase {
 
     @Test
     public void containsTestZeroMaskSizeContainsAll() {
-	IPv4 ip1 = IPv4.valueOf(new int[] { 0, 0, 0, 0 }, 0);
+	IPv4 ip1 = IPv4.valueOf(new int[] { 0, 0, 0, 0 }, (short) 0);
 	IPv4 ip2 = IPv4.valueOf(FirewallTestsUtility.getRandomAddressIPv4());
 	assertTrue(ip1.contains(ip2));
 	assertFalse(ip2.contains(ip1));
@@ -473,7 +473,7 @@ public class IPv4Test extends TestBase {
 
     @Test
     public void containsTestMaskSize8() {
-	IPv4 ip1 = IPv4.valueOf(new int[] { 145, 0, 0, 0 }, 8);
+	IPv4 ip1 = IPv4.valueOf(new int[] { 145, 0, 0, 0 }, (short) 8);
 	IPv4 ip2 = IPv4.valueOf(new int[] { 145, 55, 0, 0 });
 	assertTrue(ip1.contains(ip2));
 	assertFalse(ip2.contains(ip1));
@@ -490,7 +490,7 @@ public class IPv4Test extends TestBase {
 
     @Test
     public void containsTestMaskSize15() {
-	IPv4 ip1 = IPv4.valueOf(new int[] { 16, 216, 0, 0 }, 15);
+	IPv4 ip1 = IPv4.valueOf(new int[] { 16, 216, 0, 0 }, (short) 15);
 	IPv4 ip2 = IPv4.valueOf(new int[] { 16, 217, 11, 7 });
 	assertTrue(ip1.contains(ip2));
 	assertFalse(ip2.contains(ip1));
@@ -510,7 +510,7 @@ public class IPv4Test extends TestBase {
 
     @Test
     public void containsTestMaskSize21() {
-	IPv4 ip1 = IPv4.valueOf(new int[] { 0, 160, 40, 0 }, 21);
+	IPv4 ip1 = IPv4.valueOf(new int[] { 0, 160, 40, 0 }, (short) 21);
 	IPv4 ip2 = IPv4.valueOf(new int[] { 0, 160, 47, 7 });
 	assertTrue(ip1.contains(ip2));
 	assertFalse(ip2.contains(ip1));
@@ -530,20 +530,20 @@ public class IPv4Test extends TestBase {
 
     @Test
     public void containsTestMaskSize27() {
-	IPv4 ip1 = IPv4.valueOf(new int[] { 41, 99, 243, 160 }, 27);
-	IPv4 ip2 = IPv4.valueOf(new int[] { 41, 99, 243, 160 }, 32);
+	IPv4 ip1 = IPv4.valueOf(new int[] { 41, 99, 243, 160 }, (short) 27);
+	IPv4 ip2 = IPv4.valueOf(new int[] { 41, 99, 243, 160 }, (short) 32);
 	assertTrue(ip1.contains(ip2));
 	assertFalse(ip2.contains(ip1));
-	ip2 = IPv4.valueOf(new int[] { 41, 99, 243, 160 }, 27);
+	ip2 = IPv4.valueOf(new int[] { 41, 99, 243, 160 }, (short) 27);
 	assertTrue(ip1.contains(ip2));
 	assertTrue(ip2.contains(ip1));
-	ip2 = IPv4.valueOf(new int[] { 41, 99, 243, 168 }, 29);
+	ip2 = IPv4.valueOf(new int[] { 41, 99, 243, 168 }, (short) 29);
 	assertTrue(ip1.contains(ip2));
 	assertFalse(ip2.contains(ip1));
-	ip2 = IPv4.valueOf(new int[] { 41, 99, 243, 176 }, 30);
+	ip2 = IPv4.valueOf(new int[] { 41, 99, 243, 176 }, (short) 30);
 	assertTrue(ip1.contains(ip2));
 	assertFalse(ip2.contains(ip1));
-	ip2 = IPv4.valueOf(new int[] { 41, 99, 243, 224 }, 27);
+	ip2 = IPv4.valueOf(new int[] { 41, 99, 243, 224 }, (short) 27);
 	assertFalse(ip1.contains(ip2));
 	assertFalse(ip2.contains(ip1));
     }
@@ -587,7 +587,7 @@ public class IPv4Test extends TestBase {
 	for (int i = 0; i < repeat; i++) {
 	    int[] address = FirewallTestsUtility.getRandomAddressIPv4();
 	    IPv4 ip1 = IPv4.valueOf(address);
-	    IPv4 ip2 = IPv4.valueOf(address, 32);
+	    IPv4 ip2 = IPv4.valueOf(address, (short) 32);
 	    assertTrue(ip1.equals(ip2));
 	    assertTrue(ip2.equals(ip1));
 	}
@@ -596,7 +596,7 @@ public class IPv4Test extends TestBase {
     @Test
     public void equalsTestItselfTwoIpwithConstructorWithMaskSize() {
 	int[] address = FirewallTestsUtility.getRandomAddressIPv4();
-	int maskSize = FirewallTestsUtility.getRandomMaskSizeIPv4();
+	short maskSize = FirewallTestsUtility.getRandomMaskSizeIPv4();
 	IPv4 ip1 = IPv4.valueOf(address, maskSize);
 	IPv4 ip2 = IPv4.valueOf(address, maskSize);
 	assertTrue(ip1.equals(ip2));
@@ -606,8 +606,8 @@ public class IPv4Test extends TestBase {
     @Test
     public void equalsTestNotEqualsItselfTwoDifferentMaskSize() {
 	int[] address = FirewallTestsUtility.getRandomAddressIPv4();
-	int maskSize1 = FirewallTestsUtility.getRandomMaskSizeIPv4();
-	int maskSize2;
+	short maskSize1 = FirewallTestsUtility.getRandomMaskSizeIPv4();
+	short maskSize2;
 	do {
 	    maskSize2 = FirewallTestsUtility.getRandomMaskSizeIPv4();
 	} while (maskSize1 == maskSize2);
@@ -740,7 +740,7 @@ public class IPv4Test extends TestBase {
 	assertTrue(ip1.compareTo(ip2) < 0);
 	assertTrue(ip2.compareTo(ip1) > 0);
 
-	ip1 = IPv4.valueOf(new int[] { 4, 100, 255, 4 }, 31);
+	ip1 = IPv4.valueOf(new int[] { 4, 100, 255, 4 }, (short) 31);
 	ip2 = IPv4.valueOf(new int[] { 4, 100, 255, 4 });
 	assertTrue(ip1.compareTo(ip2) < 0);
 	assertTrue(ip2.compareTo(ip1) > 0);
@@ -748,7 +748,7 @@ public class IPv4Test extends TestBase {
 
     @Test
     public void compareToTestAny() {
-	IPv4 anyIp = IPv4.valueOf(new int[] { 0, 0, 0, 0 }, 0);
+	IPv4 anyIp = IPv4.valueOf(new int[] { 0, 0, 0, 0 }, (short) 0);
 	final int repeat = 25;
 	for (int i = 0; i < repeat; i++) {
 	    IPv4 ip = FirewallTestsUtility.getRandomIPv4();

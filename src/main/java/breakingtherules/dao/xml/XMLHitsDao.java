@@ -23,10 +23,10 @@ import org.xml.sax.SAXException;
 import breakingtherules.dao.AbstractCachedHitsDao;
 import breakingtherules.dao.DaoUtilities;
 import breakingtherules.dao.HitsDao;
-import breakingtherules.firewall.Attribute;
 import breakingtherules.firewall.Destination;
 import breakingtherules.firewall.Filter;
 import breakingtherules.firewall.Hit;
+import breakingtherules.firewall.IP;
 import breakingtherules.firewall.Rule;
 import breakingtherules.firewall.Service;
 import breakingtherules.firewall.Source;
@@ -110,9 +110,12 @@ public class XMLHitsDao extends AbstractCachedHitsDao {
 	    final DocumentBuilder builder = factory.newDocumentBuilder();
 	    final Document doc = builder.newDocument();
 
-	    final Element repoElm = doc.createElement(XMLDaoConfig.TAG_REPOSITORY);
+	    final Element repoElm = doc.createElement(XMLDaoConfig.REPOSITORY_TAG);
+
+	    final XMLHitsParser parser = new XMLHitsParser();
+
 	    for (final Hit hit : hits) {
-		final Element elm = createElement(doc, hit);
+		final Element elm = parser.createElement(doc, hit);
 		repoElm.appendChild(elm);
 	    }
 	    doc.appendChild(repoElm);
@@ -213,7 +216,13 @@ public class XMLHitsDao extends AbstractCachedHitsDao {
 	}
 
 	// Get all hits from repository
-	final NodeList hitsList = repositoryDoc.getElementsByTagName(XMLDaoConfig.TAG_HIT);
+	final NodeList hitsList = repositoryDoc.getElementsByTagName(XMLDaoConfig.HIT_TAG);
+
+	final XMLHitsParser parser = new XMLHitsParser();
+	final IP.Cache ipsCache = new IP.Cache();
+	parser.setSourceCache(new Source.Cache(ipsCache));
+	parser.setDestinationCache(new Destination.Cache(ipsCache));
+	parser.setServiceCache(new Service.Cache());
 
 	// Extract all hits that match the filter
 	final int length = hitsList.getLength();
@@ -221,68 +230,12 @@ public class XMLHitsDao extends AbstractCachedHitsDao {
 	    final Node hitNode = hitsList.item(i);
 	    if (hitNode.getNodeType() == Node.ELEMENT_NODE) {
 		final Element hitElm = (Element) hitNode;
-		final Hit hit = createHit(hitElm);
+		final Hit hit = parser.parseHit(hitElm);
 		if (DaoUtilities.isMatch(hit, rules, filter)) {
 		    destination.add(hit);
 		}
 	    }
 	}
-    }
-
-    /**
-     * Creates {@link Hit} object from {@link Element} XML object
-     * 
-     * @param hitElm
-     *            XML element with hit attributes
-     * @return hit object with the element attributes
-     * @throws XMLParseException
-     *             if failed to parse element to hit
-     */
-    private static Hit createHit(final Element hitElm) throws XMLParseException {
-	// Read attributes from element
-	final String source = hitElm.getAttribute(XMLDaoConfig.TAG_SOURCE);
-	final String destination = hitElm.getAttribute(XMLDaoConfig.TAG_DESTINATION);
-	final String service = hitElm.getAttribute(XMLDaoConfig.TAG_SERVICE);
-
-	if (source == null || source.isEmpty()) {
-	    throw new XMLParseException("Source does not exist");
-	}
-	if (destination == null || destination.isEmpty()) {
-	    throw new XMLParseException("Destination does not exist");
-	}
-	if (service == null || service.isEmpty()) {
-	    throw new XMLParseException("Service does not exist");
-	}
-
-	// Convert strings to attributes
-	final List<Attribute> attributes = new ArrayList<>();
-	try {
-	    attributes.add(Source.valueOf(source));
-	    attributes.add(Destination.valueOf(destination));
-	    attributes.add(Service.valueOf(service));
-
-	} catch (final Exception e) {
-	    throw new XMLParseException(e);
-	}
-	return new Hit(attributes);
-    }
-
-    /**
-     * Create new XML element of hit.
-     * <p>
-     * 
-     * @param doc
-     *            the parent document.
-     * @param hit
-     *            the parsed hit.
-     * @return XML element that represent the hit.
-     */
-    private static Element createElement(final Document doc, final Hit hit) {
-	final Element elm = doc.createElement(XMLDaoConfig.TAG_HIT);
-	for (final Attribute attribute : hit) {
-	    elm.setAttribute(attribute.getType().toLowerCase(), attribute.toString());
-	}
-	return elm;
     }
 
 }

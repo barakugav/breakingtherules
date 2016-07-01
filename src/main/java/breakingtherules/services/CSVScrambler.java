@@ -22,9 +22,12 @@ import java.util.Random;
 import breakingtherules.dao.csv.CSVParseException;
 import breakingtherules.dao.csv.CSVParser;
 import breakingtherules.firewall.Attribute;
+import breakingtherules.firewall.Destination;
 import breakingtherules.firewall.Hit;
 import breakingtherules.firewall.IP;
 import breakingtherules.firewall.IPAttribute;
+import breakingtherules.firewall.Service;
+import breakingtherules.firewall.Source;
 import breakingtherules.utilities.TextPrinter;
 import breakingtherules.utilities.Utility;
 
@@ -578,18 +581,20 @@ public class CSVScrambler implements Runnable {
 	    final Path tempFilePath = Files.createTempFile("tempCSVScramblerFile", ".csv");
 	    tempFile = tempFilePath.toFile();
 
+	    final CSVParser parser = new CSVParser(columnsTypes);
+
 	    if (columnsTypes.contains(CSVParser.SOURCE)) {
-		Node tree = buildTree(inputFile, columnsTypes, Attribute.SOURCE_TYPE_ID);
+		Node tree = buildTree(inputFile, parser, Attribute.SOURCE_TYPE_ID);
 		scrambleTree(tree);
-		mutateHits(inputFile, tempFilePath.toString(), columnsTypes, Attribute.SOURCE_TYPE_ID, tree);
+		mutateHits(inputFile, tempFilePath.toString(), parser, Attribute.SOURCE_TYPE_ID, tree);
 
 		Files.copy(tempFilePath, outputPath, StandardCopyOption.REPLACE_EXISTING);
 		inputFile = outputFile;
 	    }
 	    if (columnsTypes.contains(CSVParser.DESTINATION)) {
-		Node tree = buildTree(inputFile, columnsTypes, Attribute.DESTINATION_TYPE_ID);
+		Node tree = buildTree(inputFile, parser, Attribute.DESTINATION_TYPE_ID);
 		scrambleTree(tree);
-		mutateHits(inputFile, tempFilePath.toString(), columnsTypes, Attribute.DESTINATION_TYPE_ID, tree);
+		mutateHits(inputFile, tempFilePath.toString(), parser, Attribute.DESTINATION_TYPE_ID, tree);
 
 		Files.copy(tempFilePath, outputPath, StandardCopyOption.REPLACE_EXISTING);
 		inputFile = outputFile;
@@ -617,10 +622,9 @@ public class CSVScrambler implements Runnable {
      * @throws CSVParseException
      *             if fails to parse file
      */
-    private static Node buildTree(final String inputFile, final List<Integer> columnsTypes, final int ipAttId)
+    private static Node buildTree(final String inputFile, final CSVParser parser, final int ipAttId)
 	    throws IOException, CSVParseException {
 	final Map<IP, Node> existingNodes = new HashMap<>();
-	final CSVParser parser = new CSVParser(columnsTypes);
 
 	int lineNumber = 0;
 	try (final BufferedReader reader = new BufferedReader(new FileReader(inputFile))) {
@@ -718,10 +722,8 @@ public class CSVScrambler implements Runnable {
      * @throws CSVParseException
      *             if fails to parse file
      */
-    private static void mutateHits(final String inputFile, final String outputFile, final List<Integer> columnsTypes,
+    private static void mutateHits(final String inputFile, final String outputFile, final CSVParser parser,
 	    final int ipAttId, final Node tree) throws IOException, CSVParseException {
-	CSVParser parser = new CSVParser(columnsTypes);
-
 	int lineNumber = 0;
 	try (final BufferedReader reader = new BufferedReader(new FileReader(inputFile))) {
 	    try (final Writer writer = new FileWriter(outputFile)) {
@@ -729,9 +731,9 @@ public class CSVScrambler implements Runnable {
 		final String lineSeparator = System.lineSeparator();
 		for (String line; (line = reader.readLine()) != null;) {
 		    lineNumber++;
-		    Hit hit = parser.parseHit(line);
-		    hit = mutateHit(hit, ipAttId, tree);
-		    line = parser.toCSV(hit);
+		    final Hit hit = parser.parseHit(line);
+		    final Hit mutation = mutateHit(hit, ipAttId, tree);
+		    line = parser.toCSV(mutation);
 		    writer.append(line + lineSeparator);
 		}
 	    }

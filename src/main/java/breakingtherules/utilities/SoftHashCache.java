@@ -91,7 +91,7 @@ public class SoftHashCache<K, E> implements Cache<K, E> {
     private SoftReference<E> nullElement;
 
     /**
-     * Number of elements in the cache
+     * Number of elements in the cache.
      */
     private int size;
 
@@ -490,7 +490,7 @@ public class SoftHashCache<K, E> implements Cache<K, E> {
      */
     @Override
     public String toString() {
-	StringBuilder builder = new StringBuilder();
+	final StringBuilder builder = new StringBuilder();
 	final String separator = ", ";
 	builder.append('[');
 

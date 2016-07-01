@@ -4,10 +4,7 @@ import java.util.Objects;
 import java.util.function.Function;
 import java.util.function.IntFunction;
 
-import breakingtherules.utilities.Cache;
-import breakingtherules.utilities.Caches;
 import breakingtherules.utilities.Int2ObjectCache;
-import breakingtherules.utilities.Int2ObjectCaches;
 import breakingtherules.utilities.Int2ObjectSoftHashCache;
 import breakingtherules.utilities.SoftCustomHashCache;
 
@@ -77,7 +74,11 @@ public class Destination extends IPAttribute {
      */
     @Override
     public Destination createMutation(final IP ip) {
-	return Destination.valueOf(ip);
+	return Destination.valueOf(ip, null);
+    }
+
+    public static Destination valueOf(final String s) {
+	return new Destination(IP.valueOf(s, null));
     }
 
     /**
@@ -89,18 +90,12 @@ public class Destination extends IPAttribute {
      *            string representation of a destination.
      * @return destination object of the IP
      */
-    public static Destination valueOf(final String s) {
-	final IP ip = IP.valueOf(s, false);
-	if (ip.m_maskSize == ip.getSize()) {
-	    if (ip instanceof IPv4) {
-		return DestinationCache.IPv4Cache.getOrAdd(((IPv4) ip).m_address,
-			DestinationCache.IPv4AddressToDestinationSupplier);
-	    }
-	    if (ip instanceof IPv6) {
-		return DestinationCache.IPv6Cache.getOrAdd((IPv6) ip, DestinationCache.uncachedIPToDestinationSupplier);
-	    }
-	}
-	return new Destination(ip);
+    public static Destination valueOf(final String s, final Destination.Cache cache) {
+	return valueOf(IP.valueOf(s, null), cache);
+    }
+
+    public static Destination valueOf(final IP ip) {
+	return new Destination(Objects.requireNonNull(ip));
     }
 
     /**
@@ -110,27 +105,15 @@ public class Destination extends IPAttribute {
      *            an IP
      * @return destination object of the IP
      */
-    public static Destination valueOf(final IP ip) {
-	return valueOfInternal(Objects.requireNonNull(ip));
-    }
-
-    /**
-     * Get Destination object with the specified IP, used internally
-     * 
-     * @param ip
-     *            an IP
-     * @return destination object of the IP
-     */
-    private static Destination valueOfInternal(final IP ip) {
-	if (ip.m_maskSize == ip.getSize()) {
+    public static Destination valueOf(final IP ip, final Destination.Cache cache) {
+	if (cache != null && ip.m_maskSize == ip.getSize()) {
 	    // If ip is a full IP (most common destination objects) search it in
 	    // cache, or add one if one doesn't exist.
 	    if (ip instanceof IPv4) {
-		return DestinationCache.IPv4Cache.getOrAdd(((IPv4) ip).m_address,
-			DestinationCache.IPv4AddressToDestinationSupplier);
+		return cache.IPv4Cache.getOrAdd(((IPv4) ip).m_address, cache.ipv4DestinationsMappingFunction);
 	    }
 	    if (ip instanceof IPv6) {
-		return DestinationCache.IPv6Cache.getOrAdd((IPv6) ip, DestinationCache.cachedIPToDestinationSupplier);
+		return cache.IPv6Cache.getOrAdd(((IPv6) ip).m_address, cache.ipv6DestinationsMappingFunction);
 	    }
 	}
 	return new Destination(ip);
@@ -144,46 +127,36 @@ public class Destination extends IPAttribute {
      *
      * @see Cache
      */
-    private static class DestinationCache {
+    public static final class Cache {
+
+	private final IP.Cache ipsCache;
 
 	/**
 	 * Cache of destination objects with full(not subnetwork) IPv4 ips.
 	 */
-	static final Int2ObjectCache<Destination> IPv4Cache;
+	private final Int2ObjectCache<Destination> IPv4Cache;
 
 	/**
 	 * Cache of destination objects with full(not subnetwork) IPv6 ips.
 	 */
-	static final Cache<IPv6, Destination> IPv6Cache;
+	private final breakingtherules.utilities.Cache<int[], Destination> IPv6Cache;
 
-	/**
-	 * Supplier used to supply new destination objects if need to the cache
-	 * in case they are missing.
-	 * <p>
-	 * The supplier is used when the IP key is cached IP.
-	 * <p>
-	 * Used when using {@link Cache#getOrAdd(Object, Function)}.
-	 */
-	static final Function<IP, Destination> cachedIPToDestinationSupplier;
+	private final IntFunction<Destination> ipv4DestinationsMappingFunction;
 
-	/**
-	 * Supplier used to supply new destination objects if need to the cache
-	 * in case they are missing.
-	 * <p>
-	 * The supplier is used when the IP key is uncached IP.
-	 * <p>
-	 * Used when using {@link Cache#getOrAdd(Object, Function)}.
-	 */
-	static final Function<IP, Destination> uncachedIPToDestinationSupplier;
+	private final Function<int[], Destination> ipv6DestinationsMappingFunction;
 
-	static final IntFunction<Destination> IPv4AddressToDestinationSupplier;
+	public Cache(final IP.Cache ipsCache) {
+	    this.ipsCache = ipsCache != null ? ipsCache : new IP.Cache();
+	    ipv4DestinationsMappingFunction = address -> new Destination(
+		    ipsCache.ipv4Cache.cache.getOrAdd(address, IPv4.Cache.supplier));
+	    ipv6DestinationsMappingFunction = address -> new Destination(
+		    ipsCache.ipv6Cache.cache.getOrAdd(address, IPv6.Cache.supplier));
+	    IPv4Cache = new Int2ObjectSoftHashCache<>();
+	    IPv6Cache = new SoftCustomHashCache<>(IPv6.Cache.IPv6AddressesStrategy.INSTANCE);
+	}
 
-	static {
-	    IPv4Cache = Int2ObjectCaches.synchronizedCache(new Int2ObjectSoftHashCache<>());
-	    IPv6Cache = Caches.synchronizedCache(new SoftCustomHashCache<>(IPv6AddressStrategy.INSTANCE));
-	    cachedIPToDestinationSupplier = ip -> new Destination(ip);
-	    uncachedIPToDestinationSupplier = ip -> new Destination(ip.cache());
-	    IPv4AddressToDestinationSupplier = address -> new Destination(IPv4.valueOfBits(address));
+	public IP.Cache getIPsCache() {
+	    return ipsCache;
 	}
 
     }

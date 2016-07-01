@@ -327,9 +327,7 @@ public class HeavySynchronizedHashCache<K, E> implements Cache<K, E> {
 
 	    synchronized (entry) {
 		lock.unlock();
-		final E element = supplier.apply(key);
-		entry.element = element;
-		return element;
+		return entry.element = supplier.apply(key);
 	    }
 
 	} finally {

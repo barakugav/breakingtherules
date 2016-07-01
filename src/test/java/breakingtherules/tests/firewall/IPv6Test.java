@@ -34,28 +34,28 @@ public class IPv6Test extends TestBase {
     @Test
     public void constructorTestWithMaskSize() {
 	int[] address = FirewallTestsUtility.getRandomAddressIPv6();
-	int maskSize = FirewallTestsUtility.getRandomMaskSizeIPv6();
+	short maskSize = FirewallTestsUtility.getRandomMaskSizeIPv6();
 	IPv6.valueOf(address, maskSize);
     }
 
     @Test(expected = NullPointerException.class)
     public void constructorTestWithMaskSizeNullAdress() {
 	int[] address = null;
-	int maskSize = FirewallTestsUtility.getRandomMaskSizeIPv6();
+	short maskSize = FirewallTestsUtility.getRandomMaskSizeIPv6();
 	IPv6.valueOf(address, maskSize);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void constructorTestWithNegativeMaskSize() {
 	int[] address = FirewallTestsUtility.getRandomAddressIPv6();
-	int maskSize = -1;
+	short maskSize = -1;
 	IPv6.valueOf(address, maskSize);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void constructorTestWithMaskSizeOverMaxLength() {
 	int[] address = FirewallTestsUtility.getRandomAddressIPv6();
-	int maskSize = IPv6.SIZE + 1;
+	short maskSize = IPv6.SIZE + 1;
 	IPv6.valueOf(address, maskSize);
 
     }
@@ -103,7 +103,7 @@ public class IPv6Test extends TestBase {
 
     @Test
     public void constructorFromStringTestMaskSize() {
-	int maskSize = 26;
+	short maskSize = 26;
 	String ipStr = "215:255:457:4966:0:65535:78:1257";
 	int[] address = new int[] { 215, 192, 0, 0, 0, 0, 0, 0 };
 	IP ip = IPv6.valueOf(ipStr + "/" + maskSize);
@@ -499,7 +499,7 @@ public class IPv6Test extends TestBase {
 	expected[1] = new int[] { 0, 0, 0, 0, 0, 0, 0, 0 };
 	expected[0] = new int[] { 0, 0, 0, 0, 0, 0, 0, 0 };
 
-	for (int maskSize = 128; maskSize >= 0; maskSize--) {
+	for (short maskSize = 128; maskSize >= 0; maskSize--) {
 	    IPv6 ip = IPv6.valueOf(address, maskSize);
 	    assertEquals("Mask size " + maskSize, maskSize, ip.getMaskSize());
 	    assertEquals("Mask size " + maskSize, expected[maskSize], ip.getAddress());
@@ -514,7 +514,7 @@ public class IPv6Test extends TestBase {
 
     @Test
     public void getMaskSizeTestConstructorWithMaskSize() {
-	int maskSize = FirewallTestsUtility.getRandomMaskSizeIPv6();
+	short maskSize = FirewallTestsUtility.getRandomMaskSizeIPv6();
 	IPv6 ip = IPv6.valueOf(FirewallTestsUtility.getRandomAddressIPv6(), maskSize);
 	assertEquals(maskSize, ip.getMaskSize());
     }
@@ -735,7 +735,7 @@ public class IPv6Test extends TestBase {
 	expected[0] = new int[] { 0, 0, 0, 0, 0, 0, 0, 0 };
 
 	IPv6 ip = IPv6.valueOf(address);
-	for (int maskSize = 128; maskSize-- > 0;) {
+	for (short maskSize = 128; maskSize-- > 0;) {
 	    assertTrue("Mask size " + maskSize, ip.hasParent());
 	    IPv6 parent = ip.getParent();
 	    assertNotNull("Mask size " + maskSize, parent);
@@ -748,7 +748,7 @@ public class IPv6Test extends TestBase {
 
     @Test(expected = IllegalStateException.class)
     public void getParentTestPrefix0() {
-	IPv6 ip = IPv6.valueOf(FirewallTestsUtility.getRandomAddressIPv6(), 0);
+	IPv6 ip = IPv6.valueOf(FirewallTestsUtility.getRandomAddressIPv6(), (short) 0);
 	assertFalse(ip.hasParent());
 	ip.getParent();
     }
@@ -757,21 +757,21 @@ public class IPv6Test extends TestBase {
     public void hasChildrenTest() {
 	final int repeat = 25;
 	for (int i = 0; i < repeat; i++) {
-	    int maskSize = rand.nextInt(11) + 22;
+	    short maskSize = (short) (rand.nextInt(11) + 22);
 	    int[] address = FirewallTestsUtility.getRandomAddressIPv6();
 	    IPv6 ip = IPv6.valueOf(address, maskSize);
 	    assertEquals("maskSize=" + ip.getMaskSize(), ip.getMaskSize() != IPv6.SIZE, ip.hasChildren());
 	}
 
 	for (int i = 0; i < repeat; i++) {
-	    int maskSize = IPv6.SIZE;
+	    short maskSize = IPv6.SIZE;
 	    int[] address = FirewallTestsUtility.getRandomAddressIPv6();
 	    IPv6 ip = IPv6.valueOf(address, maskSize);
 	    assertFalse(ip.hasChildren());
 	}
 
 	for (int i = 0; i < repeat; i++) {
-	    for (int maskSize = 0; maskSize < IPv6.SIZE; maskSize++) {
+	    for (short maskSize = 0; maskSize < IPv6.SIZE; maskSize++) {
 		int[] address = FirewallTestsUtility.getRandomAddressIPv6();
 		IPv6 ip = IPv6.valueOf(address, maskSize);
 		assertTrue(ip.hasChildren());
@@ -1205,8 +1205,8 @@ public class IPv6Test extends TestBase {
 	expected[1][0] = new int[] { 0b0000000000000000, 0, 0, 0, 0, 0, 0, 0 };
 	int[] address = new int[] { 0, 0, 0, 0, 0, 0, 0, 0 };
 
-	IPv6 ip = IPv6.valueOf(address, 0);
-	for (int maskSize = 0; maskSize < 128; maskSize++) {
+	IPv6 ip = IPv6.valueOf(address, (short) 0);
+	for (short maskSize = 0; maskSize < 128; maskSize++) {
 
 	    assertTrue("maskSize=" + maskSize + ", has no children", ip.hasChildren());
 	    IPv6[] children = null;
@@ -1247,7 +1247,7 @@ public class IPv6Test extends TestBase {
     public void equalsTestItselfOneIpWithConstructorWithMaskSize() {
 	int[] address = FirewallTestsUtility.getRandomAddressIPv6();
 	IPv6 ip1 = IPv6.valueOf(address);
-	IPv6 ip2 = IPv6.valueOf(address, 128);
+	IPv6 ip2 = IPv6.valueOf(address, (short) 128);
 	assertTrue(ip1.equals(ip2));
 	assertTrue(ip2.equals(ip1));
     }
@@ -1255,7 +1255,7 @@ public class IPv6Test extends TestBase {
     @Test
     public void equalsTestItselfTwoIpwithConstructorWithMaskSize() {
 	int[] address = FirewallTestsUtility.getRandomAddressIPv6();
-	int maskSize = FirewallTestsUtility.getRandomMaskSizeIPv6();
+	short maskSize = FirewallTestsUtility.getRandomMaskSizeIPv6();
 	IPv6 ip1 = IPv6.valueOf(address, maskSize);
 	IPv6 ip2 = IPv6.valueOf(address, maskSize);
 	assertTrue(ip1.equals(ip2));
@@ -1265,8 +1265,8 @@ public class IPv6Test extends TestBase {
     @Test
     public void equalsTestNotEqualsItselfTwoDifferentMaskSize() {
 	int[] address = FirewallTestsUtility.getRandomAddressIPv6();
-	int maskSize1 = FirewallTestsUtility.getRandomMaskSizeIPv6();
-	int maskSize2;
+	short maskSize1 = FirewallTestsUtility.getRandomMaskSizeIPv6();
+	short maskSize2;
 	do {
 	    maskSize2 = FirewallTestsUtility.getRandomMaskSizeIPv6();
 	} while (maskSize1 == maskSize2);
@@ -1292,7 +1292,7 @@ public class IPv6Test extends TestBase {
 
     @Test
     public void containsTestZeroMaskSizeContainsAll() {
-	IPv6 ip1 = IPv6.valueOf(new int[] { 0, 0, 0, 0, 0, 0, 0, 0 }, 0);
+	IPv6 ip1 = IPv6.valueOf(new int[] { 0, 0, 0, 0, 0, 0, 0, 0 }, (short) 0);
 	IPv6 ip2 = IPv6.valueOf(FirewallTestsUtility.getRandomAddressIPv6());
 	assertTrue(ip1.contains(ip2));
 	assertFalse(ip2.contains(ip1));
@@ -1300,7 +1300,7 @@ public class IPv6Test extends TestBase {
 
     @Test
     public void containsTestMaskSize16() {
-	IPv6 ip1 = IPv6.valueOf(new int[] { 145, 0, 0, 0, 0, 0, 0, 0 }, 16);
+	IPv6 ip1 = IPv6.valueOf(new int[] { 145, 0, 0, 0, 0, 0, 0, 0 }, (short) 16);
 	IPv6 ip2 = IPv6.valueOf(new int[] { 145, 55, 0, 0, 0, 0, 0, 0 });
 	assertTrue(ip1.contains(ip2));
 	assertFalse(ip2.contains(ip1));
@@ -1317,7 +1317,7 @@ public class IPv6Test extends TestBase {
 
     @Test
     public void containsTestMaskSize31() {
-	IPv6 ip1 = IPv6.valueOf(new int[] { 16, 216, 0, 0, 0, 0, 0, 0 }, 31);
+	IPv6 ip1 = IPv6.valueOf(new int[] { 16, 216, 0, 0, 0, 0, 0, 0 }, (short) 31);
 	IPv6 ip2 = IPv6.valueOf(new int[] { 16, 217, 11, 7, 0, 0, 0, 0 });
 	assertTrue(ip1.contains(ip2));
 	assertFalse(ip2.contains(ip1));
@@ -1337,7 +1337,7 @@ public class IPv6Test extends TestBase {
 
     @Test
     public void containsTestMaskSize45() {
-	IPv6 ip1 = IPv6.valueOf(new int[] { 0, 160, 40, 0, 0, 0, 0, 0 }, 45);
+	IPv6 ip1 = IPv6.valueOf(new int[] { 0, 160, 40, 0, 0, 0, 0, 0 }, (short) 45);
 	IPv6 ip2 = IPv6.valueOf(new int[] { 0, 160, 47, 7, 0, 0, 0, 0 });
 	assertTrue(ip1.contains(ip2));
 	assertFalse(ip2.contains(ip1));
@@ -1357,20 +1357,20 @@ public class IPv6Test extends TestBase {
 
     @Test
     public void containsTestMaskSize59() {
-	IPv6 ip1 = IPv6.valueOf(new int[] { 41, 99, 243, 160, 0, 0, 0, 0 }, 59);
-	IPv6 ip2 = IPv6.valueOf(new int[] { 41, 99, 243, 160, 0, 0, 0, 0 }, 64);
+	IPv6 ip1 = IPv6.valueOf(new int[] { 41, 99, 243, 160, 0, 0, 0, 0 }, (short) 59);
+	IPv6 ip2 = IPv6.valueOf(new int[] { 41, 99, 243, 160, 0, 0, 0, 0 }, (short) 64);
 	assertTrue(ip1.contains(ip2));
 	assertFalse(ip2.contains(ip1));
-	ip2 = IPv6.valueOf(new int[] { 41, 99, 243, 160, 0, 0, 0, 0 }, 59);
+	ip2 = IPv6.valueOf(new int[] { 41, 99, 243, 160, 0, 0, 0, 0 }, (short) 59);
 	assertTrue(ip1.contains(ip2));
 	assertTrue(ip2.contains(ip1));
-	ip2 = IPv6.valueOf(new int[] { 41, 99, 243, 168, 0, 0, 0, 0 }, 61);
+	ip2 = IPv6.valueOf(new int[] { 41, 99, 243, 168, 0, 0, 0, 0 }, (short) 61);
 	assertTrue(ip1.contains(ip2));
 	assertFalse(ip2.contains(ip1));
-	ip2 = IPv6.valueOf(new int[] { 41, 99, 243, 176, 0, 0, 0, 0 }, 62);
+	ip2 = IPv6.valueOf(new int[] { 41, 99, 243, 176, 0, 0, 0, 0 }, (short) 62);
 	assertTrue(ip1.contains(ip2));
 	assertFalse(ip2.contains(ip1));
-	ip2 = IPv6.valueOf(new int[] { 41, 99, 243, 224, 0, 0, 0, 0 }, 59);
+	ip2 = IPv6.valueOf(new int[] { 41, 99, 243, 224, 0, 0, 0, 0 }, (short) 59);
 	assertFalse(ip1.contains(ip2));
 	assertFalse(ip2.contains(ip1));
     }

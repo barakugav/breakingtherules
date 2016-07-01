@@ -17,6 +17,7 @@ import breakingtherules.firewall.Attribute;
 import breakingtherules.firewall.Destination;
 import breakingtherules.firewall.Filter;
 import breakingtherules.firewall.Hit;
+import breakingtherules.firewall.IP;
 import breakingtherules.firewall.Rule;
 import breakingtherules.firewall.Service;
 import breakingtherules.firewall.Source;
@@ -32,6 +33,10 @@ import breakingtherules.utilities.Utility;
  * @see CSVHitsDao
  */
 public class CSVParser {
+
+    private Source.Cache sourceCache;
+    private Destination.Cache destinationCache;
+    private Service.Cache serviceCache;
 
     /**
      * The column index of source attribute in the CSV file or -1 if doesn't
@@ -137,6 +142,30 @@ public class CSVParser {
 	destinationIndex = columnsTypes.indexOf(DESTINATION);
 	serviceProtocolIndex = columnsTypes.indexOf(SERVICE_PROTOCOL);
 	servicePortIndex = columnsTypes.indexOf(SERVICE_PORT);
+    }
+
+    public Source.Cache getSourceCache() {
+	return sourceCache;
+    }
+
+    public Destination.Cache getDestinationCache() {
+	return destinationCache;
+    }
+
+    public Service.Cache getServiceCache() {
+	return serviceCache;
+    }
+
+    public void setSourceCache(final Source.Cache cache) {
+	sourceCache = cache;
+    }
+
+    public void setDestinationCache(final Destination.Cache cache) {
+	destinationCache = cache;
+    }
+
+    public void setServiceCache(final Service.Cache cache) {
+	serviceCache = cache;
     }
 
     /**
@@ -330,6 +359,10 @@ public class CSVParser {
 	}
 
 	final CSVParser parser = new CSVParser(columnsTypes);
+	final IP.Cache ipsCache = new IP.Cache();
+	parser.setSourceCache(new Source.Cache(ipsCache));
+	parser.setDestinationCache(new Destination.Cache(ipsCache));
+	parser.setServiceCache(new Service.Cache());
 	int lineNumber = 0;
 
 	try (final BufferedReader reader = new BufferedReader(new FileReader(repoFile))) {
@@ -361,9 +394,9 @@ public class CSVParser {
      * @throws CSVParseException
      *             if fails to parse source
      */
-    private static Source parseSource(final String source) throws CSVParseException {
+    private Source parseSource(final String source) throws CSVParseException {
 	try {
-	    return Source.valueOf(source);
+	    return Source.valueOf(source, sourceCache);
 	} catch (final IllegalArgumentException e) {
 	    throw new CSVParseException("Unable to parse source: ", e);
 	}
@@ -378,9 +411,9 @@ public class CSVParser {
      * @throws CSVParseException
      *             if fails to parse destination
      */
-    private static Destination parseDestination(final String destination) throws CSVParseException {
+    private Destination parseDestination(final String destination) throws CSVParseException {
 	try {
-	    return Destination.valueOf(destination);
+	    return Destination.valueOf(destination, destinationCache);
 	} catch (final IllegalArgumentException e) {
 	    throw new CSVParseException("Unable to parse destination: ", e);
 	}
@@ -397,9 +430,9 @@ public class CSVParser {
      * @throws CSVParseException
      *             if fails to parse service
      */
-    private static Service parseService(final String port, final String protocol) throws CSVParseException {
+    private Service parseService(final String port, final String protocol) throws CSVParseException {
 	try {
-	    return Service.valueOf(Service.parseProtocolCode(protocol), Service.parsePort(port));
+	    return Service.valueOf(Service.parseProtocolCode(protocol), Service.parsePort(port), serviceCache);
 	} catch (final IllegalArgumentException e) {
 	    throw new CSVParseException("Unable to parse service: ", e);
 	}

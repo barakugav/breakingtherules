@@ -4,10 +4,7 @@ import java.util.Objects;
 import java.util.function.Function;
 import java.util.function.IntFunction;
 
-import breakingtherules.utilities.Cache;
-import breakingtherules.utilities.Caches;
 import breakingtherules.utilities.Int2ObjectCache;
-import breakingtherules.utilities.Int2ObjectCaches;
 import breakingtherules.utilities.Int2ObjectSoftHashCache;
 import breakingtherules.utilities.SoftCustomHashCache;
 
@@ -74,7 +71,11 @@ public class Source extends IPAttribute {
      */
     @Override
     public Source createMutation(final IP ip) {
-	return Source.valueOf(ip);
+	return Source.valueOf(ip, null);
+    }
+
+    public static Source valueOf(final String s) {
+	return new Source(IP.valueOf(s, null));
     }
 
     /**
@@ -87,17 +88,12 @@ public class Source extends IPAttribute {
      * @return Source object with the IP parsed from the string.
      * @see IP#valueOf(String)
      */
-    public static Source valueOf(final String s) {
-	final IP ip = IP.valueOf(s, false);
-	if (ip.m_maskSize == ip.getSize()) {
-	    if (ip instanceof IPv4) {
-		return SourceCache.IPv4Cache.getOrAdd(((IPv4) ip).m_address, SourceCache.IPv4AddressToSourceSupplier);
-	    }
-	    if (ip instanceof IPv6) {
-		return SourceCache.IPv6Cache.getOrAdd((IPv6) ip, SourceCache.uncachedIPv6ToSourceSupplier);
-	    }
-	}
-	return new Source(ip);
+    public static Source valueOf(final String s, final Source.Cache cache) {
+	return valueOf(IP.valueOf(s, null), cache);
+    }
+
+    public static Source valueOf(final IP ip) {
+	return new Source(Objects.requireNonNull(ip));
     }
 
     /**
@@ -109,30 +105,18 @@ public class Source extends IPAttribute {
      * @throws NullPointerException
      *             if the IP is null.
      */
-    public static Source valueOf(final IP ip) {
-	return valueOfInternal(Objects.requireNonNull(ip));
-    }
-
-    /**
-     * Get Source object with the specified IP, used internally.
-     * 
-     * @param ip
-     *            an IP.
-     * @return Source object with the specified IP.
-     */
-    private static Source valueOfInternal(final IP ip) {
-	if (ip.m_maskSize == ip.getSize()) {
+    public static Source valueOf(final IP ip, final Source.Cache cache) {
+	if (cache != null && ip.m_maskSize == ip.getSize()) {
 	    // If ip is a full IP (most common source objects) search it in
 	    // cache, or add one if one doesn't exist.
 	    if (ip instanceof IPv4) {
-		return SourceCache.IPv4Cache.getOrAdd(((IPv4) ip).m_address, SourceCache.IPv4AddressToSourceSupplier);
+		return cache.IPv4Cache.getOrAdd(((IPv4) ip).m_address, cache.ipv4SourcesMappingFunction);
 	    }
 	    if (ip instanceof IPv6) {
-		return SourceCache.IPv6Cache.getOrAdd((IPv6) ip, SourceCache.cachedIPv6ToSourceSupplier);
+		return cache.IPv6Cache.getOrAdd(((IPv6) ip).m_address, cache.ipv6SourcesMapptingFunction);
 	    }
 	}
 	return new Source(ip);
-
     }
 
     /**
@@ -143,46 +127,36 @@ public class Source extends IPAttribute {
      *
      * @see Cache
      */
-    private static class SourceCache {
+    public static final class Cache {
+
+	private final IP.Cache ipsCache;
 
 	/**
 	 * Cache of source objects with full(not subnetwork) IPv4 ips.
 	 */
-	static final Int2ObjectCache<Source> IPv4Cache;
+	private final Int2ObjectCache<Source> IPv4Cache;
 
 	/**
 	 * Cache of source objects with full(not subnetwork) IPv6 ips.
 	 */
-	static final Cache<IPv6, Source> IPv6Cache;
+	private final breakingtherules.utilities.Cache<int[], Source> IPv6Cache;
 
-	/**
-	 * Supplier used to supply new source objects to the cache in case they
-	 * are missing.
-	 * <p>
-	 * The supplier is used when the IP key is cached IP.
-	 * <p>
-	 * Used by {@link Cache#getOrAdd(Object, Function)}.
-	 */
-	static final Function<IPv6, Source> cachedIPv6ToSourceSupplier;
+	private final IntFunction<Source> ipv4SourcesMappingFunction;
 
-	/**
-	 * Supplier used to supply new source objects to the cache in case they
-	 * are missing.
-	 * <p>
-	 * The supplier is used when the IP key is uncached IP.
-	 * <p>
-	 * Used by {@link Cache#getOrAdd(Object, Function)}.
-	 */
-	static final Function<IPv6, Source> uncachedIPv6ToSourceSupplier;
+	private final Function<int[], Source> ipv6SourcesMapptingFunction;
 
-	static final IntFunction<Source> IPv4AddressToSourceSupplier;
+	public Cache(final IP.Cache ipsCache) {
+	    this.ipsCache = ipsCache != null ? ipsCache : new IP.Cache();
+	    ipv4SourcesMappingFunction = address -> new Source(
+		    ipsCache.ipv4Cache.cache.getOrAdd(address, IPv4.Cache.supplier));
+	    ipv6SourcesMapptingFunction = address -> new Source(
+		    ipsCache.ipv6Cache.cache.getOrAdd(address, IPv6.Cache.supplier));
+	    IPv4Cache = new Int2ObjectSoftHashCache<>();
+	    IPv6Cache = new SoftCustomHashCache<>(IPv6.Cache.IPv6AddressesStrategy.INSTANCE);
+	}
 
-	static {
-	    IPv4Cache = Int2ObjectCaches.synchronizedCache(new Int2ObjectSoftHashCache<>());
-	    IPv6Cache = Caches.synchronizedCache(new SoftCustomHashCache<>(IPv6AddressStrategy.INSTANCE));
-	    cachedIPv6ToSourceSupplier = ip -> new Source(ip);
-	    uncachedIPv6ToSourceSupplier = ip -> new Source(ip.cache());
-	    IPv4AddressToSourceSupplier = address -> new Source(IPv4.valueOfBits(address));
+	public IP.Cache getIPsCache() {
+	    return ipsCache;
 	}
 
     }

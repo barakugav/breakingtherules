@@ -72,7 +72,7 @@ public class DestinationTest extends TestBase {
 	Source source = Source.valueOf(ip);
 	assertFalse(des.contains(source));
 
-	Service service = Service.valueOf("TCP", 80);
+	Service service = Service.valueOf(Service.protocolCode("TCP"), 80);
 	assertFalse(des.contains(service));
     }
 

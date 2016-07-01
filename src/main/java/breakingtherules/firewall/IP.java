@@ -19,7 +19,7 @@ public abstract class IP implements Comparable<IP> {
     /**
      * Size of the subnetwork mask.
      */
-    final int m_maskSize;
+    final short m_maskSize;
 
     /**
      * Any IP, contains all others.
@@ -42,7 +42,7 @@ public abstract class IP implements Comparable<IP> {
      * @param maskSize
      *            size of subnetwork mask.
      */
-    IP(final int maskSize) {
+    IP(final short maskSize) {
 	m_maskSize = maskSize;
     }
 
@@ -102,7 +102,7 @@ public abstract class IP implements Comparable<IP> {
      * 
      * @return size of the subnetwork mask.
      */
-    public int getMaskSize() {
+    public short getMaskSize() {
 	return m_maskSize;
     }
 
@@ -232,15 +232,11 @@ public abstract class IP implements Comparable<IP> {
      * 
      * @return size of the IP.
      */
-    public abstract int getSize();
+    public abstract short getSize();
 
-    /**
-     * Cache the IP or get a cached clone of this one.
-     * 
-     * @return cached exact clone of this one or this one if there is no such
-     *         cached one.
-     */
-    abstract IP cache();
+    public static IP parseIPFromBits(final List<Boolean> ip, final Class<?> clazz) {
+	return parseIPFromBits(ip, clazz, null);
+    }
 
     /**
      * Parses an IP from bits list.
@@ -257,43 +253,28 @@ public abstract class IP implements Comparable<IP> {
      *             if the given class is not IPv4, IPv6 or AnyIP, or if the bits
      *             list is invalid.
      */
-    public static IP parseIPFromBits(final List<Boolean> ip, final Class<?> clazz) {
+    public static IP parseIPFromBits(final List<Boolean> ip, final Class<?> clazz, final IP.Cache cache) {
 
 	// TODO - remove this method
 
 	if (clazz.equals(IPv4.class)) {
-	    return IPv4.parseIPv4FromBits(ip);
-	} else if (clazz.equals(IPv6.class)) {
-	    return IPv6.parseIPv6FromBits(ip);
-	} else if (clazz.equals(AnyIP.class)) {
-	    return ANY_IP;
-	} else {
-	    throw new IllegalArgumentException(
-		    "Choosen class in unkwon. Expected IPv4, IPv6 or AnyIP. Actual: " + clazz.getSimpleName());
+	    return IPv4.parseIPv4FromBits(ip, cache != null ? cache.ipv4Cache : null);
 	}
+	if (clazz.equals(IPv6.class)) {
+	    return IPv6.parseIPv6FromBits(ip, cache != null ? cache.ipv6Cache : null);
+	}
+	if (clazz.equals(AnyIP.class)) {
+	    return ANY_IP;
+	}
+	throw new IllegalArgumentException(
+		"Choosen class in unkwon. Expected IPv4, IPv6 or AnyIP. Actual: " + clazz.getSimpleName());
     }
 
-    /**
-     * Get IP object parsed from string.
-     * <p>
-     * This method detect formats of IPv4 and IPv6 only.
-     * <p>
-     * 
-     * @param s
-     *            string representation of an IP.
-     * @return IP object based on the String IP
-     * @throws NullPointerException
-     *             if the string is null.
-     * @throws IllegalArgumentException
-     *             if the string is invalid.
-     */
     public static IP valueOf(final String s) {
-	return valueOf(s, true);
+	return valueOf(s, null);
     }
 
     /**
-     * Get IP object parsed from string.
-     * 
      * Get IP object parsed from string.
      * <p>
      * This method detect formats of IPv4 and IPv6 only.
@@ -301,38 +282,52 @@ public abstract class IP implements Comparable<IP> {
      * 
      * @param s
      *            string representation of an IP.
-     * @param useCache
-     *            if true, the cache will be searched for existing IP, else it
-     *            won't.
      * @return IP object based on the String IP
      * @throws NullPointerException
      *             if the string is null.
      * @throws IllegalArgumentException
      *             if the string is invalid.
      */
-    static IP valueOf(final String s, final boolean useCache) {
+    public static IP valueOf(final String s, final IP.Cache cache) {
 	int separator;
 	if ((separator = s.indexOf(IPv4.BLOCKS_SEPARATOR)) >= 0) {
-	    return IPv4.valueOf(s, separator, useCache);
+	    return IPv4.valueOf(s, cache != null ? cache.ipv4Cache : null, separator);
 	}
 	if ((separator = s.indexOf(IPv6.BLOCKS_SEPARATOR)) >= 0) {
-	    return IPv6.valueOf(s, separator, useCache);
+	    return IPv6.valueOf(s, cache != null ? cache.ipv6Cache : null, separator);
 	}
 	if (s.startsWith(ANY_IP_STR)) {
+	    // Start with 'Any'
+
 	    if (s.length() == 7 && s.startsWith("IPv", 3)) {
+		// Equals to 'AnyIPv_'
 		if (s.charAt(6) == '4') {
+		    // Equals to 'AnyIPv4'
 		    return IPv4.ANY_IPv4;
 		}
 		if (s.charAt(6) == '6') {
+		    // Equals to 'AnyIPv6'
 		    return IPv6.ANY_IPv6;
 		}
 	    }
 	    if (s.length() == 3) {
+		// Equals to 'Any'
 		return ANY_IP;
 	    }
-	    throw new IllegalArgumentException("Unkown format: " + s);
 	}
 	throw new IllegalArgumentException("Unknown format: " + s);
+
+    }
+
+    public static final class Cache {
+
+	final IPv4.Cache ipv4Cache;
+	final IPv6.Cache ipv6Cache;
+
+	public Cache() {
+	    ipv4Cache = new IPv4.Cache();
+	    ipv6Cache = new IPv6.Cache();
+	}
 
     }
 
@@ -350,7 +345,7 @@ public abstract class IP implements Comparable<IP> {
 	 * Construct new AnyIP. Called once.
 	 */
 	AnyIP() {
-	    super(0);
+	    super((short) 0);
 	}
 
 	/**
@@ -445,7 +440,7 @@ public abstract class IP implements Comparable<IP> {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public int getSize() {
+	public short getSize() {
 	    return 0;
 	}
 
@@ -479,14 +474,6 @@ public abstract class IP implements Comparable<IP> {
 	@Override
 	public int compareTo(final IP o) {
 	    return o instanceof AnyIP ? 0 : 1;
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	AnyIP cache() {
-	    return this;
 	}
 
     }

@@ -71,7 +71,7 @@ public class FirewallTestsUtility extends TestBase {
 							    // rand(65536)
 	}
 
-	int prefixLength = rand.nextInt(ipID * 48 - 160); // 32 or 128
+	short prefixLength = (short) rand.nextInt(ipID * 48 - 160); // 32 or 128
 
 	if (ipID == 4) {
 	    return IPv4.valueOf(address, prefixLength);
@@ -116,7 +116,7 @@ public class FirewallTestsUtility extends TestBase {
 	    portRangeEnd = rand.nextInt(1 << 16);
 	} while (portRangeStart > portRangeEnd);
 
-	return Service.valueOf(protocol, portRangeStart, portRangeEnd);
+	return Service.valueOf(Service.protocolCode(protocol), portRangeStart, portRangeEnd);
     }
 
     static int getRandomPort() {
@@ -136,7 +136,7 @@ public class FirewallTestsUtility extends TestBase {
 
     static IPv4 getRandomIPv4() {
 	int[] address = getRandomAddressIPv4();
-	int prefixLength = getRandomMaskSizeIPv4();
+	short prefixLength = getRandomMaskSizeIPv4();
 	return IPv4.valueOf(address, prefixLength);
     }
 
@@ -148,13 +148,13 @@ public class FirewallTestsUtility extends TestBase {
 	return address;
     }
 
-    static int getRandomMaskSizeIPv4() {
-	return rand.nextInt(33);
+    static short getRandomMaskSizeIPv4() {
+	return (short) rand.nextInt(33);
     }
 
     static IPv6 getRandomIPv6() {
 	int[] address = getRandomAddressIPv6();
-	int prefixLength = getRandomMaskSizeIPv6();
+	short prefixLength = getRandomMaskSizeIPv6();
 	return IPv6.valueOf(address, prefixLength);
     }
 
@@ -166,8 +166,8 @@ public class FirewallTestsUtility extends TestBase {
 	return address;
     }
 
-    static int getRandomMaskSizeIPv6() {
-	return rand.nextInt(129);
+    static short getRandomMaskSizeIPv6() {
+	return (short) rand.nextInt(129);
     }
 
 }

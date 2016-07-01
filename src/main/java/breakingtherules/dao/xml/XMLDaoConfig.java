@@ -30,27 +30,37 @@ public class XMLDaoConfig {
     /**
      * Repository tag in XML file.
      */
-    static final String TAG_REPOSITORY = "Repository";
+    static final String REPOSITORY_TAG = "Repository";
 
     /**
      * Hit tag in XML file.
      */
-    static final String TAG_HIT = "hit";
+    static final String HIT_TAG = "hit";
 
     /**
      * Source tag in XML file.
      */
-    static final String TAG_SOURCE = "source";
+    static final String SOURCE_TAG = "source";
 
     /**
      * Destination tag in XML file.
      */
-    static final String TAG_DESTINATION = "destination";
+    static final String DESTINATION_TAG = "destination";
 
     /**
      * Service tag in XML file.
      */
-    static final String TAG_SERVICE = "service";
+    static final String SERVICE_TAG = "service";
+
+    /**
+     * Tag of a rule in XML format.
+     */
+    static final String RULE_TAG = "rule";
+
+    /**
+     * Tag of the original rule in XML format.
+     */
+    static final String ORIGINAL_RULE_TAG = "original-rule";
 
     /**
      * Suppresses default constructor, ensuring non-instantiability.

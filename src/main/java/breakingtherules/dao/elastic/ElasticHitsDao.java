@@ -1,7 +1,6 @@
 package breakingtherules.dao.elastic;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -39,6 +38,7 @@ import breakingtherules.firewall.Attribute;
 import breakingtherules.firewall.Destination;
 import breakingtherules.firewall.Filter;
 import breakingtherules.firewall.Hit;
+import breakingtherules.firewall.IP;
 import breakingtherules.firewall.Rule;
 import breakingtherules.firewall.Service;
 import breakingtherules.firewall.Source;
@@ -326,17 +326,23 @@ public class ElasticHitsDao implements HitsDao {
 	    startIndex = 0;
 	}
 
+	final ElasticHitsParser parser = new ElasticHitsParser();
+	final IP.Cache ipsCache = new IP.Cache();
+	parser.setSourceCache(new Source.Cache(ipsCache));
+	parser.setDestinationCache(new Destination.Cache(ipsCache));
+	parser.setServiceCache(new Service.Cache());
+
 	// Scroll until no hits are returned or endIndex has been reached
 	while (true) {
 	    // Go over search results
 	    for (final SearchHit srchHit : scrollResp.getHits().getHits()) {
 		// Add the hit to the answer list, if it passes rules and
 		// filters
-		final Hit firewallHit = toFirewallHit(srchHit);
+		final Hit firewallHit = parser.parseHit(srchHit);
 		if (isMatch(rules, filter, firewallHit)) {
 		    // Found a hit that passes the rules and the filter
 		    if (all || (i >= startIndex && i < endIndex)) {
-			relevantHits.add(toFirewallHit(srchHit));
+			relevantHits.add(firewallHit);
 		    }
 		    i++;
 		    if (i == endIndex && !all) {
@@ -388,53 +394,6 @@ public class ElasticHitsDao implements HitsDao {
 	    }
 	}
 	return true;
-    }
-
-    /**
-     * Translates a SearchHit that represents a firewall Hit, into a firewall
-     * Hit object
-     * 
-     * @param searchHit
-     *            The outcome of an ElasticSearch search - a Hit, representing a
-     *            firewall hit
-     * @throws IllegalArgumentException
-     *             If the searchHit is not in a valid hit format
-     * @return A firewall Hit object with the values from the search
-     */
-    private static Hit toFirewallHit(final SearchHit searchHit) {
-	final Map<String, Object> fields = searchHit.getSource();
-
-	final List<Attribute> attrs = new ArrayList<>();
-
-	final Object allAtributes = fields.get(ElasticDaoConfig.FIELD_ATTRIBUTES);
-	if (!(allAtributes instanceof ArrayList)) {
-	    throw new IllegalArgumentException("The searchHit it not in valid hit format");
-	}
-	for (final Object attributeObj : (ArrayList<?>) allAtributes) {
-	    if (!(attributeObj instanceof Map)) {
-		throw new IllegalArgumentException("The searchHit it not in valid hit format");
-	    }
-	    final Map<?, ?> attributeHash = (Map<?, ?>) attributeObj;
-	    final int attrTypeID = ((Integer) attributeHash.get(ElasticDaoConfig.FIELD_ATTR_TYPEID)).intValue();
-	    final String attrValue = (String) attributeHash.get(ElasticDaoConfig.FIELD_ATTR_VALUE);
-
-	    Attribute attribute;
-	    switch (attrTypeID) {
-	    case Attribute.SOURCE_TYPE_ID:
-		attribute = Source.valueOf(attrValue);
-		break;
-	    case Attribute.DESTINATION_TYPE_ID:
-		attribute = Destination.valueOf(attrValue);
-		break;
-	    case Attribute.SERVICE_TYPE_ID:
-		attribute = Service.valueOf(attrValue);
-		break;
-	    default:
-		throw new IllegalArgumentException("Unkown type id: " + attrTypeID);
-	    }
-	    attrs.add(attribute);
-	}
-	return new Hit(attrs);
     }
 
 }

@@ -24,7 +24,7 @@ public interface Int2ObjectCache<E> {
      */
     public void clear();
 
-    default E getOrAdd(int key, IntFunction<? extends E> supplier) {
+    default E getOrAdd(final int key, final IntFunction<? extends E> supplier) {
 	E elm = get(key);
 	if (elm == null) {
 	    elm = supplier.apply(key);

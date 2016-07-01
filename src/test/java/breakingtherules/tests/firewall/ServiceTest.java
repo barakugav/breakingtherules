@@ -18,7 +18,7 @@ public class ServiceTest extends TestBase {
     public void constructorTestOnePort() {
 	String protocol = "TCP";
 	int port = FirewallTestsUtility.getRandomPort();
-	Service.valueOf(protocol, port);
+	Service.valueOf(Service.protocolCode(protocol), port);
     }
 
     @Test
@@ -32,21 +32,21 @@ public class ServiceTest extends TestBase {
     public void constructorTestOneNegativePort() {
 	String protocol = "TCP";
 	int port = -2;
-	Service.valueOf(protocol, port);
+	Service.valueOf(Service.protocolCode(protocol), port);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void constructorTestOnePortOver2pow16() {
 	String protocol = "TCP";
 	int port = 1 << 16;
-	Service.valueOf(protocol, port);
+	Service.valueOf(Service.protocolCode(protocol), port);
     }
 
     @Test
     public void contructorTestPortRange() {
 	String protocol = "TCP";
 	int range[] = FirewallTestsUtility.getRandomPortRange();
-	Service.valueOf(protocol, range[0], range[1]);
+	Service.valueOf(Service.protocolCode(protocol), range[0], range[1]);
     }
 
     @Test
@@ -60,21 +60,21 @@ public class ServiceTest extends TestBase {
     public void contructorTestPortRangeUpperRangeLowerThanLowerRange() {
 	String protocol = "TCP";
 	int range[] = FirewallTestsUtility.getRandomPortRange();
-	Service.valueOf(protocol, range[1], range[0]);
+	Service.valueOf(Service.protocolCode(protocol), range[1], range[0]);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void contructorTestPortRangeNegativePort() {
 	String protocol = "TCP";
 	int range[] = FirewallTestsUtility.getRandomPortRange();
-	Service.valueOf(protocol, -1, range[1]);
+	Service.valueOf(Service.protocolCode(protocol), -1, range[1]);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void contructorTestPortRangeUpperRangeOver2pow16() {
 	String protocol = "TCP";
 	int range[] = FirewallTestsUtility.getRandomPortRange();
-	Service.valueOf(protocol, range[0], 1 << 16);
+	Service.valueOf(Service.protocolCode(protocol), range[0], 1 << 16);
     }
 
     @Test(expected = NullPointerException.class)
@@ -166,11 +166,11 @@ public class ServiceTest extends TestBase {
 	Service service;
 
 	int port = FirewallTestsUtility.getRandomPort();
-	service = Service.valueOf(protocol, port);
+	service = Service.valueOf(Service.protocolCode(protocol), port);
 	assertTrue(protocol.equals(service.getProtocol()));
 
 	int[] range = FirewallTestsUtility.getRandomPortRange();
-	service = Service.valueOf(protocol, range[0], range[1]);
+	service = Service.valueOf(Service.protocolCode(protocol), range[0], range[1]);
 	assertEquals(protocol, service.getProtocol());
     }
 
@@ -192,7 +192,7 @@ public class ServiceTest extends TestBase {
     public void getPortRangeStartTestOnePort() {
 	String protocol = "TCP";
 	int port = FirewallTestsUtility.getRandomPort();
-	Service service = Service.valueOf(protocol, port);
+	Service service = Service.valueOf(Service.protocolCode(protocol), port);
 	assertEquals(port, service.getPortRangeStart());
     }
 
@@ -200,7 +200,7 @@ public class ServiceTest extends TestBase {
     public void getPortRangeStartTestPortRange() {
 	String protocol = "TCP";
 	int[] range = FirewallTestsUtility.getRandomPortRange();
-	Service service = Service.valueOf(protocol, range[0], range[1]);
+	Service service = Service.valueOf(Service.protocolCode(protocol), range[0], range[1]);
 	assertEquals(range[0], service.getPortRangeStart());
     }
 
@@ -220,7 +220,7 @@ public class ServiceTest extends TestBase {
     public void getPortRangeEndTestOnePort() {
 	String protocol = "TCP";
 	int port = FirewallTestsUtility.getRandomPort();
-	Service service = Service.valueOf(protocol, port);
+	Service service = Service.valueOf(Service.protocolCode(protocol), port);
 	assertEquals(port, service.getPortRangeEnd());
     }
 
@@ -228,7 +228,7 @@ public class ServiceTest extends TestBase {
     public void getPortRangeEndTestPortRange() {
 	String protocol = "TCP";
 	int[] range = FirewallTestsUtility.getRandomPortRange();
-	Service service = Service.valueOf(protocol, range[0], range[1]);
+	Service service = Service.valueOf(Service.protocolCode(protocol), range[0], range[1]);
 	assertEquals(range[1], service.getPortRangeEnd());
     }
 
@@ -247,8 +247,8 @@ public class ServiceTest extends TestBase {
     @Test
     public void containsTestPortRangeContainsOnePort() {
 	String protocol = "TCP";
-	Service service1 = Service.valueOf(protocol, 1);
-	Service service2 = Service.valueOf(protocol, 0, 10);
+	Service service1 = Service.valueOf(Service.protocolCode(protocol), 1);
+	Service service2 = Service.valueOf(Service.protocolCode(protocol), 0, 10);
 	assertFalse(service1.contains(service2));
 	assertTrue(service2.contains(service1));
     }
@@ -256,8 +256,8 @@ public class ServiceTest extends TestBase {
     @Test
     public void containsTestPortRangeContainsPortRange() {
 	String protocol = "TCP";
-	Service service1 = Service.valueOf(protocol, 1, 8);
-	Service service2 = Service.valueOf(protocol, 0, 10);
+	Service service1 = Service.valueOf(Service.protocolCode(protocol), 1, 8);
+	Service service2 = Service.valueOf(Service.protocolCode(protocol), 0, 10);
 	assertFalse(service1.contains(service2));
 	assertTrue(service2.contains(service1));
     }
@@ -266,8 +266,8 @@ public class ServiceTest extends TestBase {
     public void containsTestPortRangeContainsPortRangeDifferentProtocol() {
 	String protocol1 = "TCP";
 	String protocol2 = "UDP";
-	Service service1 = Service.valueOf(protocol1, 1, 8);
-	Service service2 = Service.valueOf(protocol2, 0, 10);
+	Service service1 = Service.valueOf(Service.protocolCode(protocol1), 1, 8);
+	Service service2 = Service.valueOf(Service.protocolCode(protocol2), 0, 10);
 	assertFalse(service1.contains(service2));
 	assertFalse(service2.contains(service1));
     }
@@ -277,7 +277,7 @@ public class ServiceTest extends TestBase {
 	int protocol1 = Service.ANY_PROTOCOL;
 	String protocol2 = "UDP";
 	Service service1 = Service.valueOf(protocol1, 1, 18);
-	Service service2 = Service.valueOf(protocol2, 5, 10);
+	Service service2 = Service.valueOf(Service.protocolCode(protocol2), 5, 10);
 	assertTrue(service1.contains(service2));
 	assertFalse(service2.contains(service1));
     }
@@ -286,8 +286,8 @@ public class ServiceTest extends TestBase {
     public void containsTestContainsItsef() {
 	String protocol = "TCP";
 	int[] range = FirewallTestsUtility.getRandomPortRange();
-	Service service1 = Service.valueOf(protocol, range[0], range[1]);
-	Service service2 = Service.valueOf(protocol, range[0], range[1]);
+	Service service1 = Service.valueOf(Service.protocolCode(protocol), range[0], range[1]);
+	Service service2 = Service.valueOf(Service.protocolCode(protocol), range[0], range[1]);
 	assertTrue(service1.contains(service1));
 	assertTrue(service1.contains(service2));
 	assertTrue(service2.contains(service1));
@@ -297,7 +297,7 @@ public class ServiceTest extends TestBase {
     public void containsTestNotContainsNull() {
 	String protocol = "TCP";
 	int[] range = FirewallTestsUtility.getRandomPortRange();
-	Service service1 = Service.valueOf(protocol, range[0], range[1]);
+	Service service1 = Service.valueOf(Service.protocolCode(protocol), range[0], range[1]);
 	Service service2 = null;
 	assertFalse(service1.contains(service2));
     }
@@ -306,7 +306,7 @@ public class ServiceTest extends TestBase {
     public void containsTestNotContainsOtherAttributes() {
 	String protocol = "TCP";
 	int[] range = FirewallTestsUtility.getRandomPortRange();
-	Service service = Service.valueOf(protocol, range[0], range[1]);
+	Service service = Service.valueOf(Service.protocolCode(protocol), range[0], range[1]);
 
 	Source source = Source.valueOf("1.1.1.1");
 	assertFalse(service.contains(source));

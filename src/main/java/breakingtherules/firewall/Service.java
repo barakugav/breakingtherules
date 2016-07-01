@@ -8,9 +8,7 @@ import java.util.function.IntFunction;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
-import breakingtherules.utilities.Cache;
 import breakingtherules.utilities.Int2ObjectCache;
-import breakingtherules.utilities.Int2ObjectCaches;
 import breakingtherules.utilities.Int2ObjectSoftHashCache;
 import breakingtherules.utilities.Utility;
 
@@ -458,22 +456,12 @@ public class Service extends Attribute {
 	return Utility.parsePositiveIntUncheckedOverflow(s, 0, s.length(), MAX_PROTOCOL_CODE_DIGITS_NUMBER);
     }
 
-    /**
-     * Parses string to port.
-     * <p>
-     * This method is faster then {@link Integer#parseInt(String)} when parsing
-     * protocol codes.
-     * 
-     * @param s
-     *            the string.
-     * @return port parsed from string.
-     * @throws NullPointerException
-     *             if the string is null.
-     * @throws IllegalArgumentException
-     *             if failed to parse to protocol.
-     */
     public static int parsePort(final String s) {
 	return Utility.parsePositiveIntUncheckedOverflow(s, 0, s.length(), MAX_PORT_DIGITIS_NUMBER);
+    }
+
+    public static Service valueOf(final String s) {
+	return valueOf(s, null);
     }
 
     /**
@@ -499,7 +487,7 @@ public class Service extends Attribute {
      *             or if the lower ports bound is greater then the upper ports
      *             bound.
      */
-    public static Service valueOf(final String s) {
+    public static Service valueOf(final String s, final Service.Cache cache) {
 	int separatorIndex = s.indexOf(Utility.SPACE);
 	if (separatorIndex <= 0) {
 	    if (s.equals(ANY)) {
@@ -517,15 +505,13 @@ public class Service extends Attribute {
 	if (separatorIndex < 0) {
 	    // Only one port
 	    if (s.startsWith(ANY, fromIndex)) {
-		return valueOfSinglePortServiceInternal(protocolCode, toPortsRange(MIN_PORT, MAX_PORT));
+		return new Service(protocolCode, toPortsRange(MIN_PORT, MAX_PORT));
 	    }
 
 	    final int port = Utility.parsePositiveIntUncheckedOverflow(s, fromIndex, s.length(),
 		    MAX_PORT_DIGITIS_NUMBER);
-	    if (port < MIN_PORT || port > MAX_PORT) {
-		throw new IllegalArgumentException("Service port: " + Utility.formatRange(MIN_PORT, MAX_PORT, port));
-	    }
-	    return valueOfSinglePortServiceInternal(protocolCode, port);
+	    checkPort(port);
+	    return valueOfInternal(protocolCode, port, cache);
 	}
 
 	// Two ports
@@ -537,10 +523,7 @@ public class Service extends Attribute {
 	} else {
 	    portRangeStart = Utility.parsePositiveIntUncheckedOverflow(s, fromIndex, separatorIndex,
 		    MAX_PORT_DIGITIS_NUMBER);
-	    if (portRangeStart < MIN_PORT || portRangeStart > MAX_PORT) {
-		throw new IllegalArgumentException(
-			"Service port: " + Utility.formatRange(MIN_PORT, MAX_PORT, portRangeStart));
-	    }
+	    checkPort(portRangeStart);
 	}
 	fromIndex = separatorIndex + 1;
 
@@ -550,54 +533,22 @@ public class Service extends Attribute {
 	    portRangeEnd = MAX_PORT;
 	} else {
 	    portRangeEnd = Utility.parsePositiveIntUncheckedOverflow(s, fromIndex, s.length(), MAX_PORT_DIGITIS_NUMBER);
-	    if (portRangeEnd < MIN_PORT || portRangeEnd > MAX_PORT) {
-		throw new IllegalArgumentException(
-			"Service port: " + Utility.formatRange(MIN_PORT, MAX_PORT, portRangeEnd));
-	    }
+	    checkPort(portRangeEnd);
 	}
 
-	if (portRangeEnd == portRangeStart) {
-	    return valueOfSinglePortServiceInternal(protocolCode, portRangeStart);
-	}
-	if (portRangeStart > portRangeEnd) {
+	if (portRangeStart >= portRangeEnd) {
+	    if (portRangeStart == portRangeEnd) {
+		return valueOfInternal(protocolCode, portRangeStart, cache);
+	    }
 	    throw new IllegalArgumentException("portRangeStart > portRangeEnd");
 	}
 	return new Service(protocolCode, toPortsRange(portRangeStart, portRangeEnd));
     }
 
-    /**
-     * Get Service object with the specified protocol and port.
-     * 
-     * @param protocol
-     *            the protocol.
-     * @param port
-     *            the service port.
-     * @return Service object with the specified protocol and port.
-     * @throws IllegalArgumentException
-     *             if there is no such protocol or if the port is out of range (
-     *             {@link #MIN_PORT} to {@link #MAX_PORT}).
-     */
-    public static Service valueOf(final String protocol, final int port) {
-	return valueOf(protocolCode(protocol), port, port);
-    }
-
-    /**
-     * Get Service object with the specified protocol and ports range.
-     * 
-     * @param protocol
-     *            the protocol.
-     * @param portRangeStart
-     *            the lower bound for the ports range
-     * @param portRangeEnd
-     *            the upper bound for the ports range
-     * @return Service object with the specified protocol and ports range
-     * @throws IllegalArgumentException
-     *             if there is no such protocol , or the ports range bounds are
-     *             out of range ({@value #MIN_PORT} to {@value #MAX_PORT}), if
-     *             upper ports bound is lower then lower ports bound.
-     */
-    public static Service valueOf(final String protocol, final int portRangeStart, final int portRangeEnd) {
-	return valueOf(protocolCode(protocol), portRangeStart, portRangeEnd);
+    public static Service valueOf(final int protocolCode, final int port) {
+	checkProtocol(protocolCode);
+	checkPort(port);
+	return new Service(protocolCode, toPortsRange(port));
     }
 
     /**
@@ -612,16 +563,14 @@ public class Service extends Attribute {
      *             if there is no such protocol code or if the port is out of
      *             range ({@link #MIN_PORT} to {@link #MAX_PORT}).
      */
-    public static Service valueOf(final int protocolCode, final int port) {
-	if (protocolCode != ANY_PROTOCOL && (protocolCode < MIN_PROTOCOL || protocolCode > MAX_PROTOCOL)) {
-	    throw new IllegalArgumentException(
-		    "protocol should be in range [" + MIN_PROTOCOL + ", " + MAX_PROTOCOL + "]: " + protocolCode);
-	}
-	if (port < MIN_PORT || port > MAX_PORT) {
-	    throw new IllegalArgumentException(
-		    "Port not in range: " + port + ". should be in range [" + MIN_PORT + ", " + MAX_PORT + "]");
-	}
-	return valueOfSinglePortServiceInternal(protocolCode, port);
+    public static Service valueOf(final int protocolCode, final int port, final Service.Cache cache) {
+	checkProtocol(protocolCode);
+	checkPort(port);
+	return valueOfInternal(protocolCode, port, cache);
+    }
+
+    public static Service valueOf(final int protocolCode, final int portRangeStart, final int portRangeEnd) {
+	return valueOf(protocolCode, portRangeStart, portRangeEnd, null);
     }
 
     /**
@@ -639,22 +588,15 @@ public class Service extends Attribute {
      *             are out of range ({@value #MIN_PORT} to {@value #MAX_PORT}),
      *             if upper ports bound is lower then lower ports bound.
      */
-    public static Service valueOf(final int protocolCode, final int portRangeStart, final int portRangeEnd) {
-	if (protocolCode != ANY_PROTOCOL && (protocolCode < MIN_PROTOCOL || protocolCode > MAX_PROTOCOL)) {
-	    throw new IllegalArgumentException(
-		    "protocol should be in range [" + MIN_PROTOCOL + ", " + MAX_PROTOCOL + "]: " + protocolCode);
-	}
-	if (portRangeStart < MIN_PORT || portRangeStart > MAX_PORT) {
-	    throw new IllegalArgumentException("Port not in range: " + portRangeStart + ". should be in range ["
-		    + MIN_PORT + ", " + MAX_PORT + "]");
-	}
-	if (portRangeEnd < MIN_PORT || portRangeEnd > MAX_PORT) {
-	    throw new IllegalArgumentException(
-		    "Port not in range: " + portRangeEnd + ". should be in range [" + MIN_PORT + ", " + MAX_PORT + "]");
-	}
+    public static Service valueOf(final int protocolCode, final int portRangeStart, final int portRangeEnd,
+	    final Service.Cache cache) {
+	checkProtocol(protocolCode);
+	checkPort(portRangeStart);
+	checkPort(portRangeEnd);
+
 	if (portRangeStart >= portRangeEnd) {
 	    if (portRangeStart == portRangeEnd) {
-		return valueOfSinglePortServiceInternal(protocolCode, portRangeStart);
+		return valueOfInternal(protocolCode, portRangeStart, cache);
 	    }
 	    throw new IllegalArgumentException("portRangeStart > portRangeEnd");
 	}
@@ -671,9 +613,22 @@ public class Service extends Attribute {
      *            the service port
      * @return Service object of the specified protocol and ports
      */
-    private static Service valueOfSinglePortServiceInternal(final int protocolCode, final int port) {
-	// Intentionally using 'new Integer(int)' and not 'Integer.valueOf(int)'
-	return ServiceCache.caches[protocolCode + 1].getOrAdd(port, ServiceCache.suppliers[protocolCode + 1]);
+    private static Service valueOfInternal(final int protocolCode, final int port, final Service.Cache cache) {
+	return cache != null ? cache.caches[protocolCode + 1].getOrAdd(port, cache.suppliers[protocolCode + 1])
+		: new Service(protocolCode, toPortsRange(port));
+    }
+
+    private static void checkProtocol(final int protocolCode) {
+	if (protocolCode != ANY_PROTOCOL && (protocolCode < MIN_PROTOCOL || protocolCode > MAX_PROTOCOL)) {
+	    throw new IllegalArgumentException(
+		    "Service protocol: " + Utility.formatRange(MIN_PROTOCOL, MAX_PROTOCOL, protocolCode));
+	}
+    }
+
+    private static void checkPort(final int port) {
+	if (port < MIN_PORT || port > MAX_PORT) {
+	    throw new IllegalArgumentException("Service port: " + Utility.formatRange(MIN_PORT, MAX_PORT, port));
+	}
     }
 
     /**
@@ -712,7 +667,7 @@ public class Service extends Attribute {
      * @author Yishai Gronich
      *
      */
-    private static class ServiceCache {
+    public final static class Cache {
 
 	/**
 	 * Array of service caches.
@@ -721,18 +676,20 @@ public class Service extends Attribute {
 	 * range) of specific protocol. Services with protocol 'x' are in cache
 	 * number x.
 	 */
-	static final Int2ObjectCache<Service>[] caches;
+	private final Int2ObjectCache<Service>[] caches;
 
 	/**
 	 * Array of suppliers for each service cache.
 	 * <p>
 	 * The supplier supply new service of a single port.
 	 * <p>
-	 * Used by {@link Cache#getOrAdd(Object, Function)}.
+	 * 
+	 * Used by
+	 * {@link breakingtherules.utilities.Cache#getOrAdd(Object, Function)}
 	 */
-	static final IntFunction<Service>[] suppliers;
+	private final IntFunction<Service>[] suppliers;
 
-	static {
+	public Cache() {
 	    final int numberOfCaches = 257; // 256 and 1 for 'any protocol'
 
 	    // Used dummy to suppress warnings
@@ -744,12 +701,12 @@ public class Service extends Attribute {
 	    Object dummy2 = suppliers = new IntFunction[numberOfCaches];
 
 	    for (int i = caches.length; i-- != 0;) {
-		caches[i] = Int2ObjectCaches.synchronizedCache(new Int2ObjectSoftHashCache<>());
+		caches[i] = new Int2ObjectSoftHashCache<>();
 	    }
 
 	    for (int i = suppliers.length; i-- != 0;) {
 		final int protocolCode = i - 1;
-		suppliers[i] = portInteger -> new Service(protocolCode, toPortsRange(portInteger));
+		suppliers[i] = port -> new Service(protocolCode, toPortsRange(port));
 	    }
 	}
 

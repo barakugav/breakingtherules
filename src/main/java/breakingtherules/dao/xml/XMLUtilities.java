@@ -61,8 +61,7 @@ public class XMLUtilities {
 	    // Shouldn't happen.
 	    throw new InternalError(e);
 	}
-	final Document fileDocument = builder.parse(repoFile);
-	return fileDocument;
+	return builder.parse(repoFile);
     }
 
     /**

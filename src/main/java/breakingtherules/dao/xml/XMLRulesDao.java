@@ -19,6 +19,7 @@ import breakingtherules.dao.RulesDao;
 import breakingtherules.dto.ListDto;
 import breakingtherules.firewall.Attribute;
 import breakingtherules.firewall.Destination;
+import breakingtherules.firewall.IP;
 import breakingtherules.firewall.Rule;
 import breakingtherules.firewall.Service;
 import breakingtherules.firewall.Source;
@@ -36,22 +37,6 @@ import breakingtherules.utilities.Utility;
 public class XMLRulesDao implements RulesDao {
 
     /**
-     * Tag of the whole repository in XML format.
-     */
-    private static final String REPOSITORY_TAG = "Repository";
-
-    /**
-     * Tag of a rule in XML format.
-     */
-    private static final String RULE_TAG = "rule";
-
-    /**
-     * Tag of the original rule in XML format.
-     */
-    private static final String ORIGINAL_RULE_TAG = "original-rule";
-
-
-    /**
      * {@inheritDoc}
      */
     @Override
@@ -67,9 +52,11 @@ public class XMLRulesDao implements RulesDao {
 	}
 
 	// Get all rules from repository
-	final Element ruleElem = (Element) repositoryDoc.getElementsByTagName(ORIGINAL_RULE_TAG).item(0);
-	final Rule rule = createRule(ruleElem);
-	return rule;
+	final NodeList originalRulesList = repositoryDoc.getElementsByTagName(XMLDaoConfig.ORIGINAL_RULE_TAG);
+	if (originalRulesList.getLength() != 1) {
+	    throw new XMLParseException("Expected 1 original rule, actual " + originalRulesList.getLength());
+	}
+	return new XMLRulesParser().parseRule((Element) originalRulesList.item(0));
     }
 
     /**
@@ -168,24 +155,23 @@ public class XMLRulesDao implements RulesDao {
 	    // Shouldn't happen.
 	    throw new InternalError(e);
 	}
-	final Document document = builder.newDocument();
+	final Document doc = builder.newDocument();
 
-	final Element repoElm = document.createElement(REPOSITORY_TAG);
+	final XMLRulesParser parser = new XMLRulesParser();
+
+	final Element repoElm = doc.createElement(XMLDaoConfig.REPOSITORY_TAG);
 	for (final Rule rule : rules) {
-	    final Element ruleElm = document.createElement(RULE_TAG);
-	    for (final Attribute attribute : rule) {
-		ruleElm.setAttribute(attribute.getType(), attribute.toString());
-	    }
+	    final Element ruleElm = parser.createElement(doc, rule);
 	    repoElm.appendChild(ruleElm);
 	}
-	final Element ruleElm = document.createElement(ORIGINAL_RULE_TAG);
+	final Element ruleElm = doc.createElement(XMLDaoConfig.ORIGINAL_RULE_TAG);
 	for (final Attribute attribute : originalRule) {
 	    ruleElm.setAttribute(attribute.getType(), attribute.toString());
 	}
 	repoElm.appendChild(ruleElm);
 
-	document.appendChild(repoElm);
-	XMLUtilities.writeFile(fileName, document);
+	doc.appendChild(repoElm);
+	XMLUtilities.writeFile(fileName, doc);
     }
 
     /**
@@ -210,7 +196,13 @@ public class XMLRulesDao implements RulesDao {
 	}
 
 	// Get all rules from repository
-	final NodeList rulesList = repositoryDoc.getElementsByTagName(RULE_TAG);
+	final NodeList rulesList = repositoryDoc.getElementsByTagName(XMLDaoConfig.RULE_TAG);
+
+	final XMLRulesParser parser = new XMLRulesParser();
+	final IP.Cache ipsCache = new IP.Cache();
+	parser.setSourceCache(new Source.Cache(ipsCache));
+	parser.setDestinationCache(new Destination.Cache(ipsCache));
+	parser.setServiceCache(new Service.Cache());
 
 	// Parse into rule objects
 	final ArrayList<Rule> rules = new ArrayList<>(rulesList.getLength());
@@ -219,42 +211,13 @@ public class XMLRulesDao implements RulesDao {
 	    final Node ruleNode = rulesList.item(i);
 	    if (ruleNode.getNodeType() == Node.ELEMENT_NODE) {
 		final Element ruleElm = (Element) ruleNode;
-		final Rule rule = createRule(ruleElm);
+		final Rule rule = parser.parseRule(ruleElm);
 		rules.add(rule);
 	    }
 	}
 	rules.trimToSize();
 
 	return rules;
-    }
-
-    /**
-     * Creates {@link Rule} object from {@link Element} XML object.
-     * <p>
-     * 
-     * @param ruleElm
-     *            XML element with rule attributes
-     * @return rule object with the element attributes
-     * @throws XMLParseException
-     *             if the data is invalid.
-     */
-    private static Rule createRule(final Element ruleElm) throws XMLParseException {
-	// Read attributes from element
-	final String source = ruleElm.getAttribute(Attribute.SOURCE_TYPE);
-	final String destination = ruleElm.getAttribute(Attribute.DESTINATION_TYPE);
-	final String service = ruleElm.getAttribute(Attribute.SERVICE_TYPE);
-
-	// Convert strings to attributes
-
-	final List<Attribute> attributes = new ArrayList<>();
-	try {
-	    attributes.add(Source.valueOf(source));
-	    attributes.add(Destination.valueOf(destination));
-	    attributes.add(Service.valueOf(service));
-	} catch (Exception e) {
-	    throw new XMLParseException(e);
-	}
-	return new Rule(attributes);
     }
 
 }
