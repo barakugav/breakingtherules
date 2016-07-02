@@ -19,8 +19,9 @@ import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
 
 /**
- * The XMLUtilities class is used by XML DAOs, and include only helper static
- * methods.
+ * Utilities class that provide helpers method for XML files.
+ * <p>
+ * The XML DAOs use this class to load and store data in XML format.
  * 
  * @author Barak Ugav
  * @author Yishai Gronich
@@ -28,7 +29,7 @@ import org.xml.sax.SAXException;
  * @see XMLHitsDao
  * @see XMLRulesDao
  */
-public class XMLUtilities {
+class XMLUtilities {
 
     /**
      * Suppresses default constructor, ensuring non-instantiability.
@@ -48,7 +49,7 @@ public class XMLUtilities {
      * @throws SAXException
      *             if failed to parse the file.
      */
-    public static Document readFile(final String fileName) throws IOException, SAXException {
+    static Document readFile(final String fileName) throws IOException, SAXException {
 	final File repoFile = new File(fileName);
 	if (!repoFile.exists()) {
 	    throw new FileNotFoundException(fileName);
@@ -74,7 +75,7 @@ public class XMLUtilities {
      * @throws IOException
      *             if failed to write to memory
      */
-    public static void writeFile(final String path, final Document doc) throws IOException {
+    static void writeFile(final String path, final Document doc) throws IOException {
 	final File file = new File(path);
 	final Transformer transformer;
 	try {

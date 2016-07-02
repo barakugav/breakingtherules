@@ -247,7 +247,8 @@ public class CSVParser extends AbstractParser {
 
 	try (final BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile))) {
 	    if (columnsTypes.contains(SERVICE_PORT) ^ columnsTypes.contains(SERVICE_PROTOCOL)) {
-		throw new IllegalArgumentException("Choose service port and service protocol or neither of them");
+		System.err.println("Warning: Choose service port and service protocol or neither of them! "
+			+ "Will procede and write hits to file, but the hits' service attribute won't be readable.");
 	    }
 	    for (final Hit hit : hits) {
 		if (columnsTypes.contains(SOURCE) && hit.getAttribute(AttributeType.Source) == null) {
@@ -327,7 +328,8 @@ public class CSVParser extends AbstractParser {
 	}
 
 	if (columnsTypes.contains(SERVICE_PORT) ^ columnsTypes.contains(SERVICE_PROTOCOL)) {
-	    throw new IllegalArgumentException("Choose service port and service protocol or neither of them");
+	    System.err.println("Warning: Choose service port and service protocol or neither of them! "
+		    + "Ignoring both for now.");
 	}
 
 	final CSVParser parser = new CSVParser(columnsTypes);
@@ -398,7 +400,7 @@ public class CSVParser extends AbstractParser {
 		atts.add(Source.valueOf(words[sourceIndex], sourceCache));
 		atts.add(Destination.valueOf(words[destinationIndex], destinationCache));
 		atts.add(Service.valueOf(Service.parseProtocolCode(words[serviceProtocolIndex]),
-			Service.parsePort(words[serviceProtocolIndex]), serviceCache));
+			Service.parsePort(words[servicePortIndex]), serviceCache));
 		return new Hit(atts);
 	    };
 	}
@@ -417,7 +419,7 @@ public class CSVParser extends AbstractParser {
 		final List<Attribute> atts = new ArrayList<>(2);
 		atts.add(Source.valueOf(words[sourceIndex], sourceCache));
 		atts.add(Service.valueOf(Service.parseProtocolCode(words[serviceProtocolIndex]),
-			Service.parsePort(words[serviceProtocolIndex]), serviceCache));
+			Service.parsePort(words[servicePortIndex]), serviceCache));
 		return new Hit(atts);
 	    };
 	}
@@ -435,7 +437,7 @@ public class CSVParser extends AbstractParser {
 		final List<Attribute> atts = new ArrayList<>(2);
 		atts.add(Destination.valueOf(words[destinationIndex], destinationCache));
 		atts.add(Service.valueOf(Service.parseProtocolCode(words[serviceProtocolIndex]),
-			Service.parsePort(words[serviceProtocolIndex]), serviceCache));
+			Service.parsePort(words[servicePortIndex]), serviceCache));
 		return new Hit(atts);
 	    };
 	}
@@ -452,7 +454,7 @@ public class CSVParser extends AbstractParser {
 		final String[] words = Utility.breakToWords(line, Utility.TAB, Utility.SPACE);
 		final List<Attribute> atts = new ArrayList<>(1);
 		atts.add(Service.valueOf(Service.parseProtocolCode(words[serviceProtocolIndex]),
-			Service.parsePort(words[serviceProtocolIndex]), serviceCache));
+			Service.parsePort(words[servicePortIndex]), serviceCache));
 		return new Hit(atts);
 	    };
 	}

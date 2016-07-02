@@ -136,7 +136,8 @@ public class JobManager {
      *            this job
      * @param columnTypes
      *            The order of the columns in the CSV file
-     * @param originalRule The original rule of the job
+     * @param originalRule
+     *            The original rule of the job
      * @throws IOException
      *             if any I/O errors occurs.
      * @throws ParseException
@@ -144,8 +145,8 @@ public class JobManager {
      * @throws NullPointerException
      *             if the file is null.
      */
-    public void createJob(final String jobName, final MultipartFile hitsFile, final List<Integer> columnTypes, Rule originalRule)
-	    throws IOException, ParseException {
+    public void createJob(final String jobName, final MultipartFile hitsFile, final List<Integer> columnTypes,
+	    Rule originalRule) throws IOException, ParseException {
 
 	// TODO - treat return value from initRepository.
 	DaoConfig.initRepository(jobName);
@@ -490,6 +491,7 @@ public class JobManager {
      */
     public FileSystemResource getRulesFile() {
 	checkJobState();
+	// TODO - this is not generic
 	return new FileSystemResource(XMLDaoConfig.getRulesFile(m_name));
     }
 
@@ -500,6 +502,7 @@ public class JobManager {
      *             if any I/O errors occurs during the file update.
      */
     private void updateRulesFile() throws IOException {
+	// TODO - this is not generic
 	final String fileName = XMLDaoConfig.getRulesFile(m_name);
 	final List<Rule> rules = getRules();
 	XMLRulesDao.writeRules(fileName, rules, m_originalRule);

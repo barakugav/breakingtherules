@@ -156,7 +156,7 @@ abstract class AttributesContainer implements Iterable<Attribute> {
 		break;
 	    }
 	}
-	for (; index < Attribute.TYPE_COUNT; index++) {
+	for (; ++index < Attribute.TYPE_COUNT;) {
 	    final Attribute attribute = m_attributes[index];
 	    if (attribute != null) {
 		builder.append(", ");

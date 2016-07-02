@@ -82,11 +82,11 @@ public class FirewallTestsUtility extends TestBase {
 	}
     }
 
-    static int getRandomID() {
+    public static int getRandomID() {
 	return rand.nextInt((1 << 31) - 1) + 1; // only positive numbers
     }
 
-    static List<Attribute> getRandomAttributes() {
+    public static List<Attribute> getRandomAttributes() {
 	List<Attribute> attributes = new ArrayList<>();
 	attributes.add(getRandomSource());
 	attributes.add(getRandomDestination());
@@ -94,36 +94,35 @@ public class FirewallTestsUtility extends TestBase {
 	return attributes;
     }
 
-    static Source getRandomSource() {
+    public static Source getRandomSource() {
 	return Source.valueOf(FirewallTestsUtility.getRandomIP());
     }
 
-    static Destination getRandomDestination() {
+    public static Destination getRandomDestination() {
 	return Destination.valueOf(FirewallTestsUtility.getRandomIP());
     }
 
-    static Service getRandomService() {
-	String protocol;
-	if (rand.nextBoolean()) {
-	    protocol = "TCP";
-	} else {
-	    protocol = "UDP";
-	}
+    public static Service getRandomService() {
+	final short protocolCode = getRandomProtocolCode();
 
 	int portRangeStart, portRangeEnd;
 	do {
-	    portRangeStart = rand.nextInt(1 << 16);
-	    portRangeEnd = rand.nextInt(1 << 16);
+	    portRangeStart = getRandomPort();
+	    portRangeEnd = getRandomPort();
 	} while (portRangeStart > portRangeEnd);
 
-	return Service.valueOf(Service.protocolCode(protocol), portRangeStart, portRangeEnd);
+	return Service.valueOf(protocolCode, portRangeStart, portRangeEnd);
     }
 
-    static int getRandomPort() {
+    public static short getRandomProtocolCode() {
+	return (short) rand.nextInt(100);
+    }
+
+    public static int getRandomPort() {
 	return rand.nextInt(1 << 16);
     }
 
-    static int[] getRandomPortRange() {
+    public static int[] getRandomPortRange() {
 	int rangeStart, rangeEnd;
 
 	do {
@@ -134,13 +133,13 @@ public class FirewallTestsUtility extends TestBase {
 	return new int[] { rangeStart, rangeEnd };
     }
 
-    static IPv4 getRandomIPv4() {
+    public static IPv4 getRandomIPv4() {
 	int[] address = getRandomAddressIPv4();
 	short prefixLength = getRandomMaskSizeIPv4();
 	return IPv4.valueOf(address, prefixLength);
     }
 
-    static int[] getRandomAddressIPv4() {
+    public static int[] getRandomAddressIPv4() {
 	int[] address = new int[4];
 	for (int i = 0; i < address.length; i++) {
 	    address[i] = rand.nextInt(1 << 8);
@@ -148,17 +147,17 @@ public class FirewallTestsUtility extends TestBase {
 	return address;
     }
 
-    static short getRandomMaskSizeIPv4() {
+    public static short getRandomMaskSizeIPv4() {
 	return (short) rand.nextInt(33);
     }
 
-    static IPv6 getRandomIPv6() {
+    public static IPv6 getRandomIPv6() {
 	int[] address = getRandomAddressIPv6();
 	short prefixLength = getRandomMaskSizeIPv6();
 	return IPv6.valueOf(address, prefixLength);
     }
 
-    static int[] getRandomAddressIPv6() {
+    public static int[] getRandomAddressIPv6() {
 	int[] address = new int[8];
 	for (int i = 0; i < address.length; i++) {
 	    address[i] = rand.nextInt(1 << 16);
@@ -166,7 +165,7 @@ public class FirewallTestsUtility extends TestBase {
 	return address;
     }
 
-    static short getRandomMaskSizeIPv6() {
+    public static short getRandomMaskSizeIPv6() {
 	return (short) rand.nextInt(129);
     }
 

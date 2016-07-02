@@ -17,7 +17,6 @@ import org.xml.sax.SAXException;
 
 import breakingtherules.dao.RulesDao;
 import breakingtherules.dto.ListDto;
-import breakingtherules.firewall.Attribute;
 import breakingtherules.firewall.Destination;
 import breakingtherules.firewall.IP;
 import breakingtherules.firewall.Rule;
@@ -40,31 +39,10 @@ public class XMLRulesDao implements RulesDao {
      * {@inheritDoc}
      */
     @Override
-    public Rule getOriginalRule(final String jobName) throws IOException, XMLParseException {
-	final String path = XMLDaoConfig.getRulesFile(jobName);
-
-	// Load from file
-	final Document repositoryDoc;
-	try {
-	    repositoryDoc = XMLUtilities.readFile(path);
-	} catch (final SAXException e) {
-	    throw new XMLParseException(e);
-	}
-
-	// Get all rules from repository
-	final NodeList originalRulesList = repositoryDoc.getElementsByTagName(XMLDaoConfig.ORIGINAL_RULE_TAG);
-	if (originalRulesList.getLength() != 1) {
-	    throw new XMLParseException("Expected 1 original rule, actual " + originalRulesList.getLength());
-	}
-	return new XMLRulesParser().parseRule((Element) originalRulesList.item(0));
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public ListDto<Rule> getRules(final String jobName) throws IOException, XMLParseException {
-	return getRulesByPath(XMLDaoConfig.getRulesFile(jobName));
+	final List<Rule> rules = getRulesByPath(XMLDaoConfig.getRulesFile(jobName));
+	final int size = rules.size();
+	return new ListDto<>(rules, 0, size, size);
     }
 
     /**
@@ -78,6 +56,14 @@ public class XMLRulesDao implements RulesDao {
     }
 
     /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Rule getOriginalRule(final String jobName) throws IOException, XMLParseException {
+	return getOriginalRuleByPath(XMLDaoConfig.getRulesFile(jobName));
+    }
+
+    /**
      * Get all rules from repository by repository string path.
      * 
      * @param repoPath
@@ -88,10 +74,8 @@ public class XMLRulesDao implements RulesDao {
      * @throws XMLParseException
      *             if the data is invalid.
      */
-    public ListDto<Rule> getRulesByPath(final String repoPath) throws IOException, XMLParseException {
-	final List<Rule> rules = loadRules(repoPath);
-	final int size = rules.size();
-	return new ListDto<>(rules, 0, size, size);
+    public List<Rule> getRulesByPath(final String repoPath) throws IOException, XMLParseException {
+	return loadRules(repoPath);
     }
 
     /**
@@ -132,6 +116,34 @@ public class XMLRulesDao implements RulesDao {
     }
 
     /**
+     * Get the original rule from a file.
+     * 
+     * @param fileName
+     *            the file name.
+     * @return the original rule parsed from the file.
+     * @throws IOException
+     *             if ant I/O errors occurs.
+     * @throws XMLParseException
+     *             if the data in the file is invalid.
+     */
+    public static Rule getOriginalRuleByPath(final String fileName) throws IOException, XMLParseException {
+	// Load from file
+	final Document repositoryDoc;
+	try {
+	    repositoryDoc = XMLUtilities.readFile(fileName);
+	} catch (final SAXException e) {
+	    throw new XMLParseException(e);
+	}
+
+	// Get all rules from repository
+	final NodeList originalRulesList = repositoryDoc.getElementsByTagName(XMLDaoConfig.ORIGINAL_RULE_TAG);
+	if (originalRulesList.getLength() != 1) {
+	    throw new XMLParseException("Expected 1 original rule, actual " + originalRulesList.getLength());
+	}
+	return new XMLRulesParser().parseRule((Element) originalRulesList.item(0));
+    }
+
+    /**
      * Write a list of rules to a file.
      * <p>
      * 
@@ -150,7 +162,7 @@ public class XMLRulesDao implements RulesDao {
 	try {
 	    final DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 	    builder = factory.newDocumentBuilder();
-	} catch (ParserConfigurationException e) {
+	} catch (final ParserConfigurationException e) {
 	    // Shouldn't happen.
 	    throw new InternalError(e);
 	}
@@ -160,14 +172,12 @@ public class XMLRulesDao implements RulesDao {
 
 	final Element repoElm = doc.createElement(XMLDaoConfig.REPOSITORY_TAG);
 	for (final Rule rule : rules) {
-	    final Element ruleElm = parser.createElement(doc, rule);
-	    repoElm.appendChild(ruleElm);
+	    repoElm.appendChild(parser.createElement(doc, rule));
 	}
-	final Element ruleElm = doc.createElement(XMLDaoConfig.ORIGINAL_RULE_TAG);
-	for (final Attribute attribute : originalRule) {
-	    ruleElm.setAttribute(attribute.getType().toString(), attribute.toString());
-	}
-	repoElm.appendChild(ruleElm);
+
+	// Original rule
+	final Element originalRuleElm = doc.createElement(XMLDaoConfig.ORIGINAL_RULE_TAG);
+	repoElm.appendChild(parser.fillElement(originalRuleElm, originalRule));
 
 	doc.appendChild(repoElm);
 	XMLUtilities.writeFile(fileName, doc);

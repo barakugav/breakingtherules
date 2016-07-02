@@ -1,6 +1,9 @@
 package breakingtherules.tests;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.Random;
+import java.util.function.Consumer;
 
 import org.junit.Assert;
 
@@ -10,6 +13,18 @@ import breakingtherules.utilities.Utility;
 public class TestBase {
 
     protected static final Random rand = new Random();
+
+    public static void tempFileTest(final String prefix, final String suffix, final Consumer<File> test)
+	    throws IOException {
+	File tempFile = null;
+	try {
+	    tempFile = File.createTempFile("breakingtherules_tests_" + prefix, suffix);
+	    tempFile.deleteOnExit();
+	    test.accept(tempFile);
+	} finally {
+	    tempFile.delete();
+	}
+    }
 
     public static void assertEquals(final byte expected, final byte actual) {
 	assertEquals(null, Byte.valueOf(expected), Byte.valueOf(actual));

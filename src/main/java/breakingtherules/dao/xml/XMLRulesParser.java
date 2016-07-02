@@ -1,18 +1,9 @@
 package breakingtherules.dao.xml;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
-import breakingtherules.dao.AbstractParser;
-import breakingtherules.firewall.Attribute;
-import breakingtherules.firewall.Destination;
 import breakingtherules.firewall.Rule;
-import breakingtherules.firewall.Service;
-import breakingtherules.firewall.Source;
-import breakingtherules.firewall.Attribute.AttributeType;
 
 /**
  * Parser that parses rules from {@link Element}.
@@ -24,8 +15,9 @@ import breakingtherules.firewall.Attribute.AttributeType;
  * @author Yishai Gronich
  * 
  * @see Rule
+ * @see XMLRulesDao
  */
-public class XMLRulesParser extends AbstractParser {
+class XMLRulesParser extends AbstractXMLAttributesContainerParser {
 
     /**
      * Construct new parser.
@@ -44,25 +36,11 @@ public class XMLRulesParser extends AbstractParser {
      *             if the data is invalid.
      */
     Rule parseRule(final Element ruleElm) throws XMLParseException {
-	// Read attributes from element
-	// TODO - remove .toLowerCaser() and update repositories files.
-	final String source = ruleElm.getAttribute(AttributeType.Source.name().toLowerCase());
-	final String destination = ruleElm.getAttribute(AttributeType.Destination.name().toLowerCase());
-	final String service = ruleElm.getAttribute(AttributeType.Service.name().toLowerCase());
-
-	// Convert strings to attributes
-
-	// TODO - almost exact code as XMLHitsParser.parseHit(Element).
-
-	final List<Attribute> attributes = new ArrayList<>();
 	try {
-	    attributes.add(Source.valueOf(source, sourceCache));
-	    attributes.add(Destination.valueOf(destination, destinationCache));
-	    attributes.add(Service.valueOf(service, serviceCache));
+	    return new Rule(parseAttributesContainer(ruleElm));
 	} catch (Exception e) {
 	    throw new XMLParseException(e);
 	}
-	return new Rule(attributes);
     }
 
     /**
@@ -75,11 +53,7 @@ public class XMLRulesParser extends AbstractParser {
      * @return element with the rules attributes.
      */
     Element createElement(final Document doc, final Rule rule) {
-	final Element ruleElm = doc.createElement(XMLDaoConfig.RULE_TAG);
-	for (final Attribute attribute : rule) {
-	    ruleElm.setAttribute(attribute.getType().name(), attribute.toString());
-	}
-	return ruleElm;
+	return fillElement(doc.createElement(XMLDaoConfig.RULE_TAG), rule);
     }
 
 }

@@ -39,12 +39,12 @@ public class Service extends Attribute {
     /**
      * The minimum protocol code.
      */
-    private static final short MIN_PROTOCOL = 0;
+    public static final short MIN_PROTOCOL = 0;
 
     /**
      * The maximum protocol code.
      */
-    private static final short MAX_PROTOCOL = 255;
+    public static final short MAX_PROTOCOL = 255;
 
     /**
      * Protocol code that represent 'AnyProtocol'
@@ -156,14 +156,14 @@ public class Service extends Attribute {
 	PROTOCOL_NAMES[58] = "IPv6-ICMP";
 	PROTOCOL_NAMES[59] = "IPv6-NoNxt";
 	PROTOCOL_NAMES[60] = "IPv6-Opts";
-	PROTOCOL_NAMES[61] = "[any host internal protocol]";
+	PROTOCOL_NAMES[61] = "[any-host-internal-protocol]";
 	PROTOCOL_NAMES[62] = "CFTP";
-	PROTOCOL_NAMES[63] = "[any local network]";
+	PROTOCOL_NAMES[63] = "[any-local-network]";
 	PROTOCOL_NAMES[64] = "SAT-EXPAK";
 	PROTOCOL_NAMES[65] = "KRYPTOLAN";
 	PROTOCOL_NAMES[66] = "RVD";
 	PROTOCOL_NAMES[67] = "IPPC";
-	PROTOCOL_NAMES[68] = "";
+	PROTOCOL_NAMES[68] = "[any-distributed-file-system]";
 	PROTOCOL_NAMES[69] = "SAT-MON";
 	PROTOCOL_NAMES[70] = "VISA";
 	PROTOCOL_NAMES[71] = "IPCV";
@@ -195,7 +195,7 @@ public class Service extends Attribute {
 	PROTOCOL_NAMES[96] = "SCC-SP";
 	PROTOCOL_NAMES[97] = "ETHERIP";
 	PROTOCOL_NAMES[98] = "ENCAP";
-	PROTOCOL_NAMES[99] = "[any private encryption scheme]";
+	PROTOCOL_NAMES[99] = "[any-private-encryption-scheme]";
 	PROTOCOL_NAMES[100] = "GMTP";
 	PROTOCOL_NAMES[101] = "IFMP";
 	PROTOCOL_NAMES[102] = "PNNI";
@@ -210,7 +210,7 @@ public class Service extends Attribute {
 	PROTOCOL_NAMES[111] = "IPX-in-IP";
 	PROTOCOL_NAMES[112] = "VRRP";
 	PROTOCOL_NAMES[113] = "PGM";
-	PROTOCOL_NAMES[114] = "[any 0-hop protocol]";
+	PROTOCOL_NAMES[114] = "[any-0-hop-protocol]";
 	PROTOCOL_NAMES[115] = "L2TP";
 	PROTOCOL_NAMES[116] = "DDX";
 	PROTOCOL_NAMES[117] = "IATP";
@@ -243,8 +243,14 @@ public class Service extends Attribute {
 	// 143 - 252
 	// Unassigned
 	//
-	PROTOCOL_NAMES[253] = "[experimentation and testing]";
-	PROTOCOL_NAMES[254] = "[experimentation and testing]";
+	for (int i = 253; i-- != 143;)
+	    PROTOCOL_NAMES[i] = "Unassigned";
+	//
+	// 143 - 252
+	// Unassigned
+	//
+	PROTOCOL_NAMES[253] = "[experimentation-and-testing]";
+	PROTOCOL_NAMES[254] = "[experimentation-and-testing]";
 	PROTOCOL_NAMES[255] = "Reserved";
 
 	final Map<String, Short> map = new HashMap<>();
