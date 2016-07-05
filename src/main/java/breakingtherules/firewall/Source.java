@@ -47,7 +47,7 @@ public class Source extends IPAttribute {
      */
     @Override
     public AttributeType getType() {
-	return AttributeType.Source;
+	return AttributeType.SOURCE;
     }
 
     /**

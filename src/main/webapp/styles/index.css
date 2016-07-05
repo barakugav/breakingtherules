@@ -34,6 +34,9 @@ section {
 .u-emph {
   font-weight: bold; }
 
+.u-shadow, .AlignedTable--originalRule tr:not(:first-child) td {
+  box-shadow: 0 2px 0px rgba(0, 0, 0, 0.26); }
+
 /* Shared Components
 *************************************************/
 .Arrow-top, .Arrow-bottom, .Arrow-left, .Arrow-right {
@@ -87,8 +90,20 @@ section {
 
 /* Progress Section
 *************************************************/
+.AlignedTable--originalRule tr:not(:first-child) {
+  background-color: #90CAF9; }
+  .AlignedTable--originalRule tr:not(:first-child) td {
+    border-top: 0;
+    border-bottom: 0;
+    background-color: transparent; }
+  .AlignedTable--originalRule tr:not(:first-child) td:first-child {
+    border-top-left-radius: 5px;
+    border-bottom-left-radius: 5px; }
+  .AlignedTable--originalRule tr:not(:first-child) td:last-child {
+    border-top-right-radius: 5px;
+    border-bottom-right-radius: 5px; }
+
 .ProgressBox table {
-  border-bottom: 1px solid #ddd;
   margin-bottom: 3rem; }
 
 .ProgressList li {
@@ -154,7 +169,12 @@ section {
   cursor: pointer; }
   .SuggestionTable li:hover {
     text-decoration: underline; }
-  .SuggestionTable li span {
+  .SuggestionTable li.disabled {
+    color: gray;
+    cursor: default; }
+    .SuggestionTable li.disabled:hover {
+      text-decoration: none; }
+  .SuggestionTable li:not(.disabled) span {
     color: black; }
 
 /*# sourceMappingURL=index.css.map */

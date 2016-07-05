@@ -50,14 +50,14 @@ class AbstractXMLAttributesContainerParser extends AbstractParser {
 
 		final Attribute attribute;
 		try {
-		    switch (AttributeType.valueOf(name)) {
-		    case Source:
+		    switch (AttributeType.valueOf(name.toUpperCase())) {
+		    case SOURCE:
 			attribute = Source.valueOf(value, sourceCache);
 			break;
-		    case Destination:
+		    case DESTINATION:
 			attribute = Destination.valueOf(value, destinationCache);
 			break;
-		    case Service:
+		    case SERVICE:
 			attribute = Service.valueOf(value, serviceCache);
 			break;
 		    default:

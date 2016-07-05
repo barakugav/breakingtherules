@@ -1,10 +1,38 @@
 <Repository>
-	<hit source="165.5.4.23" destination="127.0.0.1" service="TCP 80"></hit>
-	<hit source="65.5.4.44" destination="127.55.0.1" service="TCP 80"></hit>
-	<hit source="165.5.4.23" destination="127.0.66.0" service="TCP 40"></hit>
-	<hit source="14.5.98.23" destination="124.0.0.1" service="TCP 443"></hit>
-	<hit source="15.5.4.58" destination="201.0.0.1" service="TCP 246"></hit>
-	<hit source="29.11.4.23" destination="8.0.0.4" service="TCP 4888"></hit>
+	<hit> 
+		<source>165.5.4.23</source> 
+		<destination>127.0.0.1</destination> 
+		<service>TCP 80</service>
+	</hit>
+	<hit> 
+		<source>65.5.4.44</source> 
+		<destination>127.55.0.1</destination> 
+		<service>TCP 80</service>
+	</hit>
+	<hit> 
+		<source>165.5.4.23</source> 
+		<destination>127.0.66.0</destination> 
+		<service>TCP 40</service>
+	</hit>
+	<hit> 
+		<source>14.5.98.23</source> 
+		<destination>124.0.0.1</destination> 
+		<service>TCP 443</service>
+	</hit>
+	<hit> 
+		<source>15.5.4.58</source> 
+		<destination>201.0.0.1</destination> 
+		<service>TCP 246</service>
+	</hit>
+	<hit> 
+		<source>29.11.4.23</source> 
+		<destination>8.0.0.4</destination> 
+		<service>TCP 4888</service>
+	</hit>
 
-	<original-rule source="Any" destination="Any" service="Any TCP"></original-rule>
+	<original-rule> 
+		<source>Any</source>
+		<destination>Any</destination>
+		<service>Any TCP</service>
+	</original-rule>
 </Repository>

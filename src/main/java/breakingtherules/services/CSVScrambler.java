@@ -581,17 +581,17 @@ public class CSVScrambler implements Runnable {
 	    final CSVParser parser = new CSVParser(columnsTypes);
 
 	    if (columnsTypes.contains(CSVParser.SOURCE)) {
-		Node tree = buildTree(inputFile, parser, AttributeType.Source);
+		Node tree = buildTree(inputFile, parser, AttributeType.SOURCE);
 		scrambleTree(tree);
-		mutateHits(inputFile, tempFilePath.toString(), parser, AttributeType.Source, tree);
+		mutateHits(inputFile, tempFilePath.toString(), parser, AttributeType.SOURCE, tree);
 
 		Files.copy(tempFilePath, outputPath, StandardCopyOption.REPLACE_EXISTING);
 		inputFile = outputFile;
 	    }
 	    if (columnsTypes.contains(CSVParser.DESTINATION)) {
-		Node tree = buildTree(inputFile, parser, AttributeType.Destination);
+		Node tree = buildTree(inputFile, parser, AttributeType.DESTINATION);
 		scrambleTree(tree);
-		mutateHits(inputFile, tempFilePath.toString(), parser, AttributeType.Destination, tree);
+		mutateHits(inputFile, tempFilePath.toString(), parser, AttributeType.DESTINATION, tree);
 
 		Files.copy(tempFilePath, outputPath, StandardCopyOption.REPLACE_EXISTING);
 		inputFile = outputFile;

@@ -35,7 +35,9 @@ import breakingtherules.services.algorithm.Suggestion;
 import breakingtherules.services.algorithm.SuggestionsAlgorithm;
 
 /**
- * TODO javadoc
+ * This class manages the current job and allows to create new jobs. One of
+ * these objects exists for each active session, so that each session can have
+ * one job.
  * 
  * @author Barak Ugav
  * @author Yishai Gronich
@@ -377,7 +379,7 @@ public class JobManager {
     private AttributeType[] getAllAttributeTypes() {
 	if (m_allAttributeTypes == null) {
 	    List<AttributeType> allAttributeTypes = new ArrayList<>();
-	    for (final Attribute att : m_originalRule) {
+	    for (final Attribute att : m_originalRule.getAttributes()) {
 		allAttributeTypes.add(att.getType());
 	    }
 	    m_allAttributeTypes = allAttributeTypes.toArray(new AttributeType[allAttributeTypes.size()]);

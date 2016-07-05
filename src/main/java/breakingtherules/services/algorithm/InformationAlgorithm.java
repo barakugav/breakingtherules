@@ -111,7 +111,7 @@ public class InformationAlgorithm implements SuggestionsAlgorithm {
     /**
      * Default value for the ruleWeight parameter
      */
-    private static final double DEFAULT_RULE_WIEGHT = 500;
+    private static final double DEFAULT_RULE_WEIGHT = 500;
 
     /**
      * If true, the information will operate on default. Else, the
@@ -154,7 +154,7 @@ public class InformationAlgorithm implements SuggestionsAlgorithm {
      * Construct new Information algorithm with default rule weight
      */
     public InformationAlgorithm() {
-	m_ruleWeight = DEFAULT_RULE_WIEGHT;
+	m_ruleWeight = DEFAULT_RULE_WEIGHT;
 	m_parallel = DEFAULT_PARALLEL;
 	m_maxThreads = DEFAULT_MAX_THREADS;
 	m_parallelThreshold = DEFAULT_PARALLEL_THRESHOLD;
@@ -393,10 +393,10 @@ public class InformationAlgorithm implements SuggestionsAlgorithm {
 	@Override
 	public void run() {
 	    switch (m_attTypeId) {
-	    case Destination:
+	    case DESTINATION:
 		m_result = getSuggestionsDestination();
 		break;
-	    case Source:
+	    case SOURCE:
 		m_result = getSuggestionsSource();
 		break;
 	    default:
@@ -748,7 +748,8 @@ public class InformationAlgorithm implements SuggestionsAlgorithm {
 	    m_toIndex = toIndex;
 	    m_nextLayer = new IPNode[toIndex - fromIndex];
 	    m_totalSize = totalSize;
-	    m_ruleWeight = ruleWeight;
+	    // m_ruleWeight = ruleWeight; // TODO calculate ruleWeight
+	    m_ruleWeight = ruleWeight * totalSize / 800_000; 
 	}
 
 	/**
@@ -872,8 +873,8 @@ public class InformationAlgorithm implements SuggestionsAlgorithm {
      */
     @SuppressWarnings("unused")
     private static void configCheck() {
-	if (Double.isNaN(DEFAULT_RULE_WIEGHT) || 0 >= DEFAULT_RULE_WIEGHT) {
-	    throw new InternalError("DEFAULT_RULE_WIEGHT(" + DEFAULT_RULE_WIEGHT + ") should be > 0");
+	if (Double.isNaN(DEFAULT_RULE_WEIGHT) || 0 >= DEFAULT_RULE_WEIGHT) {
+	    throw new InternalError("DEFAULT_RULE_WIEGHT(" + DEFAULT_RULE_WEIGHT + ") should be > 0");
 	}
 	if (DEFAULT_MAX_THREADS <= 0) {
 	    throw new InternalError("DEFAULT_MAX_THREADS(" + DEFAULT_MAX_THREADS + ") should be > 0");

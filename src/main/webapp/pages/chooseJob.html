@@ -16,17 +16,17 @@
 				<input type="text" class="form-control" name="job_name" ng-required
 					ng-model="ChJobCtrl.newJobName" />
 			</label>
-			<button class="btn">Start</button>
+			<button type="submit" class="btn">Start</button>
 		</form>
 	</section>
 
 	<section class="JobChoosebox">
-		<form action="" ng-submit="ChJobCtrl.existing()">
+		<form ng-submit="ChJobCtrl.existing()">
 			<h2>Choose an Existing Job</h2>
 			<p>Enter the name of the job you would like to work on:</p>
 			<input type="text" class="form-control" ng-required
 				ng-model="ChJobCtrl.existingJobName" />
-			<button class="btn">Continue</button>	
+			<button type="submit" class="btn">Continue</button>	
 		</form>
 	</section>
 

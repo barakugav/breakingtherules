@@ -50,7 +50,7 @@ public class Destination extends IPAttribute {
      */
     @Override
     public AttributeType getType() {
-	return AttributeType.Destination;
+	return AttributeType.DESTINATION;
     }
 
     /**

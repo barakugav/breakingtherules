@@ -64,13 +64,13 @@ class ElasticHitsParser extends AbstractParser {
 
 	    Attribute attribute;
 	    switch (AttributeType.values()[attrTypeID]) {
-	    case Source:
+	    case SOURCE:
 		attribute = Source.valueOf(attrValue, sourceCache);
 		break;
-	    case Destination:
+	    case DESTINATION:
 		attribute = Destination.valueOf(attrValue, destinationCache);
 		break;
-	    case Service:
+	    case SERVICE:
 		attribute = Service.valueOf(attrValue, serviceCache);
 		break;
 	    default:

@@ -1,30 +1,5 @@
 'use strict';
 
-/****************** Settings ************************/
-
-var settings = {
-
-	guiStrings: {
-		JOB_PROMPT: 'To begin, enter the job id:'
-	},
-	
-	attributes: [
-		'source', 'destination', 'service'
-	]
-
-};
-
-var events = {
-	// global events
-	RULES_CHANGED: 'rulesChanged',
-	FILTER_UPDATE: 'filterUpdate',
-	SUGGESTION_CHOSEN: 'suggestionChosen',
-
-	// specific events
-	INPUT_CLEARED: 'inputCleared',
-	PAGE_CHANGE: 'pageChange',
-
-};
 
 /**************** Main Angular ********************/
 
@@ -98,6 +73,9 @@ var events = {
 		function getFilteredHitsCount() {
 			return status.filteredHitsCount;
 		}
+		function getFilter() {
+			return status.filter;
+		}
 
 		update();
 
@@ -109,317 +87,26 @@ var events = {
 			getCreatedRulesCount: getCreatedRulesCount,
 			getTotalHitsCount: getTotalHitsCount,
 			getCoveredHitsCount: getCoveredHitsCount,
-			getFilteredHitsCount: getFilteredHitsCount
+			getFilteredHitsCount: getFilteredHitsCount,
+			getFilter: getFilter
 		};
 	}]);
 
-	app.controller('MainController', ['$rootScope', 'BtrData', 'Notify', 'StatusMonitor', function($rootScope, BtrData, Notify, StatusMonitor) {
-		this.attributes = settings.attributes;
-
-		$rootScope.$on(events.FILTER_UPDATE, function () {
-			StatusMonitor.update();
-		})
-		$rootScope.$on(events.RULES_CHANGED, function () {
-			StatusMonitor.update();
-		});
-	}]);
-
-	app.controller('ChooseJobController', ['BtrData', '$location', '$scope', function (BtrData, $location, $scope) {
-		var ChJobCtrl = this;
-		ChJobCtrl.hitsFile = null;
-
-		function patience() {
-			alert('Loading all your hits... Please wait...')
-		}
-		this.existing = function () {
-			patience();
-			BtrData.setJob(this.existingJobName).then(function () {
-				$location.url('/main');
-			});
-		};
-		this.new = function () {
-			if (!ChJobCtrl.hitsFile) {
-				alert('You must first choose a hits file.')
-				return;
-			}
-			patience();
-			BtrData.startJob(ChJobCtrl.newJobName, ChJobCtrl.hitsFile).then(function () {
-				BtrData.setJob(ChJobCtrl.newJobName).then(function () {
-					$location.url('/main');
-				});
-			}, function (error) {
-				alert('Uh oh! Error in creating new job. See console for more info.');
-				console.error(error);
-			}, function (progressEvt) {
-				console.log('Upload progress: ' + progressEvt.loaded / progressEvt.total);
-			});	
-		}
-		this.chooseFile = function (file) {
-			ChJobCtrl.hitsFile = file;
-		};
-	}]);
-
-	app.controller('ProgressCtrl', ['$rootScope', 'BtrData', 'Notify', 'StatusMonitor', function ($rootScope, BtrData, Notify, StatusMonitor) {
-		var progCtrl = this;
-		progCtrl.rules = [];
-
-		progCtrl.init = function () {
-			progCtrl.updateRules();
-			StatusMonitor.onReady(function () {
-				progCtrl.originalRule = StatusMonitor.getOriginalRule();
-			});
-		};
-
-		progCtrl.updateRules = function () {
-			BtrData.getRules().success(function (data) {
-				progCtrl.rules = data;
-			});
-		};
-
-		progCtrl.getCoveredPercentage = function () {
-			return 100 * StatusMonitor.getCoveredHitsCount() / StatusMonitor.getTotalHitsCount();
-		};
-		progCtrl.getUncoveredPercentage = function () {
-			return 100 - progCtrl.getCoveredPercentage();
-		}
-
-		progCtrl.deleteRule = function (index) {
-			BtrData.deleteRuleByIndex(index).then(function () {
-				Notify.info('Rule deleted. Updating statistics...');
-				progCtrl.updateRules();
-				$rootScope.$emit(events.RULES_CHANGED);
-			});
-		};
-
-		$rootScope.$on(events.RULES_CHANGED, function () {
-			progCtrl.updateRules();
-		});
-
-		progCtrl.init();
-	}]);
-
-	app.controller('FilterController', ['$rootScope', 'BtrData', 'Notify', function($rootScope, BtrData, Notify) {
-		var filterCtrl = this;
-		filterCtrl.filter = {};
-		filterCtrl.hasFilter = false;
-
-		filterCtrl.init = function () {
-			console.log('Init filter controller');
-			filterCtrl.updateFilter();
-		};
-
-		filterCtrl.updateFilter = function () {
-			console.log('Updating filter...');
-			BtrData.getFilter().success(function (data) {
-				filterCtrl.filter = data;
-
-				var attributes = filterCtrl.filter.attributes;
-				filterCtrl.hasFilter = false;
-
-				attributes.forEach(function (attr) {
-					if (attr.str && attr.str != 'Any') {
-						filterCtrl.hasFilter = true;
-						attr.field = attr.str;
-					}
-					else
-						attr.field = '';
-				});
-				$rootScope.$emit(events.FILTER_UPDATE, filterCtrl.hasFilter);
-			});
-		};
-
-		filterCtrl.setFilter = function () {
-			var setFilterArgs = '';
-			var attributes = filterCtrl.filter.attributes;
-			
-			BtrData.putNewFilter(attributes).success(function () {
-				console.log('Setting new filter');
-				filterCtrl.updateFilter();
-			});
-		};
-
-		filterCtrl.createRule = function () {
-			BtrData.postRule().then(function () {
-				Notify.success('New rule created! Updating statistics...');
-				$rootScope.$emit(events.RULES_CHANGED);
-			});
-		};
-
-		$rootScope.$on(events.RULES_CHANGED, function () {
-			filterCtrl.filter.attributes.forEach(function (att) {
-				att.field = 'Any';
-			});
-			filterCtrl.setFilter();
-		});
-
-		$rootScope.$on(events.SUGGESTION_CHOSEN, function (event, sug) {
-			var matchFound = false;
-			filterCtrl.filter.attributes.forEach(function (filterAttr) {
-				if (filterAttr.type === sug.attribute.type) {
-					matchFound = true;
-					filterAttr.field = sug.attribute.str;
-					filterCtrl.setFilter();
-				}
-			});
-			if (!matchFound) {
-				throw new Error('A suggestion was chosen, but no filter attribute matched the suggestion attribute type.');
-			}
-		});
-
-		$rootScope.$on(events.INPUT_CLEARED, function () {
-			filterCtrl.setFilter();
-		});
-
-		filterCtrl.init();
-	}]);
-
-	app.controller('HitsTableController', ['$scope', 'BtrData', '$rootScope', function ($scope, BtrData, $rootScope) {
-		var hitsCtrl = this;
-		hitsCtrl.NAV_SIZE = 5; 		// how many elements in nav. always an odd number
-		hitsCtrl.PAGE_SIZE = 10;	// how many hits in every page
-
-		hitsCtrl.requestPage = function() {
-			var startIndex = (hitsCtrl.page - 1) * hitsCtrl.PAGE_SIZE,
-				endIndex = startIndex + hitsCtrl.PAGE_SIZE;
-			BtrData.getHits(startIndex, endIndex).success(function (data) {
-				hitsCtrl.numOfPages = Math.ceil(data.total / hitsCtrl.PAGE_SIZE);
-				hitsCtrl.numOfHits = data.total;
-				hitsCtrl.allHits = data.data;
-			});
-		};
-
-		hitsCtrl.setPage = function (newPage) {
-			if (newPage <= hitsCtrl.numOfPages && newPage >= 1)  {
-				hitsCtrl.page = newPage;
-				hitsCtrl.requestPage();
-			}
-		};
-
-		// On initiation and on filter change
-		hitsCtrl.refresh = function () {
-			hitsCtrl.page = 1;
-			hitsCtrl.numOfPages = 10;
-			hitsCtrl.allHits = [];
-			hitsCtrl.requestPage();
-		};
-
-		$rootScope.$on(events.FILTER_UPDATE, function (event, isntEmpty) {
-			hitsCtrl.refresh();
-			hitsCtrl.hasFilter = isntEmpty;
-		});
-
-		$scope.$on(events.PAGE_CHANGE, function (event, pageNum) {
-			hitsCtrl.setPage(pageNum);
-		});
-	}]);
-
-	app.controller('SuggestionController', ['BtrData', '$rootScope', 'StatusMonitor', function (BtrData, $rootScope, StatusMonitor) {
-		var sugCtrl = this;
-
-		sugCtrl.refresh = function () {
-			BtrData.getSuggestions().success(function (data) {
-				console.log(data);
-				sugCtrl.allSuggestions = settings.attributes.map(function (attrName) {
-					for (var i = 0; i < data.length; i++) {
-						if (data[i].type == attrName)
-							return data[i];
-					}
-				});
-			});
-		};
-
-		sugCtrl.addToFilter = function (suggestion) {
-			$rootScope.$emit(events.SUGGESTION_CHOSEN, suggestion);
-		};
-
-		sugCtrl.filteredHitsCount = function () {
-			return StatusMonitor.getFilteredHitsCount();
-		}
-
-		$rootScope.$on(events.FILTER_UPDATE, function () {
-			console.log('Filter updated. Getting suggestions.');
-			sugCtrl.refresh();
-		});
-	}]);
-
-	app.directive('pageTurner', function () {
+	app.factory('Constants', [function () {
 		return {
-			restrict: 'E',
-			templateUrl: './components/page-turner.html',
-			scope: {
-				navSize: '=',
-				currentPage: '=',
-				numOfPages: '='
-			},
-			link: function (scope, element, attr) {
-				scope.nearPages = function () {
-					var numOfPages = scope.numOfPages,
-						page = scope.currentPage,
-						NAV_SIZE = scope.navSize;
-					// Edges
-					if (numOfPages <= NAV_SIZE)
-						return range(1, numOfPages + 1);
-					if (page <= NAV_SIZE / 2)
-						return range(1, NAV_SIZE + 1);
-					if (page >= numOfPages - NAV_SIZE / 2)
-						return range(numOfPages - NAV_SIZE + 1, numOfPages + 1);
+			attributes: ['source', 'destination', 'service'],
+			events: {
+				// global events
+				RULES_CHANGED: 'rulesChanged',
+				FILTER_UPDATE: 'filterUpdate',
+				SUGGESTION_CHOSEN: 'suggestionChosen',
 
-					// Normal case
-					return range(page - 2, page + 3);
-				};
-			}
-		};
-	});
-
-	app.directive('clearableInput', ['$window', function ($window) {
-		return {
-			restrict: 'AE',
-			link: function (scope, element, attr) {
-				var button = $window.document.createElement('i');
-				button.classList.add('glyphicon');
-				button.classList.add('glyphicon-remove');
-				var input = element.find('input');
-				if (!input || input.length === 0)
-					throw new Error('clearableInput does should have an input element inside');
-				input = angular.element(input);
-				button.addEventListener('click', function () {
-					input.val('');
-					input.triggerHandler('input');
-					scope.$emit(events.INPUT_CLEARED, input);
-				});
-				element[0].appendChild(button);
+				// specific events
+				INPUT_CLEARED: 'inputCleared',
+				PAGE_CHANGE: 'pageChange',
 			}
 		};
 	}]);
-
-	app.directive('onEnterKey', function() {
-	    return  {
-	    	restrict: 'A',
-	    	link: function (scope, element, attrs) {
-
-		        element.bind("keydown keypress", function(event) {
-		            var keyCode = event.which || event.keyCode;
-
-		            // If enter key is pressed
-		            if (keyCode === 13) {
-		                scope.$apply(function() {
-	                        // Evaluate the expression
-		                    scope.$eval(attrs.onEnterKey);
-		                });
-
-		                event.preventDefault();
-		            }
-		        });
-		    }
-		};
-	});
-
-	app.directive('loadingBar', function() {
-		return {
-			restrict: 'E',
-			templateUrl: './components/loading-bar.html'
-		};
-	});
 
 	app.filter('capitalize', function() {
 		// Taken from http://codepen.io/WinterJoey/pen/sfFaK
@@ -430,18 +117,3 @@ var events = {
 	});
 
 })(angular, jQuery);
-
-
-/******************* UTILS ******************/
-
-
-// Python `range`
-function range(a ,b) {
-	var ans = [];
-	if (a >= b) return [a];
-	for (var num = a; num < b; num++)
-		ans.push(num);
-	return ans;
-}
-
-

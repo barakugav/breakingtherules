@@ -23,7 +23,7 @@ public class InformationAlgorithmTest extends TestBase {
     private static final int RULE_WEIGHT = 25;
     private static final String JOB_NAME = "4";
     private static final int NUMBER_OF_SUGGESTIONS = 10;
-    private static final AttributeType ATTRIBUTE = AttributeType.Destination;
+    private static final AttributeType ATTRIBUTE = AttributeType.DESTINATION;
     private static final boolean PRINT_RESULTS = false;
 
     @Test

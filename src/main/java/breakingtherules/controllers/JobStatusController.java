@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import breakingtherules.dto.JobStatusDto;
+import breakingtherules.firewall.Filter;
 import breakingtherules.firewall.Rule;
 import breakingtherules.session.JobManager;
 
@@ -55,6 +56,7 @@ public class JobStatusController {
 	int totalHitsCount = job.getTotalHitsCount();
 	int coveredHitsCount = job.getCoveredHitsCount();
 	int filteredHitsCount = job.getFilteredHitsCount();
-	return new JobStatusDto(orig, createdRules, totalHitsCount, coveredHitsCount, filteredHitsCount);
+	Filter filter = job.getFilter();
+	return new JobStatusDto(orig, createdRules, totalHitsCount, coveredHitsCount, filteredHitsCount, filter);
     }
 }

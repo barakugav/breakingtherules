@@ -341,7 +341,7 @@ public class Service extends Attribute {
      */
     @Override
     public AttributeType getType() {
-	return AttributeType.Service;
+	return AttributeType.SERVICE;
     }
 
     /**

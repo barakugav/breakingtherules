@@ -12,6 +12,16 @@ $c-green-600: #43A047;
 $c-green-700: #388E3C;
 $c-green-800: #2E7D32;
 $c-green-900: #1B5E20;
+$c-blue-50: #E3F2FD;
+$c-blue-100: #BBDEFB;
+$c-blue-200: #90CAF9;
+$c-blue-300: #64B5F6;
+$c-blue-400: #42A5F5;
+$c-blue-500: #2196F3;
+$c-blue-600: #1E88E5;
+$c-blue-700: #1976D2;
+$c-blue-800: #1565C0;
+$c-blue-900: #0D47A1;
 
 
 h1 {
@@ -56,6 +66,21 @@ section {
 
 .u-emph {
 	font-weight: bold;
+}
+
+.u-shadow {
+	box-shadow: 0 2px 0px rgba(0, 0, 0, 0.26);
+}
+
+@mixin tr-border-radius($radius) {
+	td:first-child {
+		border-top-left-radius: $radius;
+		border-bottom-left-radius: $radius;
+	}
+	td:last-child {
+		border-top-right-radius: $radius;
+		border-bottom-right-radius: $radius;
+	}
 }
 
 
@@ -132,9 +157,21 @@ $w-arrow: 7px;
 /* Progress Section
 *************************************************/
 
+.AlignedTable--originalRule tr:not(:first-child) {
+	background-color: $c-blue-200;
+
+	td {
+		border-top: 0;
+		border-bottom: 0;
+		background-color: transparent;
+		@extend .u-shadow;
+	}
+
+	@include tr-border-radius(5px);
+}
+
 .ProgressBox {
 	table {
-		border-bottom: 1px solid #ddd;
 		margin-bottom: 3rem;
 	}
 }
@@ -237,11 +274,16 @@ $w-arrow: 7px;
 	color: blue;
 	cursor: pointer;
 
-	&:hover {
-		text-decoration: underline;
+	&:hover { text-decoration: underline; }
+
+	&.disabled { 
+		color: gray; 
+		cursor: default;
+		&:hover {
+			text-decoration: none;
+		}
 	}
 
-	span {
-		color: black;
-	}
+	&:not(.disabled) span { color: black; }
 }
+

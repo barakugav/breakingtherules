@@ -1,5 +1,6 @@
 package breakingtherules.dto;
 
+import breakingtherules.firewall.Filter;
 import breakingtherules.firewall.Rule;
 
 /**
@@ -39,6 +40,11 @@ public class JobStatusDto {
     private final int m_filteredHitsCount;
 
     /**
+     * The current filter of the job
+     */
+    private final Filter m_filter;
+
+    /**
      * Construct new JobStatusDto.
      * 
      * @param original
@@ -51,14 +57,17 @@ public class JobStatusDto {
      *            the number of all the hits covered by new rules.
      * @param filteredHits
      *            the number of hits that pass the current filter.
+     * @param filter
+     *            Current filter of the job
      */
     public JobStatusDto(final Rule original, final int createdRules, final int totalHits, final int coveredHits,
-	    final int filteredHits) {
+	    final int filteredHits, Filter filter) {
 	m_originalRule = original;
 	m_createdRulesCount = createdRules;
 	m_totalHitsCount = totalHits;
 	m_coveredHitsCount = coveredHits;
 	m_filteredHitsCount = filteredHits;
+	m_filter = filter;
     }
 
     /**
@@ -106,6 +115,13 @@ public class JobStatusDto {
      */
     public int getFilteredHitsCount() {
 	return m_filteredHitsCount;
+    }
+
+    /**
+     * @return The current filter of the job
+     */
+    public Filter getFilter() {
+	return m_filter;
     }
 
 }

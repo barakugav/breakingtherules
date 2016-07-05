@@ -59,12 +59,20 @@ public abstract class AbstractCachedHitsDao implements HitsDao {
     public final ListDto<Hit> getHitsList(final String jobName, final List<Rule> rules, final Filter filter)
 	    throws IOException, ParseException {
 	final List<Hit> hits = getHitsInternal(jobName);
-	final int size = hits.size();
+
+	// Filter hits by the rules and filter.
+	final List<Hit> filteredHits = new ArrayList<>();
+	for (final Hit hit : hits) {
+	    if (DaoUtilities.isMatch(hit, rules, filter)) {
+		filteredHits.add(hit);
+	    }
+	}
+	final int size = filteredHits.size();
 
 	m_totalHitsCache.add(
 		new UnmodifiableTriple<>(jobName, Collections.unmodifiableSet(new HashSet<>(rules)), filter),
 		Integer.valueOf(size));
-	return new ListDto<>(hits, 0, size, size);
+	return new ListDto<>(filteredHits, 0, size, size);
     }
 
     /**
@@ -88,6 +96,7 @@ public abstract class AbstractCachedHitsDao implements HitsDao {
     @Override
     public final Iterable<Hit> getHits(final String jobName, final List<Rule> rules, final Filter filter)
 	    throws ParseException, IOException {
+
 	final List<Hit> hits = getHitsInternal(jobName);
 
 	if (rules.isEmpty() && Filter.ANY_FILTER.equals(filter)) {

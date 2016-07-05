@@ -2,10 +2,10 @@
 
 	<h1>Breaking The Rules</h1>
 	
-	<section ng-controller="ProgressCtrl as progCtrl" class="ProgressBox">
+	<section ng-controller="ProgressController as progCtrl" class="ProgressBox">
 		<h2>Progress</h2> 
 		<p>In order to break down the original permissive rule, we need to create new rules to cover all the hits that were covered by the permissive rule. This is the original rule:</p>
-		<table class="table AlignedTable">
+		<table class="table AlignedTable AlignedTable--originalRule">
 			<tr>
 				<th></th>
 				<th ng-repeat="att in mainCtrl.attributes">{{ att | capitalize }}</th>
@@ -129,8 +129,8 @@
 						<td ng-repeat="attSuggestions in sugCtrl.allSuggestions">
 							<ul>
 								<li ng-repeat="sug in attSuggestions.suggestions"
-									ng-click="sugCtrl.addToFilter(sug)">
-									<!-- {{ sug.attribute.str }} <span>({{ sug.score * 100| number :1 }}%)</span> -->
+									ng-click="sugCtrl.addToFilter(sug)"
+									ng-class="{'disabled': sugCtrl.isInCurrentFilter(sug)}">
 									{{ sug.attribute.str }} <span>({{ sug.size }} hits)</span>
 								</li>
 							</ul>

@@ -57,17 +57,17 @@ public abstract class Attribute {
 	/**
 	 * Source type.
 	 */
-	Source,
+	SOURCE,
 
 	/**
 	 * Destination type.
 	 */
-	Destination,
+	DESTINATION,
 
 	/**
 	 * Service type.
 	 */
-	Service
+	SERVICE
     }
 
     /**
