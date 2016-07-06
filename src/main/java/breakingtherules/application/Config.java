@@ -52,7 +52,8 @@ public class Config {
     // Choose one of the following three options
     @Bean
     public HitsDao hitsDao() {
-	return new CSVHitsDao();
+	System.out.println("Creating hitsDao");
+	return csvHitsDao(); // TODO bad
     }
 
     // @Bean(destroyMethod = "cleanup")
@@ -62,6 +63,7 @@ public class Config {
 
     @Bean
     public CSVHitsDao csvHitsDao() {
+	System.out.println("Creating csvHitsDao");
 	return new CSVHitsDao();
     }
 

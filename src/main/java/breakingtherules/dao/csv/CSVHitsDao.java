@@ -54,6 +54,7 @@ public class CSVHitsDao extends AbstractCachedHitsDao {
      * Construct new CSVHitsDao.
      */
     public CSVHitsDao() {
+	System.out.println("asdf");
 	m_columnTypes = CSVParser.DEFAULT_COLUMNS_TYPES;
     }
 

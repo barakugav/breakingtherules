@@ -1,6 +1,7 @@
 package breakingtherules.controllers;
 
 import java.io.IOException;
+import java.util.List;
 
 import javax.servlet.annotation.MultipartConfig;
 
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import breakingtherules.dao.DaoConfig;
 import breakingtherules.dao.ParseException;
 import breakingtherules.dao.csv.CSVParser;
 import breakingtherules.firewall.Filter;
@@ -34,6 +36,17 @@ public class JobController {
      */
     @Autowired
     private JobManager m_jobManager;
+
+    /**
+     * Searches the repository for all current jobs and returns a list to the
+     * user
+     * 
+     * @return A list of all jobs existing in the system
+     */
+    @RequestMapping(value = "/job", method = RequestMethod.GET)
+    public List<String> getJobs() {
+	return DaoConfig.getExistingRepositories();
+    }
 
     /**
      * Request to handle a new job.

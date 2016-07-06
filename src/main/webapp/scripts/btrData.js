@@ -4,6 +4,10 @@
 
 	app.factory('BtrData', ['$http', 'Upload', function ($http, Upload) {
 
+		function getAllJobs() {
+			return $http.get('/job');
+		}
+
 		function setJob(jobName) {
 			return $http.put('/job?job_name=' + jobName);
 		}
@@ -71,6 +75,7 @@
 		}
 
 		return {
+			getAllJobs: getAllJobs,
 			setJob: setJob,
 			startJob: startJob,
 			getRules: getRules,

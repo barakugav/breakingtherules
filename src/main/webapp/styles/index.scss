@@ -136,29 +136,41 @@ $w-arrow: 7px;
 *************************************************/
 
 .JobChoosebox {
-	
-	input {
-		width: 400px;
-	}
+
 	input[type='file'] {
 		margin-bottom: 1.6rem;
-	}
-	label {
-		display: block;
+		max-width: 30rem;
 	}
 	button {
+		display: block;
 		margin-top: 1rem;
-		margin-left: 100px;
+		margin-left: 5rem;
 		min-width: 200px;
-		background-color: $c-green-200;
+		background-color: $c-green-400;
+		color: $c-green-50;
+		text-shadow: 1px 1px 1px $c-green-600;
+		transition: color .3s ease;
+		&:hover { color: $c-green-900; }
 	}
+
+	.ui-select-container {
+		display: inline-block;
+		min-width: 20rem;
+	}
+
 }
+
+.NameChoosebox {
+	display: block;
+	max-width: 30rem;
+}
+
 
 /* Progress Section
 *************************************************/
 
 .AlignedTable--originalRule tr:not(:first-child) {
-	background-color: $c-blue-200;
+	background-color: $c-blue-100;
 
 	td {
 		border-top: 0;

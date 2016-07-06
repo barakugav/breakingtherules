@@ -76,22 +76,32 @@ section {
 
 /* Job Choosing
 *************************************************/
-.JobChoosebox input {
-  width: 400px; }
 .JobChoosebox input[type='file'] {
-  margin-bottom: 1.6rem; }
-.JobChoosebox label {
-  display: block; }
+  margin-bottom: 1.6rem;
+  max-width: 30rem; }
 .JobChoosebox button {
+  display: block;
   margin-top: 1rem;
-  margin-left: 100px;
+  margin-left: 5rem;
   min-width: 200px;
-  background-color: #A5D6A7; }
+  background-color: #66BB6A;
+  color: #E8F5E9;
+  text-shadow: 1px 1px 1px #43A047;
+  transition: color .3s ease; }
+  .JobChoosebox button:hover {
+    color: #1B5E20; }
+.JobChoosebox .ui-select-container {
+  display: inline-block;
+  min-width: 20rem; }
+
+.NameChoosebox {
+  display: block;
+  max-width: 30rem; }
 
 /* Progress Section
 *************************************************/
 .AlignedTable--originalRule tr:not(:first-child) {
-  background-color: #90CAF9; }
+  background-color: #BBDEFB; }
   .AlignedTable--originalRule tr:not(:first-child) td {
     border-top: 0;
     border-bottom: 0;

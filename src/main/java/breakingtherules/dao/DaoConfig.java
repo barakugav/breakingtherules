@@ -2,6 +2,8 @@ package breakingtherules.dao;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * The DaoConfig used to get configurations information used by DAO objects.
@@ -55,6 +57,16 @@ public class DaoConfig {
 	    return true;
 	}
 	throw new IOException();
+    }
+
+    /**
+     * @return A list of job names, of all the existing repositories in the
+     *         system
+     */
+    public static List<String> getExistingRepositories() {
+	final File reposRoot = new File(REPOS_ROOT);
+	List<String> names = Arrays.asList(reposRoot.list());
+	return names;
     }
 
 }

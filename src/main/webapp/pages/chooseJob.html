@@ -1,6 +1,21 @@
 <div class="container" ng-controller="ChooseJobController as ChJobCtrl">
 
 	<h1>Breaking The Rules</h1>
+
+	<section class="JobChoosebox">
+		<form ng-submit="ChJobCtrl.existing()">
+			<h2>Choose an Existing Job</h2>
+			<p>Choose the name of the job you would like to work on:</p>
+			<label>Job name:</label>
+			<ui-select ng-model="ChJobCtrl.existingJob" theme="select2" ng-disabled="ctrl.disabled" title="Choose a person">
+			    <ui-select-match placeholder="Select a job...">{{$select.selected.name}}</ui-select-match>
+			    <ui-select-choices repeat="job in ChJobCtrl.allJobs | filter: {name: $select.search }">
+				      <div ng-bind-html="job.name | highlight: $select.search"></div>
+			    </ui-select-choices>
+		  	</ui-select>
+			<button type="submit" class="btn">Continue</button>	
+		</form>
+	</section>
 	
 	<section class="JobChoosebox">
 		<form ng-submit="ChJobCtrl.new()">
@@ -10,23 +25,13 @@
 			port, protocol.</p>
 			<input type="file" class="form-control" name="hits_file"
 				ngf-select="ChJobCtrl.chooseFile($file)" ng-required />
-			<p>Your job needs a name. Choose a name you can remember, because you will need it in the next times you connect to BreakingTheRules:</p>
-			<label>
+			<p>Your job needs a name. Choose a name you can remember, because you will need it in the next times you connect to BreakingTheRules.</p>
+			<label class="NameChoosebox">
 				Job name:
 				<input type="text" class="form-control" name="job_name" ng-required
 					ng-model="ChJobCtrl.newJobName" />
 			</label>
 			<button type="submit" class="btn">Start</button>
-		</form>
-	</section>
-
-	<section class="JobChoosebox">
-		<form ng-submit="ChJobCtrl.existing()">
-			<h2>Choose an Existing Job</h2>
-			<p>Enter the name of the job you would like to work on:</p>
-			<input type="text" class="form-control" ng-required
-				ng-model="ChJobCtrl.existingJobName" />
-			<button type="submit" class="btn">Continue</button>	
 		</form>
 	</section>
 

@@ -5,7 +5,7 @@
 
 (function (angular, $) {
 	
-	var app = angular.module('BreakingTheRules', ['btrData', 'ngRoute', 'ngFileUpload']);
+	var app = angular.module('BreakingTheRules', ['btrData', 'ngRoute', 'ngFileUpload', 'ui.select', 'ngSanitize']);
 
 	app.config(['$routeProvider', function($routeProvider) {
 		$routeProvider

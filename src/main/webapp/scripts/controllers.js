@@ -15,14 +15,22 @@
 
 	app.controller('ChooseJobController', ['BtrData', '$location', '$scope', function (BtrData, $location, $scope) {
 		var ChJobCtrl = this;
-		ChJobCtrl.hitsFile = null;
 
 		function patience() {
 			alert('Loading all your hits... Please wait...')
 		}
+		this.init = function () {
+			ChJobCtrl.hitsFile = null;
+			ChJobCtrl.allJobs = [];	
+			BtrData.getAllJobs().then(function (jobs) {
+				ChJobCtrl.allJobs = jobs.data.map(function (name) {
+					return { name: name };
+				});
+			});
+		}
 		this.existing = function () {
 			patience();
-			BtrData.setJob(this.existingJobName).then(function () {
+			BtrData.setJob(ChJobCtrl.existingJob.name).then(function () {
 				$location.url('/main');
 			});
 			return false;
@@ -48,6 +56,7 @@
 		this.chooseFile = function (file) {
 			ChJobCtrl.hitsFile = file;
 		};
+		this.init();
 	}]);
 
 	app.controller('ProgressController', ['$rootScope', 'BtrData', 'Notify', 'StatusMonitor','Constants', function ($rootScope, BtrData, Notify, StatusMonitor, Constants) {
