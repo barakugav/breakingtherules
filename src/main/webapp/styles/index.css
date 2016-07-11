@@ -1,6 +1,7 @@
 /* Default Behavior
 *************************************************/
 h1 {
+  display: inline-block;
   margin: 2rem 0;
   color: #E8F5E9; }
 
@@ -73,6 +74,13 @@ section {
   width: 29%; }
 .AlignedTable th:first-child, .FilterTable th:first-child, .SuggestionTable th:first-child, .AlignedTable td:first-child, .FilterTable td:first-child, .SuggestionTable td:first-child {
   width: 13%; }
+
+.LogoutLink {
+  float: right;
+  margin-top: 3.5rem;
+  color: #E8F5E9; }
+  .LogoutLink:hover {
+    color: #E8F5E9; }
 
 /* Job Choosing
 *************************************************/

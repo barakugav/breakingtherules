@@ -60,8 +60,8 @@ public class JobStatusDto {
      * @param filter
      *            Current filter of the job
      */
-    public JobStatusDto(final Rule original, final int createdRules, final int totalHits, final int coveredHits,
-	    final int filteredHits, Filter filter) {
+    public JobStatusDto(final Rule original, final int createdRules, final int totalHits,
+	    final int coveredHits, final int filteredHits, Filter filter) {
 	m_originalRule = original;
 	m_createdRulesCount = createdRules;
 	m_totalHitsCount = totalHits;

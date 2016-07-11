@@ -25,6 +25,7 @@ $c-blue-900: #0D47A1;
 
 
 h1 {
+	display: inline-block;
 	margin: 2rem 0;
 	color: $c-green-50;
 }
@@ -130,6 +131,14 @@ $w-arrow: 7px;
 	th:first-child, td:first-child {
 		width: 13%;
 	}
+}
+
+.LogoutLink {
+	float: right;
+	margin-top: 3.5rem;
+	color: $c-green-50;
+
+	&:hover { color: $c-green-50; }
 }
 
 /* Job Choosing

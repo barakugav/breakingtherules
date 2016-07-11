@@ -4,23 +4,50 @@
 
 	app.factory('BtrData', ['$http', 'Upload', function ($http, Upload) {
 
-		function getAllJobs() {
-			return $http.get('/job');
+		// There is a problem when the first requests are sent simultaneously.
+		// See: http://stackoverflow.com/questions/13015583/
+		// Other requests must wait for the first to finish
+		var firstRequest = null;
+		function afterFirstRequest(asyncFunc) {
+			return {
+				then: function (success, failure) {
+					if (!firstRequest) {
+						firstRequest = asyncFunc();
+						firstRequest.then(success, function (error) {
+							firstRequest = null; // The first request failed. Try another.
+							failure(error);
+						});
+					}
+					else {
+						firstRequest.then(function () {
+							asyncFunc().then(success, failure);
+						});
+					}
+				}
+			};
 		}
 
+		function getAllJobs() {
+			return afterFirstRequest(function () {
+				return $http.get('/job');
+			});
+		}
+
+		// Do not use directly. Only using CurrentJob service.
 		function setJob(jobName) {
 			return $http.put('/job?job_name=' + jobName);
 		}
 
 		function startJob(jobName, hitsFile) {
-			// var data = new FormData();
-	        // data.append('job_name', jobName);
-	        // data.append('hits_file', hitsFile);
-	        // return $http.post('/job', data, {
-	        //     transformRequest: angular.identity,
-	        //     headers: {'Content-Type': undefined}
-	        // });
-	        // console.log(hitsFile);
+			/* Different way to do it:
+			var data = new FormData();
+	        data.append('job_name', jobName);
+	        data.append('hits_file', hitsFile);
+	        return $http.post('/job', data, {
+	            transformRequest: angular.identity,
+	            headers: {'Content-Type': undefined}
+	        });
+	        console.log(hitsFile); */
 	        hitsFile.upload = Upload.upload({
 	        	url: '/job',
 	        	data: {
@@ -32,11 +59,15 @@
 		}
 
 		function getRules() {
-			return $http.get('/rule');
+			return afterFirstRequest(function () {
+				return $http.get('/rule');
+			});
 		}
 
 		function postRule() {
-			return $http.post('/rule');
+			return afterFirstRequest(function () {
+				return $http.post('/rule');
+			});
 		}
 
 		function putNewFilter(filterAttributes) {
@@ -54,25 +85,35 @@
 		}
 
 		function getSuggestions() {
-			console.log('Getting suggestions');
-			return $http.get('/suggestions');
+			return afterFirstRequest(function () {
+				return $http.get('/suggestions');
+			});
 		}
 
 		function getHits(startIndex, endIndex) {
-			return $http.get('/hits?startIndex=' + startIndex + '&endIndex=' + endIndex);
+			return afterFirstRequest(function () {
+				return $http.get('/hits?startIndex=' + startIndex + '&endIndex=' + endIndex);
+			});
 		}
 
 		function getFilter() { 
-			return $http.get('/filter');
+			return afterFirstRequest(function () {
+				return $http.get('/filter');
+			});
 		}
 
 		function getStatus() {
-			return $http.get('/status');
+			return afterFirstRequest(function () {
+				return $http.get('/status');
+			});
 		}
 
 		function deleteRuleByIndex(index) {
-			return $http.delete('/rule?index=' + index);
+			return afterFirstRequest(function () {
+				return $http.delete('/rule?index=' + index);
+			});
 		}
+		
 
 		return {
 			getAllJobs: getAllJobs,
@@ -85,8 +126,10 @@
 			getHits: getHits,
 			getFilter: getFilter,
 			getStatus: getStatus,
-			deleteRuleByIndex: deleteRuleByIndex
+			deleteRuleByIndex: deleteRuleByIndex,
 		};
 	}]);
+
+	
 
 })(angular);

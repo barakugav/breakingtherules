@@ -2,7 +2,7 @@
 	
 	var app = angular.module('BreakingTheRules');
 
-	app.controller('MainController', ['$rootScope', 'BtrData', 'Notify', 'StatusMonitor', 'Constants', function($rootScope, BtrData, Notify, StatusMonitor, Constants) {
+	app.controller('MainController', ['$rootScope', 'StatusMonitor', 'Constants', 'GUI', function($rootScope, StatusMonitor, Constants, GUI) {
 		this.attributes = Constants.attributes;
 
 		$rootScope.$on(Constants.events.FILTER_UPDATE, function () {
@@ -13,12 +13,27 @@
 		});
 	}]);
 
-	app.controller('ChooseJobController', ['BtrData', '$location', '$scope', function (BtrData, $location, $scope) {
+	app.controller('ChooseJobController', ['BtrData', 'ErrorHandler', 'CurrentJob', 'GUI', '$location', '$scope', function (BtrData, ErrorHandler, CurrentJob, GUI, $location, $scope) {
 		var ChJobCtrl = this;
 
+		// creates an alert and allows waiting for it
 		function patience() {
-			alert('Loading all your hits... Please wait...')
+			var listeners = [];
+			GUI.alert('Loading all your hits... Please wait...', function () {
+				listeners.forEach(function (callback) {
+					callback();
+				});
+				listeners = null;
+				$scope.$apply();
+			});
+			return {
+				then: function (callback)  {
+					if (listeners == null) callback();
+					else listeners.push(callback);
+				}
+			};
 		}
+
 		this.init = function () {
 			ChJobCtrl.hitsFile = null;
 			ChJobCtrl.allJobs = [];	
@@ -26,31 +41,36 @@
 				ChJobCtrl.allJobs = jobs.data.map(function (name) {
 					return { name: name };
 				});
-			});
+			}, ErrorHandler.standard);
 		}
 		this.existing = function () {
-			patience();
-			BtrData.setJob(ChJobCtrl.existingJob.name).then(function () {
-				$location.url('/main');
-			});
+			var message = patience();
+			CurrentJob.set(ChJobCtrl.existingJob.name).then(function () {
+				message.then(function () {
+					$location.url('/main');
+				});
+			}, ErrorHandler.standard);
 			return false;
 		};
 		this.new = function () {
 			if (!ChJobCtrl.hitsFile) {
-				alert('You must first choose a hits file.')
+				GUI.alert('You must first choose a hits file.')
 				return;
 			}
-			patience();
-			BtrData.startJob(ChJobCtrl.newJobName, ChJobCtrl.hitsFile).then(function () {
-				BtrData.setJob(ChJobCtrl.newJobName).then(function () {
-					$location.url('/main');
-				});
-			}, function (error) {
-				alert('Uh oh! Error in creating new job. See console for more info.');
-				console.error(error);
-			}, function (progressEvt) {
-				console.log('Upload progress: ' + progressEvt.loaded / progressEvt.total);
-			});	
+			var message = patience();
+			BtrData.startJob(ChJobCtrl.newJobName, ChJobCtrl.hitsFile).then(
+				function () {
+					BtrData.setJob(ChJobCtrl.newJobName).then(function () {
+						message.then(function () {
+							$location.url('/main');
+						});
+					});
+				}, 
+				ErrorHandler.standard, 
+				function (progressEvt) {
+					console.log('Upload progress: ' + progressEvt.loaded / progressEvt.total);
+				}
+			);	
 			return false;
 		}
 		this.chooseFile = function (file) {
@@ -59,7 +79,7 @@
 		this.init();
 	}]);
 
-	app.controller('ProgressController', ['$rootScope', 'BtrData', 'Notify', 'StatusMonitor','Constants', function ($rootScope, BtrData, Notify, StatusMonitor, Constants) {
+	app.controller('ProgressController', ['$rootScope', 'BtrData', 'ErrorHandler', 'GUI', 'StatusMonitor','Constants', function ($rootScope, BtrData, ErrorHandler, GUI, StatusMonitor, Constants) {
 		var progCtrl = this;
 		progCtrl.rules = [];
 
@@ -71,9 +91,9 @@
 		};
 
 		progCtrl.updateRules = function () {
-			BtrData.getRules().success(function (data) {
-				progCtrl.rules = data;
-			});
+			BtrData.getRules().then(function (response) {
+				progCtrl.rules = response.data;
+			}, ErrorHandler.standard);
 		};
 
 		progCtrl.getCoveredPercentage = function () {
@@ -85,10 +105,10 @@
 
 		progCtrl.deleteRule = function (index) {
 			BtrData.deleteRuleByIndex(index).then(function () {
-				Notify.info('Rule deleted. Updating statistics...');
+				GUI.notify.info('Rule deleted. Updating statistics...');
 				progCtrl.updateRules();
 				$rootScope.$emit(Constants.events.RULES_CHANGED);
-			});
+			}, ErrorHandler.standard);
 		};
 
 		$rootScope.$on(Constants.events.RULES_CHANGED, function () {
@@ -98,20 +118,18 @@
 		progCtrl.init();
 	}]);
 
-	app.controller('FilterController', ['$rootScope', 'BtrData', 'Notify', 'Constants', function($rootScope, BtrData, Notify, Constants) {
+	app.controller('FilterController', ['$rootScope', 'BtrData', 'ErrorHandler', 'GUI', 'Constants', function($rootScope, BtrData, ErrorHandler, GUI, Constants) {
 		var filterCtrl = this;
 		filterCtrl.filter = {};
 		filterCtrl.hasFilter = false;
 
 		filterCtrl.init = function () {
-			console.log('Init filter controller');
 			filterCtrl.updateFilter();
 		};
 
 		filterCtrl.updateFilter = function () {
-			console.log('Updating filter...');
-			BtrData.getFilter().success(function (data) {
-				filterCtrl.filter = data;
+			BtrData.getFilter().then(function (response) {
+				filterCtrl.filter = response.data;
 
 				var attributes = filterCtrl.filter.attributes;
 				filterCtrl.hasFilter = false;
@@ -125,24 +143,24 @@
 						attr.field = '';
 				});
 				$rootScope.$emit(Constants.events.FILTER_UPDATE, filterCtrl.hasFilter);
-			});
+			}, ErrorHandler.standard);
 		};
 
 		filterCtrl.setFilter = function () {
 			var setFilterArgs = '';
 			var attributes = filterCtrl.filter.attributes;
 			
-			BtrData.putNewFilter(attributes).success(function () {
+			BtrData.putNewFilter(attributes).then(function () {
 				console.log('Setting new filter');
 				filterCtrl.updateFilter();
-			});
+			}, ErrorHandler.standard);
 		};
 
 		filterCtrl.createRule = function () {
 			BtrData.postRule().then(function () {
-				Notify.success('New rule created! Updating statistics...');
+				GUI.notify.success('New rule created! Updating statistics...');
 				$rootScope.$emit(Constants.events.RULES_CHANGED);
-			});
+			}, ErrorHandler.standard);
 		};
 
 		$rootScope.$on(Constants.events.RULES_CHANGED, function () {
@@ -173,7 +191,7 @@
 		filterCtrl.init();
 	}]);
 
-	app.controller('HitsTableController', ['$scope', 'BtrData', '$rootScope', 'Constants', function ($scope, BtrData, $rootScope, Constants) {
+	app.controller('HitsTableController', ['$scope', 'BtrData', 'ErrorHandler', '$rootScope', 'Constants', function ($scope, BtrData, ErrorHandler, $rootScope, Constants) {
 		var hitsCtrl = this;
 		hitsCtrl.NAV_SIZE = 5; 		// how many elements in nav. always an odd number
 		hitsCtrl.PAGE_SIZE = 10;	// how many hits in every page
@@ -181,11 +199,11 @@
 		hitsCtrl.requestPage = function() {
 			var startIndex = (hitsCtrl.page - 1) * hitsCtrl.PAGE_SIZE,
 				endIndex = startIndex + hitsCtrl.PAGE_SIZE;
-			BtrData.getHits(startIndex, endIndex).success(function (data) {
-				hitsCtrl.numOfPages = Math.ceil(data.total / hitsCtrl.PAGE_SIZE);
-				hitsCtrl.numOfHits = data.total;
-				hitsCtrl.allHits = data.data;
-			});
+			BtrData.getHits(startIndex, endIndex).then(function (response) {
+				hitsCtrl.numOfPages = Math.ceil(response.data.total / hitsCtrl.PAGE_SIZE);
+				hitsCtrl.numOfHits = response.data.total;
+				hitsCtrl.allHits = response.data.data;
+			}, ErrorHandler.standard);
 		};
 
 		hitsCtrl.setPage = function (newPage) {
@@ -213,19 +231,21 @@
 		});
 	}]);
 
-	app.controller('SuggestionController', ['BtrData', '$rootScope', 'StatusMonitor', 'Constants', function (BtrData, $rootScope, StatusMonitor, Constants) {
+	app.controller('SuggestionController', ['BtrData', 'ErrorHandler', '$rootScope', 'StatusMonitor', 'Constants', function (BtrData, ErrorHandler, $rootScope, StatusMonitor, Constants) {
 		var sugCtrl = this;
 
 		sugCtrl.refresh = function () {
-			BtrData.getSuggestions().success(function (data) {
-				console.log(data);
+			BtrData.getSuggestions().then(function (suggestions) {
 				sugCtrl.allSuggestions = Constants.attributes.map(function (attrName) {
-					for (var i = 0; i < data.length; i++) {
-						if (data[i].type.toUpperCase() == attrName.toUpperCase())
-							return data[i];
+					var attributeIndex = null;
+					for (var i = 0; i < suggestions.data.length; i++) {
+						if (suggestions.data[i].type.toUpperCase() == attrName.toUpperCase()) {
+							attributeIndex = i;
+							return suggestions.data[attributeIndex];
+						}
 					}
 				});
-			});
+			}, ErrorHandler.standard);
 		};
 
 		sugCtrl.addToFilter = function (suggestion) {
@@ -237,7 +257,6 @@
 		};
 
 		sugCtrl.isInCurrentFilter = function (suggestion) {
-
 			var suggestionAttr = suggestion.attribute;
 			var filterAttrs = StatusMonitor.getFilter().attributes;
 
@@ -250,7 +269,6 @@
 		};
 
 		$rootScope.$on(Constants.events.FILTER_UPDATE, function () {
-			console.log('Filter updated. Getting suggestions.');
 			sugCtrl.refresh();
 		});
 	}]);

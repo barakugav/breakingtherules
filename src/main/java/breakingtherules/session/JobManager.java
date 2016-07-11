@@ -165,6 +165,7 @@ public class JobManager {
 	newJobManager.m_originalRule = originalRule;
 	newJobManager.m_rules = new ArrayList<>();
 	newJobManager.updateRulesFile();
+	throw new RuntimeException("WHY");
     }
 
     /**
@@ -177,22 +178,21 @@ public class JobManager {
      * @throws ParseException
      *             if any parse errors occurs in the data.
      */
-    public void setJob(final String name) throws IOException, ParseException {
-	synchronized (this) {
-	    m_name = Objects.requireNonNull(name);
-	    m_originalRule = m_rulesDao.getOriginalRule(name);
-	    m_rules = new ArrayList<>();
-	    m_filter = Filter.ANY_FILTER;
-	    m_totalHitsCount = m_hitsDao.getHitsNumber(name, new ArrayList<Rule>(), Filter.ANY_FILTER);
-	    m_coveredHitsCount = 0;
-	    m_filteredHitsCount = m_totalHitsCount;
-	    m_allAttributeTypes = null;
+    public synchronized void setJob(final String name) throws IOException, ParseException {
+	m_name = Objects.requireNonNull(name);
+	m_originalRule = m_rulesDao.getOriginalRule(name);
+	m_rules = new ArrayList<>();
+	m_filter = Filter.ANY_FILTER;
+	m_totalHitsCount = m_hitsDao.getHitsNumber(name, new ArrayList<Rule>(), Filter.ANY_FILTER);
+	m_coveredHitsCount = 0;
+	m_filteredHitsCount = m_totalHitsCount;
+	m_allAttributeTypes = null;
 
-	    final List<Rule> rules = m_rulesDao.getRules(name).getData();
-	    for (final Rule rule : rules) {
-		addRule(rule);
-	    }
+	final List<Rule> rules = m_rulesDao.getRules(name).getData();
+	for (final Rule rule : rules) {
+	    addRule(rule);
 	}
+
     }
 
     /**
@@ -202,7 +202,7 @@ public class JobManager {
      * @throws NoCurrentJobException
      *             if the job wasn't set yet.
      */
-    public String getName() {
+    public synchronized String getName() {
 	checkJobState();
 	return m_name;
     }
@@ -214,7 +214,7 @@ public class JobManager {
      * @throws NoCurrentJobException
      *             if the job wasn't set yet.
      */
-    public Filter getFilter() {
+    public synchronized Filter getFilter() {
 	checkJobState();
 	return m_filter;
     }
@@ -238,7 +238,7 @@ public class JobManager {
      * @throws NoCurrentJobException
      *             if the job wasn't set yet.
      */
-    public List<Rule> getRules() {
+    public synchronized List<Rule> getRules() {
 	checkJobState();
 	final List<Rule> rules = new ArrayList<>(m_rules.size());
 	for (final StatisticedRule rule : m_rules) {
@@ -262,40 +262,39 @@ public class JobManager {
      * @throws NoCurrentJobException
      *             if the job wasn't set yet.
      */
-    public void deleteRule(final int ruleIndex) throws IOException, ParseException {
+    public synchronized void deleteRule(final int ruleIndex) throws IOException, ParseException {
 	checkJobState();
-	synchronized (this) {
-	    if (ruleIndex < 0 || ruleIndex >= m_rules.size()) {
-		throw new IndexOutOfBoundsException("rule index=" + ruleIndex + ", numer of rules=" + m_rules.size());
-	    }
-
-	    // Remove all rules up to searched rule
-	    final List<Rule> removedRules = new ArrayList<>(m_rules.size() - ruleIndex - 1);
-	    for (final ListIterator<StatisticedRule> it = m_rules.listIterator(m_rules.size()); it
-		    .previousIndex() < ruleIndex;) {
-		final StatisticedRule removedRule = it.previous();
-		m_coveredHitsCount -= removedRule.m_coveredHits;
-		removedRules.add(removedRule.m_rule);
-		it.remove();
-	    }
-	    // Reverse so order is as insertion order
-	    Collections.reverse(removedRules);
-
-	    // Remove searched rule
-	    final StatisticedRule searchedRule = m_rules.get(ruleIndex);
-	    m_rules.remove(ruleIndex);
-
-	    // Update filtered hits count
-	    m_coveredHitsCount -= searchedRule.m_coveredHits;
-	    m_filteredHitsCount = m_hitsDao.getHitsNumber(m_name, getRules(), m_filter);
-
-	    // Add again removed rules
-	    for (final Rule removedRule : removedRules) {
-		addRule(removedRule);
-	    }
-
-	    updateRulesFile();
+	if (ruleIndex < 0 || ruleIndex >= m_rules.size()) {
+	    throw new IndexOutOfBoundsException("rule index=" + ruleIndex + ", numer of rules=" + m_rules.size());
 	}
+
+	// Remove all rules up to searched rule
+	final List<Rule> removedRules = new ArrayList<>(m_rules.size() - ruleIndex - 1);
+	for (final ListIterator<StatisticedRule> it = m_rules.listIterator(m_rules.size()); it
+		.previousIndex() < ruleIndex;) {
+	    final StatisticedRule removedRule = it.previous();
+	    m_coveredHitsCount -= removedRule.m_coveredHits;
+	    removedRules.add(removedRule.m_rule);
+	    it.remove();
+	}
+	// Reverse so order is as insertion order
+	Collections.reverse(removedRules);
+
+	// Remove searched rule
+	final StatisticedRule searchedRule = m_rules.get(ruleIndex);
+	m_rules.remove(ruleIndex);
+
+	// Update filtered hits count
+	m_coveredHitsCount -= searchedRule.m_coveredHits;
+	m_filteredHitsCount = m_hitsDao.getHitsNumber(m_name, getRules(), m_filter);
+
+	// Add again removed rules
+	for (final Rule removedRule : removedRules) {
+	    addRule(removedRule);
+	}
+
+	updateRulesFile();
+
     }
 
     /**
@@ -335,7 +334,7 @@ public class JobManager {
      * @throws NoCurrentJobException
      *             if the job wasn't set yet.
      */
-    public List<SuggestionsDto> getSuggestions(final int amount) throws IOException, ParseException {
+    public synchronized List<SuggestionsDto> getSuggestions(final int amount) throws IOException, ParseException {
 	checkJobState();
 
 	final AttributeType[] allAttributesType = getAllAttributeTypes();
@@ -361,12 +360,10 @@ public class JobManager {
      * @throws NoCurrentJobException
      *             if the job wasn't set yet.
      */
-    public void setFilter(final Filter filter) throws IOException, ParseException {
+    public synchronized void setFilter(final Filter filter) throws IOException, ParseException {
 	checkJobState();
-	synchronized (this) {
-	    m_filter = Objects.requireNonNull(filter);
-	    m_filteredHitsCount = m_hitsDao.getHitsNumber(m_name, getRules(), m_filter);
-	}
+	m_filter = Objects.requireNonNull(filter);
+	m_filteredHitsCount = m_hitsDao.getHitsNumber(m_name, getRules(), m_filter);
     }
 
     /**
@@ -414,16 +411,14 @@ public class JobManager {
      * @throws ParseException
      *             if any parse errors occurs when trying to update statistics.
      */
-    private void addRule(final Rule newRule) throws IOException, ParseException {
-	synchronized (this) {
-	    List<Rule> newRules = getRules();
-	    newRules.add(newRule);
+    private synchronized void addRule(final Rule newRule) throws IOException, ParseException {
+	List<Rule> newRules = getRules();
+	newRules.add(newRule);
 
-	    final int newUncoveredHitsCount = m_hitsDao.getHitsNumber(m_name, newRules, Filter.ANY_FILTER);
-	    final int oldUncoveredHitsCount = m_totalHitsCount - m_coveredHitsCount;
-	    final int ruleCoveredHits = oldUncoveredHitsCount - newUncoveredHitsCount;
-	    addRule(new StatisticedRule(newRule, ruleCoveredHits));
-	}
+	final int newUncoveredHitsCount = m_hitsDao.getHitsNumber(m_name, newRules, Filter.ANY_FILTER);
+	final int oldUncoveredHitsCount = m_totalHitsCount - m_coveredHitsCount;
+	final int ruleCoveredHits = oldUncoveredHitsCount - newUncoveredHitsCount;
+	addRule(new StatisticedRule(newRule, ruleCoveredHits));
     }
 
     /**
@@ -436,13 +431,11 @@ public class JobManager {
      * @throws ParseException
      *             if any parse errors occurs when trying to update statistics.
      */
-    private void addRule(final StatisticedRule newRule) throws IOException, ParseException {
-	synchronized (this) {
-	    m_coveredHitsCount += newRule.m_coveredHits;
-	    m_rules.add(newRule);
-	    m_filteredHitsCount = m_hitsDao.getHitsNumber(m_name, getRules(), m_filter);
-	    updateRulesFile();
-	}
+    private synchronized void addRule(final StatisticedRule newRule) throws IOException, ParseException {
+	m_coveredHitsCount += newRule.m_coveredHits;
+	m_rules.add(newRule);
+	m_filteredHitsCount = m_hitsDao.getHitsNumber(m_name, getRules(), m_filter);
+	updateRulesFile();
     }
 
     /**
