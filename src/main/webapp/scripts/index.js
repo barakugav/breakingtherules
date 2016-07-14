@@ -13,6 +13,10 @@
 			.when('/main', { templateUrl: 'pages/main.html' });
 	}]);
 
+	app.run(['$rootScope', 'Constants', function ($rootScope, Constants) {
+		$rootScope.Constants = Constants;
+	}]);
+
 	app.constant('Constants',  {
 		attributes: ['source', 'destination', 'service'],
 		events: {

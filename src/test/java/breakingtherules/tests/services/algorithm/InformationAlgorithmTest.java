@@ -34,9 +34,9 @@ public class InformationAlgorithmTest extends TestBase {
 	ListDto<Rule> rulesDto = rulesDao.getRules(JOB_NAME);
 	List<Rule> rules = rulesDto.getData();
 
-	InformationAlgorithm algorithm = new InformationAlgorithm();
+	InformationAlgorithm algorithm = new InformationAlgorithm(hitsDao);
 	algorithm.setRuleWeight(RULE_WEIGHT);
-	List<Suggestion> suggestions = algorithm.getSuggestions(hitsDao, JOB_NAME, rules, filter, NUMBER_OF_SUGGESTIONS,
+	List<Suggestion> suggestions = algorithm.getSuggestions(JOB_NAME, rules, filter, NUMBER_OF_SUGGESTIONS,
 		ATTRIBUTE);
 
 	if (PRINT_RESULTS) {

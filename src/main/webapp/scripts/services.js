@@ -38,11 +38,11 @@
 		function boot(alertType, arg1, arg2) {
 			if (alertActivated) return;
 			alertActivated = true;
-			if (arg1.callback) {
+			if (typeof arg1 === 'object') {
 				var userCallback = arg1.callback;
 				arg1.callback = function (value) {
 					alertActivated = false;
-					userCallback(value);
+					if (userCallback) userCallback(value);
 				}
 				bootbox[alertType](arg1);
 			}
@@ -50,8 +50,7 @@
 				var userCallback = arg2;
 				arg2 = function (value) {
 					alertActivated = false;
-					if (userCallback) 
-						userCallback(value); // should not happen in case of bootbox.alert('hi')
+					if (userCallback) userCallback(value);
 				}
 				bootbox[alertType](arg1, arg2);
 			}
@@ -89,7 +88,7 @@
 		};
 	}]);
 
-	app.factory('StatusMonitor', ['BtrData', 'ErrorHandler', function (BtrData, ErrorHandler) {
+	app.factory('StatusMonitor', ['BtrData', 'ErrorHandler', 'Constants', '$rootScope', function (BtrData, ErrorHandler, Constants, $rootScope) {
 		var status = {};
 		var curPromise;
 
@@ -125,6 +124,12 @@
 		}
 
 		update();
+		$rootScope.$on(Constants.events.FILTER_UPDATE, function () {
+			update();
+		})
+		$rootScope.$on(Constants.events.RULES_CHANGED, function () {
+			update();
+		});
 
 		return {
 			update: update,
@@ -144,7 +149,8 @@
 		var httpCodes = {
 			UNAUTHORIZED: 401,
 			INTERNAL_ERROR: 500,
-			NOT_FOUND: 404
+			NOT_FOUND: 404,
+			ERR_CONNECTION_REFUSED: -1
 		};
 
 		function sessionExpired() {
@@ -192,6 +198,7 @@
 		function standardErrorHandler(error)  {
 			if (error.status === httpCodes.UNAUTHORIZED) sessionExpired();
 			else if (error.status === httpCodes.NOT_FOUND) noConnection();
+			else if (error.status === httpCodes.ERR_CONNECTION_REFUSED) noConnection();
 			else GUI.alert('An unknown error occured.');
 		}
 

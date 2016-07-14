@@ -10,7 +10,7 @@
 		<table class="table AlignedTable AlignedTable--originalRule">
 			<tr>
 				<th></th>
-				<th ng-repeat="att in mainCtrl.attributes">{{ att | capitalize }}</th>
+				<th ng-repeat="att in Constants.attributes">{{ att | capitalize }}</th>
 			</tr>
 			<tr>
 				<td class="u-emph">Original Rule</td>
@@ -45,7 +45,7 @@
 		<table class="table" ng-show="progCtrl.areRulesToggled && progCtrl.rules.length > 0">
 			<tr>
 				<th></th>
-				<th ng-repeat="att in mainCtrl.attributes">{{ att | capitalize }}</th>
+				<th ng-repeat="att in Constants.attributes">{{ att | capitalize }}</th>
 				<th></th>
 			</tr>
 			<tr ng-repeat="rule in progCtrl.rules">
@@ -67,7 +67,7 @@
 		<table class="table FilterTable">
 			<tr>
 				<th></th>
-				<th ng-repeat="att in mainCtrl.attributes">{{ att | capitalize }}</th>
+				<th ng-repeat="att in Constants.attributes">{{ att | capitalize }}</th>
 			</tr>
 			<tr ng-controller="FilterController as filterCtrl">
 				<td> 
@@ -98,7 +98,7 @@
 			<table class="table HitsTable" ng-show="hitsCtrl.isToggled">
 				<tr>
 					<th></th>
-					<th ng-repeat="att in mainCtrl.attributes">{{ att | capitalize }}</th>
+					<th ng-repeat="att in Constants.attributes">{{ att | capitalize }}</th>
 				</tr>
 				<tr ng-repeat="hit in hitsCtrl.allHits">
 					<td></td>

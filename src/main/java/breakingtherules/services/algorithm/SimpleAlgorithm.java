@@ -26,15 +26,26 @@ import breakingtherules.utilities.Utility;
  * @author Yishai Gronich
  * 
  */
-public class SimpleAlgorithm implements SuggestionsAlgorithm {
+public class SimpleAlgorithm extends SuggestionsAlgorithm {
+
+    /**
+     * Construct new Information algorithm
+     * 
+     * @param hitsDao
+     *            The DAO that the algorithm will use in order to read the job's
+     *            hits
+     */
+    public SimpleAlgorithm(HitsDao hitsDao) {
+	super(hitsDao);
+    }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public List<Suggestion> getSuggestions(final HitsDao dao, final String jobName, final List<Rule> rules,
-	    final Filter filter, final int amount, final AttributeType attType) throws IOException, ParseException {
-	return getSuggestions(dao.getHits(jobName, rules, filter), amount, Objects.requireNonNull(attType));
+    public List<Suggestion> getSuggestions(final String jobName, final List<Rule> rules, final Filter filter,
+	    final int amount, final AttributeType attType) throws IOException, ParseException {
+	return getSuggestions(m_hitsDao.getHits(jobName, rules, filter), amount, Objects.requireNonNull(attType));
     }
 
     /**

@@ -2,17 +2,6 @@
 	
 	var app = angular.module('BreakingTheRules');
 
-	app.controller('MainController', ['$rootScope', 'StatusMonitor', 'Constants', 'GUI', function($rootScope, StatusMonitor, Constants, GUI) {
-		this.attributes = Constants.attributes;
-
-		$rootScope.$on(Constants.events.FILTER_UPDATE, function () {
-			StatusMonitor.update();
-		})
-		$rootScope.$on(Constants.events.RULES_CHANGED, function () {
-			StatusMonitor.update();
-		});
-	}]);
-
 	app.controller('ChooseJobController', ['BtrData', 'ErrorHandler', 'CurrentJob', 'GUI', '$location', '$scope', function (BtrData, ErrorHandler, CurrentJob, GUI, $location, $scope) {
 		var ChJobCtrl = this;
 

@@ -338,8 +338,8 @@ public class JobManager {
 	checkJobState();
 
 	final AttributeType[] allAttributesType = getAllAttributeTypes();
-	final List<Suggestion>[] suggestions = m_algorithm.getSuggestions(m_hitsDao, m_name, getRules(), m_filter,
-		amount, allAttributesType);
+	final List<Suggestion>[] suggestions = m_algorithm.getSuggestions(m_name, getRules(), m_filter, amount,
+		allAttributesType);
 	final List<SuggestionsDto> suggestionsDtos = new ArrayList<>();
 	for (int i = 0; i < allAttributesType.length; i++) {
 	    suggestionsDtos.add(new SuggestionsDto(suggestions[i], allAttributesType[i]));

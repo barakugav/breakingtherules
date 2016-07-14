@@ -68,7 +68,7 @@ import breakingtherules.utilities.Utility;
  * @see Hit
  * @see Suggestion
  */
-public class InformationAlgorithm implements SuggestionsAlgorithm {
+public class InformationAlgorithm extends SuggestionsAlgorithm {
 
     /**
      * Allows configuration, if the user wants more general rules (high
@@ -152,13 +152,18 @@ public class InformationAlgorithm implements SuggestionsAlgorithm {
 
     /**
      * Construct new Information algorithm with default rule weight
+     * 
+     * @param hitsDao
+     *            The DAO that the algorithm will use in order to pull the job's
+     *            hits
      */
-    public InformationAlgorithm() {
+    public InformationAlgorithm(HitsDao hitsDao) {
+	super(hitsDao);
 	m_ruleWeight = DEFAULT_RULE_WEIGHT;
 	m_parallel = DEFAULT_PARALLEL;
 	m_maxThreads = DEFAULT_MAX_THREADS;
 	m_parallelThreshold = DEFAULT_PARALLEL_THRESHOLD;
-	m_simpleAlgorithm = new SimpleAlgorithm();
+	m_simpleAlgorithm = new SimpleAlgorithm(hitsDao);
     }
 
     /**
@@ -241,10 +246,10 @@ public class InformationAlgorithm implements SuggestionsAlgorithm {
      * {@inheritDoc}
      */
     @Override
-    public List<Suggestion> getSuggestions(final HitsDao dao, final String jobName, final List<Rule> rules,
-	    final Filter filter, final int amount, final AttributeType attType) throws IOException, ParseException {
+    public List<Suggestion> getSuggestions(final String jobName, final List<Rule> rules, final Filter filter,
+	    final int amount, final AttributeType attType) throws IOException, ParseException {
 	Objects.requireNonNull(attType);
-	final Iterable<Hit> hits = dao.getHits(jobName, rules, filter);
+	final Iterable<Hit> hits = m_hitsDao.getHits(jobName, rules, filter);
 	final InformationAlgorithmRunner runner = new InformationAlgorithmRunner(hits, amount, attType);
 	runner.run();
 	return runner.m_result;
@@ -253,15 +258,15 @@ public class InformationAlgorithm implements SuggestionsAlgorithm {
     /**
      * {@inheritDoc}
      * <p>
-     * Operate the request with multithreaded if the parallel option was turn
+     * Operate the request with multithreaded if the parallel option was turned
      * on.
      */
     @Override
-    public List<Suggestion>[] getSuggestions(final HitsDao dao, final String jobName, final List<Rule> rules,
-	    final Filter filter, final int amount, final AttributeType[] attTypes) throws IOException, ParseException {
+    public List<Suggestion>[] getSuggestions(final String jobName, final List<Rule> rules, final Filter filter,
+	    final int amount, final AttributeType[] attTypes) throws IOException, ParseException {
 
 	final InformationAlgorithmRunner[] runners = new InformationAlgorithmRunner[attTypes.length];
-	final Iterable<Hit> hits = dao.getHits(jobName, rules, filter);
+	final Iterable<Hit> hits = m_hitsDao.getHits(jobName, rules, filter);
 	for (int i = 0; i < attTypes.length; i++) {
 	    final AttributeType attType = Objects.requireNonNull(attTypes[i]);
 	    final InformationAlgorithmRunner runner = new InformationAlgorithmRunner(hits, amount, attType);
@@ -749,7 +754,7 @@ public class InformationAlgorithm implements SuggestionsAlgorithm {
 	    m_nextLayer = new IPNode[toIndex - fromIndex];
 	    m_totalSize = totalSize;
 	    // m_ruleWeight = ruleWeight; // TODO calculate ruleWeight
-	    m_ruleWeight = ruleWeight * totalSize / 800_000; 
+	    m_ruleWeight = ruleWeight * totalSize / 800_000;
 	}
 
 	/**

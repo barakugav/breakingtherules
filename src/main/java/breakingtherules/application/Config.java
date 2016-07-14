@@ -32,12 +32,12 @@ public class Config {
 
     @Bean
     public SuggestionsAlgorithm infoAlgorithm() {
-	return new InformationAlgorithm();
+	return new InformationAlgorithm(hitsDao());
     }
 
     // @Bean
     public SuggestionsAlgorithm simpleAlgorithm() {
-	return new SimpleAlgorithm();
+	return new SimpleAlgorithm(hitsDao());
     }
 
     // ------------ Upload Settings ---------------
