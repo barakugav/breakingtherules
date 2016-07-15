@@ -276,8 +276,24 @@ $w-arrow: 7px;
 
 
 
-/* Suggestions table
+/* Suggestions 
 *************************************************/
+
+.PermissivenessSlider {
+	font-size: 0;
+	span {
+		font-size: 1.6rem;
+		display: inline-block;
+		width: 10%;
+		text-align: center;
+	}
+	div {
+		font-size: 1.6rem;
+		display: inline-block;
+		width: 80%;
+	}
+
+}
 
 .LoadingBar {
 	width: 200px;

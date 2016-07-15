@@ -220,8 +220,11 @@
 		});
 	}]);
 
-	app.controller('SuggestionController', ['BtrData', 'ErrorHandler', '$rootScope', 'StatusMonitor', 'Constants', function (BtrData, ErrorHandler, $rootScope, StatusMonitor, Constants) {
+	app.controller('SuggestionController', ['BtrData', 'ErrorHandler', '$rootScope', '$scope', 'StatusMonitor', 'Constants', function (BtrData, ErrorHandler, $rootScope, $scope, StatusMonitor, Constants) {
 		var sugCtrl = this;
+		sugCtrl.permissiveness = 50;
+
+		// TODO get current permissiveness
 
 		sugCtrl.refresh = function () {
 			BtrData.getSuggestions().then(function (suggestions) {
@@ -257,9 +260,19 @@
 			return suggestionStr === filterAttrStr;
 		};
 
+		sugCtrl.permissivenessChangeHandler = function () {
+			BtrData.setPermissiveness(sugCtrl.permissiveness).
+				then(null, ErrorHandler.standard);
+			sugCtrl.refresh();
+		};
+		sugCtrl.sliderOptions = {
+			'stop': sugCtrl.permissivenessChangeHandler
+		};
+
 		$rootScope.$on(Constants.events.FILTER_UPDATE, function () {
 			sugCtrl.refresh();
 		});
+
 	}]);
 
 })(angular, jQuery);

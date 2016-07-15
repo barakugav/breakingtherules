@@ -55,4 +55,15 @@ public class SuggestionsController {
 	return m_jobManager.getSuggestions(amount);
     }
 
+    /**
+     * Change the permissiveness of the suggestion-creating algorithm
+     *
+     * @param permissiveness
+     *            The new permissiveness, real number in range [0, 100]
+     */
+    @RequestMapping(value = "/permissiveness", method = RequestMethod.PUT)
+    public void setPermissiveness(final double permissiveness) {
+	m_jobManager.setAlgorithmPermissiveness(permissiveness);
+    }
+
 }

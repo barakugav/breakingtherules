@@ -2,6 +2,9 @@
 	
 	var app = angular.module('BreakingTheRules');
 
+	/**
+	 * Wrapper for NotifyJS
+	 */
 	app.factory('Notify', [function () {
 		var notificationPosition = 'top center';
 
@@ -150,6 +153,7 @@
 			UNAUTHORIZED: 401,
 			INTERNAL_ERROR: 500,
 			NOT_FOUND: 404,
+			METHOD_NOT_ALLOWED: 405,
 			ERR_CONNECTION_REFUSED: -1
 		};
 
@@ -192,6 +196,13 @@
 			});
 		}
 
+		function badApi() {
+			GUI.alert({
+				title: 'API Error',
+				message: 'A request has been made to the server, with the wrong API.'
+			});
+		}
+
 
 		// This is the standard handler for AJAX errors.
 		// i.e. getStatus().then(function() { }, standardErrorHandler)
@@ -199,6 +210,7 @@
 			if (error.status === httpCodes.UNAUTHORIZED) sessionExpired();
 			else if (error.status === httpCodes.NOT_FOUND) noConnection();
 			else if (error.status === httpCodes.ERR_CONNECTION_REFUSED) noConnection();
+			else if (error.status === httpCodes.METHOD_NOT_ALLOWED) badApi();
 			else GUI.alert('An unknown error occured.');
 		}
 

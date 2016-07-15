@@ -87,7 +87,7 @@ class AbstractXMLAttributesContainerParser extends AbstractParser {
     static Element fillElement(final Element elm, final Iterable<Attribute> attributesContainer) {
 	final Document doc = elm.getOwnerDocument();
 	for (final Attribute attribute : attributesContainer) {
-	    final Element attElm = doc.createElement(attribute.getType().name());
+	    final Element attElm = doc.createElement(attribute.getType().name().toLowerCase());
 	    attElm.setTextContent(attribute.toString());
 	    elm.appendChild(attElm);
 	}

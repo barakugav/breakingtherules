@@ -115,6 +115,14 @@
 
 		<div ng-controller="SuggestionController as sugCtrl">
 			<h3>Hit Statistics for current filter (total: {{ sugCtrl.filteredHitsCount() }} hits)</h3>
+			<p>Choose how specific you would like your rules. Rules that are more specific, are more secure, but they are less general, and result in a large rulebase.</p>
+			<div class="PermissivenessSlider">
+				<span>Secure</span>
+				<div ui-slider="sugCtrl.sliderOptions" min="0" max="100" 
+					ng-model="sugCtrl.permissiveness"
+					slider="sugCtrl.setPermissiveness()"></div>
+				<span>General</span>
+			</div>
 			<loading-bar 
 				ng-if="!sugCtrl.allSuggestions" 
 				class="LoadingBar"></loading-bar>

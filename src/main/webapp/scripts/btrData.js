@@ -90,6 +90,12 @@
 			});
 		}
 
+		function setPermissiveness(permissiveness) {
+			return afterFirstRequest(function () {
+				return $http.put('/permissiveness?permissiveness=' + permissiveness);
+			});
+		}
+
 		function getHits(startIndex, endIndex) {
 			return afterFirstRequest(function () {
 				return $http.get('/hits?startIndex=' + startIndex + '&endIndex=' + endIndex);
@@ -123,6 +129,7 @@
 			postRule: postRule,
 			putNewFilter: putNewFilter,
 			getSuggestions: getSuggestions,
+			setPermissiveness: setPermissiveness,
 			getHits: getHits,
 			getFilter: getFilter,
 			getStatus: getStatus,

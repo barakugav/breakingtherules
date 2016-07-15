@@ -19,6 +19,11 @@ abstract class AbstractSuggestionsAlgorithm implements SuggestionsAlgorithm {
     protected final HitsDao m_hitsDao;
 
     /**
+     * The default permissiveness for the algorithm
+     */
+    public static double DEFUALT_PERMISSIVENESS = 50;
+
+    /**
      * Initiate the SuggestionsAlgorithm with a DAO it will use
      *
      * @param hitsDao

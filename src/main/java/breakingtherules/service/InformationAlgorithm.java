@@ -113,11 +113,6 @@ public class InformationAlgorithm extends AbstractSuggestionsAlgorithm {
     private static final int ALGORITHM_TIMEOUT = 5; // minutes
 
     /**
-     * Default value for the ruleWeight parameter
-     */
-    private static final double DEFAULT_RULE_WEIGHT = 500;
-
-    /**
      * If true, the information will operate on default. Else, the
      * {@link #activateParallel()} will be needed.
      * <p>
@@ -163,11 +158,11 @@ public class InformationAlgorithm extends AbstractSuggestionsAlgorithm {
      */
     public InformationAlgorithm(final HitsDao hitsDao) {
 	super(hitsDao);
-	m_ruleWeight = DEFAULT_RULE_WEIGHT;
 	m_parallel = DEFAULT_PARALLEL;
 	m_maxThreads = DEFAULT_MAX_THREADS;
 	m_parallelThreshold = DEFAULT_PARALLEL_THRESHOLD;
 	m_simpleAlgorithm = new SimpleAlgorithm(hitsDao);
+	setPermissiveness(DEFUALT_PERMISSIVENESS);
     }
 
     /**
@@ -315,7 +310,7 @@ public class InformationAlgorithm extends AbstractSuggestionsAlgorithm {
 	if (!parallel)
 	    // No parallel
 	    for (final InformationAlgorithmRunner runner : runners)
-	    runner.run();
+		runner.run();
 
 	// Extract all results
 	@SuppressWarnings("unchecked")
@@ -334,7 +329,8 @@ public class InformationAlgorithm extends AbstractSuggestionsAlgorithm {
 	    throw new IllegalArgumentException("Permissiveness should be in range [0, 100]: " + permissiveness);
 
 	// Some function that map [0, 100] to any rule weight
-	final double ruleWeight = permissiveness == 100 ? Double.POSITIVE_INFINITY : 1 / (100 - permissiveness) - 0.01;
+	final double ruleWeight = permissiveness == 100 ? Double.POSITIVE_INFINITY
+		: 25_000 / (100 - permissiveness) - 250;
 	setRuleWeight(ruleWeight <= 0 ? Double.POSITIVE_INFINITY : ruleWeight);
     }
 
@@ -352,6 +348,7 @@ public class InformationAlgorithm extends AbstractSuggestionsAlgorithm {
 	if (weight < 0)
 	    throw new IllegalArgumentException("Rule weight can't be negative: " + weight);
 	m_ruleWeight = weight;
+	System.out.println("The rule weight changed to be " + m_ruleWeight);
     }
 
     /**
@@ -363,8 +360,8 @@ public class InformationAlgorithm extends AbstractSuggestionsAlgorithm {
      */
     @SuppressWarnings("unused")
     private static void configCheck() {
-	if (Double.isNaN(DEFAULT_RULE_WEIGHT) || 0 >= DEFAULT_RULE_WEIGHT)
-	    throw new InternalError("DEFAULT_RULE_WIEGHT(" + DEFAULT_RULE_WEIGHT + ") should be > 0");
+	if (Double.isNaN(DEFUALT_PERMISSIVENESS) || 0 >= DEFUALT_PERMISSIVENESS)
+	    throw new InternalError("DEFAULT_RULE_WIEGHT(" + DEFUALT_PERMISSIVENESS + ") should be > 0");
 	if (DEFAULT_MAX_THREADS <= 0)
 	    throw new InternalError("DEFAULT_MAX_THREADS(" + DEFAULT_MAX_THREADS + ") should be > 0");
 	if (DEFAULT_PARALLEL_THRESHOLD <= 0)
