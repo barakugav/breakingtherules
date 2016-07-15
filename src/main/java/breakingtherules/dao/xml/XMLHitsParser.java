@@ -10,7 +10,7 @@ import breakingtherules.firewall.Hit;
  * <p>
  * Caches can be set to reduce object creations and memory use.
  * <p>
- * 
+ *
  * @author Barak Ugav
  * @author Yishai Gronich
  *
@@ -26,8 +26,22 @@ class XMLHitsParser extends AbstractXMLAttributesContainerParser {
     }
 
     /**
+     * Create new XML element of hit.
+     * <p>
+     *
+     * @param doc
+     *            the parent document.
+     * @param hit
+     *            the parsed hit.
+     * @return XML element that represent the hit.
+     */
+    Element createElement(final Document doc, final Hit hit) {
+	return fillElement(doc.createElement(XMLDaoConfig.HIT_TAG), hit);
+    }
+
+    /**
      * Creates {@link Hit} object from {@link Element} XML object
-     * 
+     *
      * @param hitElm
      *            XML element with hit attributes
      * @return hit object with the element attributes
@@ -40,20 +54,6 @@ class XMLHitsParser extends AbstractXMLAttributesContainerParser {
 	} catch (final Exception e) {
 	    throw new XMLParseException(e);
 	}
-    }
-
-    /**
-     * Create new XML element of hit.
-     * <p>
-     * 
-     * @param doc
-     *            the parent document.
-     * @param hit
-     *            the parsed hit.
-     * @return XML element that represent the hit.
-     */
-    Element createElement(final Document doc, final Hit hit) {
-	return fillElement(doc.createElement(XMLDaoConfig.HIT_TAG), hit);
     }
 
 }

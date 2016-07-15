@@ -15,10 +15,10 @@ import breakingtherules.utilities.Utility;
  * For more information, see the
  * <a href='https://en.wikipedia.org/wiki/IPv4'>wiki</a>.
  * <p>
- * 
+ *
  * @author Barak Ugav
  * @author Yishai Gronich
- * 
+ *
  * @see IPv6
  */
 public final class IPv4 extends IP {
@@ -83,7 +83,7 @@ public final class IPv4 extends IP {
 
     /**
      * Construct new IPv4 with the specified address and maskSize.
-     * 
+     *
      * @param address
      *            32 bits of the IP's address
      * @param maskSize
@@ -98,11 +98,54 @@ public final class IPv4 extends IP {
      * {@inheritDoc}
      */
     @Override
+    public int compareTo(final IP other) {
+	// Assume AnyIP < IPv4 < IPv6
+	if (!(other instanceof IPv4))
+	    return other instanceof IPv6 ? -1 : 1;
+
+	final IPv4 o = (IPv4) other;
+	final int a1 = m_address;
+	final int a2 = o.m_address;
+
+	// compare as unsigned
+	return a1 == a2 ? m_maskSize - other.m_maskSize : a1 + Integer.MIN_VALUE < a2 + Integer.MIN_VALUE ? -1 : 1;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean contains(final IP other) {
+	if (!(other instanceof IPv4))
+	    return false;
+	final IPv4 o = (IPv4) other;
+	final short m = m_maskSize;
+	return m <= o.m_maskSize && (m == 0 || ((m_address ^ o.m_address) & ~((1 << SIZE - m) - 1)) == 0);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean equals(final Object o) {
+	if (o == this)
+	    return true;
+	if (!(o instanceof IPv4))
+	    return false;
+
+	final IPv4 other = (IPv4) o;
+	return m_address == other.m_address && m_maskSize == other.m_maskSize;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public int[] getAddress() {
 	int a = m_address;
 	final int[] aArr = new int[BLOCK_NUMBER];
 	for (int i = BLOCK_NUMBER - 1; i >= 0; i--) {
-	    int block = a & BLOCK_MASK;
+	    final int block = a & BLOCK_MASK;
 	    aArr[i] = block;
 	    a >>= BLOCK_SIZE;
 	}
@@ -124,7 +167,7 @@ public final class IPv4 extends IP {
      * is possible because IPv4 address is only 32 bits, so it can be
      * represented in a single int and doesn't require array of ints.
      * <p>
-     * 
+     *
      * @return 32 bits of the address in an int form.
      */
     public int getAddressBitsInt() {
@@ -135,8 +178,31 @@ public final class IPv4 extends IP {
      * {@inheritDoc}
      */
     @Override
-    public int getSubnetBitsNum() {
-	return SIZE - m_maskSize;
+    public boolean getBit(final int bitNumber) {
+	if (bitNumber < 0 || bitNumber > SIZE)
+	    throw new IndexOutOfBoundsException("Bit number should be in range [0, " + SIZE + "]");
+	return (m_address & 1 << SIZE - bitNumber) != 0;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public IPv4[] getChildren() {
+	final short m = (short) (m_maskSize + 1);
+	if (m > SIZE)
+	    throw new IllegalStateException("No children");
+	final int a = m_address;
+	final int mask = 1 << SIZE - m;
+	return new IPv4[] { new IPv4(a & ~mask, m), new IPv4(a | mask, m) };
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean getLastBit() {
+	return (m_address & 1 << SIZE - m_maskSize) != 0;
     }
 
     /**
@@ -146,89 +212,12 @@ public final class IPv4 extends IP {
     public IPv4 getParent() {
 	final short m = m_maskSize;
 	if (m <= 1) {
-	    if (m == 1) {
+	    if (m == 1)
 		return ANY_IPv4;
-	    }
 	    throw new IllegalStateException("No parent");
 	}
-	final int mask = ~(1 << (SIZE - m));
+	final int mask = ~(1 << SIZE - m);
 	return new IPv4(m_address & mask, (short) (m - 1));
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean hasChildren() {
-	return m_maskSize < SIZE;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public IPv4[] getChildren() {
-	final short m = (short) (m_maskSize + 1);
-	if (m > SIZE) {
-	    throw new IllegalStateException("No children");
-	}
-	final int a = m_address;
-	final int mask = 1 << (SIZE - m);
-	return new IPv4[] { new IPv4(a & ~mask, m), new IPv4(a | mask, m) };
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean contains(final IP other) {
-	if (!(other instanceof IPv4)) {
-	    return false;
-	}
-	final IPv4 o = (IPv4) other;
-	final short m = m_maskSize;
-	return m <= o.m_maskSize && (m == 0 || ((m_address ^ o.m_address) & ~((1 << (SIZE - m)) - 1)) == 0);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean getBit(final int bitNumber) {
-	if (bitNumber < 0 || bitNumber > SIZE) {
-	    throw new IndexOutOfBoundsException("Bit number should be in range [0, " + SIZE + "]");
-	}
-	return (m_address & (1 << SIZE - bitNumber)) != 0;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean getLastBit() {
-	return (m_address & (1 << (SIZE - m_maskSize))) != 0;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean isBrother(final IP other) {
-	if (!(other instanceof IPv4)) {
-	    return false;
-	}
-	final IPv4 o = (IPv4) other;
-
-	final short m = m_maskSize;
-	if (m != other.m_maskSize) {
-	    return false;
-	}
-	if (m == 0) {
-	    return true;
-	}
-
-	final int mask = ~(1 << (SIZE - m));
-	return (m_address & mask) == (o.m_address & mask);
     }
 
     /**
@@ -243,16 +232,16 @@ public final class IPv4 extends IP {
      * {@inheritDoc}
      */
     @Override
-    public boolean equals(final Object o) {
-	if (o == this) {
-	    return true;
-	}
-	if (!(o instanceof IPv4)) {
-	    return false;
-	}
+    public int getSubnetBitsNum() {
+	return SIZE - m_maskSize;
+    }
 
-	final IPv4 other = (IPv4) o;
-	return m_address == other.m_address && m_maskSize == other.m_maskSize;
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean hasChildren() {
+	return m_maskSize < SIZE;
     }
 
     /**
@@ -267,11 +256,29 @@ public final class IPv4 extends IP {
      * {@inheritDoc}
      */
     @Override
+    public boolean isBrother(final IP other) {
+	if (!(other instanceof IPv4))
+	    return false;
+	final IPv4 o = (IPv4) other;
+
+	final short m = m_maskSize;
+	if (m != other.m_maskSize)
+	    return false;
+	if (m == 0)
+	    return true;
+
+	final int mask = ~(1 << SIZE - m);
+	return (m_address & mask) == (o.m_address & mask);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public String toString() {
 	final short m = m_maskSize;
-	if (m == 0) {
+	if (m == 0)
 	    return ANY_IPv4_STR;
-	}
 
 	final int[] a = getAddress();
 	final StringBuilder st = new StringBuilder();
@@ -290,27 +297,8 @@ public final class IPv4 extends IP {
     }
 
     /**
-     * {@inheritDoc}
-     */
-    @Override
-    public int compareTo(final IP other) {
-	// Assume AnyIP < IPv4 < IPv6
-	if (!(other instanceof IPv4)) {
-	    return other instanceof IPv6 ? -1 : 1;
-	}
-
-	final IPv4 o = (IPv4) other;
-	final int a1 = m_address;
-	final int a2 = o.m_address;
-
-	// compare as unsigned
-	return a1 == a2 ? m_maskSize - other.m_maskSize
-		: ((a1 + Integer.MIN_VALUE) < (a2 + Integer.MIN_VALUE)) ? -1 : 1;
-    }
-
-    /**
      * Parses IPv4 from boolean bits list.
-     * 
+     *
      * @param addressBits
      *            the bits list
      * @return IPv4 with address built from the bits.
@@ -330,7 +318,7 @@ public final class IPv4 extends IP {
      * If the cache isn't null, will used the cached IPv4 from the cache if one
      * exist, or will create a new one and cache it to the cache otherwise.
      * <p>
-     * 
+     *
      * @param addressBits
      *            the bits list.
      * @param cache
@@ -346,63 +334,16 @@ public final class IPv4 extends IP {
 
 	// TODO- remove this method
 
-	if (addressBits.size() != SIZE) {
+	if (addressBits.size() != SIZE)
 	    throw new IllegalArgumentException("IPv4 size: " + Utility.formatEqual(SIZE, addressBits.size()));
-	}
 	int address = 0;
 	final Iterator<Boolean> bits = addressBits.iterator();
 	for (int i = SIZE; i-- != 0;) {
 	    address <<= 1;
-	    if (bits.next().booleanValue()) {
+	    if (bits.next().booleanValue())
 		address += 1;
-	    }
 	}
 	return valueOfBits(address, cache);
-    }
-
-    /**
-     * Get IPv4 object parsed from string.
-     * <p>
-     * The expected format is: A.B.C.D or A.B.C.D/M when A, B, C, and D are the
-     * blocks values (in range 0 to 255) and M is the subnetwork mask size (in
-     * range 0 to 32).
-     * <p>
-     * 
-     * @param s
-     *            string representation of an IPv4.
-     * @return IPv4 object parsed from string
-     * @throws NullPointerException
-     *             if the string is null
-     * @throws IllegalArgumentException
-     *             if the format is illegal or the values are out of range.
-     */
-    public static IPv4 valueOf(final String s) {
-	return valueOf(s, null, s.indexOf(BLOCKS_SEPARATOR));
-    }
-
-    /**
-     * Get IPv4 object parsed from string.
-     * <p>
-     * The expected format is: A.B.C.D or A.B.C.D/M when A, B, C, and D are the
-     * blocks values (in range 0 to 255) and M is the subnetwork mask size (in
-     * range 0 to 32).
-     * <p>
-     * If the cache isn't null, will used the cached IPv4 from the cache if one
-     * exist, or will create a new one and cache it to the cache otherwise.
-     * <p>
-     * 
-     * @param s
-     *            string representation of an IPv4.
-     * @param cache
-     *            the cached containing cached IPv4s objects. Can be null.
-     * @return IPv4 object parsed from string
-     * @throws NullPointerException
-     *             if the string is null
-     * @throws IllegalArgumentException
-     *             if the format is illegal or the values are out of range.
-     */
-    public static IPv4 valueOf(final String s, final IPv4.Cache cache) {
-	return valueOf(s, cache, s.indexOf(BLOCKS_SEPARATOR));
     }
 
     /**
@@ -414,7 +355,7 @@ public final class IPv4 extends IP {
      * <p>
      * For example:<br>
      * To create the IPv4 12.78.94.65 the array should be [12, 78, 94, 65].<br>
-     * 
+     *
      * @param address
      *            the address blocks
      * @return IPv4 object with the desire address
@@ -440,7 +381,7 @@ public final class IPv4 extends IP {
      * If the cache isn't null, will used the cached IPv4 from the cache if one
      * exist, or will create a new one and cache it to the cache otherwise.
      * <p>
-     * 
+     *
      * @param address
      *            the address blocks.
      * @param cache
@@ -465,7 +406,7 @@ public final class IPv4 extends IP {
      * For example:<br>
      * To create the IPv4 12.78.94.64/26 the array should be [12, 78, 94, 64]
      * and the maskSize should be 16.<br>
-     * 
+     *
      * @param address
      *            the address blocks
      * @param maskSize
@@ -495,7 +436,7 @@ public final class IPv4 extends IP {
      * If the cache isn't null, will used the cached IPv4 from the cache if one
      * exist, or will create a new one and cache it to the cache otherwise.
      * <p>
-     * 
+     *
      * @param address
      *            the address blocks.
      * @param maskSize
@@ -510,35 +451,76 @@ public final class IPv4 extends IP {
      *             maskSize is out of range (0 to 32).
      */
     public static IPv4 valueOf(final int[] address, final short maskSize, final IPv4.Cache cache) {
-	if (address.length != BLOCK_NUMBER) {
+	if (address.length != BLOCK_NUMBER)
 	    throw new IllegalArgumentException(
 		    "IPv4 blocks number: " + Utility.formatEqual(BLOCK_NUMBER, address.length));
-	}
 
 	int a = 0;
-	for (int i = 0; i < address.length; i++) {
-	    a = (a << BLOCK_SIZE) + address[i];
-	}
+	for (final int addres : address)
+	    a = (a << BLOCK_SIZE) + addres;
 
 	if (!(0 < maskSize && maskSize < SIZE)) {
-	    if (maskSize == SIZE) {
+	    if (maskSize == SIZE)
 		return valueOfBits(a, cache);
-	    }
-	    if (maskSize == 0) {
+	    if (maskSize == 0)
 		return ANY_IPv4;
-	    }
 	    throw new IllegalArgumentException("IPv4 subnetwork mask: " + Utility.formatRange(0, SIZE, maskSize));
 	}
 
 	// Reset suffix
-	a &= maskSize != 0 ? ~((1 << (SIZE - maskSize)) - 1) : 0;
+	a &= maskSize != 0 ? ~((1 << SIZE - maskSize) - 1) : 0;
 
 	return new IPv4(a, maskSize);
     }
 
     /**
+     * Get IPv4 object parsed from string.
+     * <p>
+     * The expected format is: A.B.C.D or A.B.C.D/M when A, B, C, and D are the
+     * blocks values (in range 0 to 255) and M is the subnetwork mask size (in
+     * range 0 to 32).
+     * <p>
+     *
+     * @param s
+     *            string representation of an IPv4.
+     * @return IPv4 object parsed from string
+     * @throws NullPointerException
+     *             if the string is null
+     * @throws IllegalArgumentException
+     *             if the format is illegal or the values are out of range.
+     */
+    public static IPv4 valueOf(final String s) {
+	return valueOf(s, null, s.indexOf(BLOCKS_SEPARATOR));
+    }
+
+    /**
+     * Get IPv4 object parsed from string.
+     * <p>
+     * The expected format is: A.B.C.D or A.B.C.D/M when A, B, C, and D are the
+     * blocks values (in range 0 to 255) and M is the subnetwork mask size (in
+     * range 0 to 32).
+     * <p>
+     * If the cache isn't null, will used the cached IPv4 from the cache if one
+     * exist, or will create a new one and cache it to the cache otherwise.
+     * <p>
+     *
+     * @param s
+     *            string representation of an IPv4.
+     * @param cache
+     *            the cached containing cached IPv4s objects. Can be null.
+     * @return IPv4 object parsed from string
+     * @throws NullPointerException
+     *             if the string is null
+     * @throws IllegalArgumentException
+     *             if the format is illegal or the values are out of range.
+     */
+    public static IPv4 valueOf(final String s, final IPv4.Cache cache) {
+	return valueOf(s, cache, s.indexOf(BLOCKS_SEPARATOR));
+    }
+
+    /**
      * Get IPv4 object with the specified 32 bits(int) address.
-     * 
+     *
      * @param addressBits
      *            the 32 bits of the address
      * @return IPv4 object with specified address
@@ -553,7 +535,7 @@ public final class IPv4 extends IP {
      * If the cache isn't null, will used the cached IPv4 from the cache if one
      * exist, or will create a new one and cache it to the cache otherwise.
      * <p>
-     * 
+     *
      * @param addressBits
      *            the 32 bits of the address.
      * @param cache
@@ -567,7 +549,7 @@ public final class IPv4 extends IP {
     /**
      * Get IPv4 object with the specified 32 bits(int) address and subnetwork
      * mask size.
-     * 
+     *
      * @param addressBits
      *            the 32 bits of the address.
      * @param maskSize
@@ -587,7 +569,7 @@ public final class IPv4 extends IP {
      * If the cache isn't null, will used the cached IPv4 from the cache if one
      * exist, or will create a new one and cache it to the cache otherwise.
      * <p>
-     * 
+     *
      * @param addressBits
      *            the 32 bits of the address.
      * @param maskSize
@@ -600,20 +582,111 @@ public final class IPv4 extends IP {
      */
     public static IPv4 valueOfBits(final int addressBits, final short maskSize, final IPv4.Cache cache) {
 	if (!(0 < maskSize && maskSize < SIZE)) {
-	    if (maskSize == SIZE) {
+	    if (maskSize == SIZE)
 		return valueOfBits(addressBits, cache);
-	    }
-	    if (maskSize == 0) {
+	    if (maskSize == 0)
 		return ANY_IPv4;
-	    }
 	    throw new IllegalArgumentException("IPv4 subnetwork mask: " + Utility.formatRange(0, SIZE, maskSize));
 	}
 	return new IPv4(addressBits, maskSize);
     }
 
     /**
+     * Get IPv4 object parsed from string.
+     * <p>
+     * The expected format is: A.B.C.D or A.B.C.D/M when A, B, C, and D are the
+     * blocks values (in range 0 to 255) and M is the subnetwork mask size (in
+     * range 0 to 32).
+     * <p>
+     * If the cache isn't null, will used the cached IPv4 from the cache if one
+     * exist, or will create a new one and cache it to the cache otherwise.
+     * <p>
+     *
+     * @param s
+     *            string representation of an IPv4. won't.
+     * @param cache
+     *            the cached containing cached IPv4s objects. Can be null.
+     * @param separatorIndex
+     *            the first index of the separator in the string. (optimization)
+     * @return IPv4 object parsed from string
+     * @throws NullPointerException
+     *             if the string is null
+     * @throws IllegalArgumentException
+     *             if the format is illegal or the values are out of range.
+     */
+    static IPv4 valueOf(final String s, final IPv4.Cache cache, int separatorIndex) {
+	int address = 0;
+
+	int fromIndex = 0;
+	int numberOfSeparators = 0;
+	for (; separatorIndex >= 0; separatorIndex = s.indexOf(BLOCKS_SEPARATOR, fromIndex)) {
+	    address = address + parseBlockValue(s, fromIndex, separatorIndex) << BLOCK_SIZE;
+	    numberOfSeparators++;
+	    fromIndex = separatorIndex + 1;
+	}
+	if (numberOfSeparators != BLOCK_NUMBER - 1) {
+	    if (s.equals(ANY_IPv4_STR))
+		return ANY_IPv4;
+	    throw new IllegalArgumentException(
+		    "IPv4 blocks number: " + Utility.formatEqual(BLOCK_NUMBER, numberOfSeparators + 1));
+	}
+
+	// Read suffix of IP - last block
+	final int maskSeparatorIndex = s.indexOf(MASK_SIZE_SEPARATOR, fromIndex);
+	if (maskSeparatorIndex < 0) {
+	    // No mask size specification
+	    address += parseBlockValue(s, fromIndex, s.length());
+	    return valueOfBits(address, cache);
+	}
+
+	// Has mask size specification
+	address += parseBlockValue(s, fromIndex, maskSeparatorIndex);
+
+	// Read subnetwork mask
+	final short maskSize = (short) Utility.parsePositiveIntUncheckedOverflow(s, maskSeparatorIndex + 1, s.length(),
+		MAX_MASK_SIZE_DIGITIS_NUMBER);
+
+	if (!(0 < maskSize && maskSize < SIZE)) {
+	    if (maskSize == SIZE)
+		return valueOfBits(address, cache);
+	    if (maskSize == 0)
+		return ANY_IPv4;
+	    throw new IllegalArgumentException("IPv4 subnetwork mask: " + Utility.formatRange(0, SIZE, maskSize));
+	}
+
+	// Reset suffix
+	address &= maskSize != 0 ? ~((1 << SIZE - maskSize) - 1) : 0;
+
+	return new IPv4(address, maskSize);
+    }
+
+    /**
+     * Parses a block of IPv4 and check if it's range is valid.
+     *
+     * @param s
+     *            the full string.
+     * @param fromIndex
+     *            the start index of the value in the text.
+     * @param toIndex
+     *            the end index of the value in the text.
+     * @return block value parsed from the specified interval on the text.
+     * @throws IllegalArgumentException
+     *             if failed to parse to integer or the parsed integer is not in
+     *             in range of valid block value [0,
+     *             {@link IPv4#MAX_BLOCK_VALUE}].
+     */
+    private static int parseBlockValue(final String s, final int fromIndex, final int toIndex) {
+	final int blockVal = Utility.parsePositiveIntUncheckedOverflow(s, fromIndex, toIndex, MAX_BLOCK_DIGITS_NUMBER);
+
+	if (!(0 <= blockVal && blockVal <= MAX_BLOCK_VALUE))
+	    throw new IllegalArgumentException(
+		    "IPv4 block value: " + Utility.formatRange(0, MAX_BLOCK_VALUE, blockVal));
+	return blockVal;
+    }
+
+    /**
      * Cache of {@link IPv4} objects.
-     * 
+     *
      * @author Barak Ugav
      * @author Yishai Gronich
      *
@@ -645,103 +718,6 @@ public final class IPv4 extends IP {
 	    cache = new Int2ObjectSoftHashCache<>();
 	}
 
-    }
-
-    /**
-     * Get IPv4 object parsed from string.
-     * <p>
-     * The expected format is: A.B.C.D or A.B.C.D/M when A, B, C, and D are the
-     * blocks values (in range 0 to 255) and M is the subnetwork mask size (in
-     * range 0 to 32).
-     * <p>
-     * If the cache isn't null, will used the cached IPv4 from the cache if one
-     * exist, or will create a new one and cache it to the cache otherwise.
-     * <p>
-     * 
-     * @param s
-     *            string representation of an IPv4. won't.
-     * @param cache
-     *            the cached containing cached IPv4s objects. Can be null.
-     * @param separatorIndex
-     *            the first index of the separator in the string. (optimization)
-     * @return IPv4 object parsed from string
-     * @throws NullPointerException
-     *             if the string is null
-     * @throws IllegalArgumentException
-     *             if the format is illegal or the values are out of range.
-     */
-    static IPv4 valueOf(final String s, final IPv4.Cache cache, int separatorIndex) {
-	int address = 0;
-
-	int fromIndex = 0;
-	int numberOfSeparators = 0;
-	for (; separatorIndex >= 0; separatorIndex = s.indexOf(BLOCKS_SEPARATOR, fromIndex)) {
-	    address = (address + parseBlockValue(s, fromIndex, separatorIndex)) << BLOCK_SIZE;
-	    numberOfSeparators++;
-	    fromIndex = separatorIndex + 1;
-	}
-	if (numberOfSeparators != BLOCK_NUMBER - 1) {
-	    if (s.equals(ANY_IPv4_STR)) {
-		return ANY_IPv4;
-	    }
-	    throw new IllegalArgumentException(
-		    "IPv4 blocks number: " + Utility.formatEqual(BLOCK_NUMBER, numberOfSeparators + 1));
-	}
-
-	// Read suffix of IP - last block
-	final int maskSeparatorIndex = s.indexOf(MASK_SIZE_SEPARATOR, fromIndex);
-	if (maskSeparatorIndex < 0) {
-	    // No mask size specification
-	    address += parseBlockValue(s, fromIndex, s.length());
-	    return valueOfBits(address, cache);
-	}
-
-	// Has mask size specification
-	address += parseBlockValue(s, fromIndex, maskSeparatorIndex);
-
-	// Read subnetwork mask
-	final short maskSize = (short) Utility.parsePositiveIntUncheckedOverflow(s, maskSeparatorIndex + 1, s.length(),
-		MAX_MASK_SIZE_DIGITIS_NUMBER);
-
-	if (!(0 < maskSize && maskSize < SIZE)) {
-	    if (maskSize == SIZE) {
-		return valueOfBits(address, cache);
-	    }
-	    if (maskSize == 0) {
-		return ANY_IPv4;
-	    }
-	    throw new IllegalArgumentException("IPv4 subnetwork mask: " + Utility.formatRange(0, SIZE, maskSize));
-	}
-
-	// Reset suffix
-	address &= maskSize != 0 ? ~((1 << (SIZE - maskSize)) - 1) : 0;
-
-	return new IPv4(address, maskSize);
-    }
-
-    /**
-     * Parses a block of IPv4 and check if it's range is valid.
-     * 
-     * @param s
-     *            the full string.
-     * @param fromIndex
-     *            the start index of the value in the text.
-     * @param toIndex
-     *            the end index of the value in the text.
-     * @return block value parsed from the specified interval on the text.
-     * @throws IllegalArgumentException
-     *             if failed to parse to integer or the parsed integer is not in
-     *             in range of valid block value [0,
-     *             {@link IPv4#MAX_BLOCK_VALUE}].
-     */
-    private static int parseBlockValue(final String s, final int fromIndex, final int toIndex) {
-	final int blockVal = Utility.parsePositiveIntUncheckedOverflow(s, fromIndex, toIndex, MAX_BLOCK_DIGITS_NUMBER);
-
-	if (!(0 <= blockVal && blockVal <= MAX_BLOCK_VALUE)) {
-	    throw new IllegalArgumentException(
-		    "IPv4 block value: " + Utility.formatRange(0, MAX_BLOCK_VALUE, blockVal));
-	}
-	return blockVal;
     }
 
 }

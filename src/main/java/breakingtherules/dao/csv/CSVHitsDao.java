@@ -16,10 +16,10 @@ import breakingtherules.firewall.Hit;
  * The CSVHitsDao is a basic DAO that only parse hits, line by line from CSV
  * files.
  * <p>
- * 
+ *
  * @author Barak Ugav
  * @author Yishai Gronich
- * 
+ *
  * @see CSVParser
  */
 public class CSVHitsDao extends AbstractCachedHitsDao {
@@ -33,14 +33,14 @@ public class CSVHitsDao extends AbstractCachedHitsDao {
     /**
      * Supplier function of hits.
      * <p>
-     * 
+     *
      * @see #getHitsSupplier()
      */
     private final Function<String, Set<Hit>> m_hitsSupplier = jobName -> {
 	try {
 	    final Set<Hit> hits = new HashSet<>();
-	    CSVParser.parseHits(m_columnTypes, CSVDaoConfig.getHitsFile(jobName),
-		    Collections.emptyList(), Filter.ANY_FILTER, hits);
+	    CSVParser.parseHits(m_columnTypes, CSVDaoConfig.getHitsFile(jobName), Collections.emptyList(),
+		    Filter.ANY_FILTER, hits);
 	    return hits;
 
 	} catch (final IOException e) {
@@ -58,16 +58,6 @@ public class CSVHitsDao extends AbstractCachedHitsDao {
     }
 
     /**
-     * Change the type of each column
-     * 
-     * @param columnTypes
-     *            New column types
-     */
-    public void setColumnTypes(List<Integer> columnTypes) {
-	m_columnTypes = columnTypes;
-    }
-
-    /**
      * {@inheritDoc}
      */
     @Override
@@ -77,6 +67,16 @@ public class CSVHitsDao extends AbstractCachedHitsDao {
 	} catch (final CSVParseException e) {
 	    throw new IllegalArgumentException(e);
 	}
+    }
+
+    /**
+     * Change the type of each column
+     *
+     * @param columnTypes
+     *            New column types
+     */
+    public void setColumnTypes(final List<Integer> columnTypes) {
+	m_columnTypes = columnTypes;
     }
 
     /**
@@ -98,7 +98,7 @@ public class CSVHitsDao extends AbstractCachedHitsDao {
      * <p>
      * This exception is similar to {@link UncheckedIOException}.
      * <p>
-     * 
+     *
      * @author Barak Ugav
      * @author Yishai Gronich
      *
@@ -110,7 +110,7 @@ public class CSVHitsDao extends AbstractCachedHitsDao {
 
 	/**
 	 * Construct new UncheckedCSVParseException without a message.
-	 * 
+	 *
 	 * @param cause
 	 *            the original checked {@link CSVParseException}.
 	 */
@@ -120,7 +120,7 @@ public class CSVHitsDao extends AbstractCachedHitsDao {
 
 	/**
 	 * Construct new UncheckedCSVParseException with a message.
-	 * 
+	 *
 	 * @param message
 	 *            the exception's message.
 	 * @param cause

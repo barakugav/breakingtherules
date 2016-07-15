@@ -6,7 +6,7 @@ package breakingtherules.dao;
  * The {@link HitsDao} and {@link RulesDao} are parsing data. When they are
  * encounter invalid data they should throw this exception.
  * <p>
- * 
+ *
  * @author Barak Ugav
  * @author Yishai Gronich
  *
@@ -25,7 +25,7 @@ public class ParseException extends Exception {
 
     /**
      * Construct new ParseException with a message.
-     * 
+     *
      * @param message
      *            the exception's message.
      */
@@ -34,19 +34,9 @@ public class ParseException extends Exception {
     }
 
     /**
-     * Construct new ParseException with a cause.
-     * 
-     * @param cause
-     *            the cause of this exception.
-     */
-    public ParseException(final Throwable cause) {
-	super(cause);
-    }
-
-    /**
-     * 
+     *
      * Construct new ParseException with a message and cause.
-     * 
+     *
      * @param message
      *            the exception's message.
      * @param cause
@@ -54,6 +44,16 @@ public class ParseException extends Exception {
      */
     public ParseException(final String message, final Throwable cause) {
 	super(message, cause);
+    }
+
+    /**
+     * Construct new ParseException with a cause.
+     *
+     * @param cause
+     *            the cause of this exception.
+     */
+    public ParseException(final Throwable cause) {
+	super(cause);
     }
 
 }

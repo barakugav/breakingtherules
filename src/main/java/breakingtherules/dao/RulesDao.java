@@ -8,17 +8,17 @@ import breakingtherules.firewall.Rule;
 /**
  * Component that supply rules from repository.
  * <p>
- * 
+ *
  * @author Barak Ugav
  * @author Yishai Gronich
- * 
+ *
  * @see Rule
  */
 public interface RulesDao {
 
     /**
      * Get the original rule of the job.
-     * 
+     *
      * @param jobName
      *            The name of the job.
      * @return The original rule of the given job.
@@ -31,7 +31,7 @@ public interface RulesDao {
 
     /**
      * Get all rules from repository.
-     * 
+     *
      * @param jobName
      *            Name of the rules' job.
      * @return all rules created
@@ -44,7 +44,7 @@ public interface RulesDao {
 
     /**
      * Get rules from repository in range [startIndex, endIndex]
-     * 
+     *
      * @param jobName
      *            name of the rules' job
      * @param startIndex

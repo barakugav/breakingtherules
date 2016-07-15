@@ -5,7 +5,7 @@ import breakingtherules.dao.ParseException;
 /**
  * The CSVParseException is a parse exception of CSV files.
  * <p>
- * 
+ *
  * @author Barak Ugav
  * @author Yishai Gronich
  *
@@ -24,7 +24,7 @@ public class CSVParseException extends ParseException {
 
     /**
      * Construct new CSVParseException with a message.
-     * 
+     *
      * @param message
      *            the exception's message.
      */
@@ -33,19 +33,9 @@ public class CSVParseException extends ParseException {
     }
 
     /**
-     * Construct new CSVParseException with a cause.
-     * 
-     * @param cause
-     *            the cause of this exception.
-     */
-    public CSVParseException(final Throwable cause) {
-	super(cause);
-    }
-
-    /**
-     * 
+     *
      * Construct new CSVParseException with a message and cause.
-     * 
+     *
      * @param message
      *            the exception's message.
      * @param cause
@@ -53,6 +43,16 @@ public class CSVParseException extends ParseException {
      */
     public CSVParseException(final String message, final Throwable cause) {
 	super(message, cause);
+    }
+
+    /**
+     * Construct new CSVParseException with a cause.
+     *
+     * @param cause
+     *            the cause of this exception.
+     */
+    public CSVParseException(final Throwable cause) {
+	super(cause);
     }
 
 }

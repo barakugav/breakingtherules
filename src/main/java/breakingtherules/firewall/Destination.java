@@ -13,10 +13,10 @@ import breakingtherules.utilities.SoftCustomHashCache;
  * <p>
  * Defined by it's IP.
  * <p>
- * 
+ *
  * @author Barak Ugav
  * @author Yishai Gronich
- * 
+ *
  * @see IP
  */
 public class Destination extends IPAttribute {
@@ -29,7 +29,7 @@ public class Destination extends IPAttribute {
 
     /**
      * Construct new destination of an IP.
-     * 
+     *
      * @param ip
      *            IP of the destination.
      */
@@ -49,8 +49,8 @@ public class Destination extends IPAttribute {
      * {@inheritDoc}
      */
     @Override
-    public AttributeType getType() {
-	return AttributeType.DESTINATION;
+    public Destination createMutation(final IP ip) {
+	return Destination.valueOf(ip, null);
     }
 
     /**
@@ -65,15 +65,51 @@ public class Destination extends IPAttribute {
      * {@inheritDoc}
      */
     @Override
-    public Destination createMutation(final IP ip) {
-	return Destination.valueOf(ip, null);
+    public AttributeType getType() {
+	return AttributeType.DESTINATION;
+    }
+
+    /**
+     * Get Destination object with the specified IP.
+     *
+     * @param ip
+     *            an IP
+     * @return destination object of the IP
+     */
+    public static Destination valueOf(final IP ip) {
+	return new Destination(Objects.requireNonNull(ip));
+    }
+
+    /**
+     * Get Destination object with the specified IP.
+     * <p>
+     * If the cache isn't null, will used the cached destination from the cache
+     * if one exist, or will create a new one and cache it to the cache
+     * otherwise.
+     *
+     * @param ip
+     *            an IP.
+     * @param cache
+     *            the cached containing cached destination objects. Can be null.
+     * @return destination object of the IP
+     */
+    public static Destination valueOf(final IP ip, final Destination.Cache cache) {
+	if (cache != null && ip.m_maskSize == ip.getSize()) {
+	    // If ip is a full IP (most common destination objects) search it in
+	    // cache, or add one if one doesn't exist.
+	    if (ip instanceof IPv4)
+		return cache.ipv4Cache.getOrAdd(((IPv4) ip).m_address, cache.ipv4DestinationsMappingFunction);
+	    if (ip instanceof IPv6)
+		return cache.ipv6Cache.getOrAdd(((IPv6) ip).m_address, cache.ipv6DestinationsMappingFunction);
+	}
+	return new Destination(ip);
     }
 
     /**
      * Get Destination object parsed from string.
-     * 
+     *
      * TODO - specified expected input format.
-     * 
+     *
      * @param s
      *            string representation of a destination.
      * @return destination object of the IP
@@ -89,9 +125,9 @@ public class Destination extends IPAttribute {
      * if one exist, or will create a new one and cache it to the cache
      * otherwise.
      * <p>
-     * 
+     *
      * TODO - specified expected input format.
-     * 
+     *
      * @param s
      *            string representation of a destination.
      * @param cache
@@ -103,46 +139,8 @@ public class Destination extends IPAttribute {
     }
 
     /**
-     * Get Destination object with the specified IP.
-     * 
-     * @param ip
-     *            an IP
-     * @return destination object of the IP
-     */
-    public static Destination valueOf(final IP ip) {
-	return new Destination(Objects.requireNonNull(ip));
-    }
-
-    /**
-     * Get Destination object with the specified IP.
-     * <p>
-     * If the cache isn't null, will used the cached destination from the cache
-     * if one exist, or will create a new one and cache it to the cache
-     * otherwise.
-     * 
-     * @param ip
-     *            an IP.
-     * @param cache
-     *            the cached containing cached destination objects. Can be null.
-     * @return destination object of the IP
-     */
-    public static Destination valueOf(final IP ip, final Destination.Cache cache) {
-	if (cache != null && ip.m_maskSize == ip.getSize()) {
-	    // If ip is a full IP (most common destination objects) search it in
-	    // cache, or add one if one doesn't exist.
-	    if (ip instanceof IPv4) {
-		return cache.ipv4Cache.getOrAdd(((IPv4) ip).m_address, cache.ipv4DestinationsMappingFunction);
-	    }
-	    if (ip instanceof IPv6) {
-		return cache.ipv6Cache.getOrAdd(((IPv6) ip).m_address, cache.ipv6DestinationsMappingFunction);
-	    }
-	}
-	return new Destination(ip);
-    }
-
-    /**
      * Cache of {@link Destination} objects.
-     * 
+     *
      * @author Barak Ugav
      * @author Yishai Gronich
      *
@@ -189,7 +187,7 @@ public class Destination extends IPAttribute {
 	/**
 	 * Construct new destination cache, built on an existing IPs cache.
 	 * <p>
-	 * 
+	 *
 	 * @param ipsCache
 	 *            the existing IPs cache. (can be null)
 	 */
@@ -207,10 +205,10 @@ public class Destination extends IPAttribute {
 
     /**
      * Any destination - contains all others.
-     * 
+     *
      * @author Barak Ugav
      * @author Yishai Gronich
-     * 
+     *
      * @see IP#ANY_IP
      */
     private static class AnyDestination extends Destination {

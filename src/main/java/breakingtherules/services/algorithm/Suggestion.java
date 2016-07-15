@@ -6,9 +6,14 @@ import breakingtherules.firewall.Attribute;
 
 /**
  * Suggestion of a part of rule - specific attribute
- * 
+ * <p>
  * Hold the number of hits that match the attribute. Is comparable, but
  * comparison is inconsistent with equals.
+ * <p>
+ * 
+ * @author Barak Ugav
+ * @author Yishai Gronich
+ *
  */
 public class Suggestion {
 
@@ -39,7 +44,7 @@ public class Suggestion {
 
     /**
      * Constructor
-     * 
+     *
      * @param att
      *            attribute of this suggestion
      */
@@ -49,7 +54,7 @@ public class Suggestion {
 
     /**
      * Constructor
-     * 
+     *
      * @param att
      *            The attribute of this suggestion
      * @param size
@@ -65,7 +70,7 @@ public class Suggestion {
 
     /**
      * Get the attribute of this suggestion
-     * 
+     *
      * @return attribute of this suggestion
      */
     public Attribute getAttribute() {
@@ -73,17 +78,17 @@ public class Suggestion {
     }
 
     /**
-     * @return the size of this suggestion
-     */
-    public int getSize() {
-	return m_size;
-    }
-
-    /**
      * @return the score of this suggestion
      */
     public double getScore() {
 	return m_score;
+    }
+
+    /**
+     * @return the size of this suggestion
+     */
+    public int getSize() {
+	return m_size;
     }
 
     /**
@@ -103,7 +108,7 @@ public class Suggestion {
 
     /**
      * Set the score of this suggestion
-     * 
+     *
      * @param score
      *            score of this suggestion
      */

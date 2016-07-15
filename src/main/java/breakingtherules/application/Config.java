@@ -18,7 +18,7 @@ import breakingtherules.services.algorithm.SuggestionsAlgorithm;
  * Configuring Of the Spring Application. Specifically, what algorithm to use to
  * get suggestions for rules, what DAO to use to get hits and rules, and how to
  * handle file uploads
- * 
+ *
  * @author Barak Ugav
  * @author Yishai Gronich
  *
@@ -31,13 +31,13 @@ public class Config {
     // -------------- Algorithm ---------------
 
     @Bean
-    public SuggestionsAlgorithm infoAlgorithm() {
-	return new InformationAlgorithm(hitsDao());
+    public CSVHitsDao csvHitsDao() {
+	return new CSVHitsDao();
     }
 
-    // @Bean
-    public SuggestionsAlgorithm simpleAlgorithm() {
-	return new SimpleAlgorithm(hitsDao());
+    // @Bean(destroyMethod = "cleanup")
+    public ElasticHitsDao esHitsDao() {
+	return new ElasticHitsDao();
     }
 
     // ------------ Upload Settings ---------------
@@ -55,19 +55,19 @@ public class Config {
 	return csvHitsDao();
     }
 
-    // @Bean(destroyMethod = "cleanup")
-    public ElasticHitsDao esHitsDao() {
-	return new ElasticHitsDao();
-    }
-
-    @Bean
-    public CSVHitsDao csvHitsDao() {
-	return new CSVHitsDao();
-    }
-
     @Bean
     public XMLHitsDao hitsXmlDao() {
 	return new XMLHitsDao();
+    }
+
+    @Bean
+    public SuggestionsAlgorithm infoAlgorithm() {
+	return new InformationAlgorithm(hitsDao());
+    }
+
+    // @Bean
+    public SuggestionsAlgorithm simpleAlgorithm() {
+	return new SimpleAlgorithm(hitsDao());
     }
 
 }

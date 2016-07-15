@@ -32,7 +32,6 @@ import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
 
 import breakingtherules.dao.HitsDao;
-import breakingtherules.dao.ParseException;
 import breakingtherules.dto.ListDto;
 import breakingtherules.firewall.Attribute;
 import breakingtherules.firewall.Destination;
@@ -50,10 +49,10 @@ import breakingtherules.utilities.Utility;
  * A Data Access Object that connects to an existing ElasticSearch cluster, and
  * allows reading, writing, and deleting hits, to and from the ElasticSearch
  * cluster.
- * 
+ *
  * @author Barak Ugav
  * @author Yishai Gronich
- * 
+ *
  */
 public class ElasticHitsDao implements HitsDao {
 
@@ -97,82 +96,8 @@ public class ElasticHitsDao implements HitsDao {
     }
 
     /**
-     * Should be called before destroying the DAO, in order to close the
-     * connection to other ElasticSearch nodes
-     */
-    public void cleanup() {
-	m_elasticNode.close();
-    }
-
-    /**
-     * @param jobName
-     *            The name of the job to check
-     * @return Whether the job exists (has hits) in ElasticSearch
-     */
-    public boolean doesJobExist(String jobName) {
-	try {
-	    final SearchRequestBuilder srchRequest = m_elasticClient.prepareSearch(ElasticDaoConfig.INDEX_NAME);
-	    final QueryBuilder query = QueryBuilders.termQuery(ElasticDaoConfig.FIELD_JOB_NAME, jobName);
-	    srchRequest.setQuery(query);
-	    srchRequest.setSize(0);
-	    srchRequest.setTerminateAfter(1);
-	    final SearchResponse response = srchRequest.get();
-	    return response.getHits().totalHits() > 0;
-
-	} catch (@SuppressWarnings("unused") final IndexNotFoundException e) {
-	    return false;
-	}
-    }
-
-    /**
-     * Deleting a job from ElasticSearch. Since this is a "dangerous" one-way
-     * procedure, it cannot be done on jobs with many hits, and they have to be
-     * erased directly through ES
-     * 
-     * @param jobName
-     *            The name of the job to delete
-     * @return Iff the job exited before calling deleteJob
-     * @throws IOException
-     *             If ElasticSearch has failures while deleting the job
-     * @throws IllegalArgumentException
-     *             If the job has too many hits
-     */
-    public boolean deleteJob(String jobName) throws IOException {
-
-	final QueryBuilder query = QueryBuilders.termQuery(ElasticDaoConfig.FIELD_JOB_NAME, jobName);
-	final SearchRequestBuilder srchRequest = m_elasticClient.prepareSearch(ElasticDaoConfig.INDEX_NAME);
-	srchRequest.setQuery(query);
-	srchRequest.setSize(ElasticDaoConfig.DELETION_THRESHOLD);
-
-	final SearchHits hitsRes = srchRequest.get().getHits();
-	if (hitsRes.totalHits() > ElasticDaoConfig.DELETION_THRESHOLD) {
-	    throw new IllegalArgumentException(
-		    "Job is too big to delete programatically. Please delete manually through ElasticSearch.");
-
-	}
-	if (hitsRes.getTotalHits() == 0) {
-	    return false;
-	}
-	final BulkRequestBuilder bulkDelete = m_elasticClient.prepareBulk();
-	for (final SearchHit hit : hitsRes.getHits()) {
-	    final DeleteRequestBuilder deleteRequest = m_elasticClient.prepareDelete();
-	    deleteRequest.setIndex(ElasticDaoConfig.INDEX_NAME);
-	    deleteRequest.setType(ElasticDaoConfig.TYPE_HIT);
-	    deleteRequest.setId(hit.getId());
-
-	    bulkDelete.add(deleteRequest);
-	}
-	final BulkResponse deleteResponse = bulkDelete.execute().actionGet();
-	if (deleteResponse.hasFailures()) {
-	    throw new IOException(deleteResponse.buildFailureMessage());
-	}
-	refreshIndex();
-	return true;
-    }
-
-    /**
      * Adding a hit to a certain job
-     * 
+     *
      * @param hit
      *            A firewall Hit to be inserted to ElasticSearch
      * @param jobName
@@ -187,7 +112,7 @@ public class ElasticHitsDao implements HitsDao {
 
     /**
      * Adding hits to a certain job
-     * 
+     *
      * @param hits
      *            A list of firewall Hits to be inserted to ElasticSearch
      * @param jobName
@@ -197,8 +122,7 @@ public class ElasticHitsDao implements HitsDao {
      */
     public void addHits(final Iterable<Hit> hits, final String jobName) throws IOException {
 	final BulkRequestBuilder bulkRequest = m_elasticClient.prepareBulk();
-	for (final Hit hit : hits) {
-
+	for (final Hit hit : hits)
 	    try (final XContentBuilder hitJson = XContentFactory.jsonBuilder()) {
 		hitJson.startObject();
 		hitJson.field(ElasticDaoConfig.FIELD_JOB_NAME, jobName);
@@ -216,38 +140,100 @@ public class ElasticHitsDao implements HitsDao {
 		indexRequest.setSource(hitJson);
 		bulkRequest.add(indexRequest);
 	    }
-
-	}
 	final BulkResponse bulkResponse = bulkRequest.execute().actionGet();
 	if (bulkResponse.hasFailures()) {
 	    String error = "Bulk add request had failures. ";
 	    // process failures by iterating through each bulk response item
-	    for (final BulkItemResponse item : bulkResponse) {
+	    for (final BulkItemResponse item : bulkResponse)
 		error += item.getFailureMessage() + " ";
-	    }
 	    throw new IOException(error);
 	}
 	refreshIndex();
     }
 
     /**
-     * {@inheritDoc}
+     * Should be called before destroying the DAO, in order to close the
+     * connection to other ElasticSearch nodes
      */
-    @Override
-    public int getHitsNumber(final String jobName, final List<Rule> rules, final Filter filter) throws IOException {
-	final Integer cachedSize = m_totalHitsCache.get(new Triple<>(Integer.valueOf(jobName), rules, filter));
-	if (cachedSize != null) {
-	    return cachedSize.intValue();
+    public void cleanup() {
+	m_elasticNode.close();
+    }
+
+    /**
+     * Deleting a job from ElasticSearch. Since this is a "dangerous" one-way
+     * procedure, it cannot be done on jobs with many hits, and they have to be
+     * erased directly through ES
+     *
+     * @param jobName
+     *            The name of the job to delete
+     * @return Iff the job exited before calling deleteJob
+     * @throws IOException
+     *             If ElasticSearch has failures while deleting the job
+     * @throws IllegalArgumentException
+     *             If the job has too many hits
+     */
+    public boolean deleteJob(final String jobName) throws IOException {
+
+	final QueryBuilder query = QueryBuilders.termQuery(ElasticDaoConfig.FIELD_JOB_NAME, jobName);
+	final SearchRequestBuilder srchRequest = m_elasticClient.prepareSearch(ElasticDaoConfig.INDEX_NAME);
+	srchRequest.setQuery(query);
+	srchRequest.setSize(ElasticDaoConfig.DELETION_THRESHOLD);
+
+	final SearchHits hitsRes = srchRequest.get().getHits();
+	if (hitsRes.totalHits() > ElasticDaoConfig.DELETION_THRESHOLD)
+	    throw new IllegalArgumentException(
+		    "Job is too big to delete programatically. Please delete manually through ElasticSearch.");
+	if (hitsRes.getTotalHits() == 0)
+	    return false;
+	final BulkRequestBuilder bulkDelete = m_elasticClient.prepareBulk();
+	for (final SearchHit hit : hitsRes.getHits()) {
+	    final DeleteRequestBuilder deleteRequest = m_elasticClient.prepareDelete();
+	    deleteRequest.setIndex(ElasticDaoConfig.INDEX_NAME);
+	    deleteRequest.setType(ElasticDaoConfig.TYPE_HIT);
+	    deleteRequest.setId(hit.getId());
+
+	    bulkDelete.add(deleteRequest);
 	}
-	return getHitsList(jobName, rules, filter).getSize();
+	final BulkResponse deleteResponse = bulkDelete.execute().actionGet();
+	if (deleteResponse.hasFailures())
+	    throw new IOException(deleteResponse.buildFailureMessage());
+	refreshIndex();
+	return true;
+    }
+
+    /**
+     * @param jobName
+     *            The name of the job to check
+     * @return Whether the job exists (has hits) in ElasticSearch
+     */
+    public boolean doesJobExist(final String jobName) {
+	try {
+	    final SearchRequestBuilder srchRequest = m_elasticClient.prepareSearch(ElasticDaoConfig.INDEX_NAME);
+	    final QueryBuilder query = QueryBuilders.termQuery(ElasticDaoConfig.FIELD_JOB_NAME, jobName);
+	    srchRequest.setQuery(query);
+	    srchRequest.setSize(0);
+	    srchRequest.setTerminateAfter(1);
+	    final SearchResponse response = srchRequest.get();
+	    return response.getHits().totalHits() > 0;
+
+	} catch (@SuppressWarnings("unused") final IndexNotFoundException e) {
+	    return false;
+	}
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public ListDto<Hit> getHitsList(final String jobName, final List<Rule> rules, final Filter filter)
-	    throws IOException {
+    public Iterable<Hit> getHits(final String jobName, final List<Rule> rules, final Filter filter) {
+	return getHits(jobName, rules, filter, true, 0, 0);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public ListDto<Hit> getHitsList(final String jobName, final List<Rule> rules, final Filter filter) {
 	final List<Hit> hits = Utility.newArrayList(getHits(jobName, rules, filter, true, 0, 0));
 
 	// Create new list of the rules to clone the list - so modifications on
@@ -263,9 +249,11 @@ public class ElasticHitsDao implements HitsDao {
      * {@inheritDoc}
      */
     @Override
-    public Iterable<Hit> getHits(final String jobName, final List<Rule> rules, final Filter filter)
-	    throws IOException, ParseException {
-	return getHits(jobName, rules, filter, true, 0, 0);
+    public int getHitsNumber(final String jobName, final List<Rule> rules, final Filter filter) {
+	final Integer cachedSize = m_totalHitsCache.get(new Triple<>(Integer.valueOf(jobName), rules, filter));
+	if (cachedSize != null)
+	    return cachedSize.intValue();
+	return getHitsList(jobName, rules, filter).getSize();
     }
 
     /**
@@ -277,21 +265,11 @@ public class ElasticHitsDao implements HitsDao {
     }
 
     /**
-     * Refreshes the ElasticSearch index, which means updating it, so that the
-     * next queries will be consistent will the previous ones
-     */
-    private void refreshIndex() {
-	// using "execute" instead of "get" in the following line, does not
-	// ensure that the refresh will happen immediately
-	m_elasticClient.admin().indices().prepareRefresh(ElasticDaoConfig.INDEX_NAME).get();
-    }
-
-    /**
      * Gets hits from the ElasticSearch database. If the boolean "all" is true,
      * this method ignores startIndex and endIndex. Otherwise, out of all the
      * hits that do not match the given rules and filter, this method returns
      * the hits in range [startIndex, endIndex)
-     * 
+     *
      * @param jobName
      *            The job from which to take the hits
      * @param rules
@@ -326,9 +304,8 @@ public class ElasticHitsDao implements HitsDao {
 
 	final Set<Hit> relevantHits = new HashSet<>();
 	int i = 0; // to only take the relevant indices.
-	if (all) {
+	if (all)
 	    startIndex = 0;
-	}
 
 	final ElasticHitsParser parser = new ElasticHitsParser();
 	final IP.Cache ipsCache = new IP.Cache();
@@ -345,41 +322,47 @@ public class ElasticHitsDao implements HitsDao {
 		final Hit firewallHit = parser.parseHit(srchHit);
 		if (isMatch(rules, filter, firewallHit)) {
 		    // Found a hit that passes the rules and the filter
-		    if (all || (i >= startIndex && i < endIndex)) {
+		    if (all || i >= startIndex && i < endIndex)
 			relevantHits.add(firewallHit);
-		    }
 		    i++;
-		    if (i == endIndex && !all) {
+		    if (i == endIndex && !all)
 			break;
-		    }
 		}
 	    }
-	    if (i == endIndex && !all) {
+	    if (i == endIndex && !all)
 		break;
-	    }
 
 	    // Get next batch - create new search request and then execute it
-	    String oldScroller = scrollResp.getScrollId();
+	    final String oldScroller = scrollResp.getScrollId();
 	    SearchScrollRequestBuilder srchScrollRequest;
 	    srchScrollRequest = m_elasticClient.prepareSearchScroll(oldScroller);
 	    srchScrollRequest.setScroll(new TimeValue(ElasticDaoConfig.TIME_PER_SCROLL));
 
 	    scrollResp = srchScrollRequest.execute().actionGet();
 	    // Break condition: No hits are returned
-	    if (scrollResp.getHits().getHits().length == 0) {
+	    if (scrollResp.getHits().getHits().length == 0)
 		break;
-	    }
 	}
 
 	return relevantHits;
     }
 
     /**
+     * Refreshes the ElasticSearch index, which means updating it, so that the
+     * next queries will be consistent will the previous ones
+     */
+    private void refreshIndex() {
+	// using "execute" instead of "get" in the following line, does not
+	// ensure that the refresh will happen immediately
+	m_elasticClient.admin().indices().prepareRefresh(ElasticDaoConfig.INDEX_NAME).get();
+    }
+
+    /**
      * Check if a hit is match to a list of rules and a filter
-     * 
+     *
      * i.e. The hit "passes" iff it matches the filter, but doesn't match any
      * rule except the first
-     * 
+     *
      * @param rules
      *            list of rules to check on the hit
      * @param filter
@@ -389,14 +372,11 @@ public class ElasticHitsDao implements HitsDao {
      * @return true if hit match all rules and filter, else - false
      */
     private static boolean isMatch(final List<Rule> rules, final Filter filter, final Hit hit) {
-	if (!filter.isMatch(hit)) {
+	if (!filter.isMatch(hit))
 	    return false;
-	}
-	for (final Rule rule : rules) {
-	    if (rule.isMatch(hit)) {
+	for (final Rule rule : rules)
+	    if (rule.isMatch(hit))
 		return false;
-	    }
-	}
 	return true;
     }
 

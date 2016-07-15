@@ -43,12 +43,12 @@ import breakingtherules.utilities.Utility;
  * theory).
  * <p>
  * The recursive rule is:
- * 
+ *
  * <pre>
  * f(x) = min { |x|&middot(log<sub>2</sub>(S<sub>x</sub>) - log<sub>2</sub>(P(x))) + K,
  * f(x.right) + f(x.left) }
  * </pre>
- * 
+ *
  * Where:
  * <ul>
  * <li>|x| is the number of hits under subnetwork x.</li>
@@ -60,10 +60,10 @@ import breakingtherules.utilities.Utility;
  * permissiveness of the rules they would like.</li>
  * </ul>
  * <p>
- * 
+ *
  * @author Barak Ugav
  * @author Yishai Gronich
- * 
+ *
  * @see IP
  * @see Hit
  * @see Suggestion
@@ -82,12 +82,6 @@ public class InformationAlgorithm extends SuggestionsAlgorithm {
     private boolean m_parallel;
 
     /**
-     * Number of current used threads by all information algorithms. Used to
-     * optimize parallel.
-     */
-    private static AtomicInteger numberOfUsedThreads;
-
-    /**
      * Max used threads.
      */
     private int m_maxThreads;
@@ -101,6 +95,12 @@ public class InformationAlgorithm extends SuggestionsAlgorithm {
      * Used when the attribute type if not source or destination
      */
     private final SimpleAlgorithm m_simpleAlgorithm;
+
+    /**
+     * Number of current used threads by all information algorithms. Used to
+     * optimize parallel.
+     */
+    private static AtomicInteger numberOfUsedThreads;
 
     /**
      * Max time to which the algorithm will abort after starting all threads if
@@ -117,7 +117,7 @@ public class InformationAlgorithm extends SuggestionsAlgorithm {
      * If true, the information will operate on default. Else, the
      * {@link #activateParallel()} will be needed.
      * <p>
-     * 
+     *
      * @see #m_parallel
      */
     private static final boolean DEFAULT_PARALLEL = false;
@@ -125,7 +125,7 @@ public class InformationAlgorithm extends SuggestionsAlgorithm {
     /**
      * The default max number of threads used by the algorithm.
      * <p>
-     * 
+     *
      * @see #m_maxThreads
      */
     private static final int DEFAULT_MAX_THREADS = Integer.MAX_VALUE;
@@ -133,7 +133,7 @@ public class InformationAlgorithm extends SuggestionsAlgorithm {
     /**
      * The default number of IPs threshold for parallel.
      * <p>
-     * 
+     *
      * @see #m_parallelThreshold
      */
     private static final int DEFAULT_PARALLEL_THRESHOLD = 0x10000;
@@ -152,34 +152,18 @@ public class InformationAlgorithm extends SuggestionsAlgorithm {
 
     /**
      * Construct new Information algorithm with default rule weight
-     * 
+     *
      * @param hitsDao
      *            The DAO that the algorithm will use in order to pull the job's
      *            hits
      */
-    public InformationAlgorithm(HitsDao hitsDao) {
+    public InformationAlgorithm(final HitsDao hitsDao) {
 	super(hitsDao);
 	m_ruleWeight = DEFAULT_RULE_WEIGHT;
 	m_parallel = DEFAULT_PARALLEL;
 	m_maxThreads = DEFAULT_MAX_THREADS;
 	m_parallelThreshold = DEFAULT_PARALLEL_THRESHOLD;
 	m_simpleAlgorithm = new SimpleAlgorithm(hitsDao);
-    }
-
-    /**
-     * Set the rule weight of this algorithm to new one
-     * 
-     * @param weight
-     *            new rule weight value
-     * @throws IllegalArgumentException
-     *             if weight is NaN or negative
-     */
-    public void setRuleWeight(final double weight) {
-	if (Double.isNaN(weight))
-	    throw new IllegalArgumentException("Rule weight can't be NaN");
-	if (weight < 0)
-	    throw new IllegalArgumentException("Rule weight can't be negative: " + weight);
-	m_ruleWeight = weight;
     }
 
     /**
@@ -198,7 +182,7 @@ public class InformationAlgorithm extends SuggestionsAlgorithm {
      * <p>
      * Other setting of parallel are as previously used or the default if they
      * didn't got set.
-     * 
+     *
      * @param maxThreads
      *            number of max threads will be used by this algorithm.
      * @throws IllegalArgumentException
@@ -214,7 +198,7 @@ public class InformationAlgorithm extends SuggestionsAlgorithm {
     /**
      * Active the parallel for this algorithm, set the number of max threads
      * used by the algorithm and set the threshold for parallel.
-     * 
+     *
      * @param maxThreads
      *            number of max threads will be used by this algorithm.
      * @param parallelThreshold
@@ -291,28 +275,23 @@ public class InformationAlgorithm extends SuggestionsAlgorithm {
 		try {
 		    if (attTypes.length < avaiableThreads) {
 			final Thread[] threads = new Thread[attTypes.length];
-			for (int i = 0; i < attTypes.length; i++) {
+			for (int i = 0; i < attTypes.length; i++)
 			    threads[i] = new Thread(runners[i], "InformationAlgorithm" + attTypes[i]);
-			}
-			for (final Thread thread : threads) {
+			for (final Thread thread : threads)
 			    thread.start();
-			}
-			for (final Thread thread : threads) {
+			for (final Thread thread : threads)
 			    thread.join();
-			}
 		    } else {
 			final ExecutorService executor = Executors.newFixedThreadPool(avaiableThreads);
-			for (int i = 0; i < attTypes.length; i++) {
+			for (int i = 0; i < attTypes.length; i++)
 			    executor.execute(runners[i]);
-			}
 			executor.shutdown();
 			executor.awaitTermination(ALGORITHM_TIMEOUT, TimeUnit.MINUTES);
-			if (!executor.isTerminated()) {
+			if (!executor.isTerminated())
 			    throw new RuntimeException("Timed out.");
-			}
 		    }
 
-		} catch (InterruptedException e) {
+		} catch (final InterruptedException e) {
 		    wasInterrupted = true;
 		    numberOfInteraptedAttempts++;
 		    System.err.println("Interapted durring an Inforamation algorithm, " + "will try again no more then "
@@ -321,357 +300,61 @@ public class InformationAlgorithm extends SuggestionsAlgorithm {
 		}
 	    } while (wasInterrupted && numberOfInteraptedAttempts < NUMBER_OF_REPEATED_INTERRUPTED_ATTEMPTS);
 
-	    if (wasInterrupted) {
+	    if (wasInterrupted)
 		// Got interrupted too many times, abandon parallel, use
 		// regular single thread
 		parallel = false;
-	    }
 	}
 
 	// Check the parallel flag again and don't used the else statement
 	// because maybe the flag was change throughout the if statement.
-	if (!parallel) {
+	if (!parallel)
 	    // No parallel
-	    for (final InformationAlgorithmRunner runner : runners) {
-		runner.run();
-	    }
-	}
+	    for (final InformationAlgorithmRunner runner : runners)
+	    runner.run();
 
 	// Extract all results
 	@SuppressWarnings("unchecked")
 	final List<Suggestion>[] suggestions = new List[attTypes.length];
-	for (int i = 0; i < runners.length; i++) {
+	for (int i = 0; i < runners.length; i++)
 	    suggestions[i] = runners[i].m_result;
-	}
 	return suggestions;
     }
 
     /**
-     * The main runnable of the algorithm. Compute suggestion for one attribute
-     * type.
-     * 
-     * @author Barak Ugav
-     * @author Yishai Gronich
+     * Set the rule weight of this algorithm to new one
      *
+     * @param weight
+     *            new rule weight value
+     * @throws IllegalArgumentException
+     *             if weight is NaN or negative
      */
-    private class InformationAlgorithmRunner implements Runnable {
+    public void setRuleWeight(final double weight) {
+	if (Double.isNaN(weight))
+	    throw new IllegalArgumentException("Rule weight can't be NaN");
+	if (weight < 0)
+	    throw new IllegalArgumentException("Rule weight can't be negative: " + weight);
+	m_ruleWeight = weight;
+    }
 
-	/**
-	 * Input hits.
-	 */
-	private final Iterable<Hit> m_hits;
-
-	/**
-	 * Type of desire suggestions's type.
-	 */
-	private final AttributeType m_attTypeId;
-
-	/**
-	 * Number of desire suggestions.
-	 */
-	private final int m_amount;
-
-	/**
-	 * The result buffer.
-	 */
-	private List<Suggestion> m_result;
-
-	/**
-	 * Construct new InformationAlgorithmRunner.
-	 * 
-	 * @param hits
-	 *            input hits.
-	 * @param amount
-	 *            number of desire suggestions.
-	 * @param attTypeId
-	 *            type of desire suggestions.
-	 */
-	InformationAlgorithmRunner(final Iterable<Hit> hits, final int amount, final AttributeType attTypeId) {
-	    m_hits = hits;
-	    m_attTypeId = attTypeId;
-	    m_amount = amount;
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public void run() {
-	    switch (m_attTypeId) {
-	    case DESTINATION:
-		m_result = getSuggestionsDestination();
-		break;
-	    case SOURCE:
-		m_result = getSuggestionsSource();
-		break;
-	    default:
-		m_result = m_simpleAlgorithm.getSuggestions(m_hits, m_amount, m_attTypeId);
-	    }
-	}
-
-	/**
-	 * Get suggestions for hits about destination attribute
-	 * 
-	 * @return list of destination suggestion
-	 * @throws NullPointerException
-	 *             if hits are null, or one of the hits are null
-	 * @throws IllegalArgumentException
-	 *             if one of the hits doesn't contains destination attribute
-	 */
-	private List<Suggestion> getSuggestionsDestination() {
-	    // Calculate suggestions
-	    List<IPNode> subnets = getIPSuggestions();
-
-	    // Sort suggestions from small to big, so reverse list after sort
-	    subnets.sort(IPNode.SUBNET_SUGGESTIONS_SIZE_COMPARATOR);
-	    Collections.reverse(subnets);
-	    subnets = Utility.subList(subnets, 0, m_amount);
-
-	    final List<Suggestion> suggestions = new ArrayList<>(subnets.size());
-	    for (final IPNode subnet : subnets) {
-		suggestions.add(new Suggestion(Destination.valueOf(subnet.m_ip), subnet.m_size, subnet.getScore()));
-	    }
-
-	    return suggestions;
-	}
-
-	/**
-	 * Get suggestions for hits about source attribute
-	 * 
-	 * @return list of source suggestion
-	 * @throws NullPointerException
-	 *             if hits are null, or one of the hits are null
-	 * @throws IllegalArgumentException
-	 *             if one of the hits doesn't contains the source attribute
-	 */
-	private List<Suggestion> getSuggestionsSource() {
-	    // Calculate suggestions
-
-	    List<IPNode> subnets = getIPSuggestions();
-
-	    // Sort suggestions from small to big, so reverse list after sort
-	    subnets.sort(IPNode.SUBNET_SUGGESTIONS_SIZE_COMPARATOR);
-	    Collections.reverse(subnets);
-	    subnets = Utility.subList(subnets, 0, m_amount);
-
-	    final List<Suggestion> suggestions = new ArrayList<>(subnets.size());
-	    for (final IPNode subnet : subnets) {
-		suggestions.add(new Suggestion(Source.valueOf(subnet.m_ip), subnet.m_size, subnet.getScore()));
-	    }
-	    return suggestions;
-	}
-
-	/**
-	 * Get suggestion for hits for IP attribute.
-	 * 
-	 * @return list of suggestions for IPs.
-	 * @throws NullPointerException
-	 *             if hits are null, or one of the hits are null
-	 * @throws IllegalArgumentException
-	 *             if one of the hits doesn't contains destination attribute
-	 */
-	private List<IPNode> getIPSuggestions() {
-	    // Creates lowest layer nodes from hits.
-	    IPNode[] nodes = toIPNodes();
-
-	    if (nodes.length == 0) {
-		return new ArrayList<>();
-	    }
-	    if (nodes.length == 1) {
-		List<IPNode> res = new ArrayList<>();
-		res.add(nodes[0]);
-		return res;
-	    }
-	    // The total number of hits, used to calculate probability (constant
-	    // value)
-	    int totalSize = 0;
-	    for (final IPNode node : nodes) {
-		totalSize += node.m_size;
-	    }
-
-	    // the current IP layer the algorithm is working on
-	    IPNode[] currentLayer = nodes;
-	    nodes = null; // Free memory
-
-	    // Sort the nodes by their IPs, ensuring the assumption that if for
-	    // a node there is a brother, it will be next to it. This assumption
-	    // will stay for next layers too.
-	    Arrays.parallelSort(currentLayer, IPNode.IPS_COMPARATOR);
-
-	    // Run until there are only one element in the list (all nodes are
-	    // sub children of the node)
-	    int currentLayerSize = currentLayer.length;
-	    while (currentLayerSize > 1) {
-
-		// The next IP layer that is currently constructed
-		IPNode[] nextLayer = null;
-
-		final int numberOfJobs;
-		boolean parallel = m_parallel;
-		if (parallel) {
-		    synchronized (numberOfUsedThreads) {
-
-			final int availableProcessors = Math.max(1,
-				Runtime.getRuntime().availableProcessors() - numberOfUsedThreads.get());
-			final int requiredProcessors = Math.max(1, 1 + (currentLayerSize / m_parallelThreshold));
-			numberOfJobs = Math.min(m_maxThreads, Math.min(availableProcessors, requiredProcessors));
-			if (parallel = m_parallel && numberOfJobs != 1)
-			    numberOfUsedThreads.addAndGet(numberOfJobs);
-		    }
-		} else {
-		    numberOfJobs = 1;
-		}
-
-		if (parallel) {
-		    List<InformationAlgorithmLayerRunner> runners = null;
-		    boolean wasInterrupted;
-		    int numberOfInteraptedAttempts = 0;
-
-		    // Try to create, start and join to all threads. If got
-		    // interrupted too many times - abort parallel and use
-		    // single thread.
-		    do {
-			wasInterrupted = false;
-			try {
-			    // List of all threads
-			    final List<Thread> threads = new ArrayList<>(numberOfJobs);
-			    runners = new ArrayList<>(numberOfJobs);
-			    final int nodesPerThread = currentLayerSize / numberOfJobs;
-			    int fromIndex, toIndex = 0;
-
-			    // Create all threads
-			    for (int threadNumber = 1; threadNumber <= numberOfJobs; threadNumber++) {
-				// continue from where the last thread stopped
-				fromIndex = toIndex;
-				if (threadNumber == numberOfJobs) {
-				    // Last thread creation, run up to the end
-				    // of the current layer
-				    toIndex = currentLayerSize;
-
-				} else {
-				    // Middle thread, run on at least
-				    // nodesPerThread
-				    toIndex = fromIndex + nodesPerThread;
-
-				    // Include additional IPNode if it's the
-				    // current last brother, else they will not
-				    // be connected
-				    if (currentLayer[toIndex - 1].m_ip.isBrother(currentLayer[toIndex].m_ip)) {
-					toIndex++;
-				    }
-				}
-				final InformationAlgorithmLayerRunner runner = new InformationAlgorithmLayerRunner(
-					currentLayer, fromIndex, toIndex, totalSize, m_ruleWeight);
-				runners.add(runner);
-				threads.add(new Thread(runner, "InformationAlgorithmThread" + threadNumber));
-			    }
-
-			    // Start all threads
-			    for (final Thread runnerThread : threads) {
-				runnerThread.start();
-			    }
-
-			    // Wait to all threads
-			    for (final Thread runnerThread : threads) {
-				runnerThread.join();
-			    }
-
-			} catch (InterruptedException e) {
-			    wasInterrupted = true;
-			    numberOfInteraptedAttempts++;
-			    System.err.println(
-				    "Interapted durring an Inforamation algorithm, " + "will try again no more then "
-					    + (NUMBER_OF_REPEATED_INTERRUPTED_ATTEMPTS - numberOfInteraptedAttempts)
-					    + " times.");
-			    e.printStackTrace(System.err);
-			}
-		    } while (wasInterrupted && numberOfInteraptedAttempts < NUMBER_OF_REPEATED_INTERRUPTED_ATTEMPTS);
-
-		    if (wasInterrupted) {
-			// Got interrupted too many times, abandon parallel, use
-			// regular single thread
-			parallel = false;
-
-		    } else {
-			// Combine all results from all threads results to the
-			// new layer
-			int nextLayerSize = 0;
-			for (final InformationAlgorithmLayerRunner runner : runners) {
-			    nextLayerSize += runner.m_nextLayerSize;
-			}
-			nextLayer = new IPNode[nextLayerSize];
-			int offSet = 0;
-			for (final InformationAlgorithmLayerRunner runner : runners) {
-			    System.arraycopy(runner.m_nextLayer, 0, nextLayer, offSet, runner.m_nextLayerSize);
-			    offSet += runner.m_nextLayerSize;
-			}
-			currentLayerSize = nextLayerSize;
-		    }
-
-		    synchronized (numberOfUsedThreads) {
-			numberOfUsedThreads.addAndGet(-numberOfJobs);
-		    }
-		}
-
-		// Check parallel flag again and don't use the else block
-		// because maybe the flag got changed during the parallel block
-		if (!parallel) {
-		    // No parallel, run normal on single thread
-		    final InformationAlgorithmLayerRunner runner = new InformationAlgorithmLayerRunner(currentLayer, 0,
-			    currentLayerSize, totalSize, m_ruleWeight);
-		    synchronized (numberOfUsedThreads) {
-			numberOfUsedThreads.incrementAndGet();
-		    }
-		    runner.run();
-		    synchronized (numberOfUsedThreads) {
-			numberOfUsedThreads.decrementAndGet();
-		    }
-		    nextLayer = runner.m_nextLayer;
-		    currentLayerSize = runner.m_nextLayerSize;
-		}
-
-		// Current layer is finished, move to next layer
-		currentLayer = nextLayer;
-	    }
-
-	    // Only one element in layer, it is the parent node of all others
-	    IPNode root = currentLayer[0];
-	    return root.m_bestSubnets.toList();
-	}
-
-	/**
-	 * Create list of IPNodes from the iterable of hits
-	 * 
-	 * @return list of IPNodes constructed from the hits
-	 * @throws NullPointerException
-	 *             if hits are null, or one of the hits are null
-	 * @throws IllegalArgumentException
-	 *             if one of the hits doesn't contains the desire attribute
-	 */
-	private IPNode[] toIPNodes() {
-	    final Map<IP, IPNode> uniqueIPNodes = new HashMap<>();
-	    for (final Hit hit : m_hits) {
-		final IPAttribute att = (IPAttribute) hit.getAttribute(m_attTypeId);
-		if (att == null) {
-		    throw new IllegalArgumentException("One of the hits doesn't have the desire attribute");
-		}
-		final IP ip = att.getIp();
-		final IPNode existingNode = uniqueIPNodes.get(ip);
-		if (existingNode == null) {
-		    final IPNode newNode = new IPNode(ip);
-		    newNode.m_compressSize = m_ruleWeight;
-		    newNode.m_size = 1;
-		    uniqueIPNodes.put(ip, newNode);
-		} else {
-		    existingNode.m_size++;
-		}
-	    }
-	    for (final IPNode node : uniqueIPNodes.values()) {
-		node.m_bestSubnets = new UntionGroup<>(node);
-	    }
-	    return uniqueIPNodes.values().toArray(new IPNode[uniqueIPNodes.size()]);
-	}
-
+    /**
+     * Configuration check. Used to check the static final fields of this
+     * algorithm.
+     *
+     * @throws InternalError
+     *             if one of the fields is not legal
+     */
+    @SuppressWarnings("unused")
+    private static void configCheck() {
+	if (Double.isNaN(DEFAULT_RULE_WEIGHT) || 0 >= DEFAULT_RULE_WEIGHT)
+	    throw new InternalError("DEFAULT_RULE_WIEGHT(" + DEFAULT_RULE_WEIGHT + ") should be > 0");
+	if (DEFAULT_MAX_THREADS <= 0)
+	    throw new InternalError("DEFAULT_MAX_THREADS(" + DEFAULT_MAX_THREADS + ") should be > 0");
+	if (DEFAULT_PARALLEL_THRESHOLD <= 0)
+	    throw new InternalError("DEFAULT_PARALLEL_THRESHOLD(" + DEFAULT_PARALLEL_THRESHOLD + ") should be > 0");
+	if (NUMBER_OF_REPEATED_INTERRUPTED_ATTEMPTS <= 0)
+	    throw new InternalError("NUMBER_OF_REPEATED_INTERRUPTED_ATTEMPTS(" + NUMBER_OF_REPEATED_INTERRUPTED_ATTEMPTS
+		    + ") should be > 0");
     }
 
     /**
@@ -682,7 +365,7 @@ public class InformationAlgorithm extends SuggestionsAlgorithm {
      * layer from it. And for each IPNode calculate if it should be treaded as
      * one union subnetwork or as multiple smaller networks (in both cases,
      * covering all the input IPs).
-     * 
+     *
      * @author Barak Ugav
      * @author Yishai Gronich
      *
@@ -726,14 +409,14 @@ public class InformationAlgorithm extends SuggestionsAlgorithm {
 	/**
 	 * The rules weight used by this runner.
 	 * <p>
-	 * 
+	 *
 	 * @see InformationAlgorithm#m_ruleWeight
 	 */
 	private final double m_ruleWeight;
 
 	/**
 	 * Construct new InformationAlgorithmLayerRunner.
-	 * 
+	 *
 	 * @param currentLayer
 	 *            the current layer.
 	 * @param fromIndex
@@ -870,27 +553,317 @@ public class InformationAlgorithm extends SuggestionsAlgorithm {
     }
 
     /**
-     * Configuration check. Used to check the static final fields of this
-     * algorithm.
-     * 
-     * @throws InternalError
-     *             if one of the fields is not legal
+     * The main runnable of the algorithm. Compute suggestion for one attribute
+     * type.
+     *
+     * @author Barak Ugav
+     * @author Yishai Gronich
+     *
      */
-    @SuppressWarnings("unused")
-    private static void configCheck() {
-	if (Double.isNaN(DEFAULT_RULE_WEIGHT) || 0 >= DEFAULT_RULE_WEIGHT) {
-	    throw new InternalError("DEFAULT_RULE_WIEGHT(" + DEFAULT_RULE_WEIGHT + ") should be > 0");
+    private class InformationAlgorithmRunner implements Runnable {
+
+	/**
+	 * Input hits.
+	 */
+	private final Iterable<Hit> m_hits;
+
+	/**
+	 * Type of desire suggestions's type.
+	 */
+	private final AttributeType m_attTypeId;
+
+	/**
+	 * Number of desire suggestions.
+	 */
+	private final int m_amount;
+
+	/**
+	 * The result buffer.
+	 */
+	private List<Suggestion> m_result;
+
+	/**
+	 * Construct new InformationAlgorithmRunner.
+	 *
+	 * @param hits
+	 *            input hits.
+	 * @param amount
+	 *            number of desire suggestions.
+	 * @param attTypeId
+	 *            type of desire suggestions.
+	 */
+	InformationAlgorithmRunner(final Iterable<Hit> hits, final int amount, final AttributeType attTypeId) {
+	    m_hits = hits;
+	    m_attTypeId = attTypeId;
+	    m_amount = amount;
 	}
-	if (DEFAULT_MAX_THREADS <= 0) {
-	    throw new InternalError("DEFAULT_MAX_THREADS(" + DEFAULT_MAX_THREADS + ") should be > 0");
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public void run() {
+	    switch (m_attTypeId) {
+	    case DESTINATION:
+		m_result = getSuggestionsDestination();
+		break;
+	    case SOURCE:
+		m_result = getSuggestionsSource();
+		break;
+	    default:
+		m_result = m_simpleAlgorithm.getSuggestions(m_hits, m_amount, m_attTypeId);
+	    }
 	}
-	if (DEFAULT_PARALLEL_THRESHOLD <= 0) {
-	    throw new InternalError("DEFAULT_PARALLEL_THRESHOLD(" + DEFAULT_PARALLEL_THRESHOLD + ") should be > 0");
+
+	/**
+	 * Get suggestion for hits for IP attribute.
+	 *
+	 * @return list of suggestions for IPs.
+	 * @throws NullPointerException
+	 *             if hits are null, or one of the hits are null
+	 * @throws IllegalArgumentException
+	 *             if one of the hits doesn't contains destination attribute
+	 */
+	private List<IPNode> getIPSuggestions() {
+	    // Creates lowest layer nodes from hits.
+	    IPNode[] nodes = toIPNodes();
+
+	    if (nodes.length == 0)
+		return new ArrayList<>();
+	    if (nodes.length == 1) {
+		final List<IPNode> res = new ArrayList<>();
+		res.add(nodes[0]);
+		return res;
+	    }
+	    // The total number of hits, used to calculate probability (constant
+	    // value)
+	    int totalSize = 0;
+	    for (final IPNode node : nodes)
+		totalSize += node.m_size;
+
+	    // the current IP layer the algorithm is working on
+	    IPNode[] currentLayer = nodes;
+	    nodes = null; // Free memory
+
+	    // Sort the nodes by their IPs, ensuring the assumption that if for
+	    // a node there is a brother, it will be next to it. This assumption
+	    // will stay for next layers too.
+	    Arrays.parallelSort(currentLayer, IPNode.IPS_COMPARATOR);
+
+	    // Run until there are only one element in the list (all nodes are
+	    // sub children of the node)
+	    int currentLayerSize = currentLayer.length;
+	    while (currentLayerSize > 1) {
+
+		// The next IP layer that is currently constructed
+		IPNode[] nextLayer = null;
+
+		final int numberOfJobs;
+		boolean parallel = m_parallel;
+		if (parallel)
+		    synchronized (numberOfUsedThreads) {
+
+			final int availableProcessors = Math.max(1,
+				Runtime.getRuntime().availableProcessors() - numberOfUsedThreads.get());
+			final int requiredProcessors = Math.max(1, 1 + currentLayerSize / m_parallelThreshold);
+			numberOfJobs = Math.min(m_maxThreads, Math.min(availableProcessors, requiredProcessors));
+			if (parallel = m_parallel && numberOfJobs != 1)
+			    numberOfUsedThreads.addAndGet(numberOfJobs);
+		    }
+		else
+		    numberOfJobs = 1;
+
+		if (parallel) {
+		    List<InformationAlgorithmLayerRunner> runners = null;
+		    boolean wasInterrupted;
+		    int numberOfInteraptedAttempts = 0;
+
+		    // Try to create, start and join to all threads. If got
+		    // interrupted too many times - abort parallel and use
+		    // single thread.
+		    do {
+			wasInterrupted = false;
+			try {
+			    // List of all threads
+			    final List<Thread> threads = new ArrayList<>(numberOfJobs);
+			    runners = new ArrayList<>(numberOfJobs);
+			    final int nodesPerThread = currentLayerSize / numberOfJobs;
+			    int fromIndex, toIndex = 0;
+
+			    // Create all threads
+			    for (int threadNumber = 1; threadNumber <= numberOfJobs; threadNumber++) {
+				// continue from where the last thread stopped
+				fromIndex = toIndex;
+				if (threadNumber == numberOfJobs)
+				    // Last thread creation, run up to the end
+				    // of the current layer
+				    toIndex = currentLayerSize;
+				else {
+				    // Middle thread, run on at least
+				    // nodesPerThread
+				    toIndex = fromIndex + nodesPerThread;
+
+				    // Include additional IPNode if it's the
+				    // current last brother, else they will not
+				    // be connected
+				    if (currentLayer[toIndex - 1].m_ip.isBrother(currentLayer[toIndex].m_ip))
+					toIndex++;
+				}
+				final InformationAlgorithmLayerRunner runner = new InformationAlgorithmLayerRunner(
+					currentLayer, fromIndex, toIndex, totalSize, m_ruleWeight);
+				runners.add(runner);
+				threads.add(new Thread(runner, "InformationAlgorithmThread" + threadNumber));
+			    }
+
+			    // Start all threads
+			    for (final Thread runnerThread : threads)
+				runnerThread.start();
+
+			    // Wait to all threads
+			    for (final Thread runnerThread : threads)
+				runnerThread.join();
+
+			} catch (final InterruptedException e) {
+			    wasInterrupted = true;
+			    numberOfInteraptedAttempts++;
+			    System.err.println(
+				    "Interapted durring an Inforamation algorithm, " + "will try again no more then "
+					    + (NUMBER_OF_REPEATED_INTERRUPTED_ATTEMPTS - numberOfInteraptedAttempts)
+					    + " times.");
+			    e.printStackTrace(System.err);
+			}
+		    } while (wasInterrupted && numberOfInteraptedAttempts < NUMBER_OF_REPEATED_INTERRUPTED_ATTEMPTS);
+
+		    if (wasInterrupted)
+			// Got interrupted too many times, abandon parallel, use
+			// regular single thread
+			parallel = false;
+		    else {
+			// Combine all results from all threads results to the
+			// new layer
+			int nextLayerSize = 0;
+			for (final InformationAlgorithmLayerRunner runner : runners)
+			    nextLayerSize += runner.m_nextLayerSize;
+			nextLayer = new IPNode[nextLayerSize];
+			int offSet = 0;
+			for (final InformationAlgorithmLayerRunner runner : runners) {
+			    System.arraycopy(runner.m_nextLayer, 0, nextLayer, offSet, runner.m_nextLayerSize);
+			    offSet += runner.m_nextLayerSize;
+			}
+			currentLayerSize = nextLayerSize;
+		    }
+
+		    synchronized (numberOfUsedThreads) {
+			numberOfUsedThreads.addAndGet(-numberOfJobs);
+		    }
+		}
+
+		// Check parallel flag again and don't use the else block
+		// because maybe the flag got changed during the parallel block
+		if (!parallel) {
+		    // No parallel, run normal on single thread
+		    final InformationAlgorithmLayerRunner runner = new InformationAlgorithmLayerRunner(currentLayer, 0,
+			    currentLayerSize, totalSize, m_ruleWeight);
+		    synchronized (numberOfUsedThreads) {
+			numberOfUsedThreads.incrementAndGet();
+		    }
+		    runner.run();
+		    synchronized (numberOfUsedThreads) {
+			numberOfUsedThreads.decrementAndGet();
+		    }
+		    nextLayer = runner.m_nextLayer;
+		    currentLayerSize = runner.m_nextLayerSize;
+		}
+
+		// Current layer is finished, move to next layer
+		currentLayer = nextLayer;
+	    }
+
+	    // Only one element in layer, it is the parent node of all others
+	    final IPNode root = currentLayer[0];
+	    return root.m_bestSubnets.toList();
 	}
-	if (NUMBER_OF_REPEATED_INTERRUPTED_ATTEMPTS <= 0) {
-	    throw new InternalError("NUMBER_OF_REPEATED_INTERRUPTED_ATTEMPTS(" + NUMBER_OF_REPEATED_INTERRUPTED_ATTEMPTS
-		    + ") should be > 0");
+
+	/**
+	 * Get suggestions for hits about destination attribute
+	 *
+	 * @return list of destination suggestion
+	 * @throws NullPointerException
+	 *             if hits are null, or one of the hits are null
+	 * @throws IllegalArgumentException
+	 *             if one of the hits doesn't contains destination attribute
+	 */
+	private List<Suggestion> getSuggestionsDestination() {
+	    // Calculate suggestions
+	    List<IPNode> subnets = getIPSuggestions();
+
+	    // Sort suggestions from small to big, so reverse list after sort
+	    subnets.sort(IPNode.SUBNET_SUGGESTIONS_SIZE_COMPARATOR);
+	    Collections.reverse(subnets);
+	    subnets = Utility.subList(subnets, 0, m_amount);
+
+	    final List<Suggestion> suggestions = new ArrayList<>(subnets.size());
+	    for (final IPNode subnet : subnets)
+		suggestions.add(new Suggestion(Destination.valueOf(subnet.m_ip), subnet.m_size, subnet.getScore()));
+
+	    return suggestions;
 	}
+
+	/**
+	 * Get suggestions for hits about source attribute
+	 *
+	 * @return list of source suggestion
+	 * @throws NullPointerException
+	 *             if hits are null, or one of the hits are null
+	 * @throws IllegalArgumentException
+	 *             if one of the hits doesn't contains the source attribute
+	 */
+	private List<Suggestion> getSuggestionsSource() {
+	    // Calculate suggestions
+
+	    List<IPNode> subnets = getIPSuggestions();
+
+	    // Sort suggestions from small to big, so reverse list after sort
+	    subnets.sort(IPNode.SUBNET_SUGGESTIONS_SIZE_COMPARATOR);
+	    Collections.reverse(subnets);
+	    subnets = Utility.subList(subnets, 0, m_amount);
+
+	    final List<Suggestion> suggestions = new ArrayList<>(subnets.size());
+	    for (final IPNode subnet : subnets)
+		suggestions.add(new Suggestion(Source.valueOf(subnet.m_ip), subnet.m_size, subnet.getScore()));
+	    return suggestions;
+	}
+
+	/**
+	 * Create list of IPNodes from the iterable of hits
+	 *
+	 * @return list of IPNodes constructed from the hits
+	 * @throws NullPointerException
+	 *             if hits are null, or one of the hits are null
+	 * @throws IllegalArgumentException
+	 *             if one of the hits doesn't contains the desire attribute
+	 */
+	private IPNode[] toIPNodes() {
+	    final Map<IP, IPNode> uniqueIPNodes = new HashMap<>();
+	    for (final Hit hit : m_hits) {
+		final IPAttribute att = (IPAttribute) hit.getAttribute(m_attTypeId);
+		if (att == null)
+		    throw new IllegalArgumentException("One of the hits doesn't have the desire attribute");
+		final IP ip = att.getIp();
+		final IPNode existingNode = uniqueIPNodes.get(ip);
+		if (existingNode == null) {
+		    final IPNode newNode = new IPNode(ip);
+		    newNode.m_compressSize = m_ruleWeight;
+		    newNode.m_size = 1;
+		    uniqueIPNodes.put(ip, newNode);
+		} else
+		    existingNode.m_size++;
+	    }
+	    for (final IPNode node : uniqueIPNodes.values())
+		node.m_bestSubnets = new UntionGroup<>(node);
+	    return uniqueIPNodes.values().toArray(new IPNode[uniqueIPNodes.size()]);
+	}
+
     }
 
     /**
@@ -949,7 +922,7 @@ public class InformationAlgorithm extends SuggestionsAlgorithm {
 
 	/**
 	 * Construct new IPNode of IP.
-	 * 
+	 *
 	 * @param ip
 	 *            the IP.
 	 */
@@ -958,27 +931,16 @@ public class InformationAlgorithm extends SuggestionsAlgorithm {
 	}
 
 	/**
-	 * Get the score of this IPNode. Treaded as suggestion for IP
-	 * subnetwork.
-	 * 
-	 * @return the score of the IPNode.
-	 */
-	double getScore() {
-	    return 1 / m_compressSize;
-	}
-
-	/**
 	 * {@inheritDoc}
 	 */
 	@Override
 	public boolean equals(final Object o) {
-	    if (o == this) {
+	    if (o == this)
 		return true;
-	    } else if (!(o instanceof IPNode)) {
+	    else if (!(o instanceof IPNode))
 		return false;
-	    }
 
-	    IPNode other = (IPNode) o;
+	    final IPNode other = (IPNode) o;
 	    return m_ip.equals(other.m_ip);
 	}
 
@@ -1002,14 +964,14 @@ public class InformationAlgorithm extends SuggestionsAlgorithm {
 	    builder.append(" compressSize=");
 	    builder.append(m_compressSize);
 	    builder.append(" nets=");
-	    if (m_bestSubnets == null) {
+	    if (m_bestSubnets == null)
 		builder.append("null");
-	    } else {
+	    else {
 		builder.append('[');
 		final Iterator<IPNode> it = m_bestSubnets.toList().iterator();
 		final String spacer = ", ";
 
-		if (it.hasNext()) { // Have at least one elements
+		if (it.hasNext())
 		    do {
 			final IPNode node = it.next();
 			builder.append(node.m_ip);
@@ -1017,10 +979,19 @@ public class InformationAlgorithm extends SuggestionsAlgorithm {
 			    break;
 			builder.append(spacer);
 		    } while (true);
-		}
 		builder.append(']');
 	    }
 	    return builder.toString();
+	}
+
+	/**
+	 * Get the score of this IPNode. Treaded as suggestion for IP
+	 * subnetwork.
+	 *
+	 * @return the score of the IPNode.
+	 */
+	double getScore() {
+	    return 1 / m_compressSize;
 	}
 
     }

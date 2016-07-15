@@ -6,10 +6,10 @@ import breakingtherules.dao.DaoConfig;
  * The CSVDaoConfig used to get configuration information specific for CSV DAO
  * objects.
  * <p>
- * 
+ *
  * @author Barak Ugav
  * @author Yishai Gronich
- * 
+ *
  */
 public class CSVDaoConfig {
 
@@ -26,7 +26,7 @@ public class CSVDaoConfig {
 
     /**
      * Get path to repository CSV file by job id
-     * 
+     *
      * @param jobName
      *            name of the job
      * @return path to CSV repository file

@@ -7,7 +7,7 @@ import java.util.Objects;
  *
  * @author Barak Ugav
  * @author Yishai Gronich
- * 
+ *
  * @param <A>
  *            type of first element
  * @param <B>
@@ -40,7 +40,7 @@ public class Triple<A, B, C> {
 
     /**
      * Construct new triple
-     * 
+     *
      * @param a
      *            value of first element
      * @param b
@@ -55,8 +55,23 @@ public class Triple<A, B, C> {
     }
 
     /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean equals(final Object o) {
+	if (o == this)
+	    return true;
+	if (!(o instanceof Triple))
+	    return false;
+
+	final Triple<?, ?, ?> other = (Triple<?, ?, ?>) o;
+	return Objects.equals(m_first, other.m_first) && Objects.equals(m_second, other.m_second)
+		&& Objects.equals(m_third, other.m_third);
+    }
+
+    /**
      * Get the first element
-     * 
+     *
      * @return the triple's first element
      */
     public A getFirst() {
@@ -65,7 +80,7 @@ public class Triple<A, B, C> {
 
     /**
      * Get the second element
-     * 
+     *
      * @return the triple's second element
      */
     public B getSecond() {
@@ -74,7 +89,7 @@ public class Triple<A, B, C> {
 
     /**
      * Get the third element
-     * 
+     *
      * @return the triple's third element
      */
     public C getThird() {
@@ -82,8 +97,16 @@ public class Triple<A, B, C> {
     }
 
     /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int hashCode() {
+	return Objects.hash(m_first, m_second, m_third);
+    }
+
+    /**
      * Set the value of the first element
-     * 
+     *
      * @param first
      *            new value for the tupl's first element
      */
@@ -93,7 +116,7 @@ public class Triple<A, B, C> {
 
     /**
      * Set the value of the second element
-     * 
+     *
      * @param second
      *            new value for the tuple's second element
      */
@@ -103,37 +126,12 @@ public class Triple<A, B, C> {
 
     /**
      * Set the value of the third element
-     * 
+     *
      * @param third
      *            new value for the tuple's third element
      */
     public void setThird(final C third) {
 	m_third = third;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean equals(final Object o) {
-	if (o == this) {
-	    return true;
-	}
-	if (!(o instanceof Triple)) {
-	    return false;
-	}
-
-	final Triple<?, ?, ?> other = (Triple<?, ?, ?>) o;
-	return Objects.equals(m_first, other.m_first) && Objects.equals(m_second, other.m_second)
-		&& Objects.equals(m_third, other.m_third);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public int hashCode() {
-	return Objects.hash(m_first, m_second, m_third);
     }
 
     /**
@@ -146,7 +144,7 @@ public class Triple<A, B, C> {
 
     /**
      * Unmodifiable version of triple.
-     * 
+     *
      * @author Barak Ugav
      * @author Yishai Gronich
      *
@@ -161,7 +159,7 @@ public class Triple<A, B, C> {
 
 	/**
 	 * Construct new UnmodifiableTriple
-	 * 
+	 *
 	 * @param a
 	 *            first element
 	 * @param b

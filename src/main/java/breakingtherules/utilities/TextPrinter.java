@@ -5,10 +5,10 @@ import java.io.PrintStream;
 /**
  * The TextPrinter is a tool used print text by used the TextBuilder. This tool
  * provide an easy interface to print texts.
- * 
+ *
  * @author Barak Ugav
  * @author Yishai Gronich
- * 
+ *
  * @see TextBuilder
  * @see PrintStream
  */
@@ -38,7 +38,7 @@ public class TextPrinter {
 
     /**
      * Constructor with default builder
-     * 
+     *
      * @param stream
      *            output stream for this printer
      */
@@ -47,18 +47,8 @@ public class TextPrinter {
     }
 
     /**
-     * Constructor with default output stream
-     * 
-     * @param builder
-     *            text builder used by this provider
-     */
-    public TextPrinter(final TextBuilder builder) {
-	this(System.out, builder);
-    }
-
-    /**
      * Constructor without default elements
-     * 
+     *
      * @param stream
      *            output stream for this printer
      * @param builder
@@ -71,8 +61,18 @@ public class TextPrinter {
     }
 
     /**
+     * Constructor with default output stream
+     *
+     * @param builder
+     *            text builder used by this provider
+     */
+    public TextPrinter(final TextBuilder builder) {
+	this(System.out, builder);
+    }
+
+    /**
      * Print a string.
-     * 
+     *
      * @param s
      *            the string.
      */
@@ -82,13 +82,24 @@ public class TextPrinter {
     }
 
     /**
-     * Print a string and go down a line.
-     * 
+     * Print a string in indented mode.
+     *
      * @param s
      *            the string.
      */
-    public void println(final String s) {
-	m_builder.appendln(s);
+    public void printIndented(final String s) {
+	m_builder.appedIndented(s);
+	print();
+    }
+
+    /**
+     * Print a string in indented mode and go down a line.
+     *
+     * @param s
+     *            the string.
+     */
+    public void printIndentedln(final String s) {
+	m_builder.appedIndentedln(s);
 	print();
     }
 
@@ -101,24 +112,13 @@ public class TextPrinter {
     }
 
     /**
-     * Print a string in indented mode.
-     * 
+     * Print a string and go down a line.
+     *
      * @param s
      *            the string.
      */
-    public void printIndented(final String s) {
-	m_builder.appedIndented(s);
-	print();
-    }
-
-    /**
-     * Print a string in indented mode and go down a line.
-     * 
-     * @param s
-     *            the string.
-     */
-    public void printIndentedln(final String s) {
-	m_builder.appedIndentedln(s);
+    public void println(final String s) {
+	m_builder.appendln(s);
 	print();
     }
 

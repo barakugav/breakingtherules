@@ -8,10 +8,10 @@ import java.util.List;
 /**
  * The DaoConfig used to get configurations information used by DAO objects.
  * <p>
- * 
+ *
  * @author Barak Ugav
  * @author Yishai Gronich
- * 
+ *
  * @see HitsDao
  * @see RulesDao
  */
@@ -29,8 +29,18 @@ public class DaoConfig {
     }
 
     /**
+     * @return A list of job names, of all the existing repositories in the
+     *         system
+     */
+    public static List<String> getExistingRepositories() {
+	final File reposRoot = new File(REPOS_ROOT);
+	final List<String> names = Arrays.asList(reposRoot.list());
+	return names;
+    }
+
+    /**
      * Get root path to repository by a job name.
-     * 
+     *
      * @param jobName
      *            name of the job.
      * @return string path to repository root.
@@ -41,7 +51,7 @@ public class DaoConfig {
 
     /**
      * Initiate a repository for a new job with the given name
-     * 
+     *
      * @param jobName
      *            The name of the new job
      * @return Iff the job name is not taken (initiation success)
@@ -50,23 +60,11 @@ public class DaoConfig {
      */
     public static boolean initRepository(final String jobName) throws IOException {
 	final File directory = new File(getRepoRoot(jobName) + '/');
-	if (directory.exists()) {
+	if (directory.exists())
 	    return false;
-	}
-	if (directory.mkdir()) {
+	if (directory.mkdir())
 	    return true;
-	}
 	throw new IOException();
-    }
-
-    /**
-     * @return A list of job names, of all the existing repositories in the
-     *         system
-     */
-    public static List<String> getExistingRepositories() {
-	final File reposRoot = new File(REPOS_ROOT);
-	List<String> names = Arrays.asList(reposRoot.list());
-	return names;
     }
 
 }

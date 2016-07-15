@@ -16,10 +16,10 @@ import java.util.function.Function;
  * as the same element (different from {@link Map} where the mapping between
  * keys to values can change), and the user of the cache should not change the
  * mapping function.
- * 
+ *
  * @author Barak Ugav
  * @author Yishai Gronich
- * 
+ *
  * @param <K>
  *            type of key of the cache
  * @param <E>
@@ -28,21 +28,12 @@ import java.util.function.Function;
 public interface Cache<K, E> {
 
     /**
-     * Get a cached element by its key.
-     * 
-     * @param key
-     *            the element's key
-     * @return the cached element or null if non found.
-     */
-    public E get(K key);
-
-    /**
      * Add new element to cache.
      * <p>
      * This method is different from {@link Map#put(Object, Object)}, if an
      * element with the same key as added is already in the cache, this
      * operation has no effect.
-     * 
+     *
      * @param key
      *            the element key
      * @param element
@@ -52,8 +43,22 @@ public interface Cache<K, E> {
     public E add(K key, E element);
 
     /**
+     * Clear the entire cache from all elements.
+     */
+    public void clear();
+
+    /**
+     * Get a cached element by its key.
+     *
+     * @param key
+     *            the element's key
+     * @return the cached element or null if non found.
+     */
+    public E get(K key);
+
+    /**
      * Remove a cashed element by its key.
-     * 
+     *
      * @param key
      *            the element's key.
      */
@@ -63,15 +68,10 @@ public interface Cache<K, E> {
      * Get the number of cached elements in the cache.
      * <p>
      * Used mostly for testing.
-     * 
+     *
      * @return number of cached elements.
      */
     public int size();
-
-    /**
-     * Clear the entire cache from all elements.
-     */
-    public void clear();
 
     /**
      * Get an element from the cache by it's key or add one if one doesn't
@@ -93,7 +93,7 @@ public interface Cache<K, E> {
      * <p>
      * This method is similar to {@link Map#computeIfAbsent(Object, Function)}.
      * <p>
-     * 
+     *
      * @param key
      *            the key of the element.
      * @param cachingFunction

@@ -2,10 +2,10 @@ package breakingtherules.dao.elastic;
 
 /**
  * Configuration information for the ElasticSearch DAO.
- * 
+ *
  * @author Barak Ugav
  * @author Yishai Gronich
- * 
+ *
  */
 class ElasticDaoConfig {
 

@@ -10,7 +10,7 @@ import breakingtherules.firewall.Source;
  * <p>
  * Caches can be set to reduce object creations and memory use.
  * <p>
- * 
+ *
  * @author Barak Ugav
  * @author Yishai Gronich
  *
@@ -42,17 +42,8 @@ public class AbstractParser {
     }
 
     /**
-     * Get the current used source objects cache by this parser.
-     * 
-     * @return the parser current source objects cache.
-     */
-    public Source.Cache getSourceCache() {
-	return sourceCache;
-    }
-
-    /**
      * Get the current used destination objects cache by this parser.
-     * 
+     *
      * @return the parser current destination objects cache.
      */
     public Destination.Cache getDestinationCache() {
@@ -61,7 +52,7 @@ public class AbstractParser {
 
     /**
      * Get the current used service objects cache by this parser.
-     * 
+     *
      * @return the parser current service objects cache.
      */
     public Service.Cache getServiceCache() {
@@ -69,22 +60,19 @@ public class AbstractParser {
     }
 
     /**
-     * Set the parser's source object cache.
-     * <p>
-     * Can be used by the parser to reduce objects creation and memory use.
-     * 
-     * @param cache
-     *            the source objects cache. (can be null).
+     * Get the current used source objects cache by this parser.
+     *
+     * @return the parser current source objects cache.
      */
-    public void setSourceCache(final Source.Cache cache) {
-	sourceCache = cache;
+    public Source.Cache getSourceCache() {
+	return sourceCache;
     }
 
     /**
      * Set the parser's destination object cache.
      * <p>
      * Can be used by the parser to reduce objects creation and memory use.
-     * 
+     *
      * @param cache
      *            the destination objects cache. (can be null).
      */
@@ -96,12 +84,24 @@ public class AbstractParser {
      * Set the parser's service object cache.
      * <p>
      * Can be used by the parser to reduce objects creation and memory use.
-     * 
+     *
      * @param cache
      *            the service objects cache. (can be null).
      */
     public void setServiceCache(final Service.Cache cache) {
 	serviceCache = cache;
+    }
+
+    /**
+     * Set the parser's source object cache.
+     * <p>
+     * Can be used by the parser to reduce objects creation and memory use.
+     *
+     * @param cache
+     *            the source objects cache. (can be null).
+     */
+    public void setSourceCache(final Source.Cache cache) {
+	sourceCache = cache;
     }
 
 }

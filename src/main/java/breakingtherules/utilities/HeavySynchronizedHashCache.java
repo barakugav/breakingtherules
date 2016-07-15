@@ -32,7 +32,7 @@ import java.util.function.Function;
  * This class should be used only in cases that the supplier of the elements is
  * heavy and takes a long time to complete.
  * <p>
- * 
+ *
  * @author Barak Ugav
  * @author Yishai Gronich
  *
@@ -42,22 +42,22 @@ import java.util.function.Function;
  *            type of the elements in the cache.
  */
 public class HeavySynchronizedHashCache<K, E> implements Cache<K, E> {
-
+    
     // TODO - remove null mask and change to similar implementation as
     // SoftHashCache.
 
     /*
      * Implementation notes.
-     * 
+     *
      * The HeavySynchronizedHashCache is implemented by a bucket hash table. In
      * each cell in the table there is a bin (linked list of entries) that
      * contains all entries that fell to that cell.
-     * 
+     *
      * The number of expected elements in each bin, if using the default load
      * factor (0.75) and the hash codes of the keys are random (in theory) is
      * very low. The probability for the length of the bins are as the
      * following: (taken from HashMap documentation)
-     * 
+     *
      * 0:    0.60653066
      * 1:    0.30326533
      * 2:    0.07581633
@@ -68,12 +68,12 @@ public class HeavySynchronizedHashCache<K, E> implements Cache<K, E> {
      * 7:    0.00000094
      * 8:    0.00000006
      * more: less than 1 in ten million
-     * 
+     *
      * The synchronized behavior of this cache is obtains by two mechanisms:
-     * 
+     *
      * 1. There is a main lock for the whole cache, any reading or writing
      * operations on the cache acquire this lock before operating on the table.
-     * 
+     *
      * 2. Each access to an entry element is synchronized on the entry itself.
      * This synchronization allowing the getOrAdd(Object, Function) to apply the
      * function without blocking the whole cache and later requests to the same
@@ -158,7 +158,7 @@ public class HeavySynchronizedHashCache<K, E> implements Cache<K, E> {
 
     /**
      * Object used to mask null keys.
-     * 
+     *
      * @see #maskNull(Object)
      */
     private static final Object NULL = new Object();
@@ -174,7 +174,7 @@ public class HeavySynchronizedHashCache<K, E> implements Cache<K, E> {
     /**
      * Construct new HeavySynchronizedHashCache with init capacity parameter and
      * default load factor.
-     * 
+     *
      * @param initCapacity
      *            the initialize capacity of the cache, can be zero.
      * @throws IllegalArgumentException
@@ -187,7 +187,7 @@ public class HeavySynchronizedHashCache<K, E> implements Cache<K, E> {
     /**
      * Construct new HeavySynchronizedHashCache with init capacity parameter and
      * load factor parameter.
-     * 
+     *
      * @param initCapacity
      *            the initialize capacity of the cache, can be zero.
      * @param loadFactor
@@ -215,37 +215,6 @@ public class HeavySynchronizedHashCache<K, E> implements Cache<K, E> {
      * {@inheritDoc}
      */
     @Override
-    public E get(final K key) {
-	// Compute hash
-	final Object k = maskNull(key);
-	final int hash = Hashs.hash(k);
-
-	lock.lock();
-	try {
-
-	    // Search entry
-	    for (Entry<E> p = table[hash & mask]; p != null; p = p.next) {
-		if (hash == p.hash && k.equals(p.key)) {
-		    lock.unlock();
-		    synchronized (p) {
-			return p.element;
-		    }
-		}
-	    }
-	    // No entry found with same key
-	    return null;
-
-	} finally {
-	    if (lock.isHeldByCurrentThread()) {
-		lock.unlock();
-	    }
-	}
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public E add(final K key, final E element) {
 	// Compute hash
 	final Object k = maskNull(key);
@@ -258,14 +227,13 @@ public class HeavySynchronizedHashCache<K, E> implements Cache<K, E> {
 
 	    // Check that such key doesn't already exist
 	    final Entry<E> firstEntry = table[index];
-	    for (Entry<E> p = firstEntry; p != null; p = p.next) {
+	    for (Entry<E> p = firstEntry; p != null; p = p.next)
 		if (hash == p.hash && k.equals(p.key)) {
 		    lock.unlock();
 		    synchronized (p) {
 			return p.element;
 		    }
 		}
-	    }
 
 	    // Insert new entry as first entry in list
 	    table[index] = new Entry<>(k, hash, element, firstEntry);
@@ -273,121 +241,8 @@ public class HeavySynchronizedHashCache<K, E> implements Cache<K, E> {
 	    return element;
 
 	} finally {
-	    if (lock.isHeldByCurrentThread()) {
+	    if (lock.isHeldByCurrentThread())
 		lock.unlock();
-	    }
-	}
-    }
-
-    /**
-     * Get an element from the cache by it's key or add one if one doesn't
-     * exist.
-     * <p>
-     * This is the main purpose of the HeavySynchronizedHashCache, allowing
-     * heavy computations of the supplier without stopping other threads to
-     * operate on the cache on other elements (with different keys).
-     * <p>
-     * This method is similar to {@link Map#computeIfAbsent(Object, Function)}.
-     * <p>
-     * 
-     * @param key
-     *            the key of the element.
-     * @param supplier
-     *            the supplier of the element if one doesn't exist in the cache.
-     *            Can performed heavy operations without stopping other threads
-     *            to operate on the cache.
-     * @return the existing element or the one created from the supplier (if
-     *         needed).
-     */
-    @Override
-    public E getOrAdd(final K key, final Function<? super K, ? extends E> supplier) {
-	// Compute hash
-	final Object k = maskNull(key);
-	final int hash = Hashs.hash(k);
-
-	lock.lock();
-	try {
-
-	    final int index = hash & mask;
-
-	    // Search entry
-	    final Entry<E> firstEntry = table[index];
-	    for (Entry<E> p = firstEntry; p != null; p = p.next) {
-		if (hash == p.hash && k.equals(p.key)) {
-		    lock.unlock();
-		    synchronized (p) {
-			return p.element;
-		    }
-		}
-	    }
-
-	    // Insert new entry as first entry in list
-	    final Entry<E> entry = table[index] = new Entry<>(k, hash, firstEntry);
-	    grow();
-
-	    synchronized (entry) {
-		lock.unlock();
-		return entry.element = supplier.apply(key);
-	    }
-
-	} finally {
-	    if (lock.isHeldByCurrentThread()) {
-		lock.unlock();
-	    }
-	}
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void remove(final K key) {
-	// Compute hash
-	final Object k = maskNull(key);
-	final int hash = Hashs.hash(k);
-
-	lock.lock();
-	try {
-
-	    final int index = hash & mask;
-
-	    Entry<E> p = table[index];
-	    Entry<E> prev = null;
-	    while (p != null) {
-		final Entry<E> next = p.next;
-		if (hash == p.hash && k.equals(p.key)) {
-		    if (prev == null) {
-			table[index] = next;
-		    } else {
-			prev.next = next;
-		    }
-		    p.next = null;
-		    p.key = null;
-		    shrink();
-		    break;
-		}
-		prev = p;
-		p = next;
-	    }
-	} finally {
-	    if (lock.isHeldByCurrentThread()) {
-		lock.unlock();
-	    }
-	}
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public int size() {
-	lock.lock();
-	try {
-	    return size;
-	} finally {
-	    if (lock.isHeldByCurrentThread()) {
-		lock.unlock();
-	    }
 	}
     }
 
@@ -419,9 +274,144 @@ public class HeavySynchronizedHashCache<K, E> implements Cache<K, E> {
 		resize(MINIMUM_SHRINK_CAPACITY); // Update thresholds and mask
 
 	} finally {
-	    if (lock.isHeldByCurrentThread()) {
+	    if (lock.isHeldByCurrentThread())
 		lock.unlock();
+	}
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public E get(final K key) {
+	// Compute hash
+	final Object k = maskNull(key);
+	final int hash = Hashs.hash(k);
+
+	lock.lock();
+	try {
+
+	    // Search entry
+	    for (Entry<E> p = table[hash & mask]; p != null; p = p.next)
+		if (hash == p.hash && k.equals(p.key)) {
+		    lock.unlock();
+		    synchronized (p) {
+			return p.element;
+		    }
+		}
+	    // No entry found with same key
+	    return null;
+
+	} finally {
+	    if (lock.isHeldByCurrentThread())
+		lock.unlock();
+	}
+    }
+
+    /**
+     * Get an element from the cache by it's key or add one if one doesn't
+     * exist.
+     * <p>
+     * This is the main purpose of the HeavySynchronizedHashCache, allowing
+     * heavy computations of the supplier without stopping other threads to
+     * operate on the cache on other elements (with different keys).
+     * <p>
+     * This method is similar to {@link Map#computeIfAbsent(Object, Function)}.
+     * <p>
+     *
+     * @param key
+     *            the key of the element.
+     * @param supplier
+     *            the supplier of the element if one doesn't exist in the cache.
+     *            Can performed heavy operations without stopping other threads
+     *            to operate on the cache.
+     * @return the existing element or the one created from the supplier (if
+     *         needed).
+     */
+    @Override
+    public E getOrAdd(final K key, final Function<? super K, ? extends E> supplier) {
+	// Compute hash
+	final Object k = maskNull(key);
+	final int hash = Hashs.hash(k);
+
+	lock.lock();
+	try {
+
+	    final int index = hash & mask;
+
+	    // Search entry
+	    final Entry<E> firstEntry = table[index];
+	    for (Entry<E> p = firstEntry; p != null; p = p.next)
+		if (hash == p.hash && k.equals(p.key)) {
+		    lock.unlock();
+		    synchronized (p) {
+			return p.element;
+		    }
+		}
+
+	    // Insert new entry as first entry in list
+	    final Entry<E> entry = table[index] = new Entry<>(k, hash, firstEntry);
+	    grow();
+
+	    synchronized (entry) {
+		lock.unlock();
+		return entry.element = supplier.apply(key);
 	    }
+
+	} finally {
+	    if (lock.isHeldByCurrentThread())
+		lock.unlock();
+	}
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void remove(final K key) {
+	// Compute hash
+	final Object k = maskNull(key);
+	final int hash = Hashs.hash(k);
+
+	lock.lock();
+	try {
+
+	    final int index = hash & mask;
+
+	    Entry<E> p = table[index];
+	    Entry<E> prev = null;
+	    while (p != null) {
+		final Entry<E> next = p.next;
+		if (hash == p.hash && k.equals(p.key)) {
+		    if (prev == null)
+			table[index] = next;
+		    else
+			prev.next = next;
+		    p.next = null;
+		    p.key = null;
+		    shrink();
+		    break;
+		}
+		prev = p;
+		p = next;
+	    }
+	} finally {
+	    if (lock.isHeldByCurrentThread())
+		lock.unlock();
+	}
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int size() {
+	lock.lock();
+	try {
+	    return size;
+	} finally {
+	    if (lock.isHeldByCurrentThread())
+		lock.unlock();
 	}
     }
 
@@ -430,7 +420,7 @@ public class HeavySynchronizedHashCache<K, E> implements Cache<K, E> {
      */
     @Override
     public String toString() {
-	StringBuilder builder = new StringBuilder();
+	final StringBuilder builder = new StringBuilder();
 	final String separator = ", ";
 	builder.append('[');
 
@@ -439,7 +429,7 @@ public class HeavySynchronizedHashCache<K, E> implements Cache<K, E> {
 
 	    // Iterate over all elements and append them
 	    final Entry<E>[] tab = table;
-	    for (int i = tab.length; i-- != 0;) {
+	    for (int i = tab.length; i-- != 0;)
 		for (Entry<E> entry = tab[i]; entry != null; entry = entry.next) {
 		    final E element;
 		    synchronized (entry) {
@@ -448,12 +438,10 @@ public class HeavySynchronizedHashCache<K, E> implements Cache<K, E> {
 		    builder.append(element);
 		    builder.append(separator);
 		}
-	    }
 
 	} finally {
-	    if (lock.isHeldByCurrentThread()) {
+	    if (lock.isHeldByCurrentThread())
 		lock.unlock();
-	    }
 	}
 
 	if (builder.lastIndexOf(separator) >= 0) {
@@ -474,19 +462,8 @@ public class HeavySynchronizedHashCache<K, E> implements Cache<K, E> {
     }
 
     /**
-     * Decrease size and check if resize is needed
-     */
-    private void shrink() {
-	if (--size <= shrinkThreshold) {
-	    final int currentCapacity = table.length;
-	    if (currentCapacity > MINIMUM_SHRINK_CAPACITY)
-		resize(currentCapacity >> 1);
-	}
-    }
-
-    /**
      * Resize the table to a new capacity.
-     * 
+     *
      * @param newCapacity
      *            new table capacity. MUST be a power of 2.
      */
@@ -517,9 +494,33 @@ public class HeavySynchronizedHashCache<K, E> implements Cache<K, E> {
     }
 
     /**
+     * Decrease size and check if resize is needed
+     */
+    private void shrink() {
+	if (--size <= shrinkThreshold) {
+	    final int currentCapacity = table.length;
+	    if (currentCapacity > MINIMUM_SHRINK_CAPACITY)
+		resize(currentCapacity >> 1);
+	}
+    }
+
+    /**
+     * Mask object by replacing null will non null object.
+     * <p>
+     * Used to mask null keys.
+     *
+     * @param o
+     *            masked object
+     * @return object quarantined to be not null.
+     */
+    private static Object maskNull(final Object o) {
+	return o == null ? NULL : o;
+    }
+
+    /**
      * Create new table of entries.
      * <p>
-     * 
+     *
      * @param <E>
      *            type of keys of the table's entries.
      * @param capacity
@@ -532,21 +533,8 @@ public class HeavySynchronizedHashCache<K, E> implements Cache<K, E> {
     }
 
     /**
-     * Mask object by replacing null will non null object.
-     * <p>
-     * Used to mask null keys.
-     * 
-     * @param o
-     *            masked object
-     * @return object quarantined to be not null.
-     */
-    private static Object maskNull(final Object o) {
-	return o == null ? NULL : o;
-    }
-
-    /**
      * Inverted version of {@link #maskNull(Object)}.
-     * 
+     *
      * @param o
      *            masked non null object
      * @return unmasked object, possible null.
@@ -557,7 +545,7 @@ public class HeavySynchronizedHashCache<K, E> implements Cache<K, E> {
 
     /**
      * An entry that holds a key and value pair in the hash table.
-     * 
+     *
      * @author Barak Ugav
      * @author Yishai Gronich
      *
@@ -588,23 +576,7 @@ public class HeavySynchronizedHashCache<K, E> implements Cache<K, E> {
 
 	/**
 	 * Construct new Entry.
-	 * 
-	 * @param key
-	 *            the entry key.
-	 * @param hash
-	 *            the key hash.
-	 * @param next
-	 *            the next entry in the entries linked list.
-	 */
-	Entry(final Object key, final int hash, final Entry<E> next) {
-	    this.key = key;
-	    this.hash = hash;
-	    this.next = next;
-	}
-
-	/**
-	 * Construct new Entry.
-	 * 
+	 *
 	 * @param key
 	 *            the entry key.
 	 * @param hash
@@ -618,6 +590,22 @@ public class HeavySynchronizedHashCache<K, E> implements Cache<K, E> {
 	    this.key = key;
 	    this.hash = hash;
 	    this.element = element;
+	    this.next = next;
+	}
+
+	/**
+	 * Construct new Entry.
+	 *
+	 * @param key
+	 *            the entry key.
+	 * @param hash
+	 *            the key hash.
+	 * @param next
+	 *            the next entry in the entries linked list.
+	 */
+	Entry(final Object key, final int hash, final Entry<E> next) {
+	    this.key = key;
+	    this.hash = hash;
 	    this.next = next;
 	}
 

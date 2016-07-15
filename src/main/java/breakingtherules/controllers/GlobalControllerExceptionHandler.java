@@ -10,7 +10,7 @@ import breakingtherules.session.NoCurrentJobException;
 /**
  * Specifies how (all) the controllers behave when they run into different
  * exceptions.
- * 
+ *
  * See https://spring.io/blog/2013/11/01/exception-handling-in-spring-mvc
  */
 @ControllerAdvice

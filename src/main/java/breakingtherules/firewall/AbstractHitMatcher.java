@@ -5,7 +5,7 @@ import java.util.List;
 /**
  * Attribute container that match or doesn't match certain hits.
  * <p>
- * 
+ *
  * @author Barak Ugav
  * @author Yishai Gronich
  *
@@ -13,8 +13,20 @@ import java.util.List;
 abstract class AbstractHitMatcher extends AttributesContainer {
 
     /**
+     * Copy constructor.
+     *
+     * @param c
+     *            other container.
+     * @throws NullPointerException
+     *             if the other container is null.
+     */
+    AbstractHitMatcher(final AttributesContainer c) {
+	super(c);
+    }
+
+    /**
      * Construct new HitMatcher.
-     * 
+     *
      * @param attributes
      *            the attributes of this matcher.
      * @throws NullPointerException
@@ -27,20 +39,8 @@ abstract class AbstractHitMatcher extends AttributesContainer {
     }
 
     /**
-     * Copy constructor.
-     * 
-     * @param c
-     *            other container.
-     * @throws NullPointerException
-     *             if the other container is null.
-     */
-    AbstractHitMatcher(final AttributesContainer c) {
-	super(c);
-    }
-
-    /**
      * Check if hit matches all this matcher attributes.
-     * 
+     *
      * @param hit
      *            check hit.
      * @return true if all attributes in this matcher contains the hit, else
@@ -49,14 +49,12 @@ abstract class AbstractHitMatcher extends AttributesContainer {
      *             if the hit is null.
      */
     public boolean isMatch(final Hit hit) {
-	for (final Attribute filterAttr : m_attributes) {
+	for (final Attribute filterAttr : m_attributes)
 	    if (filterAttr != null) {
 		final Attribute hitAttr = hit.getAttribute(filterAttr.getType());
-		if (!filterAttr.contains(hitAttr)) {
+		if (!filterAttr.contains(hitAttr))
 		    return false;
-		}
 	    }
-	}
 	return true;
     }
 

@@ -27,13 +27,21 @@ import breakingtherules.utilities.Utility;
 /**
  * Implementation of {@link RulesDao} by XML repository.
  * <p>
- * 
+ *
  * @author Barak Ugav
  * @author Yishai Gronich
- * 
+ *
  */
 @Component
 public class XMLRulesDao implements RulesDao {
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Rule getOriginalRule(final String jobName) throws IOException, XMLParseException {
+	return getOriginalRuleByPath(XMLDaoConfig.getRulesFile(jobName));
+    }
 
     /**
      * {@inheritDoc}
@@ -56,16 +64,8 @@ public class XMLRulesDao implements RulesDao {
     }
 
     /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Rule getOriginalRule(final String jobName) throws IOException, XMLParseException {
-	return getOriginalRuleByPath(XMLDaoConfig.getRulesFile(jobName));
-    }
-
-    /**
      * Get all rules from repository by repository string path.
-     * 
+     *
      * @param repoPath
      *            string path to repository.
      * @return all rules.
@@ -81,7 +81,7 @@ public class XMLRulesDao implements RulesDao {
     /**
      * Get rules from repository in range [startIndex, endIndex] by repository
      * string path
-     * 
+     *
      * @param repoPath
      *            string path to repository
      * @param startIndex
@@ -96,28 +96,24 @@ public class XMLRulesDao implements RulesDao {
      */
     public ListDto<Rule> getRulesByPath(final String repoPath, final int startIndex, final int endIndex)
 	    throws IOException, XMLParseException {
-	if (startIndex < 0) {
+	if (startIndex < 0)
 	    throw new IllegalArgumentException("Start index < 0");
-	} else if (startIndex > endIndex) {
+	else if (startIndex > endIndex)
 	    throw new IllegalArgumentException("Start index > end index");
-	}
-	// Don't need to check that arguments aren't null, if they do, usual
-	// null exception will be thrown later
 
 	// Extract all rules
 	final List<Rule> rules = loadRules(repoPath);
 
 	final int total = rules.size();
-	if (startIndex >= total) {
+	if (startIndex >= total)
 	    throw new IndexOutOfBoundsException("Start index bigger that total count");
-	}
 	final List<Rule> subRulesList = Utility.subList(rules, startIndex, endIndex - startIndex);
 	return new ListDto<>(subRulesList, startIndex, endIndex, total);
     }
 
     /**
      * Get the original rule from a file.
-     * 
+     *
      * @param fileName
      *            the file name.
      * @return the original rule parsed from the file.
@@ -137,16 +133,15 @@ public class XMLRulesDao implements RulesDao {
 
 	// Get all rules from repository
 	final NodeList originalRulesList = repositoryDoc.getElementsByTagName(XMLDaoConfig.ORIGINAL_RULE_TAG);
-	if (originalRulesList.getLength() != 1) {
+	if (originalRulesList.getLength() != 1)
 	    throw new XMLParseException("Expected 1 original rule, actual " + originalRulesList.getLength());
-	}
 	return new XMLRulesParser().parseRule((Element) originalRulesList.item(0));
     }
 
     /**
      * Write a list of rules to a file.
      * <p>
-     * 
+     *
      * @param fileName
      *            the name of the output file.
      * @param rules
@@ -171,9 +166,8 @@ public class XMLRulesDao implements RulesDao {
 	final XMLRulesParser parser = new XMLRulesParser();
 
 	final Element repoElm = doc.createElement(XMLDaoConfig.REPOSITORY_TAG);
-	for (final Rule rule : rules) {
+	for (final Rule rule : rules)
 	    repoElm.appendChild(parser.createElement(doc, rule));
-	}
 
 	// Original rule
 	final Element originalRuleElm = doc.createElement(XMLDaoConfig.ORIGINAL_RULE_TAG);
@@ -185,7 +179,7 @@ public class XMLRulesDao implements RulesDao {
 
     /**
      * Load all the rules from repository
-     * 
+     *
      * @param repoPath
      *            string path to repository file
      * @return list of loaded rules from repository

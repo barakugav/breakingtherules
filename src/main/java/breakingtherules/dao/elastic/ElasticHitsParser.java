@@ -19,7 +19,7 @@ import breakingtherules.firewall.Source;
  * <p>
  * Caches can be set to reduce object creations and memory use.
  * <p>
- * 
+ *
  * @author Barak Ugav
  * @author Yishai Gronich
  *
@@ -37,7 +37,7 @@ class ElasticHitsParser extends AbstractParser {
     /**
      * Translates a SearchHit that represents a firewall Hit, into a firewall
      * Hit object
-     * 
+     *
      * @param searchHit
      *            The outcome of an ElasticSearch search - a Hit, representing a
      *            firewall hit
@@ -51,13 +51,11 @@ class ElasticHitsParser extends AbstractParser {
 	final List<Attribute> attrs = new ArrayList<>(3);
 
 	final Object allAtributes = fields.get(ElasticDaoConfig.FIELD_ATTRIBUTES);
-	if (!(allAtributes instanceof List)) {
+	if (!(allAtributes instanceof List))
 	    throw new IllegalArgumentException("The searchHit it not in valid hit format");
-	}
 	for (final Object attributeObj : (List<?>) allAtributes) {
-	    if (!(attributeObj instanceof Map)) {
+	    if (!(attributeObj instanceof Map))
 		throw new IllegalArgumentException("The searchHit it not in valid hit format");
-	    }
 	    final Map<?, ?> attributeHash = (Map<?, ?>) attributeObj;
 	    final int attrTypeID = ((Integer) attributeHash.get(ElasticDaoConfig.FIELD_ATTR_TYPEID)).intValue();
 	    final String attrValue = (String) attributeHash.get(ElasticDaoConfig.FIELD_ATTR_VALUE);

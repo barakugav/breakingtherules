@@ -21,7 +21,7 @@ import breakingtherules.session.JobManager;
 
 /**
  * TODO - javadoc
- * 
+ *
  * @author Barak Ugav
  * @author Yishai Gronich
  *
@@ -40,7 +40,7 @@ public class JobController {
     /**
      * Searches the repository for all current jobs and returns a list to the
      * user
-     * 
+     *
      * @return A list of all jobs existing in the system
      */
     @RequestMapping(value = "/job", method = RequestMethod.GET)
@@ -49,31 +49,8 @@ public class JobController {
     }
 
     /**
-     * Request to handle a new job.
-     * <p>
-     * Note: a bug in Spring PUT - parameters should be sent through URL:
-     * http://stackoverflow.com/questions/5894270/springmvc-is-not-recognizing-
-     * request-body-parameters-if-using-put
-     * 
-     * @param jobName
-     *            The name of the new job to handle
-     * @return true if succeeded, else - false
-     * @throws IOException
-     *             if any I/O errors occurs when trying to update the
-     *             statistics.
-     * @throws ParseException
-     *             if any parse errors occurs when trying to update the
-     *             statistics.
-     */
-    @RequestMapping(value = "/job", method = RequestMethod.PUT)
-    public boolean setJob(@RequestParam(value = "job_name") final String jobName) throws IOException, ParseException {
-	m_jobManager.setJob(jobName);
-	return true;
-    }
-
-    /**
      * Create a new job and initialize it with CSV hits file.
-     * 
+     *
      * @param jobName
      *            the new job's name
      * @param hitsFile
@@ -89,6 +66,29 @@ public class JobController {
     public void newJob(@RequestParam(value = "job_name") final String jobName,
 	    @RequestParam(value = "hits_file") final MultipartFile hitsFile) throws IOException, ParseException {
 	m_jobManager.createJob(jobName, hitsFile, CSVParser.DEFAULT_COLUMNS_TYPES, new Rule(Filter.ANY_FILTER));
+    }
+
+    /**
+     * Request to handle a new job.
+     * <p>
+     * Note: a bug in Spring PUT - parameters should be sent through URL:
+     * http://stackoverflow.com/questions/5894270/springmvc-is-not-recognizing-
+     * request-body-parameters-if-using-put
+     *
+     * @param jobName
+     *            The name of the new job to handle
+     * @return true if succeeded, else - false
+     * @throws IOException
+     *             if any I/O errors occurs when trying to update the
+     *             statistics.
+     * @throws ParseException
+     *             if any parse errors occurs when trying to update the
+     *             statistics.
+     */
+    @RequestMapping(value = "/job", method = RequestMethod.PUT)
+    public boolean setJob(@RequestParam(value = "job_name") final String jobName) throws IOException, ParseException {
+	m_jobManager.setJob(jobName);
+	return true;
     }
 
 }

@@ -17,7 +17,7 @@ import breakingtherules.session.NoCurrentJobException;
 
 /**
  * Controller that provides requests for suggestions.
- * 
+ *
  * @author Barak Ugav
  * @author Yishai Gronich
  *
@@ -35,7 +35,7 @@ public class SuggestionsController {
 
     /**
      * Get suggestion for the current uncovered hits in the current job.
-     * 
+     *
      * @param amount
      *            the number of requested suggestions.
      * @return list of suggestion, one {@link SuggestionsDto} for each

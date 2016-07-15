@@ -5,10 +5,10 @@ import java.util.NoSuchElementException;
 
 /**
  * The ArrayIterator is an iterator used to iterate over arrays.
- * 
+ *
  * @author Barak Ugav
  * @author Yishai Gronich
- * 
+ *
  * @param <E>
  *            type of elements the iterator will iterate over
  */
@@ -38,7 +38,7 @@ public class ArrayIterator<E> implements Iterator<E> {
      * Construct new ArrayIterator on an array.
      * <p>
      * The iterator will not skip nulls.
-     * 
+     *
      * @param array
      *            the array to iterate on.
      * @throws NullPointerException
@@ -53,7 +53,7 @@ public class ArrayIterator<E> implements Iterator<E> {
      * <p>
      * The iterator will skip nulls if the the {@code skipNull} parameter is
      * true.
-     * 
+     *
      * @param array
      *            the array to iterate on.
      * @param skipNull
@@ -95,11 +95,9 @@ public class ArrayIterator<E> implements Iterator<E> {
      * Will skip nulls if the {@link #skipNull} flag is true.
      */
     private void advanceIndex() {
-	for (; nextIndex < length; nextIndex++) {
-	    if (array[nextIndex] != null || !skipNull) {
+	for (; nextIndex < length; nextIndex++)
+	    if (array[nextIndex] != null || !skipNull)
 		break;
-	    }
-	}
     }
 
 }

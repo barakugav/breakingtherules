@@ -20,24 +20,24 @@ public class TextBuilderTest {
 
     @Test
     public void appendTestNoWrap() {
-	TextBuilder builder = new TextBuilder(20);
-	String expected = "Hello world!";
+	final TextBuilder builder = new TextBuilder(20);
+	final String expected = "Hello world!";
 
 	builder.append(expected);
-	String actual = builder.getText();
+	final String actual = builder.getText();
 	assertEquals(expected, actual);
     }
 
     @Test
     public void appendTestWithWrap() {
-	TextBuilder builder = new TextBuilder(20);
-	String expectedFirstRow = "Hello big world,";
-	String expectedSecondRow = "what is up?";
-	String expected = expectedFirstRow + System.lineSeparator() + expectedSecondRow;
-	String text = expectedFirstRow + " " + expectedSecondRow;
+	final TextBuilder builder = new TextBuilder(20);
+	final String expectedFirstRow = "Hello big world,";
+	final String expectedSecondRow = "what is up?";
+	final String expected = expectedFirstRow + System.lineSeparator() + expectedSecondRow;
+	final String text = expectedFirstRow + " " + expectedSecondRow;
 
 	builder.append(text);
-	String actual = builder.getText();
+	final String actual = builder.getText();
 	assertEquals(expected, actual);
     }
 
@@ -49,11 +49,11 @@ public class TextBuilderTest {
 
     @Test
     public void toStringTest() {
-	TextBuilder builder = new TextBuilder(20);
+	final TextBuilder builder = new TextBuilder(20);
 
 	builder.appendln(LoremIpsum);
-	String expected = builder.getText();
-	String actual = builder.toString();
+	final String expected = builder.getText();
+	final String actual = builder.toString();
 	assertEquals(expected, actual);
     }
 

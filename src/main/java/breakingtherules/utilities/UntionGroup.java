@@ -10,10 +10,10 @@ import java.util.Objects;
  * A group of elements, provide minimal interface used only to initialize it
  * with elements and to union it to other groups using the method
  * {@link #transferElementsFrom(UntionGroup)}.
- * 
+ *
  * @author Barak Ugav
  * @author Yishai Gronich
- * 
+ *
  * @param <E>
  *            type of elements the group will contain
  */
@@ -21,10 +21,10 @@ public class UntionGroup<E> {
 
     /**
      * Implementation notes.
-     * 
+     *
      * The group is implemented by a one way linked list. When initializing the
      * list each element is stored stored in it's own node.
-     * 
+     *
      * When a union is operated, the union is done in O(1) operations because
      * the nodes are not copied - the union CONSUME the other list.
      */
@@ -46,8 +46,20 @@ public class UntionGroup<E> {
     }
 
     /**
+     * Construct new group with initialize elements from collection.
+     *
+     * @param c
+     *            the elements source collection.
+     * @throws NullPointerException
+     *             if the collection is null.
+     */
+    public UntionGroup(final Collection<? extends E> c) {
+	this(c.iterator());
+    }
+
+    /**
      * Construct new union group with one element.
-     * 
+     *
      * @param initElement
      *            initialize element.
      */
@@ -57,7 +69,7 @@ public class UntionGroup<E> {
 
     /**
      * Construct new group with initialize elements.
-     * 
+     *
      * @param firstInitElement
      *            first initialize element.
      * @param secondInitElement
@@ -70,28 +82,15 @@ public class UntionGroup<E> {
     @SafeVarargs
     public UntionGroup(final E firstInitElement, final E secondInitElement, final E... initElements) {
 	Node<E> l = first = new Node<>(firstInitElement);
-	l = (l.next = new Node<>(secondInitElement));
-	for (int i = initElements.length; i-- != 0;) {
-	    l = (l.next = new Node<>(initElements[i]));
-	}
+	l = l.next = new Node<>(secondInitElement);
+	for (int i = initElements.length; i-- != 0;)
+	    l = l.next = new Node<>(initElements[i]);
 	last = l;
     }
 
     /**
-     * Construct new group with initialize elements from collection.
-     * 
-     * @param c
-     *            the elements source collection.
-     * @throws NullPointerException
-     *             if the collection is null.
-     */
-    public UntionGroup(final Collection<? extends E> c) {
-	this(c.iterator());
-    }
-
-    /**
      * Construct new group with initialize elements from iterator.
-     * 
+     *
      * @param it
      *            the elements source iterator.
      * @throws NullPointerException
@@ -109,66 +108,22 @@ public class UntionGroup<E> {
     }
 
     /**
-     * Transfer all elements from other group to this group. Union.
-     * <p>
-     * This method <b>CONSUME</b> the other group. After a call to this method,
-     * the other group will be empty and will not contain any elements, and all
-     * it's elements will be contained in this group.
-     * 
-     * @param other
-     *            another union group to consume elements from.
-     * @return the united group - this group.
-     * @throws NullPointerException
-     *             if the other group is null.
-     */
-    public UntionGroup<E> transferElementsFrom(final UntionGroup<E> other) {
-	if (other != this) {
-	    if (last == null) {
-		first = other.first;
-	    } else {
-		last.next = other.first;
-	    }
-	    last = other.last;
-	    other.first = null;
-	    other.last = null;
-	}
-	return this;
-    }
-
-    /**
-     * Get all elements of this group to new list.
-     * 
-     * @return new list that contains all elements from this group.
-     */
-    public List<E> toList() {
-	final ArrayList<E> l = new ArrayList<>();
-	for (Node<E> node = first; node != null; node = node.next) {
-	    l.add(node.data);
-	}
-	return l;
-    }
-
-    /**
      * {@inheritDoc}
      */
     @Override
     public boolean equals(final Object o) {
-	if (o == this) {
+	if (o == this)
 	    return true;
-	}
-	if (!(o instanceof UntionGroup)) {
+	if (!(o instanceof UntionGroup))
 	    return false;
-	}
 
 	final UntionGroup<?> other = (UntionGroup<?>) o;
 
 	Node<?> cursor1, cursor2;
 	for (cursor1 = first, cursor2 = other.first; cursor1 != null
-		&& cursor2 != null; cursor1 = cursor1.next, cursor2 = cursor2.next) {
-	    if (!Objects.equals(cursor1.data, cursor2.data)) {
+		&& cursor2 != null; cursor1 = cursor1.next, cursor2 = cursor2.next)
+	    if (!Objects.equals(cursor1.data, cursor2.data))
 		return false;
-	    }
-	}
 	return cursor1 == null && cursor2 == null;
     }
 
@@ -178,10 +133,21 @@ public class UntionGroup<E> {
     @Override
     public int hashCode() {
 	int h = 17;
-	for (Node<E> cursor = first; cursor != null; cursor = cursor.next) {
+	for (Node<E> cursor = first; cursor != null; cursor = cursor.next)
 	    h = h * 31 + Objects.hashCode(cursor.data);
-	}
 	return h;
+    }
+
+    /**
+     * Get all elements of this group to new list.
+     *
+     * @return new list that contains all elements from this group.
+     */
+    public List<E> toList() {
+	final ArrayList<E> l = new ArrayList<>();
+	for (Node<E> node = first; node != null; node = node.next)
+	    l.add(node.data);
+	return l;
     }
 
     /**
@@ -190,9 +156,8 @@ public class UntionGroup<E> {
     @Override
     public String toString() {
 	final Node<E> f = first, l = last;
-	if (f == null) {
+	if (f == null)
 	    return "[]";
-	}
 
 	final StringBuilder builder = new StringBuilder('[');
 	for (Node<E> cursor = f; cursor != l; cursor = cursor.next) {
@@ -205,12 +170,38 @@ public class UntionGroup<E> {
     }
 
     /**
+     * Transfer all elements from other group to this group. Union.
+     * <p>
+     * This method <b>CONSUME</b> the other group. After a call to this method,
+     * the other group will be empty and will not contain any elements, and all
+     * it's elements will be contained in this group.
+     *
+     * @param other
+     *            another union group to consume elements from.
+     * @return the united group - this group.
+     * @throws NullPointerException
+     *             if the other group is null.
+     */
+    public UntionGroup<E> transferElementsFrom(final UntionGroup<E> other) {
+	if (other != this) {
+	    if (last == null)
+		first = other.first;
+	    else
+		last.next = other.first;
+	    last = other.last;
+	    other.first = null;
+	    other.last = null;
+	}
+	return this;
+    }
+
+    /**
      * The Node class is a wrapper for an element in the group that store a
      * reference to the next node in the linked list.
-     * 
+     *
      * @author Barak Ugav
      * @author Yishai Gronich
-     * 
+     *
      * @param <E>
      *            type of element the node will wrap
      */
@@ -228,7 +219,7 @@ public class UntionGroup<E> {
 
 	/**
 	 * Construct new node with an element
-	 * 
+	 *
 	 * @param e
 	 *            element of the node
 	 */

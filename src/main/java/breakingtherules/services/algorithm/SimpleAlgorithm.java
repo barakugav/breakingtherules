@@ -21,21 +21,21 @@ import breakingtherules.utilities.Utility;
  * Simply count the number of hits for each attribute, and suggests the ones the
  * ones that occurs more than others.
  * <p>
- * 
+ *
  * @author Barak Ugav
  * @author Yishai Gronich
- * 
+ *
  */
 public class SimpleAlgorithm extends SuggestionsAlgorithm {
 
     /**
      * Construct new Information algorithm
-     * 
+     *
      * @param hitsDao
      *            The DAO that the algorithm will use in order to read the job's
      *            hits
      */
-    public SimpleAlgorithm(HitsDao hitsDao) {
+    public SimpleAlgorithm(final HitsDao hitsDao) {
 	super(hitsDao);
     }
 
@@ -50,7 +50,7 @@ public class SimpleAlgorithm extends SuggestionsAlgorithm {
 
     /**
      * Get suggestions for hits (from iterable).
-     * 
+     *
      * @param hits
      *            the hits iterable object.
      * @param amount
@@ -68,7 +68,7 @@ public class SimpleAlgorithm extends SuggestionsAlgorithm {
     /**
      * The runnable used by the {@link SimpleAlgorithm}.
      * <p>
-     * 
+     *
      * @author Barak Ugav
      * @author Yishai Gronich
      *
@@ -98,7 +98,7 @@ public class SimpleAlgorithm extends SuggestionsAlgorithm {
 
 	/**
 	 * Construct new SimpleAlgorithmRunner.
-	 * 
+	 *
 	 * @param hits
 	 *            the input hits.
 	 * @param amount
@@ -126,10 +126,9 @@ public class SimpleAlgorithm extends SuggestionsAlgorithm {
 	    for (final Hit hit : m_hits) {
 		numberOfHits++;
 		final Attribute att = hit.getAttribute(m_attTypeId);
-		if (att == null) {
+		if (att == null)
 		    // No attribute
 		    continue;
-		}
 
 		Suggestion suggestion = allSuggestionsMap.get(att);
 		if (suggestion == null) {
@@ -141,9 +140,8 @@ public class SimpleAlgorithm extends SuggestionsAlgorithm {
 
 	    // Calculate scores
 	    final List<Suggestion> allSuggestionsList = Utility.newArrayList(allSuggestionsMap.values());
-	    for (final Suggestion suggestion : allSuggestionsList) {
+	    for (final Suggestion suggestion : allSuggestionsList)
 		suggestion.setScore(suggestion.getSize() / (double) numberOfHits);
-	    }
 	    allSuggestionsMap = null; // Free memory
 
 	    // Sort by score

@@ -13,10 +13,10 @@ import breakingtherules.utilities.ArrayIterator;
 /**
  * The AttributesContainer class is a container of attributes.
  * <p>
- * 
+ *
  * @author Barak Ugav
  * @author Yishai Gronich
- * 
+ *
  * @see Attribute
  */
 abstract class AttributesContainer implements Iterable<Attribute> {
@@ -27,8 +27,21 @@ abstract class AttributesContainer implements Iterable<Attribute> {
     final Attribute[] m_attributes;
 
     /**
+     * Copy constructor.
+     *
+     * @param c
+     *            other container.
+     * @throws NullPointerException
+     *             if the other container is null.
+     */
+    public AttributesContainer(final AttributesContainer c) {
+	// Clone is not needed because everything is final
+	m_attributes = c.m_attributes;
+    }
+
+    /**
      * Construct new container
-     * 
+     *
      * @param attributes
      *            the attributes of this container.
      * @throws NullPointerException
@@ -41,19 +54,6 @@ abstract class AttributesContainer implements Iterable<Attribute> {
     }
 
     /**
-     * Copy constructor.
-     * 
-     * @param c
-     *            other container.
-     * @throws NullPointerException
-     *             if the other container is null.
-     */
-    public AttributesContainer(final AttributesContainer c) {
-	// Clone is not needed because everything is final
-	m_attributes = c.m_attributes;
-    }
-
-    /**
      * Construct new attributes container with attributes array.
      * <p>
      * This constructor should be used carefully: the constructor doesn't checks
@@ -63,7 +63,7 @@ abstract class AttributesContainer implements Iterable<Attribute> {
      * This constructor is meant to be used by subclasses to create a mutation
      * copy of their own.
      * <p>
-     * 
+     *
      * @param attributes
      *            the attributes array of the container.
      * @throws NullPointerException
@@ -74,24 +74,26 @@ abstract class AttributesContainer implements Iterable<Attribute> {
     }
 
     /**
-     * Get the attributes of the hit.
-     * 
-     * @return list of the hit's attributes.
+     * {@inheritDoc}
      */
-    @JsonProperty("attributes")
-    public List<Attribute> getAttributes() {
-	final List<Attribute> attributeList = new ArrayList<>(Attribute.TYPE_COUNT);
-	for (final Attribute attribute : m_attributes) {
-	    if (attribute != null) {
-		attributeList.add(attribute);
-	    }
-	}
-	return attributeList;
+    @Override
+    public boolean equals(final Object o) {
+	if (o == this)
+	    return true;
+	else if (!(o instanceof AttributesContainer))
+	    return false;
+
+	// Could use Arrays.equals but there are redundant null checks.
+	final AttributesContainer other = (AttributesContainer) o;
+	for (int i = Attribute.TYPE_COUNT; i-- != 0;)
+	    if (!Objects.equals(m_attributes[i], other.m_attributes[i]))
+		return false;
+	return true;
     }
 
     /**
      * Get specific attribute by type.
-     * 
+     *
      * @param type
      *            wanted attribute type.
      * @return the wanted attribute.
@@ -101,32 +103,17 @@ abstract class AttributesContainer implements Iterable<Attribute> {
     }
 
     /**
-     * {@inheritDoc}
+     * Get the attributes of the hit.
+     *
+     * @return list of the hit's attributes.
      */
-    @Override
-    public Iterator<Attribute> iterator() {
-	return new ArrayIterator<>(m_attributes, true);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean equals(final Object o) {
-	if (o == this) {
-	    return true;
-	} else if (!(o instanceof AttributesContainer)) {
-	    return false;
-	}
-
-	// Could use Arrays.equals but there are redundant null checks.
-	final AttributesContainer other = (AttributesContainer) o;
-	for (int i = Attribute.TYPE_COUNT; i-- != 0;) {
-	    if (!Objects.equals(m_attributes[i], other.m_attributes[i])) {
-		return false;
-	    }
-	}
-	return true;
+    @JsonProperty("attributes")
+    public List<Attribute> getAttributes() {
+	final List<Attribute> attributeList = new ArrayList<>(Attribute.TYPE_COUNT);
+	for (final Attribute attribute : m_attributes)
+	    if (attribute != null)
+		attributeList.add(attribute);
+	return attributeList;
     }
 
     /**
@@ -139,6 +126,14 @@ abstract class AttributesContainer implements Iterable<Attribute> {
 	for (int i = Attribute.TYPE_COUNT; i-- != 0;)
 	    h = h * 31 + Objects.hashCode(m_attributes[i]);
 	return h;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Iterator<Attribute> iterator() {
+	return new ArrayIterator<>(m_attributes, true);
     }
 
     /**
@@ -169,7 +164,7 @@ abstract class AttributesContainer implements Iterable<Attribute> {
 
     /**
      * Convert attributes list to array of attributes
-     * 
+     *
      * @param attributesList
      *            list of attributes
      * @return array of the same attributes
@@ -178,16 +173,14 @@ abstract class AttributesContainer implements Iterable<Attribute> {
      */
     private static Attribute[] toArray(final List<Attribute> attributesList) {
 	final Attribute[] attributesArr = new Attribute[Attribute.TYPE_COUNT];
-	for (final Attribute attribute : attributesList) {
+	for (final Attribute attribute : attributesList)
 	    if (attribute != null) {
 		final int index = attribute.getType().ordinal();
-		if (attributesArr[index] != null) {
+		if (attributesArr[index] != null)
 		    throw new IllegalArgumentException(
 			    "More then one attribute of the same type (" + attribute.getType() + ")");
-		}
 		attributesArr[index] = attribute;
 	    }
-	}
 	return attributesArr;
     }
 

@@ -24,7 +24,7 @@ import breakingtherules.utilities.Utility;
  * <p>
  * The DAO caches the hits that are provided by the sub class by the
  * {@link #getHitsSupplier()} abstract method.
- * 
+ *
  * @author Barak Ugav
  * @author Yishai Gronich
  *
@@ -45,11 +45,73 @@ public abstract class AbstractCachedHitsDao implements HitsDao {
     private final Cache<UnmodifiableTriple<String, Set<Rule>, Filter>, Integer> m_totalHitsCache;
 
     /**
+     * Supplier function of the 'hits number'.
+     * <p>
+     *
+     * @see #getHitsNumber(String, List, Filter)
+     */
+    private final Function<Triple<String, Set<Rule>, Filter>, Integer> HITS_NUMBER_SUPPLIER = triple -> {
+	try {
+	    final String jobName = triple.getFirst();
+	    final Set<Rule> rules = triple.getSecond();
+	    final Filter filter = triple.getThird();
+	    final List<Hit> hits = getHitsInternal(jobName);
+
+	    int hitsNumber = 0;
+	    if (rules.isEmpty() && filter.equals(Filter.ANY_FILTER))
+		// No filtering needed
+		hitsNumber = hits.size();
+	    else
+		for (final Hit hit : hits)
+		    if (DaoUtilities.isMatch(hit, rules, filter))
+			hitsNumber++;
+	    return Integer.valueOf(hitsNumber);
+
+	} catch (final IOException e) {
+	    throw new UncheckedIOException(e);
+	} catch (final ParseException e) {
+	    throw new UncheckedParseException(e);
+	}
+    };
+
+    /**
+     * Supplier function of hits.
+     * <p>
+     *
+     * @see #getHitsInternal(String)
+     */
+    private final Function<String, List<Hit>> HITS_SUPPLIER = fileName -> {
+	// Don't let anyone change the cache
+	return Collections.unmodifiableList(Utility.newArrayList(getHitsSupplier().apply(fileName)));
+    };
+
+    /**
      * Construct new AbstractCachedHitsDao.
      */
     protected AbstractCachedHitsDao() {
 	m_cacheHits = new HeavySynchronizedHashCache<>();
 	m_totalHitsCache = new HeavySynchronizedHashCache<>();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public final Iterable<Hit> getHits(final String jobName, final List<Rule> rules, final Filter filter)
+	    throws ParseException, IOException {
+
+	final List<Hit> hits = getHitsInternal(jobName);
+
+	if (rules.isEmpty() && Filter.ANY_FILTER.equals(filter))
+	    // No filter is needed.
+	    return hits;
+
+	// Filter hits by the rules and filter.
+	final List<Hit> filteredHits = new ArrayList<>();
+	for (final Hit hit : hits)
+	    if (DaoUtilities.isMatch(hit, rules, filter))
+		filteredHits.add(hit);
+	return filteredHits;
     }
 
     /**
@@ -62,11 +124,9 @@ public abstract class AbstractCachedHitsDao implements HitsDao {
 
 	// Filter hits by the rules and filter.
 	final List<Hit> filteredHits = new ArrayList<>();
-	for (final Hit hit : hits) {
-	    if (DaoUtilities.isMatch(hit, rules, filter)) {
+	for (final Hit hit : hits)
+	    if (DaoUtilities.isMatch(hit, rules, filter))
 		filteredHits.add(hit);
-	    }
-	}
 	final int size = filteredHits.size();
 
 	m_totalHitsCache.add(
@@ -83,35 +143,10 @@ public abstract class AbstractCachedHitsDao implements HitsDao {
 	    final int startIndex, final int endIndex) throws IOException, ParseException {
 	final List<Hit> allHits = getHitsList(jobName, rules, filter).getData();
 	final int totalSize = getHitsNumber(jobName, rules, filter);
-	if (allHits.isEmpty()) {
+	if (allHits.isEmpty())
 	    return new ListDto<>(Collections.emptyList(), 0, 0, totalSize);
-	}
 	final List<Hit> hits = Utility.subListView(allHits, startIndex, endIndex - startIndex);
 	return new ListDto<>(hits, Math.min(startIndex, totalSize - 1), Math.min(endIndex, totalSize), totalSize);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public final Iterable<Hit> getHits(final String jobName, final List<Rule> rules, final Filter filter)
-	    throws ParseException, IOException {
-
-	final List<Hit> hits = getHitsInternal(jobName);
-
-	if (rules.isEmpty() && Filter.ANY_FILTER.equals(filter)) {
-	    // No filter is needed.
-	    return hits;
-	}
-
-	// Filter hits by the rules and filter.
-	final List<Hit> filteredHits = new ArrayList<>();
-	for (final Hit hit : hits) {
-	    if (DaoUtilities.isMatch(hit, rules, filter)) {
-		filteredHits.add(hit);
-	    }
-	}
-	return filteredHits;
     }
 
     /**
@@ -140,69 +175,15 @@ public abstract class AbstractCachedHitsDao implements HitsDao {
      * <p>
      * The supplier is guaranteed to be used only if the hits are not in the
      * cache.
-     * 
+     *
      * @return the DAO supplier of the hits by job name.
      */
     protected abstract Function<String, Set<Hit>> getHitsSupplier();
 
     /**
-     * Unchecked version of {@link ParseException}.
-     * <p>
-     * The UncheckedParseException is a wrapper for a checked
-     * {@link ParseException}.
-     * <p>
-     * Used when implementing or overriding a method that doesn't throw super
-     * class exception of {@link ParseException}.
-     * <p>
-     * This exception is similar to {@link UncheckedIOException}.
-     * <p>
-     * 
-     * @author Barak Ugav
-     * @author Yishai Gronich
-     *
-     */
-    protected static class UncheckedParseException extends RuntimeException {
-
-	@SuppressWarnings("javadoc")
-	private static final long serialVersionUID = 6371272539188428352L;
-
-	/**
-	 * Construct new UncheckedParseException without a message.
-	 * 
-	 * @param cause
-	 *            the original checked {@link ParseException}.
-	 */
-	protected UncheckedParseException(final ParseException cause) {
-	    super(cause);
-	}
-
-	/**
-	 * Construct new UncheckedParseException with a message.
-	 * 
-	 * @param message
-	 *            the exception's message.
-	 * @param cause
-	 *            the original checked {@link ParseException}.
-	 */
-	protected UncheckedParseException(final String message, final ParseException cause) {
-	    super(message, cause);
-	}
-
-	/**
-	 * Get the {@link ParseException} cause of this unchecked exception.
-	 * <p>
-	 */
-	@Override
-	public synchronized ParseException getCause() {
-	    return (ParseException) super.getCause();
-	}
-
-    }
-
-    /**
      * Get all hits, used internally.
      * <p>
-     * 
+     *
      * @param fileName
      *            the name of the input file.
      * @return all hits, parsed from the file or returned from cache.
@@ -223,47 +204,57 @@ public abstract class AbstractCachedHitsDao implements HitsDao {
     }
 
     /**
-     * Supplier function of the 'hits number'.
+     * Unchecked version of {@link ParseException}.
      * <p>
-     * 
-     * @see #getHitsNumber(String, List, Filter)
+     * The UncheckedParseException is a wrapper for a checked
+     * {@link ParseException}.
+     * <p>
+     * Used when implementing or overriding a method that doesn't throw super
+     * class exception of {@link ParseException}.
+     * <p>
+     * This exception is similar to {@link UncheckedIOException}.
+     * <p>
+     *
+     * @author Barak Ugav
+     * @author Yishai Gronich
+     *
      */
-    private final Function<Triple<String, Set<Rule>, Filter>, Integer> HITS_NUMBER_SUPPLIER = triple -> {
-	try {
-	    final String jobName = triple.getFirst();
-	    final Set<Rule> rules = triple.getSecond();
-	    final Filter filter = triple.getThird();
-	    final List<Hit> hits = getHitsInternal(jobName);
+    protected static class UncheckedParseException extends RuntimeException {
 
-	    int hitsNumber = 0;
-	    if (rules.isEmpty() && filter.equals(Filter.ANY_FILTER)) {
-		// No filtering needed
-		hitsNumber = hits.size();
-	    } else {
-		for (final Hit hit : hits) {
-		    if (DaoUtilities.isMatch(hit, rules, filter)) {
-			hitsNumber++;
-		    }
-		}
-	    }
-	    return Integer.valueOf(hitsNumber);
+	@SuppressWarnings("javadoc")
+	private static final long serialVersionUID = 6371272539188428352L;
 
-	} catch (final IOException e) {
-	    throw new UncheckedIOException(e);
-	} catch (final ParseException e) {
-	    throw new UncheckedParseException(e);
+	/**
+	 * Construct new UncheckedParseException without a message.
+	 *
+	 * @param cause
+	 *            the original checked {@link ParseException}.
+	 */
+	protected UncheckedParseException(final ParseException cause) {
+	    super(cause);
 	}
-    };
 
-    /**
-     * Supplier function of hits.
-     * <p>
-     * 
-     * @see #getHitsInternal(String)
-     */
-    private final Function<String, List<Hit>> HITS_SUPPLIER = fileName -> {
-	// Don't let anyone change the cache
-	return Collections.unmodifiableList(Utility.newArrayList(getHitsSupplier().apply(fileName)));
-    };
+	/**
+	 * Construct new UncheckedParseException with a message.
+	 *
+	 * @param message
+	 *            the exception's message.
+	 * @param cause
+	 *            the original checked {@link ParseException}.
+	 */
+	protected UncheckedParseException(final String message, final ParseException cause) {
+	    super(message, cause);
+	}
+
+	/**
+	 * Get the {@link ParseException} cause of this unchecked exception.
+	 * <p>
+	 */
+	@Override
+	public synchronized ParseException getCause() {
+	    return (ParseException) super.getCause();
+	}
+
+    }
 
 }

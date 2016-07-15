@@ -12,10 +12,10 @@ import breakingtherules.utilities.SoftCustomHashCache;
  * Source attribute.
  * <p>
  * Defined by it's IP.
- * 
+ *
  * @author Barak Ugav
  * @author Yishai Gronich
- * 
+ *
  */
 public class Source extends IPAttribute {
 
@@ -26,7 +26,7 @@ public class Source extends IPAttribute {
 
     /**
      * Construct new source of an IP.
-     * 
+     *
      * @param ip
      *            IP of the source.
      */
@@ -46,8 +46,8 @@ public class Source extends IPAttribute {
      * {@inheritDoc}
      */
     @Override
-    public AttributeType getType() {
-	return AttributeType.SOURCE;
+    public Source createMutation(final IP ip) {
+	return Source.valueOf(ip, null);
     }
 
     /**
@@ -62,47 +62,13 @@ public class Source extends IPAttribute {
      * {@inheritDoc}
      */
     @Override
-    public Source createMutation(final IP ip) {
-	return Source.valueOf(ip, null);
-    }
-
-    /**
-     * Get Source object parsed from string.
-     * 
-     * TODO - specified expected input format.
-     * 
-     * @param s
-     *            string representation of a source.
-     * @return Source object with the IP parsed from the string.
-     * @see IP#valueOf(String)
-     */
-    public static Source valueOf(final String s) {
-	return new Source(IP.valueOf(s, null));
-    }
-
-    /**
-     * Get Source object parsed from string.
-     * <p>
-     * If the cache isn't null, will used the cached source from the cache if
-     * one exist, or will create a new one and cache it to the cache otherwise.
-     * <p>
-     * 
-     * TODO - specified expected input format.
-     * 
-     * @param s
-     *            string representation of a source.
-     * @param cache
-     *            the cached containing cached source objects. Can be null.
-     * @return Source object with the IP parsed from the string.
-     * @see IP#valueOf(String)
-     */
-    public static Source valueOf(final String s, final Source.Cache cache) {
-	return valueOf(IP.valueOf(s, null), cache);
+    public AttributeType getType() {
+	return AttributeType.SOURCE;
     }
 
     /**
      * Get Source object with the specified IP.
-     * 
+     *
      * @param ip
      *            an IP
      * @return Source object with the specified IP.
@@ -119,7 +85,7 @@ public class Source extends IPAttribute {
      * If the cache isn't null, will used the cached source from the cache if
      * one exist, or will create a new one and cache it to the cache otherwise.
      * <p>
-     * 
+     *
      * @param ip
      *            an IP.
      * @param cache
@@ -132,19 +98,51 @@ public class Source extends IPAttribute {
 	if (cache != null && ip.m_maskSize == ip.getSize()) {
 	    // If ip is a full IP (most common source objects) search it in
 	    // cache, or add one if one doesn't exist.
-	    if (ip instanceof IPv4) {
+	    if (ip instanceof IPv4)
 		return cache.IPv4Cache.getOrAdd(((IPv4) ip).m_address, cache.ipv4SourcesMappingFunction);
-	    }
-	    if (ip instanceof IPv6) {
+	    if (ip instanceof IPv6)
 		return cache.IPv6Cache.getOrAdd(((IPv6) ip).m_address, cache.ipv6SourcesMapptingFunction);
-	    }
 	}
 	return new Source(ip);
     }
 
     /**
+     * Get Source object parsed from string.
+     *
+     * TODO - specified expected input format.
+     *
+     * @param s
+     *            string representation of a source.
+     * @return Source object with the IP parsed from the string.
+     * @see IP#valueOf(String)
+     */
+    public static Source valueOf(final String s) {
+	return new Source(IP.valueOf(s, null));
+    }
+
+    /**
+     * Get Source object parsed from string.
+     * <p>
+     * If the cache isn't null, will used the cached source from the cache if
+     * one exist, or will create a new one and cache it to the cache otherwise.
+     * <p>
+     *
+     * TODO - specified expected input format.
+     *
+     * @param s
+     *            string representation of a source.
+     * @param cache
+     *            the cached containing cached source objects. Can be null.
+     * @return Source object with the IP parsed from the string.
+     * @see IP#valueOf(String)
+     */
+    public static Source valueOf(final String s, final Source.Cache cache) {
+	return valueOf(IP.valueOf(s, null), cache);
+    }
+
+    /**
      * Cache of {@link Source} objects.
-     * 
+     *
      * @author Barak Ugav
      * @author Yishai Gronich
      *
@@ -191,7 +189,7 @@ public class Source extends IPAttribute {
 	/**
 	 * Construct new source cache, built on an existing IPs cache.
 	 * <p>
-	 * 
+	 *
 	 * @param ipsCache
 	 *            the existing IPs cache. (can be null)
 	 */
@@ -209,7 +207,7 @@ public class Source extends IPAttribute {
 
     /**
      * Any source - contains all other.
-     * 
+     *
      * @author Barak Ugav
      * @author Yishai Gronich
      *
@@ -235,7 +233,7 @@ public class Source extends IPAttribute {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public boolean equals(Object o) {
+	public boolean equals(final Object o) {
 	    return o instanceof AnySource || super.equals(o);
 	}
 

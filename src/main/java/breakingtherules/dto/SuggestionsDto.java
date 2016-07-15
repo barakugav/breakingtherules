@@ -10,10 +10,10 @@ import breakingtherules.services.algorithm.Suggestion;
 /**
  * The SuggestionsDto class is a DTO that hold a list of suggestions of a
  * specific type.
- * 
+ *
  * @author Barak Ugav
  * @author Yishai Gronich
- * 
+ *
  */
 public class SuggestionsDto {
 
@@ -29,7 +29,7 @@ public class SuggestionsDto {
 
     /**
      * Construct new SuggestionsDto.
-     * 
+     *
      * @param suggestions
      *            list of the suggestions this DTO will hold.
      * @param type
@@ -45,7 +45,7 @@ public class SuggestionsDto {
     /**
      * Get list of suggestions this DTO holds.
      * <p>
-     * 
+     *
      * @return list of suggestions of this DTO (unmodifiable).
      */
     public List<Suggestion> getSuggestions() {
@@ -54,7 +54,7 @@ public class SuggestionsDto {
 
     /**
      * Get the type of the suggestions this DTO holds
-     * 
+     *
      * @return type of suggestions.
      */
     public AttributeType getType() {

@@ -20,27 +20,6 @@ import breakingtherules.tests.firewall.FirewallTestsUtility;
 public class XMLHitsDaoTest extends TestBase {
 
     @Test
-    public void writeHitsTest() throws IOException {
-	tempFileTest("writeHitsTest", ".xml", file -> {
-	    try {
-		final int numberOfHits = rand.nextInt(10_000);
-
-		final List<Hit> hits = new ArrayList<>(numberOfHits);
-
-		for (int i = numberOfHits; i-- != 0;) {
-		    hits.add(new Hit(Arrays.asList(FirewallTestsUtility.getRandomSource(),
-			    FirewallTestsUtility.getRandomDestination(), FirewallTestsUtility.getRandomService())));
-		}
-
-		XMLHitsDao.writeHits(hits, file.getAbsolutePath());
-	    } catch (final Exception e) {
-		e.printStackTrace();
-		fail(e.getMessage());
-	    }
-	});
-    }
-
-    @Test
     public void writeAndParseHitsTest() throws IOException {
 	tempFileTest("writeAndParseHitsTest", ".xml", file -> {
 	    try {
@@ -48,10 +27,9 @@ public class XMLHitsDaoTest extends TestBase {
 
 		final List<Hit> expected = new ArrayList<>(numberOfHits);
 
-		for (int i = numberOfHits; i-- != 0;) {
+		for (int i = numberOfHits; i-- != 0;)
 		    expected.add(new Hit(Arrays.asList(FirewallTestsUtility.getRandomSource(),
 			    FirewallTestsUtility.getRandomDestination(), FirewallTestsUtility.getRandomService())));
-		}
 
 		XMLHitsDao.writeHits(expected, file.getAbsolutePath());
 
@@ -60,6 +38,26 @@ public class XMLHitsDaoTest extends TestBase {
 
 		assertEquals(expected, actual);
 
+	    } catch (final Exception e) {
+		e.printStackTrace();
+		fail(e.getMessage());
+	    }
+	});
+    }
+
+    @Test
+    public void writeHitsTest() throws IOException {
+	tempFileTest("writeHitsTest", ".xml", file -> {
+	    try {
+		final int numberOfHits = rand.nextInt(10_000);
+
+		final List<Hit> hits = new ArrayList<>(numberOfHits);
+
+		for (int i = numberOfHits; i-- != 0;)
+		    hits.add(new Hit(Arrays.asList(FirewallTestsUtility.getRandomSource(),
+			    FirewallTestsUtility.getRandomDestination(), FirewallTestsUtility.getRandomService())));
+
+		XMLHitsDao.writeHits(hits, file.getAbsolutePath());
 	    } catch (final Exception e) {
 		e.printStackTrace();
 		fail(e.getMessage());

@@ -37,17 +37,17 @@ import breakingtherules.firewall.Source;
  * Able to read hits from repository files, save the hits for each repository
  * for next hits request.
  * <p>
- * 
+ *
  * @author Barak Ugav
  * @author Yishai Gronich
- * 
+ *
  */
 public class XMLHitsDao extends AbstractCachedHitsDao {
 
     /**
      * Supplier function of hits.
      * <p>
-     * 
+     *
      * @see #getHitsSupplier()
      */
     private static final Function<String, Set<Hit>> HITS_SUPPLIER = jobName -> {
@@ -72,9 +72,17 @@ public class XMLHitsDao extends AbstractCachedHitsDao {
     }
 
     /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected Function<String, Set<Hit>> getHitsSupplier() {
+	return HITS_SUPPLIER;
+    }
+
+    /**
      * Get hits from repository that match all rules and filter by repository
      * string path.
-     * 
+     *
      * @param fileName
      *            name of the file.
      * @param rules
@@ -96,7 +104,7 @@ public class XMLHitsDao extends AbstractCachedHitsDao {
 
     /**
      * Write a list of hits to file in XML format
-     * 
+     *
      * @param hits
      *            list of the hits
      * @param fileName
@@ -127,70 +135,8 @@ public class XMLHitsDao extends AbstractCachedHitsDao {
     }
 
     /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected Function<String, Set<Hit>> getHitsSupplier() {
-	return HITS_SUPPLIER;
-    }
-
-    /**
-     * Unchecked version of {@link XMLParseException}.
-     * <p>
-     * The UncheckedXMLParseException is a wrapper for a checked
-     * {@link XMLParseException}.
-     * <p>
-     * Used when implementing or overriding a method that doesn't throw super
-     * class exception of {@link XMLParseException}.
-     * <p>
-     * This exception is similar to {@link UncheckedIOException}.
-     * <p>
-     * 
-     * @author Barak Ugav
-     * @author Yishai Gronich
-     *
-     */
-    protected static class UncheckedXMLParseException extends UncheckedParseException {
-
-	@SuppressWarnings("javadoc")
-	private static final long serialVersionUID = 6371272539188428352L;
-
-	/**
-	 * Construct new UncheckedXMLParseException without a message.
-	 * 
-	 * @param cause
-	 *            the original checked {@link XMLParseException}.
-	 */
-	protected UncheckedXMLParseException(final XMLParseException cause) {
-	    super(cause);
-	}
-
-	/**
-	 * Construct new UncheckedXMLParseException with a message.
-	 * 
-	 * @param message
-	 *            the exception's message.
-	 * @param cause
-	 *            the original checked {@link XMLParseException}.
-	 */
-	protected UncheckedXMLParseException(final String message, final XMLParseException cause) {
-	    super(message, cause);
-	}
-
-	/**
-	 * Get the {@link XMLParseException} cause of this unchecked exception.
-	 * <p>
-	 */
-	@Override
-	public synchronized XMLParseException getCause() {
-	    return (XMLParseException) super.getCause();
-	}
-
-    }
-
-    /**
      * Parse all hits from file to a destination collection.
-     * 
+     *
      * @param fileName
      *            the input file name.
      * @param rules
@@ -231,11 +177,64 @@ public class XMLHitsDao extends AbstractCachedHitsDao {
 	    if (hitNode.getNodeType() == Node.ELEMENT_NODE) {
 		final Element hitElm = (Element) hitNode;
 		final Hit hit = parser.parseHit(hitElm);
-		if (DaoUtilities.isMatch(hit, rules, filter)) {
+		if (DaoUtilities.isMatch(hit, rules, filter))
 		    destination.add(hit);
-		}
 	    }
 	}
+    }
+
+    /**
+     * Unchecked version of {@link XMLParseException}.
+     * <p>
+     * The UncheckedXMLParseException is a wrapper for a checked
+     * {@link XMLParseException}.
+     * <p>
+     * Used when implementing or overriding a method that doesn't throw super
+     * class exception of {@link XMLParseException}.
+     * <p>
+     * This exception is similar to {@link UncheckedIOException}.
+     * <p>
+     *
+     * @author Barak Ugav
+     * @author Yishai Gronich
+     *
+     */
+    protected static class UncheckedXMLParseException extends UncheckedParseException {
+
+	@SuppressWarnings("javadoc")
+	private static final long serialVersionUID = 6371272539188428352L;
+
+	/**
+	 * Construct new UncheckedXMLParseException with a message.
+	 *
+	 * @param message
+	 *            the exception's message.
+	 * @param cause
+	 *            the original checked {@link XMLParseException}.
+	 */
+	protected UncheckedXMLParseException(final String message, final XMLParseException cause) {
+	    super(message, cause);
+	}
+
+	/**
+	 * Construct new UncheckedXMLParseException without a message.
+	 *
+	 * @param cause
+	 *            the original checked {@link XMLParseException}.
+	 */
+	protected UncheckedXMLParseException(final XMLParseException cause) {
+	    super(cause);
+	}
+
+	/**
+	 * Get the {@link XMLParseException} cause of this unchecked exception.
+	 * <p>
+	 */
+	@Override
+	public synchronized XMLParseException getCause() {
+	    return (XMLParseException) super.getCause();
+	}
+
     }
 
 }

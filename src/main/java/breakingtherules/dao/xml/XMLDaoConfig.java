@@ -8,7 +8,7 @@ import breakingtherules.dao.DaoConfig;
  * <p>
  * The DAO classes uses this configuration class to parse XML files.
  * <p>
- * 
+ *
  * @author Barak Ugav
  * @author Yishai Gronich
  *
@@ -69,25 +69,25 @@ public class XMLDaoConfig {
     }
 
     /**
-     * Get the name of XML hits file by job name.
-     * 
-     * @param jobName
-     *            name of the job.
-     * @return name of the XML hits file associated with the job.
-     */
-    static String getHitsFile(final String jobName) {
-	return new StringBuilder().append(DaoConfig.getRepoRoot(jobName)).append('/').append(HITS_FILE).toString();
-    }
-
-    /**
      * Get the name of XML rules file by job name.
-     * 
+     *
      * @param jobName
      *            name of the job.
      * @return name of the XML rules file associated with the job.
      */
     public static String getRulesFile(final String jobName) {
 	return new StringBuilder().append(DaoConfig.getRepoRoot(jobName)).append('/').append(RULES_FILE).toString();
+    }
+
+    /**
+     * Get the name of XML hits file by job name.
+     *
+     * @param jobName
+     *            name of the job.
+     * @return name of the XML hits file associated with the job.
+     */
+    static String getHitsFile(final String jobName) {
+	return new StringBuilder().append(DaoConfig.getRepoRoot(jobName)).append('/').append(HITS_FILE).toString();
     }
 
 }

@@ -6,7 +6,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 /**
  * This class is in charge of initiating the program - running the Spring
  * application, that initiates the controllers and the Autowired variables
- * 
+ *
  * @author Barak Ugav
  * @author Yishai Gronich
  *
@@ -16,7 +16,7 @@ public class Application {
 
     /**
      * Run the Spring-based server
-     * 
+     *
      * @param args
      *            Arguments for the Spring application
      */

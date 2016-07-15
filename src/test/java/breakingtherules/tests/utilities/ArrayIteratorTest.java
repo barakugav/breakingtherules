@@ -19,26 +19,11 @@ public class ArrayIteratorTest extends TestBase {
 	final int size = 50;
 	final Integer[] array = randomIntegerArray(size);
 	final Iterator<Integer> it = new ArrayIterator<>(array);
-	for (int i = 0; i < array.length; i++) {
+	for (final Integer element : array) {
 	    assertTrue(it.hasNext());
-	    assertEquals(array[i], it.next());
+	    assertEquals(element, it.next());
 	}
 	assertFalse(it.hasNext());
-    }
-
-    @Test
-    public void arrayIteratorTestEmptyArray() {
-	Integer[] array = new Integer[] {};
-	Iterator<Integer> it = new ArrayIterator<>(array);
-	assertFalse(it.hasNext());
-    }
-
-    @Test(expected = NoSuchElementException.class)
-    public void arrayIteratorTestEmptyArrayAdvanceOverLimitation() {
-	Integer[] array = new Integer[] {};
-	Iterator<Integer> it = new ArrayIterator<>(array);
-	assertFalse(it.hasNext());
-	it.next();
     }
 
     @Test(expected = NoSuchElementException.class)
@@ -55,20 +40,33 @@ public class ArrayIteratorTest extends TestBase {
     }
 
     @Test
+    public void arrayIteratorTestEmptyArray() {
+	final Integer[] array = new Integer[] {};
+	final Iterator<Integer> it = new ArrayIterator<>(array);
+	assertFalse(it.hasNext());
+    }
+
+    @Test(expected = NoSuchElementException.class)
+    public void arrayIteratorTestEmptyArrayAdvanceOverLimitation() {
+	final Integer[] array = new Integer[] {};
+	final Iterator<Integer> it = new ArrayIterator<>(array);
+	assertFalse(it.hasNext());
+	it.next();
+    }
+
+    @Test
     public void arrayIteratorTestSkipNulls() {
 	final int size = 50;
-	Integer[] array = new Integer[size];
-	for (int i = 0; i < array.length - 1; i++) {
+	final Integer[] array = new Integer[size];
+	for (int i = 0; i < array.length - 1; i++)
 	    array[i] = rand.nextBoolean() ? Integer.valueOf(rand.nextInt()) : null;
-	}
 	array[array.length - 1] = Integer.valueOf(87);
-	Iterator<Integer> it = new ArrayIterator<>(array, true);
+	final Iterator<Integer> it = new ArrayIterator<>(array, true);
 
 	for (int i = 0; i < array.length - 1; i++) {
 	    assertTrue(it.hasNext());
-	    if (array[i] != null) {
+	    if (array[i] != null)
 		assertEquals(array[i], it.next());
-	    }
 	}
 	assertTrue(it.hasNext());
 	assertEquals(array[array.length - 1], it.next());

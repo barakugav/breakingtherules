@@ -5,10 +5,10 @@ import java.util.Objects;
 /**
  * The IPAttribute class represents an attribute with an IP.
  * <p>
- * 
+ *
  * @author Barak Ugav
  * @author Yishai Gronich
- * 
+ *
  * @see IP
  */
 public abstract class IPAttribute extends Attribute implements Comparable<IPAttribute> {
@@ -20,7 +20,7 @@ public abstract class IPAttribute extends Attribute implements Comparable<IPAttr
 
     /**
      * Construct new IPAttribute of an IP
-     * 
+     *
      * @param ip
      *            the IP of this attribute
      * @throws NullPointerException
@@ -31,36 +31,34 @@ public abstract class IPAttribute extends Attribute implements Comparable<IPAttr
     }
 
     /**
+     * Compare the two attributes by their IPs.
+     */
+    @Override
+    public int compareTo(final IPAttribute o) {
+	return m_ip.compareTo(o.m_ip);
+    }
+
+    /**
      * {@inheritDoc}
-     * 
+     *
      * Return true only if the other attribute is an IPAttribute and this
      * attribute's IP contains the other attribute's IP.
      * <p>
      */
     @Override
     public boolean contains(final Attribute other) {
-	if (this == other) {
+	if (this == other)
 	    return true;
-	} else if (!(other instanceof IPAttribute)) {
+	else if (!(other instanceof IPAttribute))
 	    return false;
-	}
 
-	IPAttribute o = (IPAttribute) other;
+	final IPAttribute o = (IPAttribute) other;
 	return m_ip.contains(o.m_ip);
     }
 
     /**
-     * Get the IP of this attribute
-     * 
-     * @return this attribute's IP
-     */
-    public IP getIp() {
-	return m_ip;
-    }
-
-    /**
      * Create a copy of this attribute with an IP mutation
-     * 
+     *
      * @param ip
      *            the desire change/mutation
      * @return mutation of this attribute with the IP mutation
@@ -72,14 +70,22 @@ public abstract class IPAttribute extends Attribute implements Comparable<IPAttr
      */
     @Override
     public boolean equals(final Object o) {
-	if (o == this) {
+	if (o == this)
 	    return true;
-	} else if (!(o instanceof IPAttribute)) {
+	else if (!(o instanceof IPAttribute))
 	    return false;
-	}
 
-	IPAttribute other = (IPAttribute) o;
+	final IPAttribute other = (IPAttribute) o;
 	return m_ip.equals(other.m_ip);
+    }
+
+    /**
+     * Get the IP of this attribute
+     *
+     * @return this attribute's IP
+     */
+    public IP getIp() {
+	return m_ip;
     }
 
     /**
@@ -96,14 +102,6 @@ public abstract class IPAttribute extends Attribute implements Comparable<IPAttr
     @Override
     public String toString() {
 	return m_ip.toString();
-    }
-
-    /**
-     * Compare the two attributes by their IPs.
-     */
-    @Override
-    public int compareTo(final IPAttribute o) {
-	return m_ip.compareTo(o.m_ip);
     }
 
 }

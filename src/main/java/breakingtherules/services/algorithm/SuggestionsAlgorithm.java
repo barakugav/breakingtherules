@@ -10,7 +10,12 @@ import breakingtherules.firewall.Filter;
 import breakingtherules.firewall.Rule;
 
 /**
- * Algorithm interface to get suggestion to filters and rules
+ * Algorithm interface to get suggestion to filters and rules.
+ * <p>
+ *
+ * @author Barak Ugav
+ * @author Yishai Gronich
+ *
  */
 public abstract class SuggestionsAlgorithm {
 
@@ -21,18 +26,18 @@ public abstract class SuggestionsAlgorithm {
 
     /**
      * Initiate the SuggestionsAlgorithm with a DAO it will use
-     * 
+     *
      * @param hitsDao
      *            The DAO that the algorithm will use in order to read the job's
      *            hits
      */
-    public SuggestionsAlgorithm(HitsDao hitsDao) {
+    public SuggestionsAlgorithm(final HitsDao hitsDao) {
 	m_hitsDao = hitsDao;
     }
 
     /**
      * Get suggestion for an attribute type
-     * 
+     *
      * @param jobName
      *            name of the job
      * @param rules
@@ -58,9 +63,8 @@ public abstract class SuggestionsAlgorithm {
      * <p>
      * This method allowed advance algorithms to perform faster then multiple
      * called to
-     * {@link #getSuggestions(String, List, Filter, int, AttributeType)}
-     * .
-     * 
+     * {@link #getSuggestions(String, List, Filter, int, AttributeType)} .
+     *
      * @param jobName
      *            name of the job
      * @param rules
@@ -84,9 +88,8 @@ public abstract class SuggestionsAlgorithm {
 	@SuppressWarnings("unchecked")
 	final List<Suggestion>[] suggestions = new List[attTypes.length];
 
-	for (int i = 0; i < attTypes.length; i++) {
+	for (int i = 0; i < attTypes.length; i++)
 	    suggestions[i] = getSuggestions(jobName, rules, filter, amount, attTypes[i]);
-	}
 	return suggestions;
     }
 

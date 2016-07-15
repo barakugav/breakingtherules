@@ -22,7 +22,7 @@ import breakingtherules.session.NoCurrentJobException;
 /**
  * Controller that allows setting and getting the current job's filter.
  * <p>
- * 
+ *
  * @author Barak Ugav
  * @author Yishai Gronich
  *
@@ -39,8 +39,20 @@ public class FilterController {
     private JobManager m_jobManager;
 
     /**
+     * Get the current job's filter.
+     *
+     * @return the filter of the current job.
+     * @throws NoCurrentJobException
+     *             if the job wasn't set yet.
+     */
+    @RequestMapping(value = "/filter", method = RequestMethod.GET)
+    public Filter getFilter() {
+	return m_jobManager.getFilter();
+    }
+
+    /**
      * Set the filter to a new one.
-     * 
+     *
      * @param source
      *            the new source filter.
      * @param destination
@@ -68,18 +80,6 @@ public class FilterController {
 	filterAtts.add(Service.valueOf(service));
 	final Filter newFilter = new Filter(filterAtts);
 	m_jobManager.setFilter(newFilter);
-    }
-
-    /**
-     * Get the current job's filter.
-     * 
-     * @return the filter of the current job.
-     * @throws NoCurrentJobException
-     *             if the job wasn't set yet.
-     */
-    @RequestMapping(value = "/filter", method = RequestMethod.GET)
-    public Filter getFilter() {
-	return m_jobManager.getFilter();
     }
 
 }

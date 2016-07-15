@@ -14,7 +14,7 @@ import breakingtherules.utilities.Utility;
 
 /**
  * TODO javadoc
- * 
+ *
  * @author Barak Ugav
  * @author Yishai Gronich
  *
@@ -256,9 +256,8 @@ public class Service extends Attribute {
 	final Map<String, Short> map = new HashMap<>();
 	for (short protocolCode = (short) PROTOCOL_NAMES.length; protocolCode-- > 0;) {
 	    final String protocolName = PROTOCOL_NAMES[protocolCode];
-	    if (protocolName != null) {
+	    if (protocolName != null)
 		map.put(protocolName, Short.valueOf(protocolCode));
-	    }
 	}
 	map.put(ANY, Short.valueOf(ANY_PROTOCOL));
 	PROTOCOL_CODES = Collections.unmodifiableMap(map);
@@ -266,7 +265,7 @@ public class Service extends Attribute {
 
     /**
      * Construct new Service.
-     * 
+     *
      * @param protocolCode
      *            the code of the protocol
      * @param portsRange
@@ -278,59 +277,19 @@ public class Service extends Attribute {
     }
 
     /**
-     * Get the protocol of the service
-     * 
-     * @return String protocol of the service
-     */
-    public String getProtocol() {
-	return protocolName(m_protocolCode);
-    }
-
-    /**
-     * Get the code of this service protocol
-     * 
-     * @return the protocol's code
-     */
-    @JsonIgnore
-    public short getProtocolCode() {
-	return m_protocolCode;
-    }
-
-    /**
-     * Get the start of the port range of the service
-     * 
-     * @return start of the port range of the service
-     */
-    public int getPortRangeStart() {
-	return m_portsRange & PORT_MASK;
-    }
-
-    /**
-     * Get the start of the port range of the service
-     * 
-     * @return start of the port range of the service
-     */
-    public int getPortRangeEnd() {
-	return (m_portsRange >> 16) & PORT_MASK;
-    }
-
-    /**
      * {@inheritDoc}
      */
     @Override
     public boolean contains(final Attribute other) {
-	if (!(other instanceof Service)) {
+	if (!(other instanceof Service))
 	    return false;
-	}
 
 	final Service o = (Service) other;
 	if (m_protocolCode != ANY_PROTOCOL) {
-	    if (o.m_protocolCode == ANY_PROTOCOL) {
+	    if (o.m_protocolCode == ANY_PROTOCOL)
 		return false;
-	    }
-	    if (m_protocolCode != o.m_protocolCode) {
+	    if (m_protocolCode != o.m_protocolCode)
 		return false;
-	    }
 	}
 
 	return getPortRangeStart() <= o.getPortRangeStart() && o.getPortRangeEnd() <= getPortRangeEnd();
@@ -340,23 +299,59 @@ public class Service extends Attribute {
      * {@inheritDoc}
      */
     @Override
-    public AttributeType getType() {
-	return AttributeType.SERVICE;
+    public boolean equals(final Object o) {
+	if (o == this)
+	    return true;
+	else if (!(o instanceof Service))
+	    return false;
+
+	final Service other = (Service) o;
+	return m_portsRange == other.m_portsRange && m_protocolCode == other.m_protocolCode;
+    }
+
+    /**
+     * Get the start of the port range of the service
+     *
+     * @return start of the port range of the service
+     */
+    public int getPortRangeEnd() {
+	return m_portsRange >> 16 & PORT_MASK;
+    }
+
+    /**
+     * Get the start of the port range of the service
+     *
+     * @return start of the port range of the service
+     */
+    public int getPortRangeStart() {
+	return m_portsRange & PORT_MASK;
+    }
+
+    /**
+     * Get the protocol of the service
+     *
+     * @return String protocol of the service
+     */
+    public String getProtocol() {
+	return protocolName(m_protocolCode);
+    }
+
+    /**
+     * Get the code of this service protocol
+     *
+     * @return the protocol's code
+     */
+    @JsonIgnore
+    public short getProtocolCode() {
+	return m_protocolCode;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public boolean equals(final Object o) {
-	if (o == this) {
-	    return true;
-	} else if (!(o instanceof Service)) {
-	    return false;
-	}
-
-	final Service other = (Service) o;
-	return m_portsRange == other.m_portsRange && m_protocolCode == other.m_protocolCode;
+    public AttributeType getType() {
+	return AttributeType.SERVICE;
     }
 
     /**
@@ -374,84 +369,25 @@ public class Service extends Attribute {
     public String toString() {
 	final int portRangeStart = getPortRangeStart();
 	final int portRangeEnd = getPortRangeEnd();
-	if (m_protocolCode == ANY_PROTOCOL && portRangeStart == MIN_PORT && portRangeEnd == MAX_PORT) {
+	if (m_protocolCode == ANY_PROTOCOL && portRangeStart == MIN_PORT && portRangeEnd == MAX_PORT)
 	    // All ports, all protocols
 	    return ANY;
-	}
 
-	if (portRangeStart == MIN_PORT && portRangeEnd == MAX_PORT) {
+	if (portRangeStart == MIN_PORT && portRangeEnd == MAX_PORT)
 	    // All ports, one protocol
 	    return protocolName(m_protocolCode) + ' ' + ANY;
-	}
 
 	if (m_protocolCode == ANY_PROTOCOL) {
 	    // Some ports, any protocol
-	    if (portRangeStart == portRangeEnd) {
+	    if (portRangeStart == portRangeEnd)
 		return "Any " + Integer.toString(portRangeStart);
-	    }
 	    return "Any " + portRangeStart + '-' + portRangeEnd;
 	}
 
 	// Some ports, one protocol
-	if (portRangeStart == portRangeEnd) {
+	if (portRangeStart == portRangeEnd)
 	    return protocolName(m_protocolCode) + ' ' + Integer.toString(portRangeStart);
-	}
 	return protocolName(m_protocolCode) + ' ' + portRangeStart + '-' + portRangeEnd;
-    }
-
-    /**
-     * Convert protocol name to it's code
-     * 
-     * @param protocolName
-     *            name of the protocol
-     * @return code of the protocol
-     * @throws IllegalArgumentException
-     *             if there is no such protocol
-     */
-    public static short protocolCode(final String protocolName) {
-	final Short code;
-	if (protocolName == null || (code = PROTOCOL_CODES.get(protocolName)) == null) {
-	    throw new IllegalArgumentException("Unknown protocol: " + String.valueOf(protocolName));
-	}
-	return code.shortValue();
-    }
-
-    /**
-     * Convert protocol code to it's name
-     * 
-     * @param protocolCode
-     *            code of the protocol
-     * @return the protocol's name
-     * @throws IllegalArgumentException
-     *             if there is no such protocol code
-     */
-    public static String protocolName(final short protocolCode) {
-	if (protocolCode == ANY_PROTOCOL) {
-	    return ANY;
-	}
-	if (protocolCode < MIN_PROTOCOL || protocolCode > MAX_PROTOCOL) {
-	    throw new IllegalArgumentException(
-		    "Protocol code:" + Utility.formatRange(MIN_PROTOCOL, MAX_PROTOCOL, protocolCode));
-	}
-	return PROTOCOL_NAMES[protocolCode];
-    }
-
-    /**
-     * Parses string to protocol code.
-     * <p>
-     * This method is faster then {@link Integer#parseInt(String)} when parsing
-     * protocol codes.
-     * 
-     * @param s
-     *            the string.
-     * @return protocol code parsed from string.
-     * @throws NullPointerException
-     *             if the string is null.
-     * @throws IllegalArgumentException
-     *             if failed to parse to protocol code.
-     */
-    public static short parseProtocolCode(final String s) {
-	return (short) Utility.parsePositiveIntUncheckedOverflow(s, 0, s.length(), MAX_PROTOCOL_CODE_DIGITS_NUMBER);
     }
 
     /**
@@ -459,7 +395,7 @@ public class Service extends Attribute {
      * <p>
      * This method is faster then {@link Integer#parseInt(String)} when parsing
      * ports.
-     * 
+     *
      * @param s
      *            the string.
      * @return port parsed from string.
@@ -473,6 +409,154 @@ public class Service extends Attribute {
     }
 
     /**
+     * Parses string to protocol code.
+     * <p>
+     * This method is faster then {@link Integer#parseInt(String)} when parsing
+     * protocol codes.
+     *
+     * @param s
+     *            the string.
+     * @return protocol code parsed from string.
+     * @throws NullPointerException
+     *             if the string is null.
+     * @throws IllegalArgumentException
+     *             if failed to parse to protocol code.
+     */
+    public static short parseProtocolCode(final String s) {
+	return (short) Utility.parsePositiveIntUncheckedOverflow(s, 0, s.length(), MAX_PROTOCOL_CODE_DIGITS_NUMBER);
+    }
+
+    /**
+     * Convert protocol name to it's code
+     *
+     * @param protocolName
+     *            name of the protocol
+     * @return code of the protocol
+     * @throws IllegalArgumentException
+     *             if there is no such protocol
+     */
+    public static short protocolCode(final String protocolName) {
+	final Short code;
+	if (protocolName == null || (code = PROTOCOL_CODES.get(protocolName)) == null)
+	    throw new IllegalArgumentException("Unknown protocol: " + String.valueOf(protocolName));
+	return code.shortValue();
+    }
+
+    /**
+     * Convert protocol code to it's name
+     *
+     * @param protocolCode
+     *            code of the protocol
+     * @return the protocol's name
+     * @throws IllegalArgumentException
+     *             if there is no such protocol code
+     */
+    public static String protocolName(final short protocolCode) {
+	if (protocolCode == ANY_PROTOCOL)
+	    return ANY;
+	if (protocolCode < MIN_PROTOCOL || protocolCode > MAX_PROTOCOL)
+	    throw new IllegalArgumentException(
+		    "Protocol code:" + Utility.formatRange(MIN_PROTOCOL, MAX_PROTOCOL, protocolCode));
+	return PROTOCOL_NAMES[protocolCode];
+    }
+
+    /**
+     * Get Service object with the specified protocol and port.
+     *
+     * @param protocolCode
+     *            the protocol code.
+     * @param port
+     *            the service port.
+     * @return Service object with the specified protocol and port.
+     * @throws IllegalArgumentException
+     *             if there is no such protocol code or if the port is out of
+     *             range ({@link #MIN_PORT} to {@link #MAX_PORT}).
+     */
+    public static Service valueOf(final short protocolCode, final int port) {
+	checkProtocol(protocolCode);
+	checkPort(port);
+	return new Service(protocolCode, toPortsRange(port));
+    }
+
+    /**
+     * Get Service object with the specified protocol and ports range.
+     *
+     * @param protocolCode
+     *            the protocol code
+     * @param portRangeStart
+     *            the lower bound for the ports range
+     * @param portRangeEnd
+     *            the upper bound for the ports range.
+     * @return Service object with the specified protocol and ports range
+     * @throws IllegalArgumentException
+     *             if there is no such protocol code, or the ports range bounds
+     *             are out of range ({@value #MIN_PORT} to {@value #MAX_PORT}),
+     *             if upper ports bound is lower then lower ports bound.
+     */
+    public static Service valueOf(final short protocolCode, final int portRangeStart, final int portRangeEnd) {
+	return valueOf(protocolCode, portRangeStart, portRangeEnd, null);
+    }
+
+    /**
+     * Get Service object with the specified protocol and ports range.
+     * <p>
+     * If the cache isn't null, will used the cached Service from the cache if
+     * one exist, or will create a new one and cache it to the cache otherwise.
+     * <p>
+     *
+     * @param protocolCode
+     *            the protocol code.
+     * @param portRangeStart
+     *            the lower bound for the ports range.
+     * @param portRangeEnd
+     *            the upper bound for the ports range.
+     * @param cache
+     *            the cached containing cached Service objects. Can be null.
+     * @return Service object with the specified protocol and ports range
+     * @throws IllegalArgumentException
+     *             if there is no such protocol code, or the ports range bounds
+     *             are out of range ({@value #MIN_PORT} to {@value #MAX_PORT}),
+     *             if upper ports bound is lower then lower ports bound.
+     */
+    public static Service valueOf(final short protocolCode, final int portRangeStart, final int portRangeEnd,
+	    final Service.Cache cache) {
+	checkProtocol(protocolCode);
+	checkPort(portRangeStart);
+	checkPort(portRangeEnd);
+
+	if (portRangeStart >= portRangeEnd) {
+	    if (portRangeStart == portRangeEnd)
+		return valueOfInternal(protocolCode, portRangeStart, cache);
+	    throw new IllegalArgumentException("portRangeStart > portRangeEnd");
+	}
+	return new Service(protocolCode, toPortsRange(portRangeStart, portRangeEnd));
+    }
+
+    /**
+     * Get Service object with the specified protocol and port.
+     * <p>
+     * If the cache isn't null, will used the cached Service from the cache if
+     * one exist, or will create a new one and cache it to the cache otherwise.
+     * <p>
+     *
+     * @param protocolCode
+     *            the protocol code.
+     * @param port
+     *            the service port.
+     * @param cache
+     *            the cached containing cached Service objects. Can be null.
+     * @return Service object with the specified protocol and port.
+     * @throws IllegalArgumentException
+     *             if there is no such protocol code or if the port is out of
+     *             range ({@link #MIN_PORT} to {@link #MAX_PORT}).
+     */
+    public static Service valueOf(final short protocolCode, final int port, final Service.Cache cache) {
+	checkProtocol(protocolCode);
+	checkPort(port);
+	return valueOfInternal(protocolCode, port, cache);
+    }
+
+    /**
      * Get Service object parsed from string.
      * <p>
      * The expected format of the string is [protocol] [port/ports], where
@@ -483,7 +567,7 @@ public class Service extends Attribute {
      * 'Any' it's equivalent to 'Any-Any' value. The whole string can be 'Any',
      * which is equivalent to 'Any Any-Any'.
      * <p>
-     * 
+     *
      * @param s
      *            string representation of a service.
      * @return parse service from string.
@@ -513,7 +597,7 @@ public class Service extends Attribute {
      * If the cache isn't null, will used the cached Service from the cache if
      * one exist, or will create a new one and cache it to the cache otherwise.
      * <p>
-     * 
+     *
      * @param s
      *            string representation of a service.
      * @param cache
@@ -530,9 +614,8 @@ public class Service extends Attribute {
     public static Service valueOf(final String s, final Service.Cache cache) {
 	int separatorIndex = s.indexOf(Utility.SPACE);
 	if (separatorIndex <= 0) {
-	    if (s.equals(ANY)) {
+	    if (s.equals(ANY))
 		return ANY_SERVICE;
-	    }
 	    throw new IllegalArgumentException("Unkown format: " + s);
 	}
 
@@ -544,9 +627,8 @@ public class Service extends Attribute {
 
 	if (separatorIndex < 0) {
 	    // Only one port
-	    if (s.startsWith(ANY, fromIndex)) {
+	    if (s.startsWith(ANY, fromIndex))
 		return new Service(protocolCode, toPortsRange(MIN_PORT, MAX_PORT));
-	    }
 
 	    final int port = Utility.parsePositiveIntUncheckedOverflow(s, fromIndex, s.length(),
 		    MAX_PORT_DIGITIS_NUMBER);
@@ -558,9 +640,9 @@ public class Service extends Attribute {
 
 	// First port
 	final int portRangeStart;
-	if (s.startsWith(ANY, fromIndex)) {
+	if (s.startsWith(ANY, fromIndex))
 	    portRangeStart = MIN_PORT;
-	} else {
+	else {
 	    portRangeStart = Utility.parsePositiveIntUncheckedOverflow(s, fromIndex, separatorIndex,
 		    MAX_PORT_DIGITIS_NUMBER);
 	    checkPort(portRangeStart);
@@ -569,122 +651,101 @@ public class Service extends Attribute {
 
 	// Second port
 	final int portRangeEnd;
-	if (s.startsWith(ANY, fromIndex)) {
+	if (s.startsWith(ANY, fromIndex))
 	    portRangeEnd = MAX_PORT;
-	} else {
+	else {
 	    portRangeEnd = Utility.parsePositiveIntUncheckedOverflow(s, fromIndex, s.length(), MAX_PORT_DIGITIS_NUMBER);
 	    checkPort(portRangeEnd);
 	}
 
 	if (portRangeStart >= portRangeEnd) {
-	    if (portRangeStart == portRangeEnd) {
+	    if (portRangeStart == portRangeEnd)
 		return valueOfInternal(protocolCode, portRangeStart, cache);
-	    }
 	    throw new IllegalArgumentException("portRangeStart > portRangeEnd");
 	}
 	return new Service(protocolCode, toPortsRange(portRangeStart, portRangeEnd));
     }
 
     /**
-     * Get Service object with the specified protocol and port.
-     * 
-     * @param protocolCode
-     *            the protocol code.
+     * Checks that a port is valid.
+     *
      * @param port
-     *            the service port.
-     * @return Service object with the specified protocol and port.
+     *            the checked port code.
      * @throws IllegalArgumentException
-     *             if there is no such protocol code or if the port is out of
-     *             range ({@link #MIN_PORT} to {@link #MAX_PORT}).
+     *             if the port is not valid.
      */
-    public static Service valueOf(final short protocolCode, final int port) {
-	checkProtocol(protocolCode);
-	checkPort(port);
-	return new Service(protocolCode, toPortsRange(port));
+    private static void checkPort(final int port) {
+	if (port < MIN_PORT || port > MAX_PORT)
+	    throw new IllegalArgumentException("Service port: " + Utility.formatRange(MIN_PORT, MAX_PORT, port));
     }
 
     /**
-     * Get Service object with the specified protocol and port.
+     * Checks that the protocol code is valid.
+     *
+     * @param protocolCode
+     *            the checked protocol code.
+     * @throws IllegalArgumentException
+     *             if the protocol code is not valid.
+     */
+    private static void checkProtocol(final short protocolCode) {
+	if (protocolCode != ANY_PROTOCOL && (protocolCode < MIN_PROTOCOL || protocolCode > MAX_PROTOCOL))
+	    throw new IllegalArgumentException(
+		    "Service protocol: " + Utility.formatRange(MIN_PROTOCOL, MAX_PROTOCOL, protocolCode));
+    }
+
+    /**
+     * Convert a port to a integer in 'ports range' formant.
+     *
+     * @param port
+     *            the single port.
+     * @return 'ports range' integer of the port.
+     *
+     * @see Service#m_portsRange
+     */
+    private static int toPortsRange(final int port) {
+	return toPortsRange(port, port);
+    }
+
+    /**
+     * Convert a two integers of ports range to one integer in 'ports range'
+     * formant.
+     *
+     * @param portRangeStart
+     *            the start of the ports range.
+     * @param portRangeEnd
+     *            the end of the ports range.
+     * @return 'ports range' integer of the two integers ports.
+     *
+     * @see Service#m_portsRange
+     */
+    private static int toPortsRange(final int portRangeStart, final int portRangeEnd) {
+	return portRangeEnd << 16 | portRangeStart;
+    }
+
+    /**
+     * Get Service object with the specified single port (not a port range),
+     * used internally.
      * <p>
      * If the cache isn't null, will used the cached Service from the cache if
      * one exist, or will create a new one and cache it to the cache otherwise.
      * <p>
-     * 
+     *
      * @param protocolCode
      *            the protocol code.
      * @param port
      *            the service port.
      * @param cache
      *            the cached containing cached Service objects. Can be null.
-     * @return Service object with the specified protocol and port.
-     * @throws IllegalArgumentException
-     *             if there is no such protocol code or if the port is out of
-     *             range ({@link #MIN_PORT} to {@link #MAX_PORT}).
+     * @return Service object of the specified protocol and ports.
      */
-    public static Service valueOf(final short protocolCode, final int port, final Service.Cache cache) {
-	checkProtocol(protocolCode);
-	checkPort(port);
-	return valueOfInternal(protocolCode, port, cache);
-    }
-
-    /**
-     * Get Service object with the specified protocol and ports range.
-     * 
-     * @param protocolCode
-     *            the protocol code
-     * @param portRangeStart
-     *            the lower bound for the ports range
-     * @param portRangeEnd
-     *            the upper bound for the ports range.
-     * @return Service object with the specified protocol and ports range
-     * @throws IllegalArgumentException
-     *             if there is no such protocol code, or the ports range bounds
-     *             are out of range ({@value #MIN_PORT} to {@value #MAX_PORT}),
-     *             if upper ports bound is lower then lower ports bound.
-     */
-    public static Service valueOf(final short protocolCode, final int portRangeStart, final int portRangeEnd) {
-	return valueOf(protocolCode, portRangeStart, portRangeEnd, null);
-    }
-
-    /**
-     * Get Service object with the specified protocol and ports range.
-     * <p>
-     * If the cache isn't null, will used the cached Service from the cache if
-     * one exist, or will create a new one and cache it to the cache otherwise.
-     * <p>
-     * 
-     * @param protocolCode
-     *            the protocol code.
-     * @param portRangeStart
-     *            the lower bound for the ports range.
-     * @param portRangeEnd
-     *            the upper bound for the ports range.
-     * @param cache
-     *            the cached containing cached Service objects. Can be null.
-     * @return Service object with the specified protocol and ports range
-     * @throws IllegalArgumentException
-     *             if there is no such protocol code, or the ports range bounds
-     *             are out of range ({@value #MIN_PORT} to {@value #MAX_PORT}),
-     *             if upper ports bound is lower then lower ports bound.
-     */
-    public static Service valueOf(final short protocolCode, final int portRangeStart, final int portRangeEnd,
-	    final Service.Cache cache) {
-	checkProtocol(protocolCode);
-	checkPort(portRangeStart);
-	checkPort(portRangeEnd);
-
-	if (portRangeStart >= portRangeEnd) {
-	    if (portRangeStart == portRangeEnd) {
-		return valueOfInternal(protocolCode, portRangeStart, cache);
-	    }
-	    throw new IllegalArgumentException("portRangeStart > portRangeEnd");
-	}
-	return new Service(protocolCode, toPortsRange(portRangeStart, portRangeEnd));
+    private static Service valueOfInternal(final short protocolCode, final int port, final Service.Cache cache) {
+	return cache != null ? cache.caches[protocolCode + 1].getOrAdd(port, cache.mappingFunction[protocolCode + 1])
+		: new Service(protocolCode, toPortsRange(port));
     }
 
     /**
      * Cache of {@link Service} objects.
-     * 
+     *
      * @author Barak Ugav
      * @author Yishai Gronich
      *
@@ -705,7 +766,7 @@ public class Service extends Attribute {
 	 * <p>
 	 * The functions supply new service of a single port.
 	 * <p>
-	 * 
+	 *
 	 * Used by
 	 * {@link breakingtherules.utilities.Cache#getOrAdd(Object, Function)}
 	 */
@@ -719,15 +780,14 @@ public class Service extends Attribute {
 
 	    // Used dummy to suppress warnings
 	    @SuppressWarnings({ "unchecked", "unused" })
-	    Object dummy = caches = new Int2ObjectCache[numberOfCaches];
+	    final Object dummy = caches = new Int2ObjectCache[numberOfCaches];
 
 	    // Used dummy to suppress warnings
 	    @SuppressWarnings({ "unchecked", "unused" })
-	    Object dummy2 = mappingFunction = new IntFunction[numberOfCaches];
+	    final Object dummy2 = mappingFunction = new IntFunction[numberOfCaches];
 
-	    for (int i = caches.length; i-- != 0;) {
+	    for (int i = caches.length; i-- != 0;)
 		caches[i] = new Int2ObjectSoftHashCache<>();
-	    }
 
 	    for (short i = numberOfCaches; i-- != 0;) {
 		final short protocolCode = (short) (i - 1);
@@ -738,87 +798,8 @@ public class Service extends Attribute {
     }
 
     /**
-     * Get Service object with the specified single port (not a port range),
-     * used internally.
-     * <p>
-     * If the cache isn't null, will used the cached Service from the cache if
-     * one exist, or will create a new one and cache it to the cache otherwise.
-     * <p>
-     * 
-     * @param protocolCode
-     *            the protocol code.
-     * @param port
-     *            the service port.
-     * @param cache
-     *            the cached containing cached Service objects. Can be null.
-     * @return Service object of the specified protocol and ports.
-     */
-    private static Service valueOfInternal(final short protocolCode, final int port, final Service.Cache cache) {
-	return cache != null ? cache.caches[protocolCode + 1].getOrAdd(port, cache.mappingFunction[protocolCode + 1])
-		: new Service(protocolCode, toPortsRange(port));
-    }
-
-    /**
-     * Checks that the protocol code is valid.
-     * 
-     * @param protocolCode
-     *            the checked protocol code.
-     * @throws IllegalArgumentException
-     *             if the protocol code is not valid.
-     */
-    private static void checkProtocol(final short protocolCode) {
-	if (protocolCode != ANY_PROTOCOL && (protocolCode < MIN_PROTOCOL || protocolCode > MAX_PROTOCOL)) {
-	    throw new IllegalArgumentException(
-		    "Service protocol: " + Utility.formatRange(MIN_PROTOCOL, MAX_PROTOCOL, protocolCode));
-	}
-    }
-
-    /**
-     * Checks that a port is valid.
-     * 
-     * @param port
-     *            the checked port code.
-     * @throws IllegalArgumentException
-     *             if the port is not valid.
-     */
-    private static void checkPort(final int port) {
-	if (port < MIN_PORT || port > MAX_PORT) {
-	    throw new IllegalArgumentException("Service port: " + Utility.formatRange(MIN_PORT, MAX_PORT, port));
-	}
-    }
-
-    /**
-     * Convert a port to a integer in 'ports range' formant.
-     * 
-     * @param port
-     *            the single port.
-     * @return 'ports range' integer of the port.
-     * 
-     * @see Service#m_portsRange
-     */
-    private static int toPortsRange(final int port) {
-	return toPortsRange(port, port);
-    }
-
-    /**
-     * Convert a two integers of ports range to one integer in 'ports range'
-     * formant.
-     * 
-     * @param portRangeStart
-     *            the start of the ports range.
-     * @param portRangeEnd
-     *            the end of the ports range.
-     * @return 'ports range' integer of the two integers ports.
-     * 
-     * @see Service#m_portsRange
-     */
-    private static int toPortsRange(final int portRangeStart, final int portRangeEnd) {
-	return (portRangeEnd << 16) | portRangeStart;
-    }
-
-    /**
      * 'Any' service, contains all other services.
-     * 
+     *
      * @author Barak Ugav
      * @author Yishai Gronich
      *
@@ -836,7 +817,7 @@ public class Service extends Attribute {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public boolean contains(Attribute other) {
+	public boolean contains(final Attribute other) {
 	    return other instanceof Service;
 	}
 

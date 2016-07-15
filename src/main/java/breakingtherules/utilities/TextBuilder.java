@@ -3,10 +3,10 @@ package breakingtherules.utilities;
 /**
  * The TextBuilder in a tool used to create text that doesn't go over max line
  * size and provide easy interface for indented text writing.
- * 
+ *
  * @author Barak Ugav
  * @author Yishai Gronich
- * 
+ *
  * @see StringBuilder
  */
 public class TextBuilder {
@@ -66,7 +66,7 @@ public class TextBuilder {
     /**
      * Construct new TextBuilder with specified max line and default indent size
      * and separator.
-     * 
+     *
      * @param max
      *            max line length.
      * @throws IllegalArgumentException
@@ -78,7 +78,7 @@ public class TextBuilder {
 
     /**
      * Construct new TextBuilder with specified.
-     * 
+     *
      * @param max
      *            max line length.
      * @param indentSize
@@ -92,20 +92,15 @@ public class TextBuilder {
      *             null.
      */
     public TextBuilder(final int max, final int indentSize, final String... separators) {
-	if (max < 0) {
+	if (max < 0)
 	    throw new IllegalArgumentException("max can't be negative: " + max);
-	}
-	if (indentSize < 0) {
+	if (indentSize < 0)
 	    throw new IllegalArgumentException("indentSize < 0: " + indentSize);
-	}
-	if (separators == null) {
+	if (separators == null)
 	    throw new NullPointerException();
-	}
-	for (final String separator : separators) {
-	    if (separator == null) {
+	for (final String separator : separators)
+	    if (separator == null)
 		throw new NullPointerException();
-	    }
-	}
 
 	m_builder = new StringBuilder();
 	m_maxLine = max;
@@ -115,31 +110,56 @@ public class TextBuilder {
     }
 
     /**
-     * Append the builder text with new text
-     * 
+     * Append the builder text with indented text
+     *
      * @param text
      *            new text
      */
-    public void append(String text) {
-	String[] words = Utility.breakToWords(text, m_separatorSequences);
-	for (String word : words) {
-	    int lineLength = lineLength();
-	    if (lineLength != 0) {
+    public void appedIndented(final String text) {
+	// Go down a row if needed
+	int lineLength = lineLength();
+	if (lineLength == 0)
+	    m_builder.append(m_indent);
+	else
+	    m_builder.append(indentedLineSeparator());
+
+	final int intentedMaxLine = m_maxLine - m_indentSize;
+	final String[] words = Utility.breakToWords(text, m_separatorSequences);
+	for (final String word : words) {
+	    lineLength = lineLength(getText(), indentedLineSeparator());
+	    if (lineLength != 0)
 		// Add space if needed, or line separator if went over max line
-		m_builder.append(lineLength + word.length() + 1 <= m_maxLine ? Utility.SPACE_STR : LINE_SEPARATOR);
-	    }
+		m_builder.append(lineLength + word.length() + 1 <= intentedMaxLine ? Utility.SPACE_STR
+			: indentedLineSeparator());
 	    m_builder.append(word);
 	}
     }
 
     /**
-     * Append the builder text and the go down a line
-     * 
+     * Append the builder text with indented text and the go down a line
+     *
      * @param text
      *            new text
      */
-    public void appendln(String text) {
-	append(text + LINE_SEPARATOR);
+    public void appedIndentedln(final String text) {
+	appedIndented(text + LINE_SEPARATOR);
+    }
+
+    /**
+     * Append the builder text with new text
+     *
+     * @param text
+     *            new text
+     */
+    public void append(final String text) {
+	final String[] words = Utility.breakToWords(text, m_separatorSequences);
+	for (final String word : words) {
+	    final int lineLength = lineLength();
+	    if (lineLength != 0)
+		// Add space if needed, or line separator if went over max line
+		m_builder.append(lineLength + word.length() + 1 <= m_maxLine ? Utility.SPACE_STR : LINE_SEPARATOR);
+	    m_builder.append(word);
+	}
     }
 
     /**
@@ -150,50 +170,13 @@ public class TextBuilder {
     }
 
     /**
-     * Append the builder text with indented text
-     * 
+     * Append the builder text and the go down a line
+     *
      * @param text
      *            new text
      */
-    public void appedIndented(String text) {
-	// Go down a row if needed
-	int lineLength = lineLength();
-	if (lineLength == 0) {
-	    m_builder.append(m_indent);
-	} else {
-	    m_builder.append(indentedLineSeparator());
-	}
-
-	int intentedMaxLine = m_maxLine - m_indentSize;
-	String[] words = Utility.breakToWords(text, m_separatorSequences);
-	for (String word : words) {
-	    lineLength = lineLength(getText(), indentedLineSeparator());
-	    if (lineLength != 0) {
-		// Add space if needed, or line separator if went over max line
-		m_builder.append(lineLength + word.length() + 1 <= intentedMaxLine ? Utility.SPACE_STR
-			: indentedLineSeparator());
-	    }
-	    m_builder.append(word);
-	}
-    }
-
-    /**
-     * Append the builder text with indented text and the go down a line
-     * 
-     * @param text
-     *            new text
-     */
-    public void appedIndentedln(String text) {
-	appedIndented(text + LINE_SEPARATOR);
-    }
-
-    /**
-     * Get the text of this builder
-     * 
-     * @return the builder's text
-     */
-    public String getText() {
-	return m_builder.toString();
+    public void appendln(final String text) {
+	append(text + LINE_SEPARATOR);
     }
 
     /**
@@ -201,6 +184,15 @@ public class TextBuilder {
      */
     public void clear() {
 	m_builder = new StringBuilder();
+    }
+
+    /**
+     * Get the text of this builder
+     *
+     * @return the builder's text
+     */
+    public String getText() {
+	return m_builder.toString();
     }
 
     /**
@@ -212,23 +204,8 @@ public class TextBuilder {
     }
 
     /**
-     * Get string that represent a indent
-     * 
-     * @param indentSize
-     *            the number of spaces in the indent.
-     * @return the indent's string
-     */
-    private static String indent(final int indentSize) {
-	StringBuilder tabBuilder = new StringBuilder();
-	for (int i = 0; i < indentSize; i++) {
-	    tabBuilder.append(Utility.SPACE_STR);
-	}
-	return tabBuilder.toString();
-    }
-
-    /**
      * Get string that represent new line in indented mode
-     * 
+     *
      * @return indented new line string
      */
     private String indentedLineSeparator() {
@@ -237,28 +214,42 @@ public class TextBuilder {
 
     /**
      * Get the current line length
-     * 
+     *
      * @return length of the current line
      */
     private int lineLength() {
-	String text = getText();
+	final String text = getText();
 	return lineLength(text, LINE_SEPARATOR);
     }
 
     /**
+     * Get string that represent a indent
+     *
+     * @param indentSize
+     *            the number of spaces in the indent.
+     * @return the indent's string
+     */
+    private static String indent(final int indentSize) {
+	final StringBuilder tabBuilder = new StringBuilder();
+	for (int i = 0; i < indentSize; i++)
+	    tabBuilder.append(Utility.SPACE_STR);
+	return tabBuilder.toString();
+    }
+
+    /**
      * Get the length of the last list in a text
-     * 
+     *
      * @param text
      *            the looked text
      * @param lineSeparator
      *            string sequence represent a new line
      * @return size of the last line in the text
      */
-    private static int lineLength(String text, String lineSeparator) {
-	int[] separatorPosition = Utility.lastPositionOf(text, lineSeparator);
-	int length = text.length();
-	int separatorIndex = separatorPosition[0];
-	int separatorLength = separatorPosition[1];
+    private static int lineLength(final String text, final String lineSeparator) {
+	final int[] separatorPosition = Utility.lastPositionOf(text, lineSeparator);
+	final int length = text.length();
+	final int separatorIndex = separatorPosition[0];
+	final int separatorLength = separatorPosition[1];
 	return separatorIndex == -1 ? length : text.length() - (separatorIndex + separatorLength);
     }
 

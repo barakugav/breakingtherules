@@ -22,10 +22,10 @@ import org.xml.sax.SAXException;
  * Utilities class that provide helpers method for XML files.
  * <p>
  * The XML DAOs use this class to load and store data in XML format.
- * 
+ *
  * @author Barak Ugav
  * @author Yishai Gronich
- * 
+ *
  * @see XMLHitsDao
  * @see XMLRulesDao
  */
@@ -40,7 +40,7 @@ class XMLUtilities {
     /**
      * Read document from a file.
      * <p>
-     * 
+     *
      * @param fileName
      *            name of the file.
      * @return document with the file data
@@ -51,14 +51,13 @@ class XMLUtilities {
      */
     static Document readFile(final String fileName) throws IOException, SAXException {
 	final File repoFile = new File(fileName);
-	if (!repoFile.exists()) {
+	if (!repoFile.exists())
 	    throw new FileNotFoundException(fileName);
-	}
 	final DocumentBuilder builder;
 	try {
 	    final DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 	    builder = factory.newDocumentBuilder();
-	} catch (ParserConfigurationException e) {
+	} catch (final ParserConfigurationException e) {
 	    // Shouldn't happen.
 	    throw new InternalError(e);
 	}
@@ -67,7 +66,7 @@ class XMLUtilities {
 
     /**
      * Write a document to a file
-     * 
+     *
      * @param path
      *            string path to file
      * @param doc
@@ -81,7 +80,7 @@ class XMLUtilities {
 	try {
 	    final TransformerFactory factory = TransformerFactory.newInstance();
 	    transformer = factory.newTransformer();
-	} catch (TransformerConfigurationException e) {
+	} catch (final TransformerConfigurationException e) {
 	    // Shouldn't happen.
 	    throw new InternalError(e);
 	}

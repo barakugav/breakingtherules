@@ -10,10 +10,10 @@ import java.util.List;
  * This DTO saves the indexes of this elements list out of the total list, and
  * some parameters about the total list.
  * <p>
- * 
+ *
  * @author Barak Ugav
  * @author Yishai Gronich
- * 
+ *
  * @param <E>
  *            The type list elements.
  */
@@ -43,7 +43,7 @@ public class ListDto<E> implements Iterable<E> {
 
     /**
      * Constructor
-     * 
+     *
      * @param data
      *            list of the elements
      * @param startIndex
@@ -64,7 +64,7 @@ public class ListDto<E> implements Iterable<E> {
 
     /**
      * Get the elements list
-     * 
+     *
      * @return list of the elements this DTO has
      */
     public List<E> getData() {
@@ -72,17 +72,8 @@ public class ListDto<E> implements Iterable<E> {
     }
 
     /**
-     * Get the start index of this elements list out of the total elements list
-     * 
-     * @return start index of this elements list out of the total elements list
-     */
-    public int getStartIndex() {
-	return m_startIndex;
-    }
-
-    /**
      * Get the end index of this elements list out of the total elements list
-     * 
+     *
      * @return end index of this elements list out of the total elements list
      */
     public int getEndIndex() {
@@ -91,7 +82,7 @@ public class ListDto<E> implements Iterable<E> {
 
     /**
      * Get the size of the elements list this DTO has
-     * 
+     *
      * @return Size of the internal list
      */
     public int getSize() {
@@ -99,8 +90,17 @@ public class ListDto<E> implements Iterable<E> {
     }
 
     /**
+     * Get the start index of this elements list out of the total elements list
+     *
+     * @return start index of this elements list out of the total elements list
+     */
+    public int getStartIndex() {
+	return m_startIndex;
+    }
+
+    /**
      * Get the size of the total elements list
-     * 
+     *
      * @return size of the total elements list
      */
     public int getTotal() {

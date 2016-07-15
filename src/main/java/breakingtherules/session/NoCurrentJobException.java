@@ -3,10 +3,10 @@ package breakingtherules.session;
 /**
  * Exception that get thrown when trying to operate an operation that require a
  * job, and one isn't set.
- * 
+ *
  * @author Barak Ugav
  * @author Yishai Gronich
- * 
+ *
  * @see JobManager
  */
 public class NoCurrentJobException extends IllegalStateException {
@@ -23,7 +23,7 @@ public class NoCurrentJobException extends IllegalStateException {
 
     /**
      * Construct new NoCurrentJobException with a message
-     * 
+     *
      * @param message
      *            massage of the exception
      */

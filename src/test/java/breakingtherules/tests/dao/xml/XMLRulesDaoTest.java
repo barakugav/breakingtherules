@@ -19,22 +19,6 @@ import breakingtherules.tests.firewall.FirewallTestsUtility;
 public class XMLRulesDaoTest extends TestBase {
 
     @Test
-    public void writeOriginalRuleTest() throws IOException {
-	tempFileTest("writeOriginalRuleTest", ".xml", file -> {
-	    try {
-		final Rule originalRule = new Rule(Arrays.asList(FirewallTestsUtility.getRandomSource(),
-			FirewallTestsUtility.getRandomDestination(), FirewallTestsUtility.getRandomService()));
-
-		XMLRulesDao.writeRules(file.getAbsolutePath(), Collections.emptyList(), originalRule);
-
-	    } catch (final Exception e) {
-		e.printStackTrace();
-		fail(e.getMessage());
-	    }
-	});
-    }
-
-    @Test
     public void writeAndReadOriginalRuleTest() throws IOException {
 	tempFileTest("writeAndReadOriginalRuleTest", ".xml", file -> {
 	    try {
@@ -55,30 +39,6 @@ public class XMLRulesDaoTest extends TestBase {
     }
 
     @Test
-    public void writeRulesTest() throws IOException {
-	tempFileTest("writeRulesTest", ".xml", file -> {
-	    try {
-		final int numberOfRules = 10_000;
-
-		final Rule originalRule = new Rule(Arrays.asList(FirewallTestsUtility.getRandomSource(),
-			FirewallTestsUtility.getRandomDestination(), FirewallTestsUtility.getRandomService()));
-		final List<Rule> rules = new ArrayList<>(numberOfRules);
-
-		for (int i = numberOfRules; i-- != 0;) {
-		    rules.add(new Rule(Arrays.asList(FirewallTestsUtility.getRandomSource(),
-			    FirewallTestsUtility.getRandomDestination(), FirewallTestsUtility.getRandomService())));
-		}
-
-		XMLRulesDao.writeRules(file.getAbsolutePath(), rules, originalRule);
-
-	    } catch (final Exception e) {
-		e.printStackTrace();
-		fail(e.getMessage());
-	    }
-	});
-    }
-
-    @Test
     public void writeAndReadRulesTest() throws IOException {
 	tempFileTest("writeAndReadRulesTest", ".xml", file -> {
 	    try {
@@ -88,10 +48,9 @@ public class XMLRulesDaoTest extends TestBase {
 			FirewallTestsUtility.getRandomDestination(), FirewallTestsUtility.getRandomService()));
 		final List<Rule> expectedRules = new ArrayList<>(numberOfRules);
 
-		for (int i = numberOfRules; i-- != 0;) {
+		for (int i = numberOfRules; i-- != 0;)
 		    expectedRules.add(new Rule(Arrays.asList(FirewallTestsUtility.getRandomSource(),
 			    FirewallTestsUtility.getRandomDestination(), FirewallTestsUtility.getRandomService())));
-		}
 
 		XMLRulesDao.writeRules(file.getAbsolutePath(), expectedRules, expectedOriginalRule);
 
@@ -100,6 +59,45 @@ public class XMLRulesDaoTest extends TestBase {
 
 		assertEquals(expectedOriginalRule, actualOriginalRule);
 		assertEquals(expectedRules, actualRules);
+
+	    } catch (final Exception e) {
+		e.printStackTrace();
+		fail(e.getMessage());
+	    }
+	});
+    }
+
+    @Test
+    public void writeOriginalRuleTest() throws IOException {
+	tempFileTest("writeOriginalRuleTest", ".xml", file -> {
+	    try {
+		final Rule originalRule = new Rule(Arrays.asList(FirewallTestsUtility.getRandomSource(),
+			FirewallTestsUtility.getRandomDestination(), FirewallTestsUtility.getRandomService()));
+
+		XMLRulesDao.writeRules(file.getAbsolutePath(), Collections.emptyList(), originalRule);
+
+	    } catch (final Exception e) {
+		e.printStackTrace();
+		fail(e.getMessage());
+	    }
+	});
+    }
+
+    @Test
+    public void writeRulesTest() throws IOException {
+	tempFileTest("writeRulesTest", ".xml", file -> {
+	    try {
+		final int numberOfRules = 10_000;
+
+		final Rule originalRule = new Rule(Arrays.asList(FirewallTestsUtility.getRandomSource(),
+			FirewallTestsUtility.getRandomDestination(), FirewallTestsUtility.getRandomService()));
+		final List<Rule> rules = new ArrayList<>(numberOfRules);
+
+		for (int i = numberOfRules; i-- != 0;)
+		    rules.add(new Rule(Arrays.asList(FirewallTestsUtility.getRandomSource(),
+			    FirewallTestsUtility.getRandomDestination(), FirewallTestsUtility.getRandomService())));
+
+		XMLRulesDao.writeRules(file.getAbsolutePath(), rules, originalRule);
 
 	    } catch (final Exception e) {
 		e.printStackTrace();

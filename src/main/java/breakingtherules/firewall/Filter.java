@@ -8,10 +8,10 @@ import breakingtherules.dao.HitsDao;
 /**
  * Filter of hits, base on given attributes.
  * <p>
- * 
+ *
  * @author Barak Ugav
  * @author Yishai Gronich
- * 
+ *
  * @see Hit
  * @see HitsDao
  */
@@ -23,8 +23,20 @@ public class Filter extends AbstractHitMatcher {
     public static final Filter ANY_FILTER = new AnyFilter();
 
     /**
+     * Copy constructor.
+     *
+     * @param c
+     *            other container.
+     * @throws NullPointerException
+     *             if the other container is null.
+     */
+    public Filter(final AttributesContainer c) {
+	super(c);
+    }
+
+    /**
      * Construct new filter from list of attributes
-     * 
+     *
      * @param attributes
      *            list of attributes
      * @throws NullPointerException
@@ -37,18 +49,6 @@ public class Filter extends AbstractHitMatcher {
     }
 
     /**
-     * Copy constructor.
-     * 
-     * @param c
-     *            other container.
-     * @throws NullPointerException
-     *             if the other container is null.
-     */
-    public Filter(final AttributesContainer c) {
-	super(c);
-    }
-
-    /**
      * {@inheritDoc}
      */
     @Override
@@ -58,7 +58,7 @@ public class Filter extends AbstractHitMatcher {
 
     /**
      * Filter that allow any hit.
-     * 
+     *
      * @author Barak Ugav
      * @author Yishai Gronich
      *
@@ -73,19 +73,19 @@ public class Filter extends AbstractHitMatcher {
 	}
 
 	/**
-	 * Match all hits.
-	 */
-	@Override
-	public boolean isMatch(Hit hit) {
-	    return true;
-	}
-
-	/**
 	 * {@inheritDoc}
 	 */
 	@Override
-	public boolean equals(Object o) {
+	public boolean equals(final Object o) {
 	    return o instanceof AnyFilter || super.equals(o);
+	}
+
+	/**
+	 * Match all hits.
+	 */
+	@Override
+	public boolean isMatch(final Hit hit) {
+	    return true;
 	}
 
 	/**
@@ -93,11 +93,11 @@ public class Filter extends AbstractHitMatcher {
 	 * <p>
 	 * Each attribute in the list should contains all other attributes of
 	 * the same type, creating 'Any' filter.
-	 * 
+	 *
 	 * @return list of all 'Any' attributes
 	 */
 	private static List<Attribute> getAnyFilterAttributes() {
-	    List<Attribute> anyAttributes = new ArrayList<>();
+	    final List<Attribute> anyAttributes = new ArrayList<>();
 	    anyAttributes.add(Source.ANY_SOURCE);
 	    anyAttributes.add(Destination.ANY_DESTINATION);
 	    anyAttributes.add(Service.ANY_SERVICE);

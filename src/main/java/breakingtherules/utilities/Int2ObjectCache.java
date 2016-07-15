@@ -6,23 +6,14 @@ import java.util.function.IntFunction;
 
 /**
  * Specific int keyed {@link Cache}.
- * 
+ *
  * @author Barak Ugav
  * @author Yishai Gronich
- * 
+ *
  * @param <E>
  *            type of cached elements
  */
 public interface Int2ObjectCache<E> {
-
-    /**
-     * Get a cached element by its key.
-     * 
-     * @param key
-     *            the element's key
-     * @return the cached element or null if non found.
-     */
-    public E get(int key);
 
     /**
      * Add new element to cache.
@@ -30,7 +21,7 @@ public interface Int2ObjectCache<E> {
      * This method is different from {@link Map#put(Object, Object)}, if an
      * element with the same key as added is already in the cache, this
      * operation has no effect.
-     * 
+     *
      * @param key
      *            the element key
      * @param element
@@ -40,8 +31,22 @@ public interface Int2ObjectCache<E> {
     public E add(int key, E element);
 
     /**
+     * Clear the entire cache from all elements.
+     */
+    public void clear();
+
+    /**
+     * Get a cached element by its key.
+     *
+     * @param key
+     *            the element's key
+     * @return the cached element or null if non found.
+     */
+    public E get(int key);
+
+    /**
      * Remove a cashed element by its key.
-     * 
+     *
      * @param key
      *            the element's key.
      */
@@ -51,15 +56,10 @@ public interface Int2ObjectCache<E> {
      * Get the number of cached elements in the cache.
      * <p>
      * Used mostly for testing.
-     * 
+     *
      * @return number of cached elements.
      */
     public int size();
-
-    /**
-     * Clear the entire cache from all elements.
-     */
-    public void clear();
 
     /**
      * Get an element from the cache by it's key or add one if one doesn't
@@ -81,7 +81,7 @@ public interface Int2ObjectCache<E> {
      * <p>
      * This method is similar to {@link Map#computeIfAbsent(Object, Function)}.
      * <p>
-     * 
+     *
      * @param key
      *            the key of the element.
      * @param cachingFunction

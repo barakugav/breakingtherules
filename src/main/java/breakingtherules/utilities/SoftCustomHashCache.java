@@ -9,10 +9,10 @@ import breakingtherules.utilities.Hashs.Strategy;
 
 /**
  * TODO javadoc
- * 
+ *
  * @author Barak Ugav
  * @author Yishai Gronich
- * 
+ *
  * @see SoftHashCache
  * @see Strategy
  *
@@ -25,16 +25,16 @@ public class SoftCustomHashCache<K, E> implements Cache<K, E> {
 
     /*
      * Implementation notes.
-     * 
+     *
      * The SoftCustomHashCache is implemented by a bucket hash table. In each
      * cell in the table there is a bin (linked list of entries) that contains
      * all entries that fell to that cell.
-     * 
+     *
      * The number of expected elements in each bin, if using the default load
      * factor (0.75) and the hash codes of the keys are random (in theory) is
      * very low. The probability for the length of the bins are as the
      * following: (taken from HashMap documentation)
-     * 
+     *
      * 0:    0.60653066
      * 1:    0.30326533
      * 2:    0.07581633
@@ -45,7 +45,7 @@ public class SoftCustomHashCache<K, E> implements Cache<K, E> {
      * 7:    0.00000094
      * 8:    0.00000006
      * more: less than 1 in ten million
-     * 
+     *
      * The 'soft' behavior of the elements is obtained by the following
      * mechanism: When one of the elements doesn't get held anymore by external
      * strong reference, the entry push itself to a queue (SoftReference support
@@ -151,7 +151,7 @@ public class SoftCustomHashCache<K, E> implements Cache<K, E> {
      * Construct new SoftCustomHashCache with default init capacity and default
      * load factor.
      * <p>
-     * 
+     *
      * @param strategy
      *            The strategy used by this cache.
      * @throws NullPointerException
@@ -165,7 +165,7 @@ public class SoftCustomHashCache<K, E> implements Cache<K, E> {
      * Construct new SoftCustomHashCache with init capacity parameter and
      * default load factor.
      * <p>
-     * 
+     *
      * @param strategy
      *            The strategy used by this cache.
      * @param initCapacity
@@ -183,7 +183,7 @@ public class SoftCustomHashCache<K, E> implements Cache<K, E> {
      * Construct new SoftCustomHashCache with init capacity parameter and load
      * factor parameter.
      * <p>
-     * 
+     *
      * @param strategy
      *            The strategy used by this cache.
      * @param initCapacity
@@ -211,6 +211,142 @@ public class SoftCustomHashCache<K, E> implements Cache<K, E> {
 	queue = new ReferenceQueue<>();
 	containsNull = false;
 	this.strategy = Objects.requireNonNull(strategy, "Null strategy");
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @throws NullPointerException
+     *             if the element is null. Nulls elements are no allowed in soft
+     *             cache.
+     */
+    @Override
+    public E add(final K key, final E element) {
+	if (key == null)
+	    return addNull(element);
+
+	// Compute hash
+	final int hash = Hashs.mix(strategy.hashCode(key));
+
+	// Clean cache, delayed as possible, so GC have more time to act.
+	cleanCache();
+
+	// Compute index in table, MUST happen after clearCache() because shrink
+	// may be caused and may change the mask.
+	final int index = hash & mask;
+
+	// Check if an element with the same key is already in cache.
+	final Entry<K, E> firstEntry = table[index];
+	for (Entry<K, E> p = firstEntry; p != null; p = p.next)
+	    if (hash == p.hash && strategy.equals(key, p.key)) {
+		final E existing = p.get();
+		if (existing != null)
+		    return existing;
+		/*
+		 * If the program reached this part of the code, that mean that
+		 * p's elements is a dead reference and we can remove it. We
+		 * choose not to do it here because that will require the
+		 * previous entry (so another entry iterator is required). This
+		 * scenario is not very likely because cleanCache() was called
+		 * already in this method. We prefer to leave the dead reference
+		 * as is and remove it in the next cleaning and not adding
+		 * another iterator here for performance (this method may be
+		 * called a lot).
+		 */
+	    }
+
+	// Insert new entry as first entry in list
+	table[index] = new Entry<>(key, element, queue, hash, firstEntry);
+	grow();
+	return element;
+    }
+
+    /**
+     * Clean the cache from dead references.
+     * <p>
+     * This method doesn't HAVE to be called by the cache user to keep the cache
+     * clean. If the user doesn't call this method, no errors will occurs
+     * because of it. This method is frequency called by the internal
+     * implementation of the cache, but it is visible to the user so he can free
+     * memory if he knows a lot of the elements are already dead reference.
+     */
+    public void cleanCache() {
+	// Poll from dead entries queue until it's empty. Remove each entry of
+	// dead element from the table.
+	for (Object o; (o = queue.poll()) != null;)
+	    if (o instanceof Entry) {
+
+		@SuppressWarnings("unchecked")
+		final Entry<K, E> entry = (Entry<K, E>) o;
+
+		synchronized (queue) {
+		    /*
+		     * Search the entry in it's list. If found, remove it, if
+		     * not, do nothing. The scenario that the entry is not found
+		     * means that it was already removed, this can happen if the
+		     * dead element's entry was detected already during other
+		     * operation, for example, during resize.
+		     */
+		    final int index = entry.hash & mask;
+		    Entry<K, E> p = table[index];
+		    Entry<K, E> prev = null;
+		    while (p != null) {
+			final Entry<K, E> next = p.next;
+			if (p == entry) {
+			    if (prev == null)
+				// First element
+				table[index] = next;
+			    else
+				// Not first element
+				prev.next = next;
+			    entry.key = null; // help GC
+			    entry.next = null; // help GC
+			    shrink();
+			    break;
+			}
+			prev = p;
+			p = next;
+		    }
+		}
+	    } else if (containsNull && o == nullElement) {
+		containsNull = false;
+		nullElement = null;
+		shrink();
+	    }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void clear() {
+	// Clear dead elements queue
+	do { // Until queue is empty
+	} while (queue.poll() != null);
+
+	// Clear table
+	final Entry<K, E>[] tab = table;
+	for (int index = tab.length; index-- != 0;) {
+	    for (Entry<K, E> entry = tab[index]; entry != null;) {
+		final Entry<K, E> next = entry.next;
+		entry.clear();
+		entry.next = null; // help GC
+		entry.key = null; // help GC
+		entry = next;
+	    }
+	    tab[index] = null;
+	}
+
+	// Reset size
+	size = 0;
+
+	// Shrink to minimum capacity
+	if (tab.length > MINIMUM_SHRINK_CAPACITY)
+	    resize(MINIMUM_SHRINK_CAPACITY); // Update thresholds and mask
+
+	// Clear dead elements queue if some already added
+	do {// Until queue is empty
+	} while (queue.poll() != null);
     }
 
     /**
@@ -253,59 +389,10 @@ public class SoftCustomHashCache<K, E> implements Cache<K, E> {
     }
 
     /**
-     * {@inheritDoc}
-     * 
-     * @throws NullPointerException
-     *             if the element is null. Nulls elements are no allowed in soft
-     *             cache.
-     */
-    @Override
-    public E add(final K key, final E element) {
-	if (key == null)
-	    return addNull(element);
-
-	// Compute hash
-	final int hash = Hashs.mix(strategy.hashCode(key));
-
-	// Clean cache, delayed as possible, so GC have more time to act.
-	cleanCache();
-
-	// Compute index in table, MUST happen after clearCache() because shrink
-	// may be caused and may change the mask.
-	final int index = hash & mask;
-
-	// Check if an element with the same key is already in cache.
-	final Entry<K, E> firstEntry = table[index];
-	for (Entry<K, E> p = firstEntry; p != null; p = p.next) {
-	    if (hash == p.hash && strategy.equals(key, p.key)) {
-		final E existing = p.get();
-		if (existing != null)
-		    return existing;
-		/*
-		 * If the program reached this part of the code, that mean that
-		 * p's elements is a dead reference and we can remove it. We
-		 * choose not to do it here because that will require the
-		 * previous entry (so another entry iterator is required). This
-		 * scenario is not very likely because cleanCache() was called
-		 * already in this method. We prefer to leave the dead reference
-		 * as is and remove it in the next cleaning and not adding
-		 * another iterator here for performance (this method may be
-		 * called a lot).
-		 */
-	    }
-	}
-
-	// Insert new entry as first entry in list
-	table[index] = new Entry<>(key, element, queue, hash, firstEntry);
-	grow();
-	return element;
-    }
-
-    /**
      * This implementation provide a faster alternative over the default
      * implementation.
      * <p>
-     * 
+     *
      * @see Cache#getOrAdd(Object, Function) for full documentation of the
      *      method.
      * @throws NullPointerException
@@ -329,13 +416,12 @@ public class SoftCustomHashCache<K, E> implements Cache<K, E> {
 
 	// Search entry
 	final Entry<K, E> firstEntry = table[index];
-	for (Entry<K, E> p = firstEntry; p != null; p = p.next) {
+	for (Entry<K, E> p = firstEntry; p != null; p = p.next)
 	    if (hash == p.hash && strategy.equals(key, p.key)) {
 		final E elm = p.get();
 		if (elm != null)
 		    return elm;
 	    }
-	}
 
 	// Not found, supply element
 	final E element = supplier.apply(key);
@@ -372,13 +458,12 @@ public class SoftCustomHashCache<K, E> implements Cache<K, E> {
 	while (p != null) {
 	    final Entry<K, E> next = p.next;
 	    if (hash == p.hash && strategy.equals(key, p.key)) {
-		if (prev == null) {
+		if (prev == null)
 		    // First element
 		    table[index] = next;
-		} else {
+		else
 		    // Not first element
 		    prev.next = next;
-		}
 		p.next = null; // help GC
 		p.key = null; // help GC
 		shrink();
@@ -402,101 +487,8 @@ public class SoftCustomHashCache<K, E> implements Cache<K, E> {
      * {@inheritDoc}
      */
     @Override
-    public void clear() {
-	// Clear dead elements queue
-	do { // Until queue is empty
-	} while (queue.poll() != null);
-
-	// Clear table
-	final Entry<K, E>[] tab = table;
-	for (int index = tab.length; index-- != 0;) {
-	    for (Entry<K, E> entry = tab[index]; entry != null;) {
-		final Entry<K, E> next = entry.next;
-		entry.clear();
-		entry.next = null; // help GC
-		entry.key = null; // help GC
-		entry = next;
-	    }
-	    tab[index] = null;
-	}
-
-	// Reset size
-	size = 0;
-
-	// Shrink to minimum capacity
-	if (tab.length > MINIMUM_SHRINK_CAPACITY)
-	    resize(MINIMUM_SHRINK_CAPACITY); // Update thresholds and mask
-
-	// Clear dead elements queue if some already added
-	do {// Until queue is empty
-	} while (queue.poll() != null);
-    }
-
-    /**
-     * Clean the cache from dead references.
-     * <p>
-     * This method doesn't HAVE to be called by the cache user to keep the cache
-     * clean. If the user doesn't call this method, no errors will occurs
-     * because of it. This method is frequency called by the internal
-     * implementation of the cache, but it is visible to the user so he can free
-     * memory if he knows a lot of the elements are already dead reference.
-     */
-    public void cleanCache() {
-	// Poll from dead entries queue until it's empty. Remove each entry of
-	// dead element from the table.
-	for (Object o; (o = queue.poll()) != null;) {
-
-	    if (o instanceof Entry) {
-
-		@SuppressWarnings("unchecked")
-		final Entry<K, E> entry = (Entry<K, E>) o;
-
-		synchronized (queue) {
-		    /*
-		     * Search the entry in it's list. If found, remove it, if
-		     * not, do nothing. The scenario that the entry is not found
-		     * means that it was already removed, this can happen if the
-		     * dead element's entry was detected already during other
-		     * operation, for example, during resize.
-		     */
-		    final int index = entry.hash & mask;
-		    Entry<K, E> p = table[index];
-		    Entry<K, E> prev = null;
-		    while (p != null) {
-			final Entry<K, E> next = p.next;
-			if (p == entry) {
-			    if (prev == null) {
-				// First element
-				table[index] = next;
-			    } else {
-				// Not first element
-				prev.next = next;
-			    }
-			    entry.key = null; // help GC
-			    entry.next = null; // help GC
-			    shrink();
-			    break;
-			}
-			prev = p;
-			p = next;
-		    }
-		}
-	    } else {
-		if (containsNull && o == nullElement) {
-		    containsNull = false;
-		    nullElement = null;
-		    shrink();
-		}
-	    }
-	}
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public String toString() {
-	StringBuilder builder = new StringBuilder();
+	final StringBuilder builder = new StringBuilder();
 	final String separator = ", ";
 	builder.append('[');
 
@@ -506,7 +498,7 @@ public class SoftCustomHashCache<K, E> implements Cache<K, E> {
 	// Iterate over all elements and append them
 	final Entry<K, E>[] tab = table;
 	E element;
-	for (int i = tab.length; i-- != 0;) {
+	for (int i = tab.length; i-- != 0;)
 	    for (Entry<K, E> entry = tab[i]; entry != null; entry = entry.next) {
 		element = entry.get();
 		if (element == null)
@@ -515,10 +507,9 @@ public class SoftCustomHashCache<K, E> implements Cache<K, E> {
 		builder.append(element);
 		builder.append(separator);
 	    }
-	}
-	if (containsNull && (element = nullElement.get()) != null) {
+	if (containsNull && (element = nullElement.get()) != null)
 	    builder.append(element);
-	} else if (builder.lastIndexOf(separator) >= 0) {
+	else if (builder.lastIndexOf(separator) >= 0) {
 	    // Had any elements, delete last separator
 	    final int length = builder.length();
 	    builder.delete(length - 2, length);
@@ -528,18 +519,8 @@ public class SoftCustomHashCache<K, E> implements Cache<K, E> {
     }
 
     /**
-     * Get the element with the null key.
-     * 
-     * @return element that it;s key is null or null if one doesn't exist.
-     */
-    private E getNull() {
-	cleanCache();
-	return containsNull ? nullElement.get() : null;
-    }
-
-    /**
      * Add an element with null key.
-     * 
+     *
      * @param element
      *            the added element.
      * @return the existing element or the added if one doesn't already exist.
@@ -563,8 +544,18 @@ public class SoftCustomHashCache<K, E> implements Cache<K, E> {
     }
 
     /**
+     * Get the element with the null key.
+     *
+     * @return element that it;s key is null or null if one doesn't exist.
+     */
+    private E getNull() {
+	cleanCache();
+	return containsNull ? nullElement.get() : null;
+    }
+
+    /**
      * Get or add element with null key.
-     * 
+     *
      * @param supplier
      *            the supplier of the element. Used only if element is null in
      *            the cache.
@@ -591,6 +582,14 @@ public class SoftCustomHashCache<K, E> implements Cache<K, E> {
     }
 
     /**
+     * Increase size and check if resize is needed
+     */
+    private void grow() {
+	if (++size >= growThreshold)
+	    resize(table.length << 1);
+    }
+
+    /**
      * Remove the element that his key is null.
      */
     private void removeNull() {
@@ -604,27 +603,8 @@ public class SoftCustomHashCache<K, E> implements Cache<K, E> {
     }
 
     /**
-     * Increase size and check if resize is needed
-     */
-    private void grow() {
-	if (++size >= growThreshold)
-	    resize(table.length << 1);
-    }
-
-    /**
-     * Decrease size and check if resize is needed
-     */
-    private void shrink() {
-	if (--size <= shrinkThreshold) {
-	    final int currentCapacity = table.length;
-	    if (currentCapacity > MINIMUM_SHRINK_CAPACITY)
-		resize(currentCapacity >> 1);
-	}
-    }
-
-    /**
      * Resize the table to a new capacity.
-     * 
+     *
      * @param newCapacity
      *            new table capacity. MUST be a power of 2.
      */
@@ -689,9 +669,20 @@ public class SoftCustomHashCache<K, E> implements Cache<K, E> {
     }
 
     /**
+     * Decrease size and check if resize is needed
+     */
+    private void shrink() {
+	if (--size <= shrinkThreshold) {
+	    final int currentCapacity = table.length;
+	    if (currentCapacity > MINIMUM_SHRINK_CAPACITY)
+		resize(currentCapacity >> 1);
+	}
+    }
+
+    /**
      * Create new table of entries.
      * <p>
-     * 
+     *
      * @param <K>
      *            type of keys of the table's entries.
      * @param <E>
@@ -718,7 +709,7 @@ public class SoftCustomHashCache<K, E> implements Cache<K, E> {
      *
      * @author Barak Ugav
      * @author Yishai Gronich
-     * 
+     *
      * @param <K>
      *            type of key.
      * @param <E>
@@ -744,7 +735,7 @@ public class SoftCustomHashCache<K, E> implements Cache<K, E> {
 
 	/**
 	 * Construct new entry
-	 * 
+	 *
 	 * @param key
 	 *            the entry key
 	 * @param element

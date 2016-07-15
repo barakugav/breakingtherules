@@ -16,10 +16,10 @@ import breakingtherules.session.NoCurrentJobException;
 /**
  * Controller that allows requests of hits.
  * <p>
- * 
+ *
  * @author Barak Ugav
  * @author Yishai Gronich
- * 
+ *
  * @see Hit
  * @see JobManager
  */
@@ -34,7 +34,7 @@ public class HitsController {
 
     /**
      * Answers the GET hits query
-     * 
+     *
      * @param startIndex
      *            Index of the first hit wanted, inclusive
      * @param endIndex

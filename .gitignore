@@ -3,3 +3,4 @@ repository/
 src/main/java/breakingtherules/application/Main.java
 .sass-cache
 
+/bin/

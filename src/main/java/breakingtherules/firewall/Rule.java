@@ -5,16 +5,16 @@ import java.util.List;
 /**
  * Rule that apply on hits by the super matcher.
  * <p>
- * 
+ *
  * @author Barak Ugav
  * @author Yishai Gronich
- * 
+ *
  */
 public class Rule extends AbstractHitMatcher {
 
     /**
      * Construct new rule from existing filter.
-     * 
+     *
      * @param filter
      *            existing filter to copy his attribute and to create rule from.
      * @throws NullPointerException
@@ -26,7 +26,7 @@ public class Rule extends AbstractHitMatcher {
 
     /**
      * Construct new rule from list of attributes
-     * 
+     *
      * @param attributes
      *            list of attributes to construct a rule from.
      * @throws NullPointerException
