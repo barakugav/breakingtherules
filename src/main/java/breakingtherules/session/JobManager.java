@@ -8,12 +8,7 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.Objects;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.context.annotation.Scope;
-import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.core.io.FileSystemResource;
-import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
 import breakingtherules.dao.DaoConfig;
@@ -43,28 +38,22 @@ import breakingtherules.services.algorithm.SuggestionsAlgorithm;
  * @author Yishai Gronich
  *
  */
-@Component
-@Scope(value = "session", proxyMode = ScopedProxyMode.TARGET_CLASS)
 public class JobManager {
 
     /**
      * DAO of the job's hits
      */
-    @Autowired
-    @Qualifier("hitsDao")
-    private HitsDao m_hitsDao;
+    private final HitsDao m_hitsDao;
 
     /**
      * DAO of the job's rules
      */
-    @Autowired
-    private RulesDao m_rulesDao;
+    private final RulesDao m_rulesDao;
 
     /**
      * Algorithm for suggesting rules suggestions
      */
-    @Autowired
-    private SuggestionsAlgorithm m_algorithm;
+    private final SuggestionsAlgorithm m_algorithm;
 
     /**
      * Name of the job.
@@ -120,11 +109,21 @@ public class JobManager {
     private static final String NO_CURRENT_JOB = null;
 
     /**
-     * Construct new rule.
-     * <p>
-     * Set name to {@link JobManager#NO_CURRENT_JOB}.
+     * Construct new job manager.
+     *
+     * @param hitsDao
+     *            the hits DAO used by the manager.
+     * @param rulesDao
+     *            the rules DAO used by the manager.
+     * @param algorithm
+     *            the suggestion algorithm used by this manager.
+     * @throws NullPointerException
+     *             if any if the parameters is null.
      */
-    public JobManager() {
+    public JobManager(final HitsDao hitsDao, final RulesDao rulesDao, final SuggestionsAlgorithm algorithm) {
+	m_hitsDao = Objects.requireNonNull(hitsDao);
+	m_rulesDao = Objects.requireNonNull(rulesDao);
+	m_algorithm = Objects.requireNonNull(algorithm);
 	m_name = NO_CURRENT_JOB;
     }
 
@@ -177,12 +176,7 @@ public class JobManager {
 	final Iterable<Hit> hits = csvDao.getHits(jobName, Collections.emptyList(), Filter.ANY_FILTER);
 	m_hitsDao.initJob(jobName, hits);
 
-	final JobManager newJobManager = new JobManager();
-	newJobManager.m_name = jobName;
-	newJobManager.m_originalRule = originalRule;
-	newJobManager.m_rules = new ArrayList<>();
-	newJobManager.updateRulesFile();
-	throw new RuntimeException("WHY");
+	updateRulesFile(jobName, Collections.emptyList(), originalRule);
     }
 
     /**
@@ -387,6 +381,20 @@ public class JobManager {
     }
 
     /**
+     * Set the permissiveness of the suggestion algorithm used by the manager.
+     * <p>
+     *
+     * @param permissiveness
+     *            the new permissiveness value. Should be in range [0, 100].
+     * @throws IllegalArgumentException
+     *             if the permissiveness is not in range [0, 100].
+     * @see SuggestionsAlgorithm#setPermissiveness(double)
+     */
+    public void setAlgorithmPermissiveness(final double permissiveness) {
+	m_algorithm.setPermissiveness(permissiveness);
+    }
+
+    /**
      * Set the filter of this job to a new filter
      *
      * @param filter
@@ -413,6 +421,8 @@ public class JobManager {
      *             if DAO failed to load data
      * @throws ParseException
      *             if any parse errors occurs in the data.
+     * @throws NullPointerException
+     *             if name is null.
      */
     public synchronized void setJob(final String name) throws IOException, ParseException {
 	m_name = Objects.requireNonNull(name);
@@ -487,10 +497,10 @@ public class JobManager {
      */
     private AttributeType[] getAllAttributeTypes() {
 	if (m_allAttributeTypes == null) {
-	    final List<AttributeType> allAttributeTypes = new ArrayList<>();
-	    for (final Attribute att : m_originalRule.getAttributes())
-		allAttributeTypes.add(att.getType());
-	    m_allAttributeTypes = allAttributeTypes.toArray(new AttributeType[allAttributeTypes.size()]);
+	    final List<Attribute> allAttributes = m_originalRule.getAttributes();
+	    m_allAttributeTypes = new AttributeType[allAttributes.size()];
+	    for (final ListIterator<Attribute> it = allAttributes.listIterator(); it.hasNext();)
+		m_allAttributeTypes[it.nextIndex()] = it.next().getType();
 	}
 	return m_allAttributeTypes;
     }
@@ -502,10 +512,26 @@ public class JobManager {
      *             if any I/O errors occurs during the file update.
      */
     private void updateRulesFile() throws IOException {
+	updateRulesFile(m_name, getRules(), m_originalRule);
+    }
+
+    /**
+     * Update the rules file of a job.
+     *
+     * @param jobName
+     *            the job's name.
+     * @param rules
+     *            the rules list.
+     * @param originalRule
+     *            the original rule of the job.
+     * @throws IOException
+     *             if any I/O errors occurs during the file update.
+     */
+    private static void updateRulesFile(final String jobName, final List<Rule> rules, final Rule originalRule)
+	    throws IOException {
 	// TODO - this is not generic
-	final String fileName = XMLDaoConfig.getRulesFile(m_name);
-	final List<Rule> rules = getRules();
-	XMLRulesDao.writeRules(fileName, rules, m_originalRule);
+	final String fileName = XMLDaoConfig.getRulesFile(jobName);
+	XMLRulesDao.writeRules(fileName, rules, originalRule);
     }
 
     /**

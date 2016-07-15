@@ -3,16 +3,21 @@ package breakingtherules.application;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Scope;
+import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.web.multipart.MultipartResolver;
 import org.springframework.web.multipart.support.StandardServletMultipartResolver;
 
 import breakingtherules.dao.HitsDao;
+import breakingtherules.dao.RulesDao;
 import breakingtherules.dao.csv.CSVHitsDao;
 import breakingtherules.dao.elastic.ElasticHitsDao;
 import breakingtherules.dao.xml.XMLHitsDao;
+import breakingtherules.dao.xml.XMLRulesDao;
 import breakingtherules.services.algorithm.InformationAlgorithm;
 import breakingtherules.services.algorithm.SimpleAlgorithm;
 import breakingtherules.services.algorithm.SuggestionsAlgorithm;
+import breakingtherules.session.JobManager;
 
 /**
  * Configuring Of the Spring Application. Specifically, what algorithm to use to
@@ -28,36 +33,16 @@ import breakingtherules.services.algorithm.SuggestionsAlgorithm;
 @ComponentScan({ "breakingtherules" })
 public class Config {
 
-    // -------------- Algorithm ---------------
+    /* ------- Algorithm ------- */
 
     @Bean
-    public CSVHitsDao csvHitsDao() {
-	return new CSVHitsDao();
-    }
-
-    // @Bean(destroyMethod = "cleanup")
-    public ElasticHitsDao esHitsDao() {
-	return new ElasticHitsDao();
-    }
-
-    // ------------ Upload Settings ---------------
-
-    @Bean
-    public MultipartResolver fileResolver() {
-	return new StandardServletMultipartResolver();
-    }
-
-    // ---------- Data Access Objects -------------
-
-    // Choose one of the following three options
-    @Bean
-    public HitsDao hitsDao() {
-	return csvHitsDao();
+    public SuggestionsAlgorithm algorithm() {
+	return infoAlgorithm();
     }
 
     @Bean
-    public XMLHitsDao hitsXmlDao() {
-	return new XMLHitsDao();
+    public SuggestionsAlgorithm simpleAlgorithm() {
+	return new SimpleAlgorithm(hitsDao());
     }
 
     @Bean
@@ -65,9 +50,49 @@ public class Config {
 	return new InformationAlgorithm(hitsDao());
     }
 
-    // @Bean
-    public SuggestionsAlgorithm simpleAlgorithm() {
-	return new SimpleAlgorithm(hitsDao());
+    /* ------- DAO ------- */
+
+    @Bean
+    public HitsDao hitsDao() {
+	return csvHitsDao();
+    }
+
+    @Bean
+    public RulesDao rulesDao() {
+	return xmlRulesDao();
+    }
+
+    @Bean
+    public CSVHitsDao csvHitsDao() {
+	return new CSVHitsDao();
+    }
+
+    @Bean
+    public XMLHitsDao hitsXmlDao() {
+	return new XMLHitsDao();
+    }
+
+    // @Bean(destroyMethod = "cleanup")
+    public ElasticHitsDao esHitsDao() {
+	return new ElasticHitsDao();
+    }
+
+    @Bean
+    public XMLRulesDao xmlRulesDao() {
+	return new XMLRulesDao();
+    }
+
+    /* ------- Other ------- */
+
+    @Bean
+    public MultipartResolver fileResolver() {
+	return new StandardServletMultipartResolver();
+    }
+
+    @Bean
+    @Scope(value = "session", proxyMode = ScopedProxyMode.TARGET_CLASS)
+    public JobManager jobManager() {
+	return new JobManager(hitsDao(), rulesDao(), algorithm());
     }
 
 }

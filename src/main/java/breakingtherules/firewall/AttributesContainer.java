@@ -80,7 +80,7 @@ abstract class AttributesContainer implements Iterable<Attribute> {
     public boolean equals(final Object o) {
 	if (o == this)
 	    return true;
-	else if (!(o instanceof AttributesContainer))
+	if (!(o instanceof AttributesContainer))
 	    return false;
 
 	// Could use Arrays.equals but there are redundant null checks.

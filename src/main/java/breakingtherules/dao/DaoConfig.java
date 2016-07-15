@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * The DaoConfig used to get configurations information used by DAO objects.
@@ -34,8 +35,7 @@ public class DaoConfig {
      */
     public static List<String> getExistingRepositories() {
 	final File reposRoot = new File(REPOS_ROOT);
-	final List<String> names = Arrays.asList(reposRoot.list());
-	return names;
+	return Arrays.asList(reposRoot.list());
     }
 
     /**
@@ -46,7 +46,7 @@ public class DaoConfig {
      * @return string path to repository root.
      */
     public static String getRepoRoot(final String jobName) {
-	return new StringBuilder().append(REPOS_ROOT).append('/').append(jobName).toString();
+	return new StringBuilder().append(REPOS_ROOT).append('/').append(Objects.requireNonNull(jobName)).toString();
     }
 
     /**

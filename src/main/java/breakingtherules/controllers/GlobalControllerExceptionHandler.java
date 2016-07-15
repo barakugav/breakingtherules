@@ -24,6 +24,6 @@ public class GlobalControllerExceptionHandler {
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
     @ExceptionHandler(NoCurrentJobException.class)
     public void handleNoJob() {
-	System.out.println("The current session hasn't yet initiated a job.");
+	System.err.println("The current session hasn't yet initiated a job.");
     }
 }

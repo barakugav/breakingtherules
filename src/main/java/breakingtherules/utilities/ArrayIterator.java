@@ -95,9 +95,8 @@ public class ArrayIterator<E> implements Iterator<E> {
      * Will skip nulls if the {@link #skipNull} flag is true.
      */
     private void advanceIndex() {
-	for (; nextIndex < length; nextIndex++)
-	    if (array[nextIndex] != null || !skipNull)
-		break;
+	while (nextIndex < length && (array[nextIndex] != null || !skipNull))
+	    nextIndex++;
     }
 
 }

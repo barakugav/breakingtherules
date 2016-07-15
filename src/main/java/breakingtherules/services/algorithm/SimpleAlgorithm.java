@@ -26,7 +26,7 @@ import breakingtherules.utilities.Utility;
  * @author Yishai Gronich
  *
  */
-public class SimpleAlgorithm extends SuggestionsAlgorithm {
+public class SimpleAlgorithm extends AbstractSuggestionsAlgorithm {
 
     /**
      * Construct new Information algorithm

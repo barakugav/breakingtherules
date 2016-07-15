@@ -68,7 +68,7 @@ import breakingtherules.utilities.Utility;
  * @see Hit
  * @see Suggestion
  */
-public class InformationAlgorithm extends SuggestionsAlgorithm {
+public class InformationAlgorithm extends AbstractSuggestionsAlgorithm {
 
     /**
      * Allows configuration, if the user wants more general rules (high
@@ -319,6 +319,19 @@ public class InformationAlgorithm extends SuggestionsAlgorithm {
 	for (int i = 0; i < runners.length; i++)
 	    suggestions[i] = runners[i].m_result;
 	return suggestions;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void setPermissiveness(final double permissiveness) {
+	if (!(0 <= permissiveness && permissiveness <= 100))
+	    throw new IllegalArgumentException("Permissiveness should be in range [0, 100]: " + permissiveness);
+
+	// Some function that map [0, 100] to any rule weight
+	final double ruleWeight = permissiveness == 100 ? Double.POSITIVE_INFINITY : 1 / (100 - permissiveness) - 0.01;
+	setRuleWeight(ruleWeight <= 0 ? Double.POSITIVE_INFINITY : ruleWeight);
     }
 
     /**

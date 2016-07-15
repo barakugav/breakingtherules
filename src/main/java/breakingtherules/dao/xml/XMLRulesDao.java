@@ -8,7 +8,6 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
-import org.springframework.stereotype.Component;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -32,7 +31,6 @@ import breakingtherules.utilities.Utility;
  * @author Yishai Gronich
  *
  */
-@Component
 public class XMLRulesDao implements RulesDao {
 
     /**
@@ -75,7 +73,37 @@ public class XMLRulesDao implements RulesDao {
      *             if the data is invalid.
      */
     public List<Rule> getRulesByPath(final String repoPath) throws IOException, XMLParseException {
-	return loadRules(repoPath);
+	// Check if this repository is already loaded
+	// Load from file
+	final Document repositoryDoc;
+	try {
+	    repositoryDoc = XMLUtilities.readFile(repoPath);
+	} catch (final SAXException e) {
+	    throw new XMLParseException(e);
+	}
+
+	// Get all rules from repository
+	final NodeList rulesList = repositoryDoc.getElementsByTagName(XMLDaoConfig.RULE_TAG);
+
+	final XMLRulesParser parser = new XMLRulesParser();
+	final IP.Cache ipsCache = new IP.Cache();
+	parser.setSourceCache(new Source.Cache(ipsCache));
+	parser.setDestinationCache(new Destination.Cache(ipsCache));
+	parser.setServiceCache(new Service.Cache());
+
+	// Parse into rule objects
+	final ArrayList<Rule> rules = new ArrayList<>(rulesList.getLength());
+	final int length = rulesList.getLength();
+	for (int i = 0; i < length; i++) {
+	    final Node ruleNode = rulesList.item(i);
+	    if (ruleNode.getNodeType() == Node.ELEMENT_NODE) {
+		final Element ruleElm = (Element) ruleNode;
+		final Rule rule = parser.parseRule(ruleElm);
+		rules.add(rule);
+	    }
+	}
+	rules.trimToSize();
+	return rules;
     }
 
     /**
@@ -102,7 +130,7 @@ public class XMLRulesDao implements RulesDao {
 	    throw new IllegalArgumentException("Start index > end index");
 
 	// Extract all rules
-	final List<Rule> rules = loadRules(repoPath);
+	final List<Rule> rules = getRulesByPath(repoPath);
 
 	final int total = rules.size();
 	if (startIndex >= total)
@@ -175,52 +203,6 @@ public class XMLRulesDao implements RulesDao {
 
 	doc.appendChild(repoElm);
 	XMLUtilities.writeFile(fileName, doc);
-    }
-
-    /**
-     * Load all the rules from repository
-     *
-     * @param repoPath
-     *            string path to repository file
-     * @return list of loaded rules from repository
-     * @throws IOException
-     *             if failed to read from file
-     * @throws XMLParseException
-     *             if the data is invalid.
-     */
-    private static List<Rule> loadRules(final String repoPath) throws IOException, XMLParseException {
-	// Check if this repository is already loaded
-	// Load from file
-	final Document repositoryDoc;
-	try {
-	    repositoryDoc = XMLUtilities.readFile(repoPath);
-	} catch (final SAXException e) {
-	    throw new XMLParseException(e);
-	}
-
-	// Get all rules from repository
-	final NodeList rulesList = repositoryDoc.getElementsByTagName(XMLDaoConfig.RULE_TAG);
-
-	final XMLRulesParser parser = new XMLRulesParser();
-	final IP.Cache ipsCache = new IP.Cache();
-	parser.setSourceCache(new Source.Cache(ipsCache));
-	parser.setDestinationCache(new Destination.Cache(ipsCache));
-	parser.setServiceCache(new Service.Cache());
-
-	// Parse into rule objects
-	final ArrayList<Rule> rules = new ArrayList<>(rulesList.getLength());
-	final int length = rulesList.getLength();
-	for (int i = 0; i < length; i++) {
-	    final Node ruleNode = rulesList.item(i);
-	    if (ruleNode.getNodeType() == Node.ELEMENT_NODE) {
-		final Element ruleElm = (Element) ruleNode;
-		final Rule rule = parser.parseRule(ruleElm);
-		rules.add(rule);
-	    }
-	}
-	rules.trimToSize();
-
-	return rules;
     }
 
 }

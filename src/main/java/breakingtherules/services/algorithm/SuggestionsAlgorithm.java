@@ -3,7 +3,6 @@ package breakingtherules.services.algorithm;
 import java.io.IOException;
 import java.util.List;
 
-import breakingtherules.dao.HitsDao;
 import breakingtherules.dao.ParseException;
 import breakingtherules.firewall.Attribute.AttributeType;
 import breakingtherules.firewall.Filter;
@@ -17,23 +16,7 @@ import breakingtherules.firewall.Rule;
  * @author Yishai Gronich
  *
  */
-public abstract class SuggestionsAlgorithm {
-
-    /**
-     * The DAO that the algorithm will use in order to read the job's hits
-     */
-    final HitsDao m_hitsDao;
-
-    /**
-     * Initiate the SuggestionsAlgorithm with a DAO it will use
-     *
-     * @param hitsDao
-     *            The DAO that the algorithm will use in order to read the job's
-     *            hits
-     */
-    public SuggestionsAlgorithm(final HitsDao hitsDao) {
-	m_hitsDao = hitsDao;
-    }
+public interface SuggestionsAlgorithm {
 
     /**
      * Get suggestion for an attribute type
@@ -55,8 +38,22 @@ public abstract class SuggestionsAlgorithm {
      * @throws ParseException
      *             if any parse errors occurs in DAO.
      */
-    public abstract List<Suggestion> getSuggestions(String jobName, List<Rule> rules, Filter filter, int amount,
+    public List<Suggestion> getSuggestions(String jobName, List<Rule> rules, Filter filter, int amount,
 	    AttributeType attType) throws IOException, ParseException;
+
+    /**
+     * Set the permissiveness of the algorithm.
+     * <p>
+     * The algorithm may consider this value when choosing between more secure
+     * rules versus more general ones.
+     * <p>
+     *
+     * @param permissiveness
+     *            the new permissiveness value. Should be in range [0, 100].
+     * @throws IllegalArgumentException
+     *             if the permissiveness is not in range [0, 100].
+     */
+    public void setPermissiveness(double permissiveness);
 
     /**
      * Get suggestions for more then one type at once.
@@ -83,7 +80,7 @@ public abstract class SuggestionsAlgorithm {
      * @throws ParseException
      *             if any parse errors occurs in DAO.
      */
-    public List<Suggestion>[] getSuggestions(final String jobName, final List<Rule> rules, final Filter filter,
+    default List<Suggestion>[] getSuggestions(final String jobName, final List<Rule> rules, final Filter filter,
 	    final int amount, final AttributeType[] attTypes) throws IOException, ParseException {
 	@SuppressWarnings("unchecked")
 	final List<Suggestion>[] suggestions = new List[attTypes.length];
