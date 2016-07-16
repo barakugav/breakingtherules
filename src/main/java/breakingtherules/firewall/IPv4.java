@@ -6,7 +6,7 @@ import java.util.function.Function;
 import java.util.function.IntFunction;
 
 import breakingtherules.utilities.Int2ObjectCache;
-import breakingtherules.utilities.Int2ObjectSoftHashCache;
+import breakingtherules.utilities.Int2ObjectOpenAddressingHashCache;
 import breakingtherules.utilities.Utility;
 
 /**
@@ -703,7 +703,8 @@ public final class IPv4 extends IP {
 	 * Supplier of new IPv4 objects by integer address.
 	 * <p>
 	 * Used by
-	 * {@link breakingtherules.utilities.Cache#getOrAdd(Object, Function)}.
+	 * {@link breakingtherules.utilities.Object2ObjectCache#getOrAdd(Object, Function)}
+	 * .
 	 */
 	static final IntFunction<IPv4> supplier;
 
@@ -715,7 +716,7 @@ public final class IPv4 extends IP {
 	 * Construct new IPv4 cache.
 	 */
 	public Cache() {
-	    cache = new Int2ObjectSoftHashCache<>();
+	    cache = new Int2ObjectOpenAddressingHashCache<>();
 	}
 
     }

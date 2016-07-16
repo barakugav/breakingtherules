@@ -5,8 +5,8 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Function;
 
 /**
- * The HeavySynchronizedHashCache class is used for heavy computational elements
- * in synchronized cache.
+ * The Object2ObjectHeavySynchronizedBucketHashCache class is used for heavy
+ * computational elements in synchronized cache.
  * <p>
  * The purpose of this cache to support practical use of
  * {@link #getOrAdd(Object, Function)} for heavy computational supplier
@@ -41,17 +41,17 @@ import java.util.function.Function;
  * @param <E>
  *            type of the elements in the cache.
  */
-public class HeavySynchronizedHashCache<K, E> implements Cache<K, E> {
-    
+public class Object2ObjectHeavySynchronizedBucketHashCache<K, E> implements Object2ObjectCache<K, E> {
+
     // TODO - remove null mask and change to similar implementation as
     // SoftHashCache.
 
     /*
      * Implementation notes.
      *
-     * The HeavySynchronizedHashCache is implemented by a bucket hash table. In
-     * each cell in the table there is a bin (linked list of entries) that
-     * contains all entries that fell to that cell.
+     * The Object2ObjectHeavySynchronizedBucketHashCache is implemented by a
+     * bucket hash table. In each cell in the table there is a bin (linked list
+     * of entries) that contains all entries that fell to that cell.
      *
      * The number of expected elements in each bin, if using the default load
      * factor (0.75) and the hash codes of the keys are random (in theory) is
@@ -164,29 +164,29 @@ public class HeavySynchronizedHashCache<K, E> implements Cache<K, E> {
     private static final Object NULL = new Object();
 
     /**
-     * Construct new HeavySynchronizedHashCache with default init capacity and
-     * default load factor.
+     * Construct new Object2ObjectHeavySynchronizedBucketHashCache with default
+     * init capacity and default load factor.
      */
-    public HeavySynchronizedHashCache() {
+    public Object2ObjectHeavySynchronizedBucketHashCache() {
 	this(Hashs.DEFAULT_INIT_CAPACITY, Hashs.DEFAULT_LOAD_FACTOR);
     }
 
     /**
-     * Construct new HeavySynchronizedHashCache with init capacity parameter and
-     * default load factor.
+     * Construct new Object2ObjectHeavySynchronizedBucketHashCache with init
+     * capacity parameter and default load factor.
      *
      * @param initCapacity
      *            the initialize capacity of the cache, can be zero.
      * @throws IllegalArgumentException
      *             if init capacity is negative.
      */
-    public HeavySynchronizedHashCache(final int initCapacity) {
+    public Object2ObjectHeavySynchronizedBucketHashCache(final int initCapacity) {
 	this(initCapacity, Hashs.DEFAULT_LOAD_FACTOR);
     }
 
     /**
-     * Construct new HeavySynchronizedHashCache with init capacity parameter and
-     * load factor parameter.
+     * Construct new Object2ObjectHeavySynchronizedBucketHashCache with init
+     * capacity parameter and load factor parameter.
      *
      * @param initCapacity
      *            the initialize capacity of the cache, can be zero.
@@ -196,7 +196,7 @@ public class HeavySynchronizedHashCache<K, E> implements Cache<K, E> {
      *             if init capacity is negative, load factor is negative, 0 or
      *             NaN.
      */
-    public HeavySynchronizedHashCache(final int initCapacity, final float loadFactor) {
+    public Object2ObjectHeavySynchronizedBucketHashCache(final int initCapacity, final float loadFactor) {
 	if (initCapacity < 0)
 	    throw new IllegalArgumentException("initCapacity < 0: " + initCapacity);
 	if (loadFactor <= 0 || Float.isNaN(loadFactor))
@@ -312,9 +312,10 @@ public class HeavySynchronizedHashCache<K, E> implements Cache<K, E> {
      * Get an element from the cache by it's key or add one if one doesn't
      * exist.
      * <p>
-     * This is the main purpose of the HeavySynchronizedHashCache, allowing
-     * heavy computations of the supplier without stopping other threads to
-     * operate on the cache on other elements (with different keys).
+     * This is the main purpose of the
+     * Object2ObjectHeavySynchronizedBucketHashCache, allowing heavy
+     * computations of the supplier without stopping other threads to operate on
+     * the cache on other elements (with different keys).
      * <p>
      * This method is similar to {@link Map#computeIfAbsent(Object, Function)}.
      * <p>
@@ -555,7 +556,8 @@ public class HeavySynchronizedHashCache<K, E> implements Cache<K, E> {
     private static class Entry<E> {
 
 	/**
-	 * The entry key. Can be {@link HeavySynchronizedHashCache#NULL}.
+	 * The entry key. Can be
+	 * {@link Object2ObjectHeavySynchronizedBucketHashCache#NULL}.
 	 */
 	Object key;
 

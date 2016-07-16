@@ -2,8 +2,6 @@ package breakingtherules.tests.services.algorithm;
 
 import java.util.List;
 
-import org.junit.Test;
-
 import breakingtherules.dao.HitsDao;
 import breakingtherules.dao.RulesDao;
 import breakingtherules.dao.xml.XMLHitsDao;
@@ -26,7 +24,6 @@ public class InformationAlgorithmTest extends TestBase {
     private static final AttributeType ATTRIBUTE = AttributeType.DESTINATION;
     private static final boolean PRINT_RESULTS = false;
 
-    @Test
     public void getSuggestionTest() throws Exception {
 	final RulesDao rulesDao = new XMLRulesDao();
 	final HitsDao hitsDao = new XMLHitsDao();

@@ -5,8 +5,9 @@ import java.util.function.Function;
 import java.util.function.IntFunction;
 
 import breakingtherules.utilities.Int2ObjectCache;
-import breakingtherules.utilities.Int2ObjectSoftHashCache;
-import breakingtherules.utilities.SoftCustomHashCache;
+import breakingtherules.utilities.Int2ObjectOpenAddressingHashCache;
+import breakingtherules.utilities.Object2ObjectCache;
+import breakingtherules.utilities.Object2ObjectSoftCustomBucketHashCache;
 
 /**
  * Source attribute.
@@ -163,7 +164,7 @@ public class Source extends IPAttribute {
 	/**
 	 * Cache of source objects with IPv6 addresses.
 	 */
-	private final breakingtherules.utilities.Cache<int[], Source> IPv6Cache;
+	private final Object2ObjectCache<int[], Source> IPv6Cache;
 
 	/**
 	 * The mapping function of source object with IPv4 addresses.
@@ -199,8 +200,8 @@ public class Source extends IPAttribute {
 		    this.ipsCache.ipv4Cache.cache.getOrAdd(address, IPv4.Cache.supplier));
 	    ipv6SourcesMapptingFunction = address -> new Source(
 		    this.ipsCache.ipv6Cache.cache.getOrAdd(address, IPv6.Cache.supplier));
-	    IPv4Cache = new Int2ObjectSoftHashCache<>();
-	    IPv6Cache = new SoftCustomHashCache<>(IPv6.Cache.IPv6AddressesStrategy.INSTANCE);
+	    IPv4Cache = new Int2ObjectOpenAddressingHashCache<>();
+	    IPv6Cache = new Object2ObjectSoftCustomBucketHashCache<>(IPv6.Cache.IPv6AddressesStrategy.INSTANCE);
 	}
 
     }

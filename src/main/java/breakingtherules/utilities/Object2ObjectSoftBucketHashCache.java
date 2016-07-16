@@ -5,30 +5,46 @@ import java.lang.ref.SoftReference;
 import java.util.Objects;
 import java.util.function.Function;
 
-import breakingtherules.utilities.Hashs.Strategy;
-
 /**
- * TODO javadoc
+ * Cache that provides search of cached element by key and adding element by
+ * key. Elements are stored by soft reference.
+ * <p>
+ * When there is some memory demand and no more strong references to an element,
+ * it will be automatically removed from the cache, so cached elements are
+ * mostly elements that are held by other references too.
+ * <p>
+ * This class has the same performance as hash map and it depends strongly on
+ * the keys {@link Object#hashCode()} method.
+ * <p>
+ * When using this class, it's essential that the keys are not the same objects
+ * as the elements - if this is the case, the cache itself will hold strong
+ * reference to the keys, to the elements as well(as they are the same) and
+ * therefore the elements will never be cleaned from cache and memory by the GC.
+ * <p>
+ * Null elements are not allowed, because there will be no way to determine when
+ * to remove them from cache.
+ * <p>
+ * The cache will resize itself (grow and shrink) according to the number of
+ * elements in it and the {@link #loadFactor}.
  *
  * @author Barak Ugav
  * @author Yishai Gronich
  *
- * @see SoftHashCache
- * @see Strategy
+ * @see SoftReference
  *
  * @param <K>
- *            type of cache keys
+ *            type of key of the cache
  * @param <E>
- *            type of the cache elements.
+ *            type of cached elements
  */
-public class SoftCustomHashCache<K, E> implements Cache<K, E> {
+public class Object2ObjectSoftBucketHashCache<K, E> implements Object2ObjectCache<K, E> {
 
     /*
      * Implementation notes.
      *
-     * The SoftCustomHashCache is implemented by a bucket hash table. In each
-     * cell in the table there is a bin (linked list of entries) that contains
-     * all entries that fell to that cell.
+     * The Object2ObjectSoftBucketHashCache is implemented by a bucket hash
+     * table. In each cell in the table there is a bin (linked list of entries)
+     * that contains all entries that fell to that cell.
      *
      * The number of expected elements in each bin, if using the default load
      * factor (0.75) and the hash codes of the keys are random (in theory) is
@@ -75,7 +91,7 @@ public class SoftCustomHashCache<K, E> implements Cache<K, E> {
     private SoftReference<E> nullElement;
 
     /**
-     * Number of elements in the cache
+     * Number of elements in the cache.
      */
     private int size;
 
@@ -130,11 +146,6 @@ public class SoftCustomHashCache<K, E> implements Cache<K, E> {
     private final float loadFactor;
 
     /**
-     * The strategy used by this cache.
-     */
-    private final Strategy<? super K> strategy;
-
-    /**
      * Queue used to determine which elements was queued and needed to be
      * removed from the table.
      */
@@ -148,44 +159,30 @@ public class SoftCustomHashCache<K, E> implements Cache<K, E> {
     private static final int MINIMUM_SHRINK_CAPACITY = 8;
 
     /**
-     * Construct new SoftCustomHashCache with default init capacity and default
-     * load factor.
-     * <p>
-     *
-     * @param strategy
-     *            The strategy used by this cache.
-     * @throws NullPointerException
-     *             if the strategy is null.
+     * Construct new Object2ObjectSoftBucketHashCache with default init capacity
+     * and default load factor.
      */
-    public SoftCustomHashCache(final Strategy<? super K> strategy) {
-	this(strategy, Hashs.DEFAULT_INIT_CAPACITY, Hashs.DEFAULT_LOAD_FACTOR);
+    public Object2ObjectSoftBucketHashCache() {
+	this(Hashs.DEFAULT_INIT_CAPACITY, Hashs.DEFAULT_LOAD_FACTOR);
     }
 
     /**
-     * Construct new SoftCustomHashCache with init capacity parameter and
-     * default load factor.
-     * <p>
+     * Construct new Object2ObjectSoftBucketHashCache with init capacity
+     * parameter and default load factor.
      *
-     * @param strategy
-     *            The strategy used by this cache.
      * @param initCapacity
      *            the initialize capacity of the cache, can be zero
      * @throws IllegalArgumentException
-     *             if init capacity is negative.
-     * @throws NullPointerException
-     *             if the strategy is null.
+     *             if init capacity is negative
      */
-    public SoftCustomHashCache(final Strategy<? super K> strategy, final int initCapacity) {
-	this(strategy, initCapacity, Hashs.DEFAULT_LOAD_FACTOR);
+    public Object2ObjectSoftBucketHashCache(final int initCapacity) {
+	this(initCapacity, Hashs.DEFAULT_LOAD_FACTOR);
     }
 
     /**
-     * Construct new SoftCustomHashCache with init capacity parameter and load
-     * factor parameter.
-     * <p>
+     * Construct new Object2ObjectSoftBucketHashCache with init capacity
+     * parameter and load factor parameter.
      *
-     * @param strategy
-     *            The strategy used by this cache.
      * @param initCapacity
      *            the initialize capacity of the cache, can be zero
      * @param loadFactor
@@ -193,10 +190,8 @@ public class SoftCustomHashCache<K, E> implements Cache<K, E> {
      * @throws IllegalArgumentException
      *             if init capacity is negative, load factor is negative, 0 or
      *             NaN.
-     * @throws NullPointerException
-     *             if the strategy is null.
      */
-    public SoftCustomHashCache(final Strategy<? super K> strategy, final int initCapacity, final float loadFactor) {
+    public Object2ObjectSoftBucketHashCache(final int initCapacity, final float loadFactor) {
 	if (initCapacity < 0)
 	    throw new IllegalArgumentException("initCapacity < 0: " + initCapacity);
 	if (loadFactor <= 0 || Float.isNaN(loadFactor))
@@ -210,7 +205,6 @@ public class SoftCustomHashCache<K, E> implements Cache<K, E> {
 	this.loadFactor = loadFactor;
 	queue = new ReferenceQueue<>();
 	containsNull = false;
-	this.strategy = Objects.requireNonNull(strategy, "Null strategy");
     }
 
     /**
@@ -226,7 +220,7 @@ public class SoftCustomHashCache<K, E> implements Cache<K, E> {
 	    return addNull(element);
 
 	// Compute hash
-	final int hash = Hashs.mix(strategy.hashCode(key));
+	final int hash = Hashs.hash(key);
 
 	// Clean cache, delayed as possible, so GC have more time to act.
 	cleanCache();
@@ -238,7 +232,7 @@ public class SoftCustomHashCache<K, E> implements Cache<K, E> {
 	// Check if an element with the same key is already in cache.
 	final Entry<K, E> firstEntry = table[index];
 	for (Entry<K, E> p = firstEntry; p != null; p = p.next)
-	    if (hash == p.hash && strategy.equals(key, p.key)) {
+	    if (hash == p.hash && key.equals(p.key)) {
 		final E existing = p.get();
 		if (existing != null)
 		    return existing;
@@ -358,14 +352,14 @@ public class SoftCustomHashCache<K, E> implements Cache<K, E> {
 	    return getNull();
 
 	// Compute hash
-	final int hash = Hashs.mix(strategy.hashCode(key));
+	final int hash = Hashs.hash(key);
 
 	// Clean cache, delayed as possible, so GC have more time to act.
 	cleanCache();
 
 	// Search entry
 	for (Entry<K, E> p = table[hash & mask]; p != null; p = p.next)
-	    if (hash == p.hash && strategy.equals(key, p.key))
+	    if (hash == p.hash && key.equals(p.key))
 		/*
 		 * Entry found, no need to check if it's element is a dead
 		 * reference because two reasons. First of all, if there are
@@ -393,8 +387,8 @@ public class SoftCustomHashCache<K, E> implements Cache<K, E> {
      * implementation.
      * <p>
      *
-     * @see Cache#getOrAdd(Object, Function) for full documentation of the
-     *      method.
+     * @see Object2ObjectCache#getOrAdd(Object, Function) for full documentation
+     *      of the method.
      * @throws NullPointerException
      *             if the element provided by supplier (if needed) is null.
      *             Nulls elements are no allowed in soft cache.
@@ -405,7 +399,7 @@ public class SoftCustomHashCache<K, E> implements Cache<K, E> {
 	    return getOrAddNull(supplier);
 
 	// Compute hash
-	final int hash = Hashs.mix(strategy.hashCode(key));
+	final int hash = Hashs.hash(key);
 
 	// Clean cache, delayed as possible, so GC have more time to act.
 	cleanCache();
@@ -417,7 +411,7 @@ public class SoftCustomHashCache<K, E> implements Cache<K, E> {
 	// Search entry
 	final Entry<K, E> firstEntry = table[index];
 	for (Entry<K, E> p = firstEntry; p != null; p = p.next)
-	    if (hash == p.hash && strategy.equals(key, p.key)) {
+	    if (hash == p.hash && key.equals(p.key)) {
 		final E elm = p.get();
 		if (elm != null)
 		    return elm;
@@ -443,7 +437,7 @@ public class SoftCustomHashCache<K, E> implements Cache<K, E> {
 	}
 
 	// Compute hash
-	final int hash = Hashs.mix(strategy.hashCode(key));
+	final int hash = Hashs.hash(key);
 
 	// Clean cache, delayed as possible, so GC have more time to act.
 	cleanCache();
@@ -457,7 +451,7 @@ public class SoftCustomHashCache<K, E> implements Cache<K, E> {
 	Entry<K, E> prev = null;
 	while (p != null) {
 	    final Entry<K, E> next = p.next;
-	    if (hash == p.hash && strategy.equals(key, p.key)) {
+	    if (hash == p.hash && key.equals(p.key)) {
 		if (prev == null)
 		    // First element
 		    table[index] = next;
@@ -697,15 +691,15 @@ public class SoftCustomHashCache<K, E> implements Cache<K, E> {
     }
 
     /**
-     * Entry of cached element in the {@link SoftCustomHashCache}.
+     * Entry of cached element in the {@link Object2ObjectSoftBucketHashCache}.
      * <p>
      * The entries are save as a bin (one way linked list) in each table cell,
      * and last entry at the list {@link #next} field is null.
      * <p>
      * The key is saved as a field and the element itself is saved via the super
      * class {@link SoftReference}. When there is no more strong references to
-     * the element the {@link SoftCustomHashCache} will remove the entry from
-     * the table.
+     * the element the {@link Object2ObjectSoftBucketHashCache} will remove the
+     * entry from the table.
      *
      * @author Barak Ugav
      * @author Yishai Gronich

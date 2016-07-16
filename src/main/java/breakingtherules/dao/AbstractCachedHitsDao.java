@@ -13,8 +13,8 @@ import breakingtherules.dto.ListDto;
 import breakingtherules.firewall.Filter;
 import breakingtherules.firewall.Hit;
 import breakingtherules.firewall.Rule;
-import breakingtherules.utilities.Cache;
-import breakingtherules.utilities.HeavySynchronizedHashCache;
+import breakingtherules.utilities.Object2ObjectCache;
+import breakingtherules.utilities.Object2ObjectHeavySynchronizedBucketHashCache;
 import breakingtherules.utilities.Triple;
 import breakingtherules.utilities.Triple.UnmodifiableTriple;
 import breakingtherules.utilities.Utility;
@@ -34,7 +34,7 @@ public abstract class AbstractCachedHitsDao implements HitsDao {
     /**
      * Cache for loaded hits.
      */
-    private final Cache<String, List<Hit>> m_cacheHits;
+    private final Object2ObjectCache<String, List<Hit>> m_cacheHits;
 
     /**
      * Cache for hits number by filter and rules.
@@ -42,7 +42,7 @@ public abstract class AbstractCachedHitsDao implements HitsDao {
      * The 'number of hits' cache is keyed by the hits jobName, rules (which are
      * stored in a set, because there order doesn't matter) and filter.
      */
-    private final Cache<UnmodifiableTriple<String, Set<Rule>, Filter>, Integer> m_totalHitsCache;
+    private final Object2ObjectCache<UnmodifiableTriple<String, Set<Rule>, Filter>, Integer> m_totalHitsCache;
 
     /**
      * Supplier function of the 'hits number'.
@@ -89,8 +89,8 @@ public abstract class AbstractCachedHitsDao implements HitsDao {
      * Construct new AbstractCachedHitsDao.
      */
     protected AbstractCachedHitsDao() {
-	m_cacheHits = new HeavySynchronizedHashCache<>();
-	m_totalHitsCache = new HeavySynchronizedHashCache<>();
+	m_cacheHits = new Object2ObjectHeavySynchronizedBucketHashCache<>();
+	m_totalHitsCache = new Object2ObjectHeavySynchronizedBucketHashCache<>();
     }
 
     /**

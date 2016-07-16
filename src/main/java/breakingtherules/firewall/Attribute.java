@@ -71,6 +71,7 @@ public abstract class Attribute {
      * @see Attribute#getType()
      */
     public static enum AttributeType {
+
 	/**
 	 * Source type.
 	 */

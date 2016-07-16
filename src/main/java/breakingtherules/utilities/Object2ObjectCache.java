@@ -4,7 +4,7 @@ import java.util.Map;
 import java.util.function.Function;
 
 /**
- * Cache for reusable objects.
+ * Cache for reusable objects keyed by object keys.
  * <p>
  * Allowing search element by key, insertion by key and remove.
  * <p>
@@ -25,7 +25,7 @@ import java.util.function.Function;
  * @param <E>
  *            type of cached elements
  */
-public interface Cache<K, E> {
+public interface Object2ObjectCache<K, E> {
 
     /**
      * Add new element to cache.

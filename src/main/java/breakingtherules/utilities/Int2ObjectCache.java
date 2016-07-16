@@ -5,13 +5,13 @@ import java.util.function.Function;
 import java.util.function.IntFunction;
 
 /**
- * Specific int keyed {@link Cache}.
+ * Specific int keyed to object elements cache.
  *
  * @author Barak Ugav
  * @author Yishai Gronich
  *
  * @param <E>
- *            type of cached elements
+ *            type of cached elements.
  */
 public interface Int2ObjectCache<E> {
 

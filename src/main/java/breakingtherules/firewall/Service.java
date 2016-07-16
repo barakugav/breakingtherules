@@ -9,7 +9,7 @@ import java.util.function.IntFunction;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import breakingtherules.utilities.Int2ObjectCache;
-import breakingtherules.utilities.Int2ObjectSoftHashCache;
+import breakingtherules.utilities.Int2ObjectOpenAddressingHashCache;
 import breakingtherules.utilities.Utility;
 
 /**
@@ -768,7 +768,7 @@ public class Service extends Attribute {
 	 * <p>
 	 *
 	 * Used by
-	 * {@link breakingtherules.utilities.Cache#getOrAdd(Object, Function)}
+	 * {@link breakingtherules.utilities.Object2ObjectCache#getOrAdd(Object, Function)}
 	 */
 	private final IntFunction<Service>[] mappingFunction;
 
@@ -787,7 +787,7 @@ public class Service extends Attribute {
 	    final Object dummy2 = mappingFunction = new IntFunction[numberOfCaches];
 
 	    for (int i = caches.length; i-- != 0;)
-		caches[i] = new Int2ObjectSoftHashCache<>();
+		caches[i] = new Int2ObjectOpenAddressingHashCache<>();
 
 	    for (short i = numberOfCaches; i-- != 0;) {
 		final short protocolCode = (short) (i - 1);

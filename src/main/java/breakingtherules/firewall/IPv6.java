@@ -5,7 +5,8 @@ import java.util.List;
 import java.util.function.Function;
 
 import breakingtherules.utilities.Hashs.Strategy;
-import breakingtherules.utilities.SoftCustomHashCache;
+import breakingtherules.utilities.Object2ObjectCache;
+import breakingtherules.utilities.Object2ObjectSoftCustomBucketHashCache;
 import breakingtherules.utilities.Utility;
 
 /**
@@ -825,13 +826,14 @@ public final class IPv6 extends IP {
 	/**
 	 * Cache of full (maskSize = {@link IPv6#SIZE}) IPv6 objects.
 	 */
-	final breakingtherules.utilities.Cache<int[], IPv6> cache;
+	final Object2ObjectCache<int[], IPv6> cache;
 
 	/**
 	 * Supplier of IPv6 object by address.
 	 * <p>
 	 * Used by
-	 * {@link breakingtherules.utilities.Cache#getOrAdd(Object, Function)}.
+	 * {@link breakingtherules.utilities.Object2ObjectCache#getOrAdd(Object, Function)}
+	 * .
 	 */
 	static final Function<int[], IPv6> supplier;
 
@@ -843,7 +845,7 @@ public final class IPv6 extends IP {
 	 * Construct new IPv6 objects.
 	 */
 	public Cache() {
-	    cache = new SoftCustomHashCache<>(IPv6AddressesStrategy.INSTANCE);
+	    cache = new Object2ObjectSoftCustomBucketHashCache<>(IPv6AddressesStrategy.INSTANCE);
 	}
 
 	/**
@@ -852,7 +854,7 @@ public final class IPv6 extends IP {
 	 * @author Barak Ugav
 	 * @author Yishai Gronich
 	 *
-	 * @see SoftCustomHashCache
+	 * @see Object2ObjectSoftCustomBucketHashCache
 	 */
 	static class IPv6AddressesStrategy implements Strategy<int[]> {
 

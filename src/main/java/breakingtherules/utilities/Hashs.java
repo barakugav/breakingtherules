@@ -53,6 +53,21 @@ public class Hashs {
     }
 
     /**
+     * Get a default strategy object implemented by {@link Object#hashCode()}
+     * and {@link Object#equals(Object)}.
+     * <p>
+     *
+     * @param <K>
+     *            type of objects the strategy will work on.
+     * @return a default strategy for the specified type.
+     * @see DefaultStrategy
+     */
+    @SuppressWarnings("unchecked")
+    public static <K> Strategy<K> defaultStrategy() {
+	return DefaultStrategy.INSTANCE;
+    }
+
+    /**
      * Compute the hash code for an object by a strategy and mix the result
      * bits.
      *
@@ -107,8 +122,7 @@ public class Hashs {
      * @return first power of 2 equal or greater then {@code x}
      */
     static int nextPowerOfTwo(int x) {
-	if (x == 0)
-	    return 1;
+
 	/*
 	 * Implementation notes:
 	 *
@@ -120,6 +134,9 @@ public class Hashs {
 	 *
 	 * 0b011111 to 0b100000
 	 */
+
+	if (x == 0)
+	    return 1;
 	x--;
 	x |= x >> 1;
 	x |= x >> 2;
@@ -163,6 +180,45 @@ public class Hashs {
 	 * @return hash code of the object by the strategy.
 	 */
 	public int hashCode(K k);
+
+    }
+
+    /**
+     * Default strategy implemented by the {@link Object#hashCode()} and
+     * {@link Object#equals(Object)}.
+     * <p>
+     *
+     * @author Barak Ugav
+     * @author Yishai Gronich
+     *
+     * @param <K>
+     *            type of object the strategy is working on.
+     */
+    private static class DefaultStrategy<K> implements Strategy<K> {
+
+	/**
+	 * The single instance of this class.
+	 */
+	@SuppressWarnings("rawtypes")
+	static final DefaultStrategy INSTANCE = new DefaultStrategy<>();
+
+	/**
+	 * Determine if {@code a} and {@code b} are equals by {@code a}'s
+	 * {@link Object#equals(Object)} method.
+	 */
+	@Override
+	public boolean equals(final K a, final K b) {
+	    return a.equals(b);
+	}
+
+	/**
+	 * Compute the hash code of {@code k} by its {@link Object#hashCode()}
+	 * method.
+	 */
+	@Override
+	public int hashCode(final K k) {
+	    return k.hashCode();
+	}
 
     }
 
