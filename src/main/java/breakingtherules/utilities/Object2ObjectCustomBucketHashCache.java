@@ -1,50 +1,31 @@
 package breakingtherules.utilities;
 
-import java.lang.ref.ReferenceQueue;
-import java.lang.ref.SoftReference;
 import java.util.Objects;
 import java.util.function.Function;
 
+import breakingtherules.utilities.Hashs.Strategy;
+
 /**
- * Cache that provides search of cached element by key and adding element by
- * key. Elements are stored by soft reference.
- * <p>
- * When there is some memory demand and no more strong references to an element,
- * it will be automatically removed from the cache, so cached elements are
- * mostly elements that are held by other references too.
- * <p>
- * This class has the same performance as hash map and it depends strongly on
- * the keys {@link Object#hashCode()} method.
- * <p>
- * When using this class, it's essential that the keys are not the same objects
- * as the elements - if this is the case, the cache itself will hold strong
- * reference to the keys, to the elements as well(as they are the same) and
- * therefore the elements will never be cleaned from cache and memory by the GC.
- * <p>
- * Null elements are not allowed, because there will be no way to determine when
- * to remove them from cache.
- * <p>
- * The cache will resize itself (grow and shrink) according to the number of
- * elements in it and the {@link #loadFactor}.
+ * TODO javadoc
  *
  * @author Barak Ugav
  * @author Yishai Gronich
  *
- * @see SoftReference
+ * @see Strategy
  *
  * @param <K>
- *            type of key of the cache
+ *            type of cache keys.
  * @param <E>
- *            type of cached elements
+ *            type of the cache elements.
  */
-public class Object2ObjectSoftBucketHashCache<K, E> implements Object2ObjectCache<K, E> {
+public class Object2ObjectCustomBucketHashCache<K, E> implements Object2ObjectCache<K, E> {
 
     /*
      * Implementation notes.
      *
-     * The Object2ObjectSoftBucketHashCache is implemented by a bucket hash
-     * table. In each cell in the table there is a bin (linked list of entries)
-     * that contains all entries that fell to that cell.
+     * The Object2ObjectSoftCustomBucketHashCache is implemented by a bucket
+     * hash table. In each cell in the table there is a bin (linked list of
+     * entries) that contains all entries that fell to that cell.
      *
      * The number of expected elements in each bin, if using the default load
      * factor (0.75) and the hash codes of the keys are random (in theory) is
@@ -88,10 +69,10 @@ public class Object2ObjectSoftBucketHashCache<K, E> implements Object2ObjectCach
      * <p>
      * Always null if {@link #containsNull} is false.
      */
-    private SoftReference<E> nullElement;
+    private E nullElement;
 
     /**
-     * Number of elements in the cache.
+     * Number of elements in the cache
      */
     private int size;
 
@@ -146,10 +127,9 @@ public class Object2ObjectSoftBucketHashCache<K, E> implements Object2ObjectCach
     private final float loadFactor;
 
     /**
-     * Queue used to determine which elements was queued and needed to be
-     * removed from the table.
+     * The strategy used by this cache.
      */
-    private final ReferenceQueue<E> queue;
+    private final Strategy<? super K> strategy;
 
     /**
      * Minimum capacity which the table will not be shrinking less then.
@@ -159,30 +139,44 @@ public class Object2ObjectSoftBucketHashCache<K, E> implements Object2ObjectCach
     private static final int MINIMUM_SHRINK_CAPACITY = 8;
 
     /**
-     * Construct new Object2ObjectSoftBucketHashCache with default init capacity
-     * and default load factor.
+     * Construct new Object2ObjectSoftCustomBucketHashCache with default init
+     * capacity and default load factor.
+     * <p>
+     *
+     * @param strategy
+     *            The strategy used by this cache.
+     * @throws NullPointerException
+     *             if the strategy is null.
      */
-    public Object2ObjectSoftBucketHashCache() {
-	this(Hashs.DEFAULT_INIT_CAPACITY, Hashs.DEFAULT_LOAD_FACTOR);
+    public Object2ObjectCustomBucketHashCache(final Strategy<? super K> strategy) {
+	this(strategy, Hashs.DEFAULT_INIT_CAPACITY, Hashs.DEFAULT_LOAD_FACTOR);
     }
 
     /**
-     * Construct new Object2ObjectSoftBucketHashCache with init capacity
+     * Construct new Object2ObjectSoftCustomBucketHashCache with init capacity
      * parameter and default load factor.
+     * <p>
      *
+     * @param strategy
+     *            The strategy used by this cache.
      * @param initCapacity
      *            the initialize capacity of the cache, can be zero
      * @throws IllegalArgumentException
-     *             if init capacity is negative
+     *             if init capacity is negative.
+     * @throws NullPointerException
+     *             if the strategy is null.
      */
-    public Object2ObjectSoftBucketHashCache(final int initCapacity) {
-	this(initCapacity, Hashs.DEFAULT_LOAD_FACTOR);
+    public Object2ObjectCustomBucketHashCache(final Strategy<? super K> strategy, final int initCapacity) {
+	this(strategy, initCapacity, Hashs.DEFAULT_LOAD_FACTOR);
     }
 
     /**
-     * Construct new Object2ObjectSoftBucketHashCache with init capacity
+     * Construct new Object2ObjectSoftCustomBucketHashCache with init capacity
      * parameter and load factor parameter.
+     * <p>
      *
+     * @param strategy
+     *            The strategy used by this cache.
      * @param initCapacity
      *            the initialize capacity of the cache, can be zero
      * @param loadFactor
@@ -190,8 +184,11 @@ public class Object2ObjectSoftBucketHashCache<K, E> implements Object2ObjectCach
      * @throws IllegalArgumentException
      *             if init capacity is negative, load factor is negative, 0 or
      *             NaN.
+     * @throws NullPointerException
+     *             if the strategy is null.
      */
-    public Object2ObjectSoftBucketHashCache(final int initCapacity, final float loadFactor) {
+    public Object2ObjectCustomBucketHashCache(final Strategy<? super K> strategy, final int initCapacity,
+	    final float loadFactor) {
 	if (initCapacity < 0)
 	    throw new IllegalArgumentException("initCapacity < 0: " + initCapacity);
 	if (loadFactor <= 0 || Float.isNaN(loadFactor))
@@ -203,110 +200,32 @@ public class Object2ObjectSoftBucketHashCache<K, E> implements Object2ObjectCach
 	growThreshold = (int) (capacity * loadFactor);
 	shrinkThreshold = growThreshold >> 2;
 	this.loadFactor = loadFactor;
-	queue = new ReferenceQueue<>();
 	containsNull = false;
+	this.strategy = Objects.requireNonNull(strategy, "Null strategy");
     }
 
     /**
      * {@inheritDoc}
      *
-     * @throws NullPointerException
-     *             if the element is null. Nulls elements are no allowed in soft
-     *             cache.
      */
     @Override
     public E add(final K key, final E element) {
 	if (key == null)
 	    return addNull(element);
 
-	// Compute hash
-	final int hash = Hashs.hash(key);
-
-	// Clean cache, delayed as possible, so GC have more time to act.
-	cleanCache();
-
-	// Compute index in table, MUST happen after clearCache() because shrink
-	// may be caused and may change the mask.
+	final int hash = Hashs.mix(strategy.hashCode(key));
 	final int index = hash & mask;
 
 	// Check if an element with the same key is already in cache.
 	final Entry<K, E> firstEntry = table[index];
 	for (Entry<K, E> p = firstEntry; p != null; p = p.next)
-	    if (hash == p.hash && key.equals(p.key)) {
-		final E existing = p.get();
-		if (existing != null)
-		    return existing;
-		/*
-		 * If the program reached this part of the code, that mean that
-		 * p's elements is a dead reference and we can remove it. We
-		 * choose not to do it here because that will require the
-		 * previous entry (so another entry iterator is required). This
-		 * scenario is not very likely because cleanCache() was called
-		 * already in this method. We prefer to leave the dead reference
-		 * as is and remove it in the next cleaning and not adding
-		 * another iterator here for performance (this method may be
-		 * called a lot).
-		 */
-	    }
+	    if (hash == p.hash && strategy.equals(key, p.key))
+		return p.element;
 
 	// Insert new entry as first entry in list
-	table[index] = new Entry<>(key, element, queue, hash, firstEntry);
+	table[index] = new Entry<>(key, element, hash, firstEntry);
 	grow();
 	return element;
-    }
-
-    /**
-     * Clean the cache from dead references.
-     * <p>
-     * This method doesn't HAVE to be called by the cache user to keep the cache
-     * clean. If the user doesn't call this method, no errors will occurs
-     * because of it. This method is frequency called by the internal
-     * implementation of the cache, but it is visible to the user so he can free
-     * memory if he knows a lot of the elements are already dead reference.
-     */
-    public void cleanCache() {
-	// Poll from dead entries queue until it's empty. Remove each entry of
-	// dead element from the table.
-	for (Object o; (o = queue.poll()) != null;)
-	    if (o instanceof Entry) {
-
-		@SuppressWarnings("unchecked")
-		final Entry<K, E> entry = (Entry<K, E>) o;
-
-		synchronized (queue) {
-		    /*
-		     * Search the entry in it's list. If found, remove it, if
-		     * not, do nothing. The scenario that the entry is not found
-		     * means that it was already removed, this can happen if the
-		     * dead element's entry was detected already during other
-		     * operation, for example, during resize.
-		     */
-		    final int index = entry.hash & mask;
-		    Entry<K, E> p = table[index];
-		    Entry<K, E> prev = null;
-		    while (p != null) {
-			final Entry<K, E> next = p.next;
-			if (p == entry) {
-			    if (prev == null)
-				// First element
-				table[index] = next;
-			    else
-				// Not first element
-				prev.next = next;
-			    entry.key = null; // help GC
-			    entry.next = null; // help GC
-			    shrink();
-			    break;
-			}
-			prev = p;
-			p = next;
-		    }
-		}
-	    } else if (containsNull && o == nullElement) {
-		containsNull = false;
-		nullElement = null;
-		shrink();
-	    }
     }
 
     /**
@@ -314,18 +233,14 @@ public class Object2ObjectSoftBucketHashCache<K, E> implements Object2ObjectCach
      */
     @Override
     public void clear() {
-	// Clear dead elements queue
-	do { // Until queue is empty
-	} while (queue.poll() != null);
-
 	// Clear table
 	final Entry<K, E>[] tab = table;
 	for (int index = tab.length; index-- != 0;) {
 	    for (Entry<K, E> entry = tab[index]; entry != null;) {
 		final Entry<K, E> next = entry.next;
-		entry.clear();
 		entry.next = null; // help GC
 		entry.key = null; // help GC
+		entry.element = null; // help GC
 		entry = next;
 	    }
 	    tab[index] = null;
@@ -337,10 +252,6 @@ public class Object2ObjectSoftBucketHashCache<K, E> implements Object2ObjectCach
 	// Shrink to minimum capacity
 	if (tab.length > MINIMUM_SHRINK_CAPACITY)
 	    resize(MINIMUM_SHRINK_CAPACITY); // Update thresholds and mask
-
-	// Clear dead elements queue if some already added
-	do {// Until queue is empty
-	} while (queue.poll() != null);
     }
 
     /**
@@ -351,32 +262,11 @@ public class Object2ObjectSoftBucketHashCache<K, E> implements Object2ObjectCach
 	if (key == null)
 	    return getNull();
 
-	// Compute hash
-	final int hash = Hashs.hash(key);
-
-	// Clean cache, delayed as possible, so GC have more time to act.
-	cleanCache();
-
 	// Search entry
+	final int hash = Hashs.mix(strategy.hashCode(key));
 	for (Entry<K, E> p = table[hash & mask]; p != null; p = p.next)
-	    if (hash == p.hash && key.equals(p.key))
-		/*
-		 * Entry found, no need to check if it's element is a dead
-		 * reference because two reasons. First of all, if there are
-		 * only one entry with the specified key in the map, if the
-		 * element is dead it will return null (which is equivalent to
-		 * it not contained in the cache). Secondly, if there is more
-		 * then one entry with the specified key, which can happen if
-		 * only one of the entries contains alive element (see add(K, E)
-		 * implementation), if there is an entry with an alive element
-		 * between those entries, it will always be the first one
-		 * because the insertion of the entries is always to the
-		 * beginning of the linked list (when transferring entries to
-		 * new table in resize the order is reversed. But then dead
-		 * reference are eliminated, so for each key is guaranteed that
-		 * there is at most one entry that match it).
-		 */
-		return p.get();
+	    if (hash == p.hash && strategy.equals(key, p.key))
+		return p.element;
 
 	// No entry found with same key
 	return null;
@@ -398,30 +288,20 @@ public class Object2ObjectSoftBucketHashCache<K, E> implements Object2ObjectCach
 	if (key == null)
 	    return getOrAddNull(supplier);
 
-	// Compute hash
-	final int hash = Hashs.hash(key);
-
-	// Clean cache, delayed as possible, so GC have more time to act.
-	cleanCache();
-
-	// Compute index in table, MUST happen after clearCache() because shrink
-	// may be caused and may change the mask.
+	final int hash = Hashs.mix(strategy.hashCode(key));
 	final int index = hash & mask;
 
 	// Search entry
 	final Entry<K, E> firstEntry = table[index];
 	for (Entry<K, E> p = firstEntry; p != null; p = p.next)
-	    if (hash == p.hash && key.equals(p.key)) {
-		final E elm = p.get();
-		if (elm != null)
-		    return elm;
-	    }
+	    if (hash == p.hash && strategy.equals(key, p.key))
+		return p.element;
 
 	// Not found, supply element
 	final E element = supplier.apply(key);
 
 	// Insert new entry as first entry in list
-	table[index] = new Entry<>(key, element, queue, hash, firstEntry);
+	table[index] = new Entry<>(key, element, hash, firstEntry);
 	grow();
 	return element;
     }
@@ -436,14 +316,7 @@ public class Object2ObjectSoftBucketHashCache<K, E> implements Object2ObjectCach
 	    return;
 	}
 
-	// Compute hash
-	final int hash = Hashs.hash(key);
-
-	// Clean cache, delayed as possible, so GC have more time to act.
-	cleanCache();
-
-	// Compute index in table, MUST happen after clearCache() because shrink
-	// may be caused and may change the mask.
+	final int hash = Hashs.mix(strategy.hashCode(key));
 	final int index = hash & mask;
 
 	// Search and remove
@@ -451,7 +324,7 @@ public class Object2ObjectSoftBucketHashCache<K, E> implements Object2ObjectCach
 	Entry<K, E> prev = null;
 	while (p != null) {
 	    final Entry<K, E> next = p.next;
-	    if (hash == p.hash && key.equals(p.key)) {
+	    if (hash == p.hash && strategy.equals(key, p.key)) {
 		if (prev == null)
 		    // First element
 		    table[index] = next;
@@ -460,8 +333,9 @@ public class Object2ObjectSoftBucketHashCache<K, E> implements Object2ObjectCach
 		    prev.next = next;
 		p.next = null; // help GC
 		p.key = null; // help GC
+		p.element = null; // help GC
 		shrink();
-		break;
+		return;
 	    }
 	    prev = p;
 	    p = next;
@@ -473,7 +347,6 @@ public class Object2ObjectSoftBucketHashCache<K, E> implements Object2ObjectCach
      */
     @Override
     public int size() {
-	cleanCache();
 	return size;
     }
 
@@ -486,23 +359,15 @@ public class Object2ObjectSoftBucketHashCache<K, E> implements Object2ObjectCach
 	final String separator = ", ";
 	builder.append('[');
 
-	// Clean cache, delayed as possible, so GC have more time to act.
-	cleanCache();
-
 	// Iterate over all elements and append them
 	final Entry<K, E>[] tab = table;
-	E element;
 	for (int i = tab.length; i-- != 0;)
 	    for (Entry<K, E> entry = tab[i]; entry != null; entry = entry.next) {
-		element = entry.get();
-		if (element == null)
-		    // If element is already dead reference, ignore him
-		    continue;
-		builder.append(element);
+		builder.append(entry.element);
 		builder.append(separator);
 	    }
-	if (containsNull && (element = nullElement.get()) != null)
-	    builder.append(element);
+	if (containsNull)
+	    builder.append(nullElement);
 	else if (builder.lastIndexOf(separator) >= 0) {
 	    // Had any elements, delete last separator
 	    final int length = builder.length();
@@ -520,20 +385,11 @@ public class Object2ObjectSoftBucketHashCache<K, E> implements Object2ObjectCach
      * @return the existing element or the added if one doesn't already exist.
      */
     private E addNull(final E element) {
-	cleanCache();
-
-	if (containsNull) {
-	    final E existingElement = nullElement.get();
-	    if (existingElement != null)
-		return existingElement;
-	}
-	nullElement = new SoftReference<>(
-		Objects.requireNonNull(element, "Nulls elements are not allowed in soft cache"), queue);
-
-	if (!containsNull) {
-	    containsNull = true;
-	    grow();
-	}
+	if (containsNull)
+	    return nullElement;
+	nullElement = element;
+	containsNull = true;
+	grow();
 	return element;
     }
 
@@ -543,8 +399,7 @@ public class Object2ObjectSoftBucketHashCache<K, E> implements Object2ObjectCach
      * @return element that it;s key is null or null if one doesn't exist.
      */
     private E getNull() {
-	cleanCache();
-	return containsNull ? nullElement.get() : null;
+	return containsNull ? nullElement : null;
     }
 
     /**
@@ -557,21 +412,12 @@ public class Object2ObjectSoftBucketHashCache<K, E> implements Object2ObjectCach
      *         exist.
      */
     private E getOrAddNull(final Function<? super K, ? extends E> supplier) {
-	cleanCache();
-
-	if (containsNull) {
-	    final E existingElement = nullElement.get();
-	    if (existingElement != null)
-		return existingElement;
-	}
+	if (containsNull)
+	    return nullElement;
 	final E element = supplier.apply(null);
-	nullElement = new SoftReference<>(
-		Objects.requireNonNull(element, "Nulls elements are not allowed in soft cache"), queue);
-
-	if (!containsNull) {
-	    containsNull = true;
-	    grow();
-	}
+	nullElement = element;
+	containsNull = true;
+	grow();
 	return element;
     }
 
@@ -587,10 +433,8 @@ public class Object2ObjectSoftBucketHashCache<K, E> implements Object2ObjectCach
      * Remove the element that his key is null.
      */
     private void removeNull() {
-	cleanCache();
 	if (containsNull) {
 	    containsNull = false;
-	    nullElement.clear();
 	    nullElement = null;
 	    shrink();
 	}
@@ -620,45 +464,13 @@ public class Object2ObjectSoftBucketHashCache<K, E> implements Object2ObjectCach
 		// to new table.
 		final Entry<K, E> next = entry.next;
 
-		if (entry.get() == null) {
-		    // If we encounter dead reference, don't transfer it to new
-		    // table - use the opportunity to remove it.
-		    entry.clear();
-		    entry.next = null; // help GC
-		    entry.key = null; // help GC
-		    size--;
-
-		} else {
-		    // Element is still alive, transfer him to new table
-		    final int newIndex = entry.hash & newMask;
-		    entry.next = newTable[newIndex];
-		    newTable[newIndex] = entry;
-		}
+		// Transfer element to new table
+		final int newIndex = entry.hash & newMask;
+		entry.next = newTable[newIndex];
+		newTable[newIndex] = entry;
 		entry = next;
 	    }
 	    oldTable[oldIndex] = null;
-	}
-
-	/*
-	 * If enough dead elements were detected through the transferring, a
-	 * shrink may be required. This scenario is rare but it's possible.
-	 */
-	if (size <= shrinkThreshold && newCapacity > MINIMUM_SHRINK_CAPACITY) {
-	    /*
-	     * In rare case shrinking will be required more that one time,
-	     * shrink to final capacity in advance. This scenario can happen
-	     * when the cache was initialized with big capacity, small number of
-	     * elements was inserted and then a shrink was performed.
-	     */
-	    int numberOfShrinks = 1;
-	    int newShrinkedCapacity = newCapacity >> 1;
-	    int newShrinkThreshold = (int) (newShrinkedCapacity * loadFactor);
-	    while (size <= newShrinkThreshold && newShrinkedCapacity > MINIMUM_SHRINK_CAPACITY) {
-		newShrinkedCapacity >>= 1;
-		newShrinkThreshold = (int) (newShrinkedCapacity * loadFactor);
-		numberOfShrinks++;
-	    }
-	    resize(newCapacity >> numberOfShrinks);
 	}
     }
 
@@ -691,15 +503,12 @@ public class Object2ObjectSoftBucketHashCache<K, E> implements Object2ObjectCach
     }
 
     /**
-     * Entry of cached element in the {@link Object2ObjectSoftBucketHashCache}.
+     * Entry of cached element in the {@link Object2ObjectCustomBucketHashCache}
+     * .
      * <p>
      * The entries are save as a bin (one way linked list) in each table cell,
      * and last entry at the list {@link #next} field is null.
      * <p>
-     * The key is saved as a field and the element itself is saved via the super
-     * class {@link SoftReference}. When there is no more strong references to
-     * the element the {@link Object2ObjectSoftBucketHashCache} will remove the
-     * entry from the table.
      *
      * @author Barak Ugav
      * @author Yishai Gronich
@@ -709,12 +518,17 @@ public class Object2ObjectSoftBucketHashCache<K, E> implements Object2ObjectCach
      * @param <E>
      *            type of element.
      */
-    private static class Entry<K, E> extends SoftReference<E> {
+    private static class Entry<K, E> {
 
 	/**
-	 * The entry key.
+	 * The entry's key.
 	 */
 	private K key;
+
+	/**
+	 * The entry's element.
+	 */
+	private E element;
 
 	/**
 	 * Cache for the key hash.
@@ -734,9 +548,6 @@ public class Object2ObjectSoftBucketHashCache<K, E> implements Object2ObjectCach
 	 *            the entry key
 	 * @param element
 	 *            the entry element
-	 * @param queue
-	 *            the ReferenceQueue which this entry should add itself when
-	 *            the element become dead reference
 	 * @param hash
 	 *            hash of the key
 	 * @param next
@@ -744,10 +555,9 @@ public class Object2ObjectSoftBucketHashCache<K, E> implements Object2ObjectCach
 	 * @throws NullPointerException
 	 *             if the element is null.
 	 */
-	public Entry(final K key, final E element, final ReferenceQueue<? super E> queue, final int hash,
-		final Entry<K, E> next) {
-	    super(Objects.requireNonNull(element, "Nulls elements are not allowed in soft cache"), queue);
+	public Entry(final K key, final E element, final int hash, final Entry<K, E> next) {
 	    this.key = key;
+	    this.element = element;
 	    this.hash = hash;
 	    this.next = next;
 	}
@@ -757,7 +567,7 @@ public class Object2ObjectSoftBucketHashCache<K, E> implements Object2ObjectCach
 	 */
 	@Override
 	public String toString() {
-	    String st = String.valueOf(get());
+	    String st = String.valueOf(element);
 	    if (next != null)
 		st += " -> " + next.toString();
 	    return st;

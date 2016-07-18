@@ -6,7 +6,7 @@ import java.util.function.Function;
 
 import breakingtherules.utilities.Hashs.Strategy;
 import breakingtherules.utilities.Object2ObjectCache;
-import breakingtherules.utilities.Object2ObjectSoftCustomBucketHashCache;
+import breakingtherules.utilities.Object2ObjectCustomBucketHashCache;
 import breakingtherules.utilities.Utility;
 
 /**
@@ -346,7 +346,7 @@ public final class IPv6 extends IP {
     /**
      * Get IPv6 object parsed from boolean bits list.
      *
-     * @param addressBits
+     * @param bitsAddress
      *            the bits list.
      * @return IPv6 with the address build from the bits.
      * @throws NullPointerException
@@ -355,8 +355,8 @@ public final class IPv6 extends IP {
      * @throws IllegalArgumentException
      *             if number of bits is unequal to {@value #SIZE}.
      */
-    public static IPv6 parseIPv6FromBits(final List<Boolean> addressBits) {
-	return parseIPv6FromBits(addressBits, null);
+    public static IPv6 parseIPv6FromBits(final List<Boolean> bitsAddress) {
+	return parseIPv6FromBits(bitsAddress, null);
     }
 
     /**
@@ -366,7 +366,7 @@ public final class IPv6 extends IP {
      * exist, or will create a new one and cache it to the cache otherwise.
      * <p>
      *
-     * @param addressBits
+     * @param bitsAddress
      *            the bits list.
      * @param cache
      *            the cached containing cached IPv6s objects. Can be null.
@@ -377,13 +377,13 @@ public final class IPv6 extends IP {
      * @throws IllegalArgumentException
      *             if number of bits is unequal to {@value #SIZE}.
      */
-    public static IPv6 parseIPv6FromBits(final List<Boolean> addressBits, final IPv6.Cache cache) {
+    public static IPv6 parseIPv6FromBits(final List<Boolean> bitsAddress, final IPv6.Cache cache) {
 
 	// TODO - remove this method.
 
-	if (addressBits.size() != SIZE)
-	    throw new IllegalArgumentException("IPv6 size: " + Utility.formatEqual(SIZE, addressBits.size()));
-	final Iterator<Boolean> it = addressBits.iterator();
+	if (bitsAddress.size() != SIZE)
+	    throw new IllegalArgumentException("IPv6 size: " + Utility.formatEqual(SIZE, bitsAddress.size()));
+	final Iterator<Boolean> it = bitsAddress.iterator();
 	final int[] address = new int[ADDRESS_ARRAY_SIZE];
 	for (int blockNum = 0; blockNum < BLOCK_NUMBER; blockNum++) {
 	    int blockValue = 0;
@@ -581,7 +581,7 @@ public final class IPv6 extends IP {
     /**
      * Get IPv6 object with the specified 128 bits(ints array) address.
      *
-     * @param addressBits
+     * @param bitsAddress
      *            the 128 bits of the address.
      * @return IPv6 object with the specified address.
      * @throws NullPointerException
@@ -590,11 +590,11 @@ public final class IPv6 extends IP {
      *             if the size of the address array is not
      *             {@value #ADDRESS_ARRAY_SIZE}.
      */
-    public static IPv6 valueOfBits(final int[] addressBits) {
-	checkAddressBits(addressBits);
-	// Must clone addressBits to be safe that the address won't be changed
+    public static IPv6 valueOfBits(final int[] bitsAddress) {
+	checkAddressBits(bitsAddress);
+	// Must clone bitsAddress to be safe that the address won't be changed
 	// in the future.
-	return new IPv6(addressBits.clone(), SIZE);
+	return new IPv6(bitsAddress.clone(), SIZE);
     }
 
     /**
@@ -604,7 +604,7 @@ public final class IPv6 extends IP {
      * exist, or will create a new one and cache it to the cache otherwise.
      * <p>
      *
-     * @param addressBits
+     * @param bitsAddress
      *            the 128 bits of the address.
      * @param cache
      *            the cached containing cached IPv6s objects. Can be null.
@@ -615,18 +615,18 @@ public final class IPv6 extends IP {
      *             if the size of the address array is not
      *             {@value #ADDRESS_ARRAY_SIZE}.
      */
-    public static IPv6 valueOfBits(final int[] addressBits, final IPv6.Cache cache) {
-	checkAddressBits(addressBits);
-	// Must clone addressBits to be safe that the address won't be changed
+    public static IPv6 valueOfBits(final int[] bitsAddress, final IPv6.Cache cache) {
+	checkAddressBits(bitsAddress);
+	// Must clone bitsAddress to be safe that the address won't be changed
 	// in the future.
-	return valueOfInternal(addressBits.clone(), cache);
+	return valueOfInternal(bitsAddress.clone(), cache);
     }
 
     /**
      * Get IPv6 object with the specified 128 bits(ints array) address and
      * subnetwork mask size.
      *
-     * @param addressBits
+     * @param bitsAddress
      *            the 128 bits of the address.
      * @param maskSize
      *            the size of the subnetwork mask.
@@ -638,8 +638,8 @@ public final class IPv6 extends IP {
      *             {@value #ADDRESS_ARRAY_SIZE} or if the mask size is out of
      *             range (0 to 128).
      */
-    public static IPv6 valueOfBits(final int[] addressBits, final short maskSize) {
-	return valueOfBits(addressBits, maskSize, null);
+    public static IPv6 valueOfBits(final int[] bitsAddress, final short maskSize) {
+	return valueOfBits(bitsAddress, maskSize, null);
     }
 
     /**
@@ -650,7 +650,7 @@ public final class IPv6 extends IP {
      * exist, or will create a new one and cache it to the cache otherwise.
      * <p>
      *
-     * @param addressBits
+     * @param bitsAddress
      *            the 128 bits of the address.
      * @param maskSize
      *            the size of the subnetwork mask.
@@ -664,11 +664,11 @@ public final class IPv6 extends IP {
      *             {@value #ADDRESS_ARRAY_SIZE} or if the mask size is out of
      *             range (0 to 128).
      */
-    public static IPv6 valueOfBits(final int[] addressBits, final short maskSize, final IPv6.Cache cache) {
-	checkAddressBits(addressBits);
-	// Must clone addressBits to be safe that the address won't be changed
+    public static IPv6 valueOfBits(final int[] bitsAddress, final short maskSize, final IPv6.Cache cache) {
+	checkAddressBits(bitsAddress);
+	// Must clone bitsAddress to be safe that the address won't be changed
 	// in the future.
-	final int[] address = addressBits.clone();
+	final int[] address = bitsAddress.clone();
 	if (!(0 < maskSize && maskSize < SIZE)) {
 	    if (maskSize == SIZE)
 		return valueOfInternal(address, cache);
@@ -845,7 +845,7 @@ public final class IPv6 extends IP {
 	 * Construct new IPv6 objects.
 	 */
 	public Cache() {
-	    cache = new Object2ObjectSoftCustomBucketHashCache<>(IPv6AddressesStrategy.INSTANCE);
+	    cache = new Object2ObjectCustomBucketHashCache<>(IPv6AddressesStrategy.INSTANCE);
 	}
 
 	/**
@@ -854,7 +854,7 @@ public final class IPv6 extends IP {
 	 * @author Barak Ugav
 	 * @author Yishai Gronich
 	 *
-	 * @see Object2ObjectSoftCustomBucketHashCache
+	 * @see Object2ObjectCustomBucketHashCache
 	 */
 	static class IPv6AddressesStrategy implements Strategy<int[]> {
 

@@ -7,7 +7,7 @@ import java.util.function.IntFunction;
 import breakingtherules.utilities.Int2ObjectCache;
 import breakingtherules.utilities.Int2ObjectOpenAddressingHashCache;
 import breakingtherules.utilities.Object2ObjectCache;
-import breakingtherules.utilities.Object2ObjectSoftCustomBucketHashCache;
+import breakingtherules.utilities.Object2ObjectCustomBucketHashCache;
 
 /**
  * Source attribute.
@@ -201,7 +201,7 @@ public class Source extends IPAttribute {
 	    ipv6SourcesMapptingFunction = address -> new Source(
 		    this.ipsCache.ipv6Cache.cache.getOrAdd(address, IPv6.Cache.supplier));
 	    IPv4Cache = new Int2ObjectOpenAddressingHashCache<>();
-	    IPv6Cache = new Object2ObjectSoftCustomBucketHashCache<>(IPv6.Cache.IPv6AddressesStrategy.INSTANCE);
+	    IPv6Cache = new Object2ObjectCustomBucketHashCache<>(IPv6.Cache.IPv6AddressesStrategy.INSTANCE);
 	}
 
     }

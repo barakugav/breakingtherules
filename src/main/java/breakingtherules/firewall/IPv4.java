@@ -299,7 +299,7 @@ public final class IPv4 extends IP {
     /**
      * Parses IPv4 from boolean bits list.
      *
-     * @param addressBits
+     * @param bitsAddress
      *            the bits list
      * @return IPv4 with address built from the bits.
      * @throws NullPointerException
@@ -308,8 +308,8 @@ public final class IPv4 extends IP {
      * @throws IllegalArgumentException
      *             if number of bits is unequal to {@value #SIZE}.
      */
-    public static IPv4 parseIPv4FromBits(final List<Boolean> addressBits) {
-	return parseIPv4FromBits(addressBits, null);
+    public static IPv4 parseIPv4FromBits(final List<Boolean> bitsAddress) {
+	return parseIPv4FromBits(bitsAddress, null);
     }
 
     /**
@@ -319,7 +319,7 @@ public final class IPv4 extends IP {
      * exist, or will create a new one and cache it to the cache otherwise.
      * <p>
      *
-     * @param addressBits
+     * @param bitsAddress
      *            the bits list.
      * @param cache
      *            the cached containing cached IPv4s objects. Can be null.
@@ -330,14 +330,14 @@ public final class IPv4 extends IP {
      * @throws IllegalArgumentException
      *             if number of bits is unequal to {@value #SIZE}.
      */
-    public static IPv4 parseIPv4FromBits(final List<Boolean> addressBits, final IPv4.Cache cache) {
+    public static IPv4 parseIPv4FromBits(final List<Boolean> bitsAddress, final IPv4.Cache cache) {
 
 	// TODO- remove this method
 
-	if (addressBits.size() != SIZE)
-	    throw new IllegalArgumentException("IPv4 size: " + Utility.formatEqual(SIZE, addressBits.size()));
+	if (bitsAddress.size() != SIZE)
+	    throw new IllegalArgumentException("IPv4 size: " + Utility.formatEqual(SIZE, bitsAddress.size()));
 	int address = 0;
-	final Iterator<Boolean> bits = addressBits.iterator();
+	final Iterator<Boolean> bits = bitsAddress.iterator();
 	for (int i = SIZE; i-- != 0;) {
 	    address <<= 1;
 	    if (bits.next().booleanValue())
@@ -521,12 +521,12 @@ public final class IPv4 extends IP {
     /**
      * Get IPv4 object with the specified 32 bits(int) address.
      *
-     * @param addressBits
+     * @param bitsAddress
      *            the 32 bits of the address
      * @return IPv4 object with specified address
      */
-    public static IPv4 valueOfBits(final int addressBits) {
-	return new IPv4(addressBits, SIZE);
+    public static IPv4 valueOfBits(final int bitsAddress) {
+	return new IPv4(bitsAddress, SIZE);
     }
 
     /**
@@ -536,21 +536,21 @@ public final class IPv4 extends IP {
      * exist, or will create a new one and cache it to the cache otherwise.
      * <p>
      *
-     * @param addressBits
+     * @param bitsAddress
      *            the 32 bits of the address.
      * @param cache
      *            the cached containing cached IPv4s objects. Can be null.
      * @return IPv4 object with specified address.
      */
-    public static IPv4 valueOfBits(final int addressBits, final IPv4.Cache cache) {
-	return cache != null ? cache.cache.getOrAdd(addressBits, IPv4.Cache.supplier) : new IPv4(addressBits, SIZE);
+    public static IPv4 valueOfBits(final int bitsAddress, final IPv4.Cache cache) {
+	return cache != null ? cache.cache.getOrAdd(bitsAddress, IPv4.Cache.supplier) : new IPv4(bitsAddress, SIZE);
     }
 
     /**
      * Get IPv4 object with the specified 32 bits(int) address and subnetwork
      * mask size.
      *
-     * @param addressBits
+     * @param bitsAddress
      *            the 32 bits of the address.
      * @param maskSize
      *            the size of the subnetwork mask.
@@ -558,8 +558,8 @@ public final class IPv4 extends IP {
      * @throws IllegalArgumentException
      *             if the mask size is out of range (0 to 32).
      */
-    public static IPv4 valueOfBits(final int addressBits, final short maskSize) {
-	return valueOfBits(addressBits, maskSize, null);
+    public static IPv4 valueOfBits(final int bitsAddress, final short maskSize) {
+	return valueOfBits(bitsAddress, maskSize, null);
     }
 
     /**
@@ -570,7 +570,7 @@ public final class IPv4 extends IP {
      * exist, or will create a new one and cache it to the cache otherwise.
      * <p>
      *
-     * @param addressBits
+     * @param bitsAddress
      *            the 32 bits of the address.
      * @param maskSize
      *            the size of the subnetwork mask.
@@ -580,15 +580,15 @@ public final class IPv4 extends IP {
      * @throws IllegalArgumentException
      *             if the mask size is out of range (0 to 32).
      */
-    public static IPv4 valueOfBits(final int addressBits, final short maskSize, final IPv4.Cache cache) {
+    public static IPv4 valueOfBits(final int bitsAddress, final short maskSize, final IPv4.Cache cache) {
 	if (!(0 < maskSize && maskSize < SIZE)) {
 	    if (maskSize == SIZE)
-		return valueOfBits(addressBits, cache);
+		return valueOfBits(bitsAddress, cache);
 	    if (maskSize == 0)
 		return ANY_IPv4;
 	    throw new IllegalArgumentException("IPv4 subnetwork mask: " + Utility.formatRange(0, SIZE, maskSize));
 	}
-	return new IPv4(addressBits, maskSize);
+	return new IPv4(bitsAddress, maskSize);
     }
 
     /**

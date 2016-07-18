@@ -192,25 +192,24 @@ public class CSVScrambler implements Runnable {
     }
 
     /**
-     * Update a single hit
+     * Create a mutation of a single hit to match new IP address.
      *
      * @param hit
      *            the current hit
      * @param attType
      *            type of IP attribute
-     * @param prefix
-     *            boolean array of right and left decisions until the hit's node
-     * @return new hit with new IP
+     * @param addressBits
+     *            the bits of the new address.
+     * @return mutated hit with the new IP.
      */
-    private static Hit mutateHit(final Hit hit, final AttributeType attType, final List<Boolean> prefix) {
+    private static Hit mutateHit(final Hit hit, final AttributeType attType, final int[] addressBits) {
 	final IPAttribute attribute = (IPAttribute) hit.getAttribute(attType);
-	final IP currentIp = attribute.getIp();
-	final IP newIp = IP.parseIPFromBits(prefix, currentIp.getClass());
+	final IP newIp = IP.valueOfBits(addressBits);
 	return hit.createMutation(attribute.createMutation(newIp));
     }
 
     /**
-     * Update one hit to match the scrambled tree
+     * Mutate one hit to match the scrambled tree
      *
      * @param hit
      *            the hit
@@ -223,16 +222,17 @@ public class CSVScrambler implements Runnable {
     private static Hit mutateHit(final Hit hit, final AttributeType attType, Node tree) {
 	final IP ip = ((IPAttribute) hit.getAttribute(attType)).getIp();
 
-	final List<Boolean> prefix = new ArrayList<>(ip.getSize());
-	while (!tree.ip.equals(ip))
-	    if (tree.left != null && tree.left.ip.contains(ip)) {
-		prefix.add(Boolean.FALSE);
+	// Assume ip's size is multiple of Integer.SIZE.
+	final int[] bits = new int[ip.getSize() / Integer.SIZE];
+	for (int bitNum = 0; !tree.ip.equals(ip); bitNum++)
+	    if (tree.left != null && tree.left.ip.contains(ip))
 		tree = tree.left;
-	    } else {
-		prefix.add(Boolean.TRUE);
+	    else {
+		final int blockNum = bitNum / Integer.SIZE;
+		bits[blockNum] |= 1 << Integer.SIZE - 1 - bitNum % Integer.SIZE;
 		tree = tree.right;
 	    }
-	return mutateHit(hit, attType, prefix);
+	return mutateHit(hit, attType, bits);
     }
 
     /**

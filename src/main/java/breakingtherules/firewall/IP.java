@@ -1,7 +1,5 @@
 package breakingtherules.firewall;
 
-import java.util.List;
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 /**
@@ -235,59 +233,6 @@ public abstract class IP implements Comparable<IP> {
     public abstract boolean isBrother(IP other);
 
     /**
-     * Parses an IP from bits list.
-     * <p>
-     * This method create IPs of type IPv4, IPv6 and AnyIP only.
-     * <p>
-     *
-     * @param ip
-     *            bits of the IP
-     * @param clazz
-     *            class of the requested IP - IPv4, IPv6 or AnyIP
-     * @return IP object based on the boolean bits
-     * @throws IllegalArgumentException
-     *             if the given class is not IPv4, IPv6 or AnyIP, or if the bits
-     *             list is invalid.
-     */
-    public static IP parseIPFromBits(final List<Boolean> ip, final Class<?> clazz) {
-	return parseIPFromBits(ip, clazz, null);
-    }
-
-    /**
-     * Parses an IP from bits list.
-     * <p>
-     * This method create IPs of type IPv4, IPv6 and AnyIP only.
-     * <p>
-     * If the cache isn't null, will used the cached IP from the cache if one
-     * exist, or will create a new one and cache it to the cache otherwise.
-     * <p>
-     *
-     * @param ip
-     *            bits of the IP.
-     * @param clazz
-     *            class of the requested IP - IPv4, IPv6 or AnyIP.
-     * @param cache
-     *            the cached containing cached IPs objects. Can be null.
-     * @return IP object based on the boolean bits
-     * @throws IllegalArgumentException
-     *             if the given class is not IPv4, IPv6 or AnyIP, or if the bits
-     *             list is invalid.
-     */
-    public static IP parseIPFromBits(final List<Boolean> ip, final Class<?> clazz, final IP.Cache cache) {
-
-	// TODO - remove this method
-
-	if (clazz.equals(IPv4.class))
-	    return IPv4.parseIPv4FromBits(ip, cache != null ? cache.ipv4Cache : null);
-	if (clazz.equals(IPv6.class))
-	    return IPv6.parseIPv6FromBits(ip, cache != null ? cache.ipv6Cache : null);
-	if (clazz.equals(AnyIP.class))
-	    return ANY_IP;
-	throw new IllegalArgumentException(
-		"Choosen class in unkwon. Expected IPv4, IPv6 or AnyIP. Actual: " + clazz.getSimpleName());
-    }
-
-    /**
      * Get IP object parsed from string.
      * <p>
      * This method detect formats of IPv4 and IPv6 only.
@@ -330,6 +275,7 @@ public abstract class IP implements Comparable<IP> {
 	    return IPv4.valueOf(s, cache != null ? cache.ipv4Cache : null, separator);
 	if ((separator = s.indexOf(IPv6.BLOCKS_SEPARATOR)) >= 0)
 	    return IPv6.valueOf(s, cache != null ? cache.ipv6Cache : null, separator);
+
 	if (s.startsWith(ANY_IP_STR)) {
 	    // Start with 'Any'
 
@@ -348,6 +294,58 @@ public abstract class IP implements Comparable<IP> {
 	}
 	throw new IllegalArgumentException("Unknown format: " + s);
 
+    }
+
+    /**
+     * Get IP object with the specified address.
+     * <p>
+     * The input address is treated as bits of the address(each int is 32 bits).
+     * And expect number of bits that will match {@link IPv4} or {@link IPv6}
+     * only.
+     * <p>
+     *
+     * @param bitsAddress
+     *            the input bits address(each int is 32 bits).
+     * @return IP object with the specified address.
+     * @throws NullPointerException
+     *             if the address array is null.
+     * @throws IllegalArgumentException
+     *             if the address is one with unknown size.
+     */
+    public static IP valueOfBits(final int[] bitsAddress) {
+	return valueOfBits(bitsAddress, null);
+    }
+
+    /**
+     * Get IP object with the specified address.
+     * <p>
+     * The input address is treated as bits of the address(each int is 32 bits).
+     * And expect number of bits that will match {@link IPv4} or {@link IPv6}
+     * only.
+     * <p>
+     * If the cache isn't null, will used the cached IP from the cache if one
+     * exist, or will create a new one and cache it to the cache otherwise.
+     * <p>
+     *
+     * @param bitsAddress
+     *            the input bits address(each int is 32 bits).
+     * @param cache
+     *            the cached containing cached IPs objects. Can be null.
+     * @return IP object with the specified address.
+     * @throws NullPointerException
+     *             if the address array is null.
+     * @throws IllegalArgumentException
+     *             if the address is one with unknown size.
+     */
+    public static IP valueOfBits(final int[] bitsAddress, final IP.Cache cache) {
+	switch (bitsAddress.length) {
+	case IPv4.SIZE / Integer.SIZE:
+	    return IPv4.valueOfBits(bitsAddress[0], cache != null ? cache.ipv4Cache : null);
+	case IPv6.SIZE / Integer.SIZE:
+	    return IPv6.valueOfBits(bitsAddress, cache != null ? cache.ipv6Cache : null);
+	default:
+	    throw new IllegalArgumentException("Unkown IP size: " + bitsAddress.length);
+	}
     }
 
     /**

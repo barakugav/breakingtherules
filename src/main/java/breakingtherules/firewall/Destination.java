@@ -7,7 +7,7 @@ import java.util.function.IntFunction;
 import breakingtherules.utilities.Int2ObjectCache;
 import breakingtherules.utilities.Int2ObjectOpenAddressingHashCache;
 import breakingtherules.utilities.Object2ObjectCache;
-import breakingtherules.utilities.Object2ObjectSoftCustomBucketHashCache;
+import breakingtherules.utilities.Object2ObjectCustomBucketHashCache;
 
 /**
  * Destination attribute.
@@ -199,7 +199,7 @@ public class Destination extends IPAttribute {
 	    ipv6DestinationsMappingFunction = address -> new Destination(
 		    this.ipsCache.ipv6Cache.cache.getOrAdd(address, IPv6.Cache.supplier));
 	    ipv4Cache = new Int2ObjectOpenAddressingHashCache<>();
-	    ipv6Cache = new Object2ObjectSoftCustomBucketHashCache<>(IPv6.Cache.IPv6AddressesStrategy.INSTANCE);
+	    ipv6Cache = new Object2ObjectCustomBucketHashCache<>(IPv6.Cache.IPv6AddressesStrategy.INSTANCE);
 	}
 
     }
