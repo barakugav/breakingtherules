@@ -26,27 +26,6 @@ import breakingtherules.firewall.Source;
 class AbstractXMLAttributesContainerParser extends AbstractParser {
 
     /**
-     * Add all attributes of an attributes container to parent element.
-     *
-     * @param elm
-     *            the parent element.
-     * @param attributesContainer
-     *            the attributes source.
-     * @return the constructed element. The input element.
-     * @throws NullPointerException
-     *             if the element is null or the container is null.
-     */
-    Element fillElement(final Element elm, final Iterable<Attribute> attributesContainer) {
-	final Document doc = elm.getOwnerDocument();
-	for (final Attribute attribute : attributesContainer) {
-	    final Element attElm = doc.createElement(attribute.getType().name());
-	    attElm.setTextContent(attribute.toString());
-	    elm.appendChild(attElm);
-	}
-	return elm;
-    }
-
-    /**
      * Parses all attributes from an XML element.
      *
      * @param elm
@@ -92,6 +71,27 @@ class AbstractXMLAttributesContainerParser extends AbstractParser {
 	    }
 	}
 	return attributes;
+    }
+
+    /**
+     * Add all attributes of an attributes container to parent element.
+     *
+     * @param elm
+     *            the parent element.
+     * @param attributesContainer
+     *            the attributes source.
+     * @return the constructed element. The input element.
+     * @throws NullPointerException
+     *             if the element is null or the container is null.
+     */
+    static Element fillElement(final Element elm, final Iterable<Attribute> attributesContainer) {
+	final Document doc = elm.getOwnerDocument();
+	for (final Attribute attribute : attributesContainer) {
+	    final Element attElm = doc.createElement(attribute.getType().name());
+	    attElm.setTextContent(attribute.toString());
+	    elm.appendChild(attElm);
+	}
+	return elm;
     }
 
 }

@@ -7,7 +7,7 @@ import breakingtherules.dto.ListDto;
 import breakingtherules.firewall.Filter;
 import breakingtherules.firewall.Hit;
 import breakingtherules.firewall.Rule;
-import breakingtherules.utilities.Utility;
+import breakingtherules.util.Utility;
 
 /**
  * Component that supply hits from repository.
@@ -27,7 +27,7 @@ public interface HitsDao {
      * @param jobName
      *            the name of the job.
      * @param rules
-     *            list of current rules.
+     *            current rules, act like additional filters.
      * @param filter
      *            current filter.
      * @return iterable object of all unique hits.
@@ -35,8 +35,10 @@ public interface HitsDao {
      *             if failed to read from memory.
      * @throws ParseException
      *             if any parse errors occurs in the data.
+     * @throws NullPointerException
+     *             if the rules or the filter is null.
      */
-    public Iterable<Hit> getHits(final String jobName, final List<Rule> rules, final Filter filter)
+    public Iterable<Hit> getHits(final String jobName, final Iterable<Rule> rules, final Filter filter)
 	    throws IOException, ParseException;
 
     /**
@@ -46,7 +48,7 @@ public interface HitsDao {
      * @param jobName
      *            Name of the hits' job
      * @param rules
-     *            list of the current rules, filter out
+     *            current rules, act like additional filters.
      * @param filter
      *            filter of the hits
      * @return The number of hits that are in the job, pass the rules but not
@@ -55,8 +57,10 @@ public interface HitsDao {
      *             if failed to read from memory.
      * @throws ParseException
      *             if any parse errors occurs in the data.
+     * @throws NullPointerException
+     *             if the rules or the filter is null.
      */
-    public int getHitsNumber(String jobName, List<Rule> rules, Filter filter) throws IOException, ParseException;
+    public int getHitsNumber(String jobName, Iterable<Rule> rules, Filter filter) throws IOException, ParseException;
 
     /**
      * Initiate a repository for this job, with the given hits
@@ -69,6 +73,8 @@ public interface HitsDao {
      *             If this job (name) already exists
      * @throws IOException
      *             If there was an error writing to IO
+     * @throws NullPointerException
+     *             if hits iterable is null.
      */
     public void initJob(String jobName, Iterable<Hit> hits) throws IOException;
 
@@ -79,7 +85,7 @@ public interface HitsDao {
      * @param jobName
      *            id of the hits' job
      * @param rules
-     *            list of the current rules, act like additional filter
+     *            current rules, act like additional filters.
      * @param filter
      *            filter of the hits
      * @return all (unique) hits that match all rules and filter
@@ -88,7 +94,7 @@ public interface HitsDao {
      * @throws ParseException
      *             if any parse errors occurs in the data.
      */
-    default ListDto<Hit> getHitsList(final String jobName, final List<Rule> rules, final Filter filter)
+    default ListDto<Hit> getHitsList(final String jobName, final Iterable<Rule> rules, final Filter filter)
 	    throws IOException, ParseException {
 	final List<Hit> hits = Utility.newArrayList(getHits(jobName, rules, filter));
 	final int size = hits.size();
@@ -106,7 +112,7 @@ public interface HitsDao {
      * @param endIndex
      *            the end index of the hits list, including this index
      * @param rules
-     *            list of the current rules, act like additional filter
+     *            current rules, act like additional filter.
      * @param filter
      *            filter of the hits
      * @return all (unique) hits that match all rules and filter in range
@@ -116,7 +122,7 @@ public interface HitsDao {
      * @throws ParseException
      *             if any parse errors occurs in the data.
      */
-    default ListDto<Hit> getHitsList(final String jobName, final List<Rule> rules, final Filter filter,
+    default ListDto<Hit> getHitsList(final String jobName, final Iterable<Rule> rules, final Filter filter,
 	    final int startIndex, final int endIndex) throws IOException, ParseException {
 	final Iterable<Hit> allHits = getHits(jobName, rules, filter);
 	final int totalSize = getHitsNumber(jobName, rules, filter);

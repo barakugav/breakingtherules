@@ -5,9 +5,10 @@ import java.util.List;
 import java.util.function.Function;
 import java.util.function.IntFunction;
 
-import breakingtherules.utilities.Int2ObjectCache;
-import breakingtherules.utilities.Int2ObjectOpenAddressingHashCache;
-import breakingtherules.utilities.Utility;
+import breakingtherules.util.Int2ObjectCache;
+import breakingtherules.util.Int2ObjectOpenAddressingHashCache;
+import breakingtherules.util.Object2ObjectCache;
+import breakingtherules.util.Utility;
 
 /**
  * IP address that is represented by a 32 bits.
@@ -702,9 +703,7 @@ public final class IPv4 extends IP {
 	/**
 	 * Supplier of new IPv4 objects by integer address.
 	 * <p>
-	 * Used by
-	 * {@link breakingtherules.utilities.Object2ObjectCache#getOrAdd(Object, Function)}
-	 * .
+	 * Used by {@link Object2ObjectCache#getOrAdd(Object, Function)} .
 	 */
 	static final IntFunction<IPv4> supplier;
 

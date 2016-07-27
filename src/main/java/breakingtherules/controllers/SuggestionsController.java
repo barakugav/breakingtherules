@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import breakingtherules.dao.ParseException;
 import breakingtherules.dto.SuggestionsDto;
-import breakingtherules.services.algorithm.Suggestion;
+import breakingtherules.service.Suggestion;
 import breakingtherules.session.JobManager;
 import breakingtherules.session.NoCurrentJobException;
 

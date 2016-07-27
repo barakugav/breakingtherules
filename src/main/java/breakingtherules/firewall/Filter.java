@@ -23,18 +23,6 @@ public class Filter extends AbstractHitMatcher {
     public static final Filter ANY_FILTER = new AnyFilter();
 
     /**
-     * Copy constructor.
-     *
-     * @param c
-     *            other container.
-     * @throws NullPointerException
-     *             if the other container is null.
-     */
-    public Filter(final AttributesContainer c) {
-	super(c);
-    }
-
-    /**
      * Construct new filter from list of attributes
      *
      * @param attributes

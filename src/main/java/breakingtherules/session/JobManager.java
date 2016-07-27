@@ -18,7 +18,7 @@ import breakingtherules.dao.RulesDao;
 import breakingtherules.dao.csv.CSVDaoConfig;
 import breakingtherules.dao.csv.CSVHitsDao;
 import breakingtherules.dao.xml.XMLDaoConfig;
-import breakingtherules.dao.xml.XMLRulesDao;
+import breakingtherules.dao.xml.XMLRulesParser;
 import breakingtherules.dto.ListDto;
 import breakingtherules.dto.SuggestionsDto;
 import breakingtherules.firewall.Attribute;
@@ -26,8 +26,8 @@ import breakingtherules.firewall.Attribute.AttributeType;
 import breakingtherules.firewall.Filter;
 import breakingtherules.firewall.Hit;
 import breakingtherules.firewall.Rule;
-import breakingtherules.services.algorithm.Suggestion;
-import breakingtherules.services.algorithm.SuggestionsAlgorithm;
+import breakingtherules.service.Suggestion;
+import breakingtherules.service.SuggestionsAlgorithm;
 
 /**
  * This class manages the current job and allows to create new jobs. One of
@@ -531,7 +531,7 @@ public class JobManager {
 	    throws IOException {
 	// TODO - this is not generic
 	final String fileName = XMLDaoConfig.getRulesFile(jobName);
-	XMLRulesDao.writeRules(fileName, rules, originalRule);
+	XMLRulesParser.writeRules(fileName, rules, originalRule);
     }
 
     /**

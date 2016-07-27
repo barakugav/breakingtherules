@@ -1,6 +1,7 @@
 package breakingtherules.firewall;
 
 import java.util.ArrayList;
+import java.util.EnumMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
@@ -8,7 +9,7 @@ import java.util.Objects;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import breakingtherules.firewall.Attribute.AttributeType;
-import breakingtherules.utilities.ArrayIterator;
+import breakingtherules.util.ArrayIterator;
 
 /**
  * The AttributesContainer class is a container of attributes.
@@ -23,6 +24,10 @@ abstract class AttributesContainer implements Iterable<Attribute> {
 
     /**
      * The attributes this container contains.
+     * <p>
+     * This array servers as a map from enum type ({@link AttributeType}) to
+     * attributes. This could be replaced with {@link EnumMap} to be on the safe
+     * side, but was decided not to for performance.
      */
     final Attribute[] m_attributes;
 
@@ -83,7 +88,8 @@ abstract class AttributesContainer implements Iterable<Attribute> {
 	if (!(o instanceof AttributesContainer))
 	    return false;
 
-	// Could use Arrays.equals but there are redundant null checks.
+	// Could use Arrays.equals but there are redundant null and length
+	// checks.
 	final AttributesContainer other = (AttributesContainer) o;
 	for (int i = Attribute.TYPE_COUNT; i-- != 0;)
 	    if (!Objects.equals(m_attributes[i], other.m_attributes[i]))

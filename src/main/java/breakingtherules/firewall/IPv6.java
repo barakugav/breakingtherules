@@ -4,10 +4,10 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.function.Function;
 
-import breakingtherules.utilities.Hashs.Strategy;
-import breakingtherules.utilities.Object2ObjectCache;
-import breakingtherules.utilities.Object2ObjectCustomBucketHashCache;
-import breakingtherules.utilities.Utility;
+import breakingtherules.util.Hashs.Strategy;
+import breakingtherules.util.Object2ObjectCache;
+import breakingtherules.util.Object2ObjectCustomBucketHashCache;
+import breakingtherules.util.Utility;
 
 /**
  * IP address that is represented by a 128 bits.
@@ -831,9 +831,7 @@ public final class IPv6 extends IP {
 	/**
 	 * Supplier of IPv6 object by address.
 	 * <p>
-	 * Used by
-	 * {@link breakingtherules.utilities.Object2ObjectCache#getOrAdd(Object, Function)}
-	 * .
+	 * Used by {@link Object2ObjectCache#getOrAdd(Object, Function)} .
 	 */
 	static final Function<int[], IPv6> supplier;
 

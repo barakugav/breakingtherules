@@ -6,7 +6,6 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.FileReader;
 import java.io.FileWriter;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -14,7 +13,7 @@ import java.util.List;
 import org.junit.Test;
 
 import breakingtherules.dao.csv.CSVParseException;
-import breakingtherules.dao.csv.CSVParser;
+import breakingtherules.dao.csv.CSVHitsParser;
 import breakingtherules.firewall.Destination;
 import breakingtherules.firewall.Hit;
 import breakingtherules.firewall.Service;
@@ -27,27 +26,29 @@ public class CSVParserTest extends TestBase {
 
     private static final Integer DUMMY = Integer.valueOf(0x4000 + rand.nextInt(0x4000));
 
+    private static final String CSV_SUFFIX = ".csv";
+
     @Test
     @SuppressWarnings("unused")
     public void constructorTestDefault() {
-	new CSVParser(CSVParser.DEFAULT_COLUMNS_TYPES);
+	new CSVHitsParser(CSVHitsParser.DEFAULT_COLUMNS_TYPES);
     }
 
     @Test(expected = NullPointerException.class)
     @SuppressWarnings("unused")
     public void constructorTestNullType() {
-	new CSVParser(Arrays.asList(CSVParser.DESTINATION, null, CSVParser.SERVICE_PORT));
+	new CSVHitsParser(Arrays.asList(CSVHitsParser.DESTINATION, null, CSVHitsParser.SERVICE_PORT));
     }
 
     @Test(expected = NullPointerException.class)
     @SuppressWarnings("unused")
     public void constructorTestNullTypesList() {
-	new CSVParser(null);
+	new CSVHitsParser(null);
     }
 
     @Test
-    public void parseHitsTestAllAttributes() throws IOException {
-	tempFileTest("parseHitsTestAllAttributes", ".csv", file -> {
+    public void parseHitsTestAllAttributes() throws Exception {
+	runTempFileTest(getCurrentMethodName(), CSV_SUFFIX, file -> {
 	    try {
 		final int numberOfLines = rand.nextInt(10_000);
 
@@ -70,9 +71,9 @@ public class CSVParserTest extends TestBase {
 		    }
 		}
 
-		final List<Integer> columnsTypes = Arrays.asList(CSVParser.SOURCE, CSVParser.DESTINATION,
-			CSVParser.SERVICE_PROTOCOL, CSVParser.SERVICE_PORT);
-		final List<Hit> actual = CSVParser.parseHits(columnsTypes, file.getAbsolutePath());
+		final List<Integer> columnsTypes = Arrays.asList(CSVHitsParser.SOURCE, CSVHitsParser.DESTINATION,
+			CSVHitsParser.SERVICE_PROTOCOL, CSVHitsParser.SERVICE_PORT);
+		final List<Hit> actual = CSVHitsParser.parseAllHits(columnsTypes, file.getAbsolutePath());
 
 		assertEquals(expected, actual);
 
@@ -84,8 +85,8 @@ public class CSVParserTest extends TestBase {
     }
 
     @Test
-    public void parseHitsTestWithoutDestination() throws IOException {
-	tempFileTest("parseHitsTestWithoutDestination", ".csv", file -> {
+    public void parseHitsTestWithoutDestination() throws Exception {
+	runTempFileTest(getCurrentMethodName(), CSV_SUFFIX, file -> {
 	    try {
 		final int numberOfLines = rand.nextInt(10_000);
 
@@ -107,9 +108,9 @@ public class CSVParserTest extends TestBase {
 		    }
 		}
 
-		final List<Integer> columnsTypes = Arrays.asList(CSVParser.SOURCE, DUMMY, CSVParser.SERVICE_PROTOCOL,
-			CSVParser.SERVICE_PORT);
-		final List<Hit> actual = CSVParser.parseHits(columnsTypes, file.getAbsolutePath());
+		final List<Integer> columnsTypes = Arrays.asList(CSVHitsParser.SOURCE, DUMMY, CSVHitsParser.SERVICE_PROTOCOL,
+			CSVHitsParser.SERVICE_PORT);
+		final List<Hit> actual = CSVHitsParser.parseAllHits(columnsTypes, file.getAbsolutePath());
 
 		assertEquals(expected, actual);
 
@@ -121,8 +122,8 @@ public class CSVParserTest extends TestBase {
     }
 
     @Test
-    public void parseHitsTestWithoutServicePort() throws IOException {
-	tempFileTest("parseHitsTestWithoutServicePort", ".csv", file -> {
+    public void parseHitsTestWithoutServicePort() throws Exception {
+	runTempFileTest(getCurrentMethodName(), CSV_SUFFIX, file -> {
 	    try {
 		final int numberOfLines = rand.nextInt(10_000);
 
@@ -143,9 +144,9 @@ public class CSVParserTest extends TestBase {
 		    }
 		}
 
-		final List<Integer> columnsTypes = Arrays.asList(CSVParser.SOURCE, CSVParser.DESTINATION,
-			CSVParser.SERVICE_PROTOCOL);
-		final List<Hit> actual = CSVParser.parseHits(columnsTypes, file.getAbsolutePath());
+		final List<Integer> columnsTypes = Arrays.asList(CSVHitsParser.SOURCE, CSVHitsParser.DESTINATION,
+			CSVHitsParser.SERVICE_PROTOCOL);
+		final List<Hit> actual = CSVHitsParser.parseAllHits(columnsTypes, file.getAbsolutePath());
 
 		assertEquals(expected, actual);
 
@@ -157,8 +158,8 @@ public class CSVParserTest extends TestBase {
     }
 
     @Test
-    public void parseHitsTestWithoutServiveProtocol() throws IOException {
-	tempFileTest("parseHitsTestWithoutServiveProtocol", ".csv", file -> {
+    public void parseHitsTestWithoutServiveProtocol() throws Exception {
+	runTempFileTest(getCurrentMethodName(), CSV_SUFFIX, file -> {
 	    try {
 		final int numberOfLines = rand.nextInt(10_000);
 
@@ -179,9 +180,9 @@ public class CSVParserTest extends TestBase {
 		    }
 		}
 
-		final List<Integer> columnsTypes = Arrays.asList(CSVParser.SOURCE, CSVParser.DESTINATION, DUMMY,
-			CSVParser.SERVICE_PORT);
-		final List<Hit> actual = CSVParser.parseHits(columnsTypes, file.getAbsolutePath());
+		final List<Integer> columnsTypes = Arrays.asList(CSVHitsParser.SOURCE, CSVHitsParser.DESTINATION, DUMMY,
+			CSVHitsParser.SERVICE_PORT);
+		final List<Hit> actual = CSVHitsParser.parseAllHits(columnsTypes, file.getAbsolutePath());
 
 		assertEquals(expected, actual);
 
@@ -193,8 +194,8 @@ public class CSVParserTest extends TestBase {
     }
 
     @Test
-    public void parseHitsTestWithoutSource() throws IOException {
-	tempFileTest("parseHitsTestWithoutSource", ".csv", file -> {
+    public void parseHitsTestWithoutSource() throws Exception {
+	runTempFileTest(getCurrentMethodName(), CSV_SUFFIX, file -> {
 	    try {
 		final int numberOfLines = rand.nextInt(10_000);
 
@@ -216,9 +217,9 @@ public class CSVParserTest extends TestBase {
 		    }
 		}
 
-		final List<Integer> columnsTypes = Arrays.asList(DUMMY, CSVParser.DESTINATION,
-			CSVParser.SERVICE_PROTOCOL, CSVParser.SERVICE_PORT);
-		final List<Hit> actual = CSVParser.parseHits(columnsTypes, file.getAbsolutePath());
+		final List<Integer> columnsTypes = Arrays.asList(DUMMY, CSVHitsParser.DESTINATION,
+			CSVHitsParser.SERVICE_PROTOCOL, CSVHitsParser.SERVICE_PORT);
+		final List<Hit> actual = CSVHitsParser.parseAllHits(columnsTypes, file.getAbsolutePath());
 
 		assertEquals(expected, actual);
 
@@ -231,9 +232,9 @@ public class CSVParserTest extends TestBase {
 
     @Test
     public void parseHitTestAllAttributes() throws CSVParseException {
-	final List<Integer> columnsTypes = Arrays.asList(CSVParser.SOURCE, CSVParser.DESTINATION,
-		CSVParser.SERVICE_PROTOCOL, CSVParser.SERVICE_PORT);
-	final CSVParser parser = new CSVParser(columnsTypes);
+	final List<Integer> columnsTypes = Arrays.asList(CSVHitsParser.SOURCE, CSVHitsParser.DESTINATION,
+		CSVHitsParser.SERVICE_PROTOCOL, CSVHitsParser.SERVICE_PORT);
+	final CSVHitsParser parser = new CSVHitsParser(columnsTypes);
 	final int repeat = 25;
 
 	for (int i = repeat; i-- != 0;) {
@@ -253,9 +254,9 @@ public class CSVParserTest extends TestBase {
 
     @Test
     public void parseHitTestWithoutDestination() throws CSVParseException {
-	final List<Integer> columnsTypes = Arrays.asList(CSVParser.SOURCE, DUMMY, CSVParser.SERVICE_PROTOCOL,
-		CSVParser.SERVICE_PORT);
-	final CSVParser parser = new CSVParser(columnsTypes);
+	final List<Integer> columnsTypes = Arrays.asList(CSVHitsParser.SOURCE, DUMMY, CSVHitsParser.SERVICE_PROTOCOL,
+		CSVHitsParser.SERVICE_PORT);
+	final CSVHitsParser parser = new CSVHitsParser(columnsTypes);
 	final int repeat = 25;
 
 	for (int i = repeat; i-- != 0;) {
@@ -275,9 +276,9 @@ public class CSVParserTest extends TestBase {
 
     @Test
     public void parseHitTestWithoutServicePort() throws CSVParseException {
-	final List<Integer> columnsTypes = Arrays.asList(CSVParser.SOURCE, CSVParser.DESTINATION,
-		CSVParser.SERVICE_PROTOCOL);
-	final CSVParser parser = new CSVParser(columnsTypes);
+	final List<Integer> columnsTypes = Arrays.asList(CSVHitsParser.SOURCE, CSVHitsParser.DESTINATION,
+		CSVHitsParser.SERVICE_PROTOCOL);
+	final CSVHitsParser parser = new CSVHitsParser(columnsTypes);
 	final int repeat = 25;
 
 	for (int i = repeat; i-- != 0;) {
@@ -296,9 +297,9 @@ public class CSVParserTest extends TestBase {
 
     @Test
     public void parseHitTestWithoutServiceProtocol() throws CSVParseException {
-	final List<Integer> columnsTypes = Arrays.asList(CSVParser.SOURCE, CSVParser.DESTINATION, DUMMY,
-		CSVParser.SERVICE_PORT);
-	final CSVParser parser = new CSVParser(columnsTypes);
+	final List<Integer> columnsTypes = Arrays.asList(CSVHitsParser.SOURCE, CSVHitsParser.DESTINATION, DUMMY,
+		CSVHitsParser.SERVICE_PORT);
+	final CSVHitsParser parser = new CSVHitsParser(columnsTypes);
 	final int repeat = 25;
 
 	for (int i = repeat; i-- != 0;) {
@@ -317,9 +318,9 @@ public class CSVParserTest extends TestBase {
 
     @Test
     public void parseHitTestWithoutSource() throws CSVParseException {
-	final List<Integer> columnsTypes = Arrays.asList(DUMMY, CSVParser.DESTINATION, CSVParser.SERVICE_PROTOCOL,
-		CSVParser.SERVICE_PORT);
-	final CSVParser parser = new CSVParser(columnsTypes);
+	final List<Integer> columnsTypes = Arrays.asList(DUMMY, CSVHitsParser.DESTINATION, CSVHitsParser.SERVICE_PROTOCOL,
+		CSVHitsParser.SERVICE_PORT);
+	final CSVHitsParser parser = new CSVHitsParser(columnsTypes);
 
 	final int repeat = 25;
 
@@ -339,8 +340,8 @@ public class CSVParserTest extends TestBase {
     }
 
     @Test
-    public void toCSVMultipleHitsTestAllAttributes() throws IOException {
-	tempFileTest("toCSVMultipleHitsTestAllAttributes", ".csv", file -> {
+    public void toCSVMultipleHitsTestAllAttributes() throws Exception {
+	runTempFileTest(getCurrentMethodName(), CSV_SUFFIX, file -> {
 	    try {
 		final int numberOfLines = rand.nextInt(10_000);
 
@@ -359,9 +360,9 @@ public class CSVParserTest extends TestBase {
 			    .valueOf(Service.parseProtocolCode(serviceProtocol), Service.parsePort(servicePort)))));
 		}
 
-		final List<Integer> columnsTypes = Arrays.asList(CSVParser.SOURCE, CSVParser.DESTINATION,
-			CSVParser.SERVICE_PROTOCOL, CSVParser.SERVICE_PORT);
-		CSVParser.toCSV(columnsTypes, hits, file.getAbsolutePath());
+		final List<Integer> columnsTypes = Arrays.asList(CSVHitsParser.SOURCE, CSVHitsParser.DESTINATION,
+			CSVHitsParser.SERVICE_PROTOCOL, CSVHitsParser.SERVICE_PORT);
+		CSVHitsParser.toCSV(columnsTypes, hits, file.getAbsolutePath());
 
 		final List<String> actual = new ArrayList<>(numberOfLines);
 		try (final BufferedReader reader = new BufferedReader(new FileReader(file))) {
@@ -379,8 +380,8 @@ public class CSVParserTest extends TestBase {
     }
 
     @Test
-    public void toCSVMultipleHitsTestWithoutDestination() throws IOException {
-	tempFileTest("toCSVMultipleHitsTestWithoutDestination", ".csv", file -> {
+    public void toCSVMultipleHitsTestWithoutDestination() throws Exception {
+	runTempFileTest(getCurrentMethodName(), CSV_SUFFIX, file -> {
 	    try {
 		final int numberOfLines = rand.nextInt(10_000);
 
@@ -399,9 +400,9 @@ public class CSVParserTest extends TestBase {
 			    .valueOf(Service.parseProtocolCode(serviceProtocol), Service.parsePort(servicePort)))));
 		}
 
-		final List<Integer> columnsTypes = Arrays.asList(CSVParser.SOURCE, CSVParser.SERVICE_PROTOCOL,
-			CSVParser.SERVICE_PORT);
-		CSVParser.toCSV(columnsTypes, hits, file.getAbsolutePath());
+		final List<Integer> columnsTypes = Arrays.asList(CSVHitsParser.SOURCE, CSVHitsParser.SERVICE_PROTOCOL,
+			CSVHitsParser.SERVICE_PORT);
+		CSVHitsParser.toCSV(columnsTypes, hits, file.getAbsolutePath());
 
 		final List<String> actual = new ArrayList<>(numberOfLines);
 		try (final BufferedReader reader = new BufferedReader(new FileReader(file))) {
@@ -419,8 +420,8 @@ public class CSVParserTest extends TestBase {
     }
 
     @Test
-    public void toCSVMultipleHitsTestWithoutServicePort() throws IOException {
-	tempFileTest("toCSVMultipleHitsTestWithoutServicePort", ".csv", file -> {
+    public void toCSVMultipleHitsTestWithoutServicePort() throws Exception {
+	runTempFileTest(getCurrentMethodName(), CSV_SUFFIX, file -> {
 	    try {
 		final int numberOfLines = rand.nextInt(10_000);
 
@@ -439,9 +440,9 @@ public class CSVParserTest extends TestBase {
 			    .valueOf(Service.parseProtocolCode(serviceProtocol), Service.parsePort(servicePort)))));
 		}
 
-		final List<Integer> columnsTypes = Arrays.asList(CSVParser.SOURCE, CSVParser.DESTINATION,
-			CSVParser.SERVICE_PROTOCOL);
-		CSVParser.toCSV(columnsTypes, hits, file.getAbsolutePath());
+		final List<Integer> columnsTypes = Arrays.asList(CSVHitsParser.SOURCE, CSVHitsParser.DESTINATION,
+			CSVHitsParser.SERVICE_PROTOCOL);
+		CSVHitsParser.toCSV(columnsTypes, hits, file.getAbsolutePath());
 
 		final List<String> actual = new ArrayList<>(numberOfLines);
 		try (final BufferedReader reader = new BufferedReader(new FileReader(file))) {
@@ -459,8 +460,8 @@ public class CSVParserTest extends TestBase {
     }
 
     @Test
-    public void toCSVMultipleHitsTestWithoutServiceProtocol() throws IOException {
-	tempFileTest("toCSVMultipleHitsTestWithoutServiceProtocol", ".csv", file -> {
+    public void toCSVMultipleHitsTestWithoutServiceProtocol() throws Exception {
+	runTempFileTest(getCurrentMethodName(), CSV_SUFFIX, file -> {
 	    try {
 		final int numberOfLines = rand.nextInt(10_000);
 
@@ -479,9 +480,9 @@ public class CSVParserTest extends TestBase {
 			    .valueOf(Service.parseProtocolCode(serviceProtocol), Service.parsePort(servicePort)))));
 		}
 
-		final List<Integer> columnsTypes = Arrays.asList(CSVParser.SOURCE, CSVParser.DESTINATION,
-			CSVParser.SERVICE_PORT);
-		CSVParser.toCSV(columnsTypes, hits, file.getAbsolutePath());
+		final List<Integer> columnsTypes = Arrays.asList(CSVHitsParser.SOURCE, CSVHitsParser.DESTINATION,
+			CSVHitsParser.SERVICE_PORT);
+		CSVHitsParser.toCSV(columnsTypes, hits, file.getAbsolutePath());
 
 		final List<String> actual = new ArrayList<>(numberOfLines);
 		try (final BufferedReader reader = new BufferedReader(new FileReader(file))) {
@@ -499,8 +500,8 @@ public class CSVParserTest extends TestBase {
     }
 
     @Test
-    public void toCSVMultipleHitsTestWithoutSource() throws IOException {
-	tempFileTest("toCSVMultipleHitsTestWithoutSource", ".csv", file -> {
+    public void toCSVMultipleHitsTestWithoutSource() throws Exception {
+	runTempFileTest(getCurrentMethodName(), CSV_SUFFIX, file -> {
 	    try {
 		final int numberOfLines = rand.nextInt(10_000);
 
@@ -519,9 +520,9 @@ public class CSVParserTest extends TestBase {
 			    .valueOf(Service.parseProtocolCode(serviceProtocol), Service.parsePort(servicePort)))));
 		}
 
-		final List<Integer> columnsTypes = Arrays.asList(CSVParser.DESTINATION, CSVParser.SERVICE_PROTOCOL,
-			CSVParser.SERVICE_PORT);
-		CSVParser.toCSV(columnsTypes, hits, file.getAbsolutePath());
+		final List<Integer> columnsTypes = Arrays.asList(CSVHitsParser.DESTINATION, CSVHitsParser.SERVICE_PROTOCOL,
+			CSVHitsParser.SERVICE_PORT);
+		CSVHitsParser.toCSV(columnsTypes, hits, file.getAbsolutePath());
 
 		final List<String> actual = new ArrayList<>(numberOfLines);
 		try (final BufferedReader reader = new BufferedReader(new FileReader(file))) {
@@ -540,9 +541,9 @@ public class CSVParserTest extends TestBase {
 
     @Test
     public void toCSVSingleHitTestAllAttributes() throws CSVParseException {
-	final List<Integer> columnsTypes = Arrays.asList(CSVParser.SOURCE, CSVParser.DESTINATION,
-		CSVParser.SERVICE_PROTOCOL, CSVParser.SERVICE_PORT);
-	final CSVParser parser = new CSVParser(columnsTypes);
+	final List<Integer> columnsTypes = Arrays.asList(CSVHitsParser.SOURCE, CSVHitsParser.DESTINATION,
+		CSVHitsParser.SERVICE_PROTOCOL, CSVHitsParser.SERVICE_PORT);
+	final CSVHitsParser parser = new CSVHitsParser(columnsTypes);
 	final int repeat = 25;
 
 	for (int i = repeat; i-- != 0;) {
@@ -562,9 +563,9 @@ public class CSVParserTest extends TestBase {
 
     @Test
     public void toCSVSingleHitTestWithoutDestination() throws CSVParseException {
-	final List<Integer> columnsTypes = Arrays.asList(CSVParser.SOURCE, CSVParser.SERVICE_PROTOCOL,
-		CSVParser.SERVICE_PORT);
-	final CSVParser parser = new CSVParser(columnsTypes);
+	final List<Integer> columnsTypes = Arrays.asList(CSVHitsParser.SOURCE, CSVHitsParser.SERVICE_PROTOCOL,
+		CSVHitsParser.SERVICE_PORT);
+	final CSVHitsParser parser = new CSVHitsParser(columnsTypes);
 	final int repeat = 25;
 
 	for (int i = repeat; i-- != 0;) {
@@ -584,9 +585,9 @@ public class CSVParserTest extends TestBase {
 
     @Test
     public void toCSVSingleHitTestWithoutServicePort() throws CSVParseException {
-	final List<Integer> columnsTypes = Arrays.asList(CSVParser.SOURCE, CSVParser.DESTINATION,
-		CSVParser.SERVICE_PROTOCOL);
-	final CSVParser parser = new CSVParser(columnsTypes);
+	final List<Integer> columnsTypes = Arrays.asList(CSVHitsParser.SOURCE, CSVHitsParser.DESTINATION,
+		CSVHitsParser.SERVICE_PROTOCOL);
+	final CSVHitsParser parser = new CSVHitsParser(columnsTypes);
 	final int repeat = 25;
 
 	for (int i = repeat; i-- != 0;) {
@@ -606,9 +607,9 @@ public class CSVParserTest extends TestBase {
 
     @Test
     public void toCSVSingleHitTestWithoutServiceProtocol() throws CSVParseException {
-	final List<Integer> columnsTypes = Arrays.asList(CSVParser.SOURCE, CSVParser.DESTINATION,
-		CSVParser.SERVICE_PORT);
-	final CSVParser parser = new CSVParser(columnsTypes);
+	final List<Integer> columnsTypes = Arrays.asList(CSVHitsParser.SOURCE, CSVHitsParser.DESTINATION,
+		CSVHitsParser.SERVICE_PORT);
+	final CSVHitsParser parser = new CSVHitsParser(columnsTypes);
 	final int repeat = 25;
 
 	for (int i = repeat; i-- != 0;) {
@@ -628,9 +629,9 @@ public class CSVParserTest extends TestBase {
 
     @Test
     public void toCSVSingleHitTestWithoutSource() throws CSVParseException {
-	final List<Integer> columnsTypes = Arrays.asList(CSVParser.DESTINATION, CSVParser.SERVICE_PROTOCOL,
-		CSVParser.SERVICE_PORT);
-	final CSVParser parser = new CSVParser(columnsTypes);
+	final List<Integer> columnsTypes = Arrays.asList(CSVHitsParser.DESTINATION, CSVHitsParser.SERVICE_PROTOCOL,
+		CSVHitsParser.SERVICE_PORT);
+	final CSVHitsParser parser = new CSVHitsParser(columnsTypes);
 	final int repeat = 25;
 
 	for (int i = repeat; i-- != 0;) {

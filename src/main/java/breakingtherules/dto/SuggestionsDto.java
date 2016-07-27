@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Objects;
 
 import breakingtherules.firewall.Attribute.AttributeType;
-import breakingtherules.services.algorithm.Suggestion;
+import breakingtherules.service.Suggestion;
 
 /**
  * The SuggestionsDto class is a DTO that hold a list of suggestions of a

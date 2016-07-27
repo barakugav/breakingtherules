@@ -31,6 +31,7 @@ import org.elasticsearch.node.NodeBuilder;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
 
+import breakingtherules.dao.DaoUtils;
 import breakingtherules.dao.HitsDao;
 import breakingtherules.dto.ListDto;
 import breakingtherules.firewall.Attribute;
@@ -41,9 +42,9 @@ import breakingtherules.firewall.IP;
 import breakingtherules.firewall.Rule;
 import breakingtherules.firewall.Service;
 import breakingtherules.firewall.Source;
-import breakingtherules.utilities.Triple;
-import breakingtherules.utilities.Triple.UnmodifiableTriple;
-import breakingtherules.utilities.Utility;
+import breakingtherules.util.Triple;
+import breakingtherules.util.Triple.UnmodifiableTriple;
+import breakingtherules.util.Utility;
 
 /**
  * A Data Access Object that connects to an existing ElasticSearch cluster, and
@@ -77,7 +78,7 @@ public class ElasticHitsDao implements HitsDao {
      * Filter. This prevents reading ALL of the job's hits to determine the
      * number of relevant hits. Useful for getHits with startIndex and endIndex
      */
-    private final Map<UnmodifiableTriple<Integer, List<Rule>, Filter>, Integer> m_totalHitsCache;
+    private final Map<UnmodifiableTriple<Integer, Set<Rule>, Filter>, Integer> m_totalHitsCache;
 
     /**
      * Create an ElasticHitsDao
@@ -225,7 +226,7 @@ public class ElasticHitsDao implements HitsDao {
      * {@inheritDoc}
      */
     @Override
-    public Iterable<Hit> getHits(final String jobName, final List<Rule> rules, final Filter filter) {
+    public Iterable<Hit> getHits(final String jobName, final Iterable<Rule> rules, final Filter filter) {
 	return getHits(jobName, rules, filter, true, 0, 0);
     }
 
@@ -233,15 +234,13 @@ public class ElasticHitsDao implements HitsDao {
      * {@inheritDoc}
      */
     @Override
-    public ListDto<Hit> getHitsList(final String jobName, final List<Rule> rules, final Filter filter) {
+    public ListDto<Hit> getHitsList(final String jobName, final Iterable<Rule> rules, final Filter filter) {
 	final List<Hit> hits = Utility.newArrayList(getHits(jobName, rules, filter, true, 0, 0));
 
 	// Create new list of the rules to clone the list - so modifications on
 	// the original list will not change the list saved in the cache
-	m_totalHitsCache.put(
-		new UnmodifiableTriple<>(Integer.valueOf(jobName),
-			Collections.unmodifiableList(Utility.newArrayList(rules)), filter),
-		Integer.valueOf(hits.size()));
+	m_totalHitsCache.put(new UnmodifiableTriple<>(Integer.valueOf(jobName),
+		Collections.unmodifiableSet(Utility.newHashSet(rules)), filter), Integer.valueOf(hits.size()));
 	return new ListDto<>(hits, 0, hits.size(), hits.size());
     }
 
@@ -249,7 +248,7 @@ public class ElasticHitsDao implements HitsDao {
      * {@inheritDoc}
      */
     @Override
-    public int getHitsNumber(final String jobName, final List<Rule> rules, final Filter filter) {
+    public int getHitsNumber(final String jobName, final Iterable<Rule> rules, final Filter filter) {
 	final Integer cachedSize = m_totalHitsCache.get(new Triple<>(Integer.valueOf(jobName), rules, filter));
 	if (cachedSize != null)
 	    return cachedSize.intValue();
@@ -290,7 +289,7 @@ public class ElasticHitsDao implements HitsDao {
      * @return A ListDto of the relevant hits, from the given range, if such
      *         exists
      */
-    private Set<Hit> getHits(final String jobName, final List<Rule> rules, final Filter filter, final boolean all,
+    private Set<Hit> getHits(final String jobName, final Iterable<Rule> rules, final Filter filter, final boolean all,
 	    int startIndex, final int endIndex) {
 	final QueryBuilder query = QueryBuilders.termQuery(ElasticDaoConfig.FIELD_JOB_NAME, jobName);
 
@@ -320,7 +319,7 @@ public class ElasticHitsDao implements HitsDao {
 		// Add the hit to the answer list, if it passes rules and
 		// filters
 		final Hit firewallHit = parser.parseHit(srchHit);
-		if (isMatch(rules, filter, firewallHit)) {
+		if (DaoUtils.isMatch(firewallHit, rules, filter)) {
 		    // Found a hit that passes the rules and the filter
 		    if (all || i >= startIndex && i < endIndex)
 			relevantHits.add(firewallHit);
@@ -355,29 +354,6 @@ public class ElasticHitsDao implements HitsDao {
 	// using "execute" instead of "get" in the following line, does not
 	// ensure that the refresh will happen immediately
 	m_elasticClient.admin().indices().prepareRefresh(ElasticDaoConfig.INDEX_NAME).get();
-    }
-
-    /**
-     * Check if a hit is match to a list of rules and a filter
-     *
-     * i.e. The hit "passes" iff it matches the filter, but doesn't match any
-     * rule except the first
-     *
-     * @param rules
-     *            list of rules to check on the hit
-     * @param filter
-     *            filter to check on the hit
-     * @param hit
-     *            the hit that being checked
-     * @return true if hit match all rules and filter, else - false
-     */
-    private static boolean isMatch(final List<Rule> rules, final Filter filter, final Hit hit) {
-	if (!filter.isMatch(hit))
-	    return false;
-	for (final Rule rule : rules)
-	    if (rule.isMatch(hit))
-		return false;
-	return true;
     }
 
 }

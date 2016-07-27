@@ -14,7 +14,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import breakingtherules.dao.DaoConfig;
 import breakingtherules.dao.ParseException;
-import breakingtherules.dao.csv.CSVParser;
+import breakingtherules.dao.csv.CSVHitsParser;
 import breakingtherules.firewall.Filter;
 import breakingtherules.firewall.Rule;
 import breakingtherules.session.JobManager;
@@ -65,7 +65,7 @@ public class JobController {
     @RequestMapping(value = "/job", method = RequestMethod.POST)
     public void newJob(@RequestParam(value = "job_name") final String jobName,
 	    @RequestParam(value = "hits_file") final MultipartFile hitsFile) throws IOException, ParseException {
-	m_jobManager.createJob(jobName, hitsFile, CSVParser.DEFAULT_COLUMNS_TYPES, new Rule(Filter.ANY_FILTER));
+	m_jobManager.createJob(jobName, hitsFile, CSVHitsParser.DEFAULT_COLUMNS_TYPES, new Rule(Filter.ANY_FILTER));
     }
 
     /**

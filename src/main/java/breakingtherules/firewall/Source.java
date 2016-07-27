@@ -4,10 +4,10 @@ import java.util.Objects;
 import java.util.function.Function;
 import java.util.function.IntFunction;
 
-import breakingtherules.utilities.Int2ObjectCache;
-import breakingtherules.utilities.Int2ObjectOpenAddressingHashCache;
-import breakingtherules.utilities.Object2ObjectCache;
-import breakingtherules.utilities.Object2ObjectCustomBucketHashCache;
+import breakingtherules.util.Int2ObjectCache;
+import breakingtherules.util.Int2ObjectOpenAddressingHashCache;
+import breakingtherules.util.Object2ObjectCache;
+import breakingtherules.util.Object2ObjectCustomBucketHashCache;
 
 /**
  * Source attribute.

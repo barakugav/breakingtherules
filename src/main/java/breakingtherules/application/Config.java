@@ -14,9 +14,9 @@ import breakingtherules.dao.csv.CSVHitsDao;
 import breakingtherules.dao.elastic.ElasticHitsDao;
 import breakingtherules.dao.xml.XMLHitsDao;
 import breakingtherules.dao.xml.XMLRulesDao;
-import breakingtherules.services.algorithm.InformationAlgorithm;
-import breakingtherules.services.algorithm.SimpleAlgorithm;
-import breakingtherules.services.algorithm.SuggestionsAlgorithm;
+import breakingtherules.service.InformationAlgorithm;
+import breakingtherules.service.SimpleAlgorithm;
+import breakingtherules.service.SuggestionsAlgorithm;
 import breakingtherules.session.JobManager;
 
 /**

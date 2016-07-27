@@ -8,9 +8,9 @@ import java.util.function.IntFunction;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
-import breakingtherules.utilities.Int2ObjectCache;
-import breakingtherules.utilities.Int2ObjectOpenAddressingHashCache;
-import breakingtherules.utilities.Utility;
+import breakingtherules.util.Int2ObjectCache;
+import breakingtherules.util.Int2ObjectOpenAddressingHashCache;
+import breakingtherules.util.Utility;
 
 /**
  * TODO javadoc
@@ -768,7 +768,7 @@ public class Service extends Attribute {
 	 * <p>
 	 *
 	 * Used by
-	 * {@link breakingtherules.utilities.Object2ObjectCache#getOrAdd(Object, Function)}
+	 * {@link breakingtherules.util.Object2ObjectCache#getOrAdd(Object, Function)}
 	 */
 	private final IntFunction<Service>[] mappingFunction;
 

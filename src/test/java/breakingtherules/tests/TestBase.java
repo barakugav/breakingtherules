@@ -1,13 +1,11 @@
 package breakingtherules.tests;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.Random;
-import java.util.function.Consumer;
 
 import org.junit.Assert;
 
-import breakingtherules.utilities.Utility;
+import breakingtherules.util.Utility;
 
 @SuppressWarnings("javadoc")
 public class TestBase {
@@ -83,7 +81,7 @@ public class TestBase {
 
     protected static void assertEquals(final String message, final double expected, final double actual,
 	    final double delta) {
-	if (Double.compare(expected, actual) != 0 && Math.abs(expected - actual) > delta)
+	if (!equals(expected, actual, delta))
 	    failNotEquals(message, Double.valueOf(expected), Double.valueOf(actual));
     }
 
@@ -96,7 +94,7 @@ public class TestBase {
 
     protected static void assertEquals(final String message, final float expected, final float actual,
 	    final float delta) {
-	if (Float.compare(expected, actual) != 0 && Math.abs(expected - actual) > delta)
+	if (!equals(expected, actual, delta))
 	    failNotEquals(message, Float.valueOf(expected), Float.valueOf(actual));
     }
 
@@ -116,8 +114,6 @@ public class TestBase {
     protected static void assertEquals(final String message, final short expected, final short actual) {
 	assertEquals(message, Short.valueOf(expected), Short.valueOf(actual));
     }
-
-    // ==============
 
     protected static void assertNotEquals(final boolean unexpected, final boolean actual) {
 	assertNotEquals(null, unexpected, actual);
@@ -188,7 +184,7 @@ public class TestBase {
 
     protected static void assertNotEquals(final String message, final double unexpected, final double actual,
 	    final double delta) {
-	if (Double.compare(unexpected, actual) == 0 || Math.abs(unexpected - actual) <= delta)
+	if (equals(unexpected, actual, delta))
 	    failEquals(message, Double.valueOf(actual));
     }
 
@@ -201,7 +197,7 @@ public class TestBase {
 
     protected static void assertNotEquals(final String message, final float unexpected, final float actual,
 	    final float delta) {
-	if (Float.compare(unexpected, actual) == 0 || Math.abs(unexpected - actual) <= delta)
+	if (equals(unexpected, actual, delta))
 	    failEquals(message, Float.valueOf(actual));
     }
 
@@ -222,15 +218,25 @@ public class TestBase {
 	assertNotEquals(message, Short.valueOf(unexpected), Short.valueOf(actual));
     }
 
-    // ==============
+    protected static boolean equals(final double a, final double b, final double delta) {
+	return Double.compare(a, b) == 0 || Math.abs(b - a) <= delta;
+    }
 
-    protected static void tempFileTest(final String prefix, final String suffix, final Consumer<File> test)
-	    throws IOException {
+    protected static boolean equals(final float a, final float b, final float delta) {
+	return Float.compare(a, b) == 0 || Math.abs(b - a) <= delta;
+    }
+
+    protected static String getCurrentMethodName() {
+	return Thread.currentThread().getStackTrace()[2].getMethodName();
+    }
+
+    protected static void runTempFileTest(final String prefix, final String suffix, final TempFileTest test)
+	    throws Exception {
 	File tempFile = null;
 	try {
 	    tempFile = File.createTempFile("breakingtherules_tests_" + prefix, suffix);
 	    tempFile.deleteOnExit();
-	    test.accept(tempFile);
+	    test.run(tempFile);
 	} finally {
 	    tempFile.delete();
 	}
@@ -243,6 +249,13 @@ public class TestBase {
 
     private static void failNotEquals(final String message, final Object expected, final Object actual) {
 	Assert.fail((message != null ? message + ": " : "") + Utility.formatEqual(expected, actual));
+    }
+
+    @FunctionalInterface
+    protected static interface TempFileTest {
+
+	public void run(File tempFile) throws Exception;
+
     }
 
 }

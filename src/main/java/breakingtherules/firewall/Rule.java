@@ -13,15 +13,16 @@ import java.util.List;
 public class Rule extends AbstractHitMatcher {
 
     /**
-     * Construct new rule from existing filter.
+     * Construct new rule from existing container.
      *
-     * @param filter
-     *            existing filter to copy his attribute and to create rule from.
+     * @param container
+     *            existing container to copy his attributes and to create rule
+     *            from.
      * @throws NullPointerException
-     *             if the filter is null.
+     *             if the container is null.
      */
-    public Rule(final Filter filter) {
-	super(filter);
+    public Rule(final AttributesContainer container) {
+	super(container);
     }
 
     /**
