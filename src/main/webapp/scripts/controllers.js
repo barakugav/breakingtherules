@@ -222,7 +222,7 @@
 
 	app.controller('SuggestionController', ['BtrData', 'ErrorHandler', '$rootScope', '$scope', 'StatusMonitor', 'Constants', function (BtrData, ErrorHandler, $rootScope, $scope, StatusMonitor, Constants) {
 		var sugCtrl = this;
-		sugCtrl.permissiveness = 50;
+		sugCtrl.permissiveness = 0.5;
 
 		// TODO get current permissiveness
 

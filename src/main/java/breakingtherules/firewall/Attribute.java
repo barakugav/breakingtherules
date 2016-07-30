@@ -85,7 +85,52 @@ public abstract class Attribute {
 	/**
 	 * Service type.
 	 */
-	SERVICE
+	SERVICE;
+
+	/**
+	 * The lower case form of the enum name.
+	 */
+	private final String lowerCaseName;
+
+	/**
+	 * Construct new AttributeType.
+	 */
+	AttributeType() {
+	    lowerCaseName = name().toLowerCase();
+	}
+
+	/**
+	 * Get the lower case form of the enum name.
+	 *
+	 * @return the enum's name's lower case form.
+	 */
+	public String lowerCaseName() {
+	    return lowerCaseName;
+	}
+
+	/**
+	 * Get an {@link AttributeType} with the the specified name, when
+	 * comparing without case sensitivity.
+	 *
+	 * @param name
+	 *            the name of the {@link AttributeType}.
+	 * @return {@link AttributeType} with the specified name when comparing
+	 *         without case sensitivity.
+	 * @throws NullPointerException
+	 *             if the name is null.
+	 * @throws IllegalArgumentException
+	 *             if there is no such {@link AttributeType} with the
+	 */
+	public static AttributeType valueOfIgnoreCase(final String name) {
+	    if (name.equalsIgnoreCase(SOURCE.name()))
+		return SOURCE;
+	    if (name.equalsIgnoreCase(DESTINATION.name()))
+		return DESTINATION;
+	    if (name.equalsIgnoreCase(SERVICE.name()))
+		return SERVICE;
+	    throw new IllegalArgumentException("Unkown attribute type: " + name);
+	}
+
     }
 
 }

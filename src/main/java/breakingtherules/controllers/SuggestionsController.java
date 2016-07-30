@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 import breakingtherules.dao.ParseException;
 import breakingtherules.dto.SuggestionsDto;
 import breakingtherules.service.Suggestion;
+import breakingtherules.service.SuggestionsAlgorithm;
 import breakingtherules.session.JobManager;
 import breakingtherules.session.NoCurrentJobException;
 
@@ -59,11 +60,18 @@ public class SuggestionsController {
      * Change the permissiveness of the suggestion-creating algorithm
      *
      * @param permissiveness
-     *            The new permissiveness, real number in range [0, 100]
+     *            the new permissiveness value. Should be in range [
+     *            {@link SuggestionsAlgorithm#MIN_PERMISSIVENESS min},
+     *            {@link SuggestionsAlgorithm#MAX_PERMISSIVENESS max}].
+     * @throws IllegalArgumentException
+     *             if the permissiveness is not in range [
+     *             {@link SuggestionsAlgorithm#MIN_PERMISSIVENESS min},
+     *             {@link SuggestionsAlgorithm#MAX_PERMISSIVENESS max}].
      */
     @RequestMapping(value = "/permissiveness", method = RequestMethod.PUT)
     public void setPermissiveness(final double permissiveness) {
 	m_jobManager.setAlgorithmPermissiveness(permissiveness);
+	System.out.println("The permissiveness changed to be " + permissiveness);
     }
 
 }

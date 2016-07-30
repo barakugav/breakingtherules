@@ -50,7 +50,7 @@ class AbstractXMLAttributesContainerParser extends AbstractParser {
 
 		final Attribute attribute;
 		try {
-		    switch (AttributeType.valueOf(name.toUpperCase())) {
+		    switch (AttributeType.valueOfIgnoreCase(name)) {
 		    case SOURCE:
 			attribute = Source.valueOf(value, sourceCache);
 			break;
@@ -87,7 +87,7 @@ class AbstractXMLAttributesContainerParser extends AbstractParser {
     static Element fillElement(final Element elm, final Iterable<Attribute> attributesContainer) {
 	final Document doc = elm.getOwnerDocument();
 	for (final Attribute attribute : attributesContainer) {
-	    final Element attElm = doc.createElement(attribute.getType().name().toLowerCase());
+	    final Element attElm = doc.createElement(attribute.getType().lowerCaseName());
 	    attElm.setTextContent(attribute.toString());
 	    elm.appendChild(attElm);
 	}

@@ -118,7 +118,7 @@
 			<p>Choose how specific you would like your rules. Rules that are more specific, are more secure, but they are less general, and result in a large rulebase.</p>
 			<div class="PermissivenessSlider">
 				<span>Secure</span>
-				<div ui-slider="sugCtrl.sliderOptions" min="0" max="100" 
+				<div ui-slider="sugCtrl.sliderOptions" min="0" max="1" step="0.01" use-decimals
 					ng-model="sugCtrl.permissiveness"
 					slider="sugCtrl.setPermissiveness()"></div>
 				<span>General</span>

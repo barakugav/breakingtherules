@@ -162,7 +162,6 @@ public class InformationAlgorithm extends AbstractSuggestionsAlgorithm {
 	m_maxThreads = DEFAULT_MAX_THREADS;
 	m_parallelThreshold = DEFAULT_PARALLEL_THRESHOLD;
 	m_simpleAlgorithm = new SimpleAlgorithm(hitsDao);
-	setPermissiveness(DEFUALT_PERMISSIVENESS);
     }
 
     /**
@@ -310,7 +309,7 @@ public class InformationAlgorithm extends AbstractSuggestionsAlgorithm {
 	if (!parallel)
 	    // No parallel
 	    for (final InformationAlgorithmRunner runner : runners)
-		runner.run();
+	    runner.run();
 
 	// Extract all results
 	@SuppressWarnings("unchecked")
@@ -325,13 +324,16 @@ public class InformationAlgorithm extends AbstractSuggestionsAlgorithm {
      */
     @Override
     public void setPermissiveness(final double permissiveness) {
-	if (!(0 <= permissiveness && permissiveness <= 100))
-	    throw new IllegalArgumentException("Permissiveness should be in range [0, 100]: " + permissiveness);
+	if (!(MIN_PERMISSIVENESS <= permissiveness && permissiveness <= MAX_PERMISSIVENESS))
+	    throw new IllegalArgumentException("Permissiveness should be in range [" + MIN_PERMISSIVENESS + ", "
+		    + MAX_PERMISSIVENESS + "]: " + permissiveness);
 
-	// Some function that map [0, 100] to any rule weight
-	final double ruleWeight = permissiveness == 100 ? Double.POSITIVE_INFINITY
-		: 25_000 / (100 - permissiveness) - 250;
-	setRuleWeight(ruleWeight <= 0 ? Double.POSITIVE_INFINITY : ruleWeight);
+	// Some function that map [MIN_PERMISSIVENESS, MAX_PERMISSIVENESS] to
+	// any rule weight
+	if (permissiveness >= MAX_PERMISSIVENESS * 0.99)
+	    setRuleWeight(Double.POSITIVE_INFINITY);
+	else
+	    setRuleWeight(2500 * permissiveness / (MAX_PERMISSIVENESS - permissiveness));
     }
 
     /**
@@ -348,7 +350,6 @@ public class InformationAlgorithm extends AbstractSuggestionsAlgorithm {
 	if (weight < 0)
 	    throw new IllegalArgumentException("Rule weight can't be negative: " + weight);
 	m_ruleWeight = weight;
-	System.out.println("The rule weight changed to be " + m_ruleWeight);
     }
 
     /**
@@ -360,8 +361,6 @@ public class InformationAlgorithm extends AbstractSuggestionsAlgorithm {
      */
     @SuppressWarnings("unused")
     private static void configCheck() {
-	if (Double.isNaN(DEFUALT_PERMISSIVENESS) || 0 >= DEFUALT_PERMISSIVENESS)
-	    throw new InternalError("DEFAULT_RULE_WIEGHT(" + DEFUALT_PERMISSIVENESS + ") should be > 0");
 	if (DEFAULT_MAX_THREADS <= 0)
 	    throw new InternalError("DEFAULT_MAX_THREADS(" + DEFAULT_MAX_THREADS + ") should be > 0");
 	if (DEFAULT_PARALLEL_THRESHOLD <= 0)

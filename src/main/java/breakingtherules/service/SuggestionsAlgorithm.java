@@ -11,12 +11,28 @@ import breakingtherules.firewall.Rule;
 /**
  * Algorithm interface to get suggestion to filters and rules.
  * <p>
+ * TODO javadoc
  *
  * @author Barak Ugav
  * @author Yishai Gronich
  *
  */
 public interface SuggestionsAlgorithm {
+
+    /**
+     * The default permissiveness for an algorithm.
+     */
+    public static double DEFAULT_PERMISSIVENESS = 0.5;
+
+    /**
+     * The minimum allowed permissiveness for an algorithm.
+     */
+    public static double MIN_PERMISSIVENESS = 0;
+
+    /**
+     * The maximum allowed permissiveness for an algorithm.
+     */
+    public static double MAX_PERMISSIVENESS = 1;
 
     /**
      * Get suggestion for an attribute type
@@ -51,9 +67,11 @@ public interface SuggestionsAlgorithm {
      * <p>
      *
      * @param permissiveness
-     *            the new permissiveness value. Should be in range [0, 100].
+     *            the new permissiveness value. Should be in range [
+     *            {@value #MIN_PERMISSIVENESS}, {@value #MAX_PERMISSIVENESS}].
      * @throws IllegalArgumentException
-     *             if the permissiveness is not in range [0, 100].
+     *             if the permissiveness is not in range [
+     *             {@value #MIN_PERMISSIVENESS}, {@value #MAX_PERMISSIVENESS}].
      */
     public void setPermissiveness(double permissiveness);
 

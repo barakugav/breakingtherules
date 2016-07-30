@@ -19,11 +19,6 @@ abstract class AbstractSuggestionsAlgorithm implements SuggestionsAlgorithm {
     protected final HitsDao m_hitsDao;
 
     /**
-     * The default permissiveness for the algorithm
-     */
-    public static double DEFUALT_PERMISSIVENESS = 50;
-
-    /**
      * Initiate the SuggestionsAlgorithm with a DAO it will use
      *
      * @param hitsDao
@@ -32,6 +27,7 @@ abstract class AbstractSuggestionsAlgorithm implements SuggestionsAlgorithm {
      */
     public AbstractSuggestionsAlgorithm(final HitsDao hitsDao) {
 	m_hitsDao = Objects.requireNonNull(hitsDao);
+	setPermissiveness(DEFAULT_PERMISSIVENESS);
     }
 
     /**
@@ -39,8 +35,9 @@ abstract class AbstractSuggestionsAlgorithm implements SuggestionsAlgorithm {
      */
     @Override
     public void setPermissiveness(final double permissiveness) {
-	if (!(0 <= permissiveness && permissiveness <= 100))
-	    throw new IllegalArgumentException("Permissiveness should be in range [0, 100]: " + permissiveness);
+	if (!(MIN_PERMISSIVENESS <= permissiveness && permissiveness <= MAX_PERMISSIVENESS))
+	    throw new IllegalArgumentException("Permissiveness should be in range [" + MIN_PERMISSIVENESS + ", "
+		    + MAX_PERMISSIVENESS + "]: " + permissiveness);
 	// Do nothing.
     }
 

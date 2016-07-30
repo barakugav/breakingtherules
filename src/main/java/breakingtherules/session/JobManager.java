@@ -79,7 +79,7 @@ public class JobManager {
     /**
      * The rules that were created by the user throughout the program usage.
      */
-    private List<StatisticedRule> m_rules;
+    private final List<StatisticedRule> m_rules;
 
     /**
      * A list of all the attributes that this job holds for each hit/rule. To be
@@ -125,6 +125,7 @@ public class JobManager {
 	m_rulesDao = Objects.requireNonNull(rulesDao);
 	m_algorithm = Objects.requireNonNull(algorithm);
 	m_name = NO_CURRENT_JOB;
+	m_rules = new ArrayList<>();
     }
 
     /**
@@ -385,9 +386,13 @@ public class JobManager {
      * <p>
      *
      * @param permissiveness
-     *            the new permissiveness value. Should be in range [0, 100].
+     *            the new permissiveness value. Should be in range [
+     *            {@link SuggestionsAlgorithm#MIN_PERMISSIVENESS min},
+     *            {@link SuggestionsAlgorithm#MAX_PERMISSIVENESS max}].
      * @throws IllegalArgumentException
-     *             if the permissiveness is not in range [0, 100].
+     *             if the permissiveness is not in range [
+     *             {@link SuggestionsAlgorithm#MIN_PERMISSIVENESS min},
+     *             {@link SuggestionsAlgorithm#MAX_PERMISSIVENESS max}].
      * @see SuggestionsAlgorithm#setPermissiveness(double)
      */
     public void setAlgorithmPermissiveness(final double permissiveness) {
@@ -427,7 +432,7 @@ public class JobManager {
     public synchronized void setJob(final String name) throws IOException, ParseException {
 	m_name = Objects.requireNonNull(name);
 	m_originalRule = m_rulesDao.getOriginalRule(name);
-	m_rules = new ArrayList<>();
+	m_rules.clear();
 	m_filter = Filter.ANY_FILTER;
 	m_totalHitsCount = m_hitsDao.getHitsNumber(name, new ArrayList<Rule>(), Filter.ANY_FILTER);
 	m_coveredHitsCount = 0;
