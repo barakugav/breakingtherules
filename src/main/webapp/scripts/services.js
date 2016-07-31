@@ -171,8 +171,7 @@
 							$window.location.reload();
 						}
 						else {
-							$location.url('/');
-							$window.location.reload();
+							$window.location.href = "/#/";
 						}
 					}
 				});	

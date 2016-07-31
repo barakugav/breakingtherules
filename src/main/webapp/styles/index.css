@@ -175,22 +175,28 @@ section {
 /* Suggestions 
 *************************************************/
 .PermissivenessSlider {
+  display: block;
+  width: 60%;
+  margin: 0 auto;
   font-size: 0; }
   .PermissivenessSlider span {
     font-size: 1.6rem;
     display: inline-block;
-    width: 10%;
+    width: 20%;
     text-align: center; }
   .PermissivenessSlider div {
     font-size: 1.6rem;
     display: inline-block;
-    width: 80%; }
+    width: 60%; }
 
 .LoadingBar {
   width: 200px;
   display: block;
   margin: 0 auto;
   height: 150px; }
+
+.SuggestionTable ul {
+  padding-left: 0; }
 
 .SuggestionTable li {
   display: block;

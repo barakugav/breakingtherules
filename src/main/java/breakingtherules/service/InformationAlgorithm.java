@@ -309,7 +309,7 @@ public class InformationAlgorithm extends AbstractSuggestionsAlgorithm {
 	if (!parallel)
 	    // No parallel
 	    for (final InformationAlgorithmRunner runner : runners)
-	    runner.run();
+		runner.run();
 
 	// Extract all results
 	@SuppressWarnings("unchecked")

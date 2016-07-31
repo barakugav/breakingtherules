@@ -75,6 +75,7 @@
 		progCtrl.init = function () {
 			progCtrl.updateRules();
 			StatusMonitor.onReady(function () {
+				console.log('Updating original rule variable');
 				progCtrl.originalRule = StatusMonitor.getOriginalRule();
 			});
 		};
