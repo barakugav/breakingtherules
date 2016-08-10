@@ -63,13 +63,14 @@ class ElasticHitsParser extends AbstractParser {
 	    Attribute attribute;
 	    switch (AttributeType.values()[attrTypeID]) {
 	    case SOURCE:
-		attribute = Source.valueOf(attrValue, sourceCache);
+		attribute = sourceCache != null ? sourceCache.valueOf(attrValue) : Source.valueOf(attrValue);
 		break;
 	    case DESTINATION:
-		attribute = Destination.valueOf(attrValue, destinationCache);
+		attribute = destinationCache != null ? destinationCache.valueOf(attrValue)
+			: Destination.valueOf(attrValue);
 		break;
 	    case SERVICE:
-		attribute = Service.valueOf(attrValue, serviceCache);
+		attribute = serviceCache != null ? serviceCache.valueOf(attrValue) : Service.valueOf(attrValue);
 		break;
 	    default:
 		throw new IllegalArgumentException("Unkown type id: " + attrTypeID);

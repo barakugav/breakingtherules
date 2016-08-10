@@ -12,8 +12,8 @@ import java.util.List;
 
 import org.junit.Test;
 
-import breakingtherules.dao.csv.CSVParseException;
 import breakingtherules.dao.csv.CSVHitsParser;
+import breakingtherules.dao.csv.CSVParseException;
 import breakingtherules.firewall.Destination;
 import breakingtherules.firewall.Hit;
 import breakingtherules.firewall.Service;
@@ -50,7 +50,7 @@ public class CSVParserTest extends TestBase {
     public void parseHitsTestAllAttributes() throws Exception {
 	runTempFileTest(getCurrentMethodName(), CSV_SUFFIX, file -> {
 	    try {
-		final int numberOfLines = rand.nextInt(10_000);
+		final int numberOfLines = 10_000;
 
 		final List<Hit> expected = new ArrayList<>(numberOfLines);
 
@@ -73,9 +73,9 @@ public class CSVParserTest extends TestBase {
 
 		final List<Integer> columnsTypes = Arrays.asList(CSVHitsParser.SOURCE, CSVHitsParser.DESTINATION,
 			CSVHitsParser.SERVICE_PROTOCOL, CSVHitsParser.SERVICE_PORT);
-		final List<Hit> actual = CSVHitsParser.parseAllHits(columnsTypes, file.getAbsolutePath());
+		final Iterable<Hit> actual = CSVHitsParser.parseAllHits(columnsTypes, file.getAbsolutePath());
 
-		assertEquals(expected, actual);
+		assertEqualsAsSets(expected, actual);
 
 	    } catch (final Exception e) {
 		e.printStackTrace();
@@ -108,11 +108,11 @@ public class CSVParserTest extends TestBase {
 		    }
 		}
 
-		final List<Integer> columnsTypes = Arrays.asList(CSVHitsParser.SOURCE, DUMMY, CSVHitsParser.SERVICE_PROTOCOL,
-			CSVHitsParser.SERVICE_PORT);
-		final List<Hit> actual = CSVHitsParser.parseAllHits(columnsTypes, file.getAbsolutePath());
+		final List<Integer> columnsTypes = Arrays.asList(CSVHitsParser.SOURCE, DUMMY,
+			CSVHitsParser.SERVICE_PROTOCOL, CSVHitsParser.SERVICE_PORT);
+		final Iterable<Hit> actual = CSVHitsParser.parseAllHits(columnsTypes, file.getAbsolutePath());
 
-		assertEquals(expected, actual);
+		assertEqualsAsSets(expected, actual);
 
 	    } catch (final Exception e) {
 		e.printStackTrace();
@@ -146,7 +146,7 @@ public class CSVParserTest extends TestBase {
 
 		final List<Integer> columnsTypes = Arrays.asList(CSVHitsParser.SOURCE, CSVHitsParser.DESTINATION,
 			CSVHitsParser.SERVICE_PROTOCOL);
-		final List<Hit> actual = CSVHitsParser.parseAllHits(columnsTypes, file.getAbsolutePath());
+		final Iterable<Hit> actual = CSVHitsParser.parseAllHits(columnsTypes, file.getAbsolutePath());
 
 		assertEquals(expected, actual);
 
@@ -182,7 +182,7 @@ public class CSVParserTest extends TestBase {
 
 		final List<Integer> columnsTypes = Arrays.asList(CSVHitsParser.SOURCE, CSVHitsParser.DESTINATION, DUMMY,
 			CSVHitsParser.SERVICE_PORT);
-		final List<Hit> actual = CSVHitsParser.parseAllHits(columnsTypes, file.getAbsolutePath());
+		final Iterable<Hit> actual = CSVHitsParser.parseAllHits(columnsTypes, file.getAbsolutePath());
 
 		assertEquals(expected, actual);
 
@@ -219,9 +219,9 @@ public class CSVParserTest extends TestBase {
 
 		final List<Integer> columnsTypes = Arrays.asList(DUMMY, CSVHitsParser.DESTINATION,
 			CSVHitsParser.SERVICE_PROTOCOL, CSVHitsParser.SERVICE_PORT);
-		final List<Hit> actual = CSVHitsParser.parseAllHits(columnsTypes, file.getAbsolutePath());
+		final Iterable<Hit> actual = CSVHitsParser.parseAllHits(columnsTypes, file.getAbsolutePath());
 
-		assertEquals(expected, actual);
+		assertEqualsAsSets(expected, actual);
 
 	    } catch (final Exception e) {
 		e.printStackTrace();
@@ -318,8 +318,8 @@ public class CSVParserTest extends TestBase {
 
     @Test
     public void parseHitTestWithoutSource() throws CSVParseException {
-	final List<Integer> columnsTypes = Arrays.asList(DUMMY, CSVHitsParser.DESTINATION, CSVHitsParser.SERVICE_PROTOCOL,
-		CSVHitsParser.SERVICE_PORT);
+	final List<Integer> columnsTypes = Arrays.asList(DUMMY, CSVHitsParser.DESTINATION,
+		CSVHitsParser.SERVICE_PROTOCOL, CSVHitsParser.SERVICE_PORT);
 	final CSVHitsParser parser = new CSVHitsParser(columnsTypes);
 
 	final int repeat = 25;
@@ -520,8 +520,8 @@ public class CSVParserTest extends TestBase {
 			    .valueOf(Service.parseProtocolCode(serviceProtocol), Service.parsePort(servicePort)))));
 		}
 
-		final List<Integer> columnsTypes = Arrays.asList(CSVHitsParser.DESTINATION, CSVHitsParser.SERVICE_PROTOCOL,
-			CSVHitsParser.SERVICE_PORT);
+		final List<Integer> columnsTypes = Arrays.asList(CSVHitsParser.DESTINATION,
+			CSVHitsParser.SERVICE_PROTOCOL, CSVHitsParser.SERVICE_PORT);
 		CSVHitsParser.toCSV(columnsTypes, hits, file.getAbsolutePath());
 
 		final List<String> actual = new ArrayList<>(numberOfLines);

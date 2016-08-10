@@ -87,7 +87,9 @@ public abstract class AbstractCachedHitsDao implements HitsDao {
 	try {
 	    // Don't let anyone change the cache.
 	    // We are using array list here for faster iterations.
-	    return Collections.unmodifiableList(Utility.newArrayList(getHits(jobName)));
+
+	    final Iterable<Hit> hits = getHits(jobName);
+	    return Collections.unmodifiableList(hits instanceof List ? (List<Hit>) hits : Utility.newArrayList(hits));
 	} catch (final IOException e) {
 	    throw new UncheckedIOException(e);
 	} catch (final ParseException e) {
@@ -178,13 +180,13 @@ public abstract class AbstractCachedHitsDao implements HitsDao {
      *
      * @param jobName
      *            name of the job.
-     * @return set of all (unique) hits that are related to the job,
+     * @return iterable of all (unique) hits that are related to the job,
      * @throws IOException
      *             if any I/O errors occurs.
      * @throws ParseException
      *             if any parse errors occurs.
      */
-    protected abstract Set<Hit> getHits(String jobName) throws IOException, ParseException;
+    protected abstract Iterable<Hit> getHits(String jobName) throws IOException, ParseException;
 
     /**
      * Get all hits, used internally.

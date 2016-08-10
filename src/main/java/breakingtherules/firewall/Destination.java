@@ -51,7 +51,7 @@ public class Destination extends IPAttribute {
      */
     @Override
     public Destination createMutation(final IP ip) {
-	return Destination.valueOf(ip, null);
+	return Destination.valueOf(ip);
     }
 
     /**
@@ -82,31 +82,6 @@ public class Destination extends IPAttribute {
     }
 
     /**
-     * Get Destination object with the specified IP.
-     * <p>
-     * If the cache isn't null, will used the cached destination from the cache
-     * if one exist, or will create a new one and cache it to the cache
-     * otherwise.
-     *
-     * @param ip
-     *            an IP.
-     * @param cache
-     *            the cached containing cached destination objects. Can be null.
-     * @return destination object of the IP
-     */
-    public static Destination valueOf(final IP ip, final Destination.Cache cache) {
-	if (cache != null && ip.m_maskSize == ip.getSize()) {
-	    // If ip is a full IP (most common destination objects) search it in
-	    // cache, or add one if one doesn't exist.
-	    if (ip instanceof IPv4)
-		return cache.ipv4Cache.getOrAdd(((IPv4) ip).m_address, cache.ipv4DestinationsMappingFunction);
-	    if (ip instanceof IPv6)
-		return cache.ipv6Cache.getOrAdd(((IPv6) ip).m_address, cache.ipv6DestinationsMappingFunction);
-	}
-	return new Destination(ip);
-    }
-
-    /**
      * Get Destination object parsed from string.
      *
      * TODO - specified expected input format.
@@ -116,27 +91,7 @@ public class Destination extends IPAttribute {
      * @return destination object of the IP
      */
     public static Destination valueOf(final String s) {
-	return new Destination(IP.valueOf(s, null));
-    }
-
-    /**
-     * Get Destination object parsed from string.
-     * <p>
-     * If the cache isn't null, will used the cached destination from the cache
-     * if one exist, or will create a new one and cache it to the cache
-     * otherwise.
-     * <p>
-     *
-     * TODO - specified expected input format.
-     *
-     * @param s
-     *            string representation of a destination.
-     * @param cache
-     *            the cached containing cached destination objects. Can be null.
-     * @return destination object of the IP
-     */
-    public static Destination valueOf(final String s, final Destination.Cache cache) {
-	return valueOf(IP.valueOf(s, null), cache);
+	return new Destination(IP.valueOf(s));
     }
 
     /**
@@ -200,6 +155,35 @@ public class Destination extends IPAttribute {
 		    this.ipsCache.ipv6Cache.cache.getOrAdd(address, IPv6.Cache.supplier));
 	    ipv4Cache = new Int2ObjectOpenAddressingHashCache<>();
 	    ipv6Cache = new Object2ObjectCustomBucketHashCache<>(IPv6.Cache.IPv6AddressesStrategy.INSTANCE);
+	}
+
+	public Destination add(final Destination destination) {
+	    final IP ip = destination.getIp();
+	    if (ip.m_maskSize == ip.getSize()) {
+		// If ip is a full IP (most common destination objects) search
+		// it in cache, or add one if one doesn't exist.
+		if (ip instanceof IPv4)
+		    return ipv4Cache.add(((IPv4) ip).m_address, destination);
+		if (ip instanceof IPv6)
+		    return ipv6Cache.add(((IPv6) ip).m_address, destination);
+	    }
+	    return destination;
+	}
+
+	public Destination valueOf(final IP ip) {
+	    if (ip.m_maskSize == ip.getSize()) {
+		// If ip is a full IP (most common destination objects) search
+		// it in cache, or add one if one doesn't exist.
+		if (ip instanceof IPv4)
+		    return ipv4Cache.getOrAdd(((IPv4) ip).m_address, ipv4DestinationsMappingFunction);
+		if (ip instanceof IPv6)
+		    return ipv6Cache.getOrAdd(((IPv6) ip).m_address, ipv6DestinationsMappingFunction);
+	    }
+	    return new Destination(ip);
+	}
+
+	public Destination valueOf(final String s) {
+	    return valueOf(IP.valueOf(s));
 	}
 
     }

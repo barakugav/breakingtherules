@@ -247,34 +247,11 @@ public abstract class IP implements Comparable<IP> {
      *             if the string is invalid.
      */
     public static IP valueOf(final String s) {
-	return valueOf(s, null);
-    }
-
-    /**
-     * Get IP object parsed from string.
-     * <p>
-     * This method detect formats of IPv4 and IPv6 only.
-     * <p>
-     * If the cache isn't null, will used the cached IP from the cache if one
-     * exist, or will create a new one and cache it to the cache otherwise.
-     * <p>
-     *
-     * @param s
-     *            string representation of an IP.
-     * @param cache
-     *            the cached containing cached IPs objects. Can be null.
-     * @return IP object based on the String IP
-     * @throws NullPointerException
-     *             if the string is null.
-     * @throws IllegalArgumentException
-     *             if the string is invalid.
-     */
-    public static IP valueOf(final String s, final IP.Cache cache) {
 	int separator;
 	if ((separator = s.indexOf(IPv4.BLOCKS_SEPARATOR)) >= 0)
-	    return IPv4.valueOf(s, cache != null ? cache.ipv4Cache : null, separator);
+	    return IPv4.valueOf(s, separator);
 	if ((separator = s.indexOf(IPv6.BLOCKS_SEPARATOR)) >= 0)
-	    return IPv6.valueOf(s, cache != null ? cache.ipv6Cache : null, separator);
+	    return IPv6.valueOf(s, separator);
 
 	if (s.startsWith(ANY_IP_STR)) {
 	    // Start with 'Any'
@@ -313,36 +290,11 @@ public abstract class IP implements Comparable<IP> {
      *             if the address is one with unknown size.
      */
     public static IP valueOfBits(final int[] bitsAddress) {
-	return valueOfBits(bitsAddress, null);
-    }
-
-    /**
-     * Get IP object with the specified address.
-     * <p>
-     * The input address is treated as bits of the address(each int is 32 bits).
-     * And expect number of bits that will match {@link IPv4} or {@link IPv6}
-     * only.
-     * <p>
-     * If the cache isn't null, will used the cached IP from the cache if one
-     * exist, or will create a new one and cache it to the cache otherwise.
-     * <p>
-     *
-     * @param bitsAddress
-     *            the input bits address(each int is 32 bits).
-     * @param cache
-     *            the cached containing cached IPs objects. Can be null.
-     * @return IP object with the specified address.
-     * @throws NullPointerException
-     *             if the address array is null.
-     * @throws IllegalArgumentException
-     *             if the address is one with unknown size.
-     */
-    public static IP valueOfBits(final int[] bitsAddress, final IP.Cache cache) {
 	switch (bitsAddress.length) {
 	case IPv4.SIZE / Integer.SIZE:
-	    return IPv4.valueOfBits(bitsAddress[0], cache != null ? cache.ipv4Cache : null);
+	    return IPv4.valueOfBits(bitsAddress[0]);
 	case IPv6.SIZE / Integer.SIZE:
-	    return IPv6.valueOfBits(bitsAddress, cache != null ? cache.ipv6Cache : null);
+	    return IPv6.valueOfBits(bitsAddress);
 	default:
 	    throw new IllegalArgumentException("Unkown IP size: " + bitsAddress.length);
 	}
@@ -375,6 +327,22 @@ public abstract class IP implements Comparable<IP> {
 	public Cache() {
 	    ipv4Cache = new IPv4.Cache();
 	    ipv6Cache = new IPv6.Cache();
+	}
+
+	public IP add(final IP ip) {
+	    if (ip instanceof IPv4)
+		ipv4Cache.add((IPv4) ip);
+	    else if (ip instanceof IPv6)
+		ipv6Cache.add((IPv6) ip);
+	    return ip;
+	}
+
+	public IP valueOf(final String s) {
+	    return add(IP.valueOf(s));
+	}
+
+	public IP valueOfBits(final int[] bitsAddress) {
+	    return add(IP.valueOfBits(bitsAddress));
 	}
 
     }

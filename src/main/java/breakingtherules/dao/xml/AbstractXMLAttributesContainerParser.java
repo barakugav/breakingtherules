@@ -52,13 +52,14 @@ class AbstractXMLAttributesContainerParser extends AbstractParser {
 		try {
 		    switch (AttributeType.valueOfIgnoreCase(name)) {
 		    case SOURCE:
-			attribute = Source.valueOf(value, sourceCache);
+			attribute = sourceCache != null ? sourceCache.valueOf(value) : Source.valueOf(value);
 			break;
 		    case DESTINATION:
-			attribute = Destination.valueOf(value, destinationCache);
+			attribute = destinationCache != null ? destinationCache.valueOf(value)
+				: Destination.valueOf(value);
 			break;
 		    case SERVICE:
-			attribute = Service.valueOf(value, serviceCache);
+			attribute = serviceCache != null ? serviceCache.valueOf(value) : Service.valueOf(value);
 			break;
 		    default:
 			throw new XMLParseException("Unkown attribute");

@@ -48,7 +48,7 @@ public class Source extends IPAttribute {
      */
     @Override
     public Source createMutation(final IP ip) {
-	return Source.valueOf(ip, null);
+	return Source.valueOf(ip);
     }
 
     /**
@@ -81,33 +81,6 @@ public class Source extends IPAttribute {
     }
 
     /**
-     * Get Source object with the specified IP.
-     * <p>
-     * If the cache isn't null, will used the cached source from the cache if
-     * one exist, or will create a new one and cache it to the cache otherwise.
-     * <p>
-     *
-     * @param ip
-     *            an IP.
-     * @param cache
-     *            the cached containing cached source objects. Can be null.
-     * @return Source object with the specified IP.
-     * @throws NullPointerException
-     *             if the IP is null.
-     */
-    public static Source valueOf(final IP ip, final Source.Cache cache) {
-	if (cache != null && ip.m_maskSize == ip.getSize()) {
-	    // If ip is a full IP (most common source objects) search it in
-	    // cache, or add one if one doesn't exist.
-	    if (ip instanceof IPv4)
-		return cache.IPv4Cache.getOrAdd(((IPv4) ip).m_address, cache.ipv4SourcesMappingFunction);
-	    if (ip instanceof IPv6)
-		return cache.IPv6Cache.getOrAdd(((IPv6) ip).m_address, cache.ipv6SourcesMapptingFunction);
-	}
-	return new Source(ip);
-    }
-
-    /**
      * Get Source object parsed from string.
      *
      * TODO - specified expected input format.
@@ -118,27 +91,7 @@ public class Source extends IPAttribute {
      * @see IP#valueOf(String)
      */
     public static Source valueOf(final String s) {
-	return new Source(IP.valueOf(s, null));
-    }
-
-    /**
-     * Get Source object parsed from string.
-     * <p>
-     * If the cache isn't null, will used the cached source from the cache if
-     * one exist, or will create a new one and cache it to the cache otherwise.
-     * <p>
-     *
-     * TODO - specified expected input format.
-     *
-     * @param s
-     *            string representation of a source.
-     * @param cache
-     *            the cached containing cached source objects. Can be null.
-     * @return Source object with the IP parsed from the string.
-     * @see IP#valueOf(String)
-     */
-    public static Source valueOf(final String s, final Source.Cache cache) {
-	return valueOf(IP.valueOf(s, null), cache);
+	return new Source(IP.valueOf(s));
     }
 
     /**
@@ -202,6 +155,35 @@ public class Source extends IPAttribute {
 		    this.ipsCache.ipv6Cache.cache.getOrAdd(address, IPv6.Cache.supplier));
 	    IPv4Cache = new Int2ObjectOpenAddressingHashCache<>();
 	    IPv6Cache = new Object2ObjectCustomBucketHashCache<>(IPv6.Cache.IPv6AddressesStrategy.INSTANCE);
+	}
+
+	public Source add(final Source source) {
+	    final IP ip = source.getIp();
+	    if (ip.m_maskSize == ip.getSize()) {
+		// If ip is a full IP (most common source objects) search it in
+		// cache, or add one if one doesn't exist.
+		if (ip instanceof IPv4)
+		    return IPv4Cache.add(((IPv4) ip).m_address, source);
+		if (ip instanceof IPv6)
+		    return IPv6Cache.add(((IPv6) ip).m_address, source);
+	    }
+	    return source;
+	}
+
+	public Source valueOf(final IP ip) {
+	    if (ip.m_maskSize == ip.getSize()) {
+		// If ip is a full IP (most common source objects) search it in
+		// cache, or add one if one doesn't exist.
+		if (ip instanceof IPv4)
+		    return IPv4Cache.getOrAdd(((IPv4) ip).m_address, ipv4SourcesMappingFunction);
+		if (ip instanceof IPv6)
+		    return IPv6Cache.getOrAdd(((IPv6) ip).m_address, ipv6SourcesMapptingFunction);
+	    }
+	    return new Source(ip);
+	}
+
+	public Source valueOf(final String s) {
+	    return valueOf(IP.valueOf(s));
 	}
 
     }

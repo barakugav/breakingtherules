@@ -2,7 +2,6 @@ package breakingtherules.dao.csv;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Set;
 
 import breakingtherules.dao.AbstractCachedHitsDao;
 import breakingtherules.dao.ParseException;
@@ -59,7 +58,7 @@ public class CSVHitsDao extends AbstractCachedHitsDao {
      * {@inheritDoc}
      */
     @Override
-    protected Set<Hit> getHits(final String jobName) throws IOException, ParseException {
+    protected Iterable<Hit> getHits(final String jobName) throws IOException, ParseException {
 	return CSVHitsParser.parseUniqueHits(m_columnTypes, CSVDaoConfig.getHitsFile(jobName));
     }
 

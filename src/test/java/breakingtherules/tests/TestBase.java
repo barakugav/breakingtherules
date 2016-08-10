@@ -1,7 +1,9 @@
 package breakingtherules.tests;
 
 import java.io.File;
+import java.util.HashSet;
 import java.util.Random;
+import java.util.Set;
 
 import org.junit.Assert;
 
@@ -113,6 +115,21 @@ public class TestBase {
 
     protected static void assertEquals(final String message, final short expected, final short actual) {
 	assertEquals(message, Short.valueOf(expected), Short.valueOf(actual));
+    }
+
+    protected static void assertEqualsAsSets(final Iterable<?> expected, final Iterable<?> actual) {
+	assertEqualsAsSets(null, expected, actual);
+    }
+
+    protected static void assertEqualsAsSets(final String message, final Iterable<?> expected,
+	    final Iterable<?> actual) {
+	final Set<Object> expectedSet = new HashSet<>();
+	final Set<Object> actualSet = new HashSet<>();
+	for (final Object expectedObj : expected)
+	    expectedSet.add(expectedObj);
+	for (final Object actualObj : actual)
+	    actualSet.add(actualObj);
+	assertEquals(message, expectedSet, actualSet);
     }
 
     protected static void assertNotEquals(final boolean unexpected, final boolean actual) {

@@ -44,7 +44,7 @@ import java.util.function.Function;
 public class Object2ObjectHeavySynchronizedBucketHashCache<K, E> implements Object2ObjectCache<K, E> {
 
     // TODO - remove null mask and change to similar implementation as
-    // SoftHashCache.
+    // Object2ObjectCustomBucketHashCache.
 
     /*
      * Implementation notes.
@@ -86,12 +86,12 @@ public class Object2ObjectHeavySynchronizedBucketHashCache<K, E> implements Obje
      * <p>
      * The table length MUST be a power of 2. See {@link #mask}.
      */
-    private Entry<E>[] table;
+    private volatile Entry<E>[] table;
 
     /**
      * Number of elements in the cache.
      */
-    private int size;
+    private volatile int size;
 
     /**
      * Cache of the table indexes mask.
@@ -105,7 +105,7 @@ public class Object2ObjectHeavySynchronizedBucketHashCache<K, E> implements Obje
      * <code>table.length = 0b010000, mask = 0b001111</code><br>
      * This invariant allow fast computation of a key index in the table.
      */
-    private int mask;
+    private volatile int mask;
 
     /**
      * Cache for number of elements threshold before growing the table. When
@@ -113,7 +113,7 @@ public class Object2ObjectHeavySynchronizedBucketHashCache<K, E> implements Obje
      * <p>
      * This value is always the table size times {@link #loadFactor}.
      */
-    private int growThreshold;
+    private volatile int growThreshold;
 
     /**
      * Cache for number of elements threshold before shrinking the table. When
@@ -123,7 +123,7 @@ public class Object2ObjectHeavySynchronizedBucketHashCache<K, E> implements Obje
      * This value is always {@link #growThreshold} (which is always the table
      * size times {@link #loadFactor}) divide by 4.
      */
-    private int shrinkThreshold;
+    private volatile int shrinkThreshold;
 
     /**
      * Load factor of the table. Control the size of the table compare to the
@@ -220,25 +220,31 @@ public class Object2ObjectHeavySynchronizedBucketHashCache<K, E> implements Obje
 	final Object k = maskNull(key);
 	final int hash = Hashs.mix(k.hashCode());
 
-	lock.lock();
 	try {
+	    loop: for (;;) {
+		lock.lock();
+		final int index = hash & mask;
 
-	    final int index = hash & mask;
-
-	    // Check that such key doesn't already exist
-	    final Entry<E> firstEntry = table[index];
-	    for (Entry<E> p = firstEntry; p != null; p = p.next)
-		if (hash == p.hash && k.equals(p.key)) {
-		    lock.unlock();
-		    synchronized (p) {
-			return p.element;
+		// Check that such key doesn't already exist
+		final Entry<E> firstEntry = table[index];
+		for (Entry<E> p = firstEntry; p != null; p = p.next)
+		    if (hash == p.hash && k.equals(p.key)) {
+			lock.unlock();
+			synchronized (p) {
+			    final E e = p.element;
+			    if (e != null || p.key != null)
+				return e;
+			}
+			// Entry was removed or abandoned after supplier threw
+			// an unchecked throwable in getOrAdd method, spin.
+			continue loop;
 		    }
-		}
 
-	    // Insert new entry as first entry in list
-	    table[index] = new Entry<>(k, hash, element, firstEntry);
-	    grow();
-	    return element;
+		// Insert new entry as first entry in list
+		table[index] = new Entry<>(k, hash, element, firstEntry);
+		grow();
+		return element;
+	    }
 
 	} finally {
 	    if (lock.isHeldByCurrentThread())
@@ -251,8 +257,8 @@ public class Object2ObjectHeavySynchronizedBucketHashCache<K, E> implements Obje
      */
     @Override
     public void clear() {
-	lock.lock();
 	try {
+	    lock.lock();
 
 	    // Clear table
 	    final Entry<E>[] tab = table;
@@ -288,19 +294,27 @@ public class Object2ObjectHeavySynchronizedBucketHashCache<K, E> implements Obje
 	final Object k = maskNull(key);
 	final int hash = Hashs.mix(k.hashCode());
 
-	lock.lock();
 	try {
+	    loop: for (;;) {
+		lock.lock();
 
-	    // Search entry
-	    for (Entry<E> p = table[hash & mask]; p != null; p = p.next)
-		if (hash == p.hash && k.equals(p.key)) {
-		    lock.unlock();
-		    synchronized (p) {
-			return p.element;
+		// Search entry
+		for (Entry<E> p = table[hash & mask]; p != null; p = p.next)
+		    if (hash == p.hash && k.equals(p.key)) {
+			lock.unlock();
+			synchronized (p) {
+			    final E e = p.element;
+			    if (e != null || p.key != null)
+				return e;
+			}
+			// Entry was removed or abandoned after supplier threw
+			// an unchecked throwable in getOrAdd method, spin.
+			continue loop;
 		    }
-		}
-	    // No entry found with same key
-	    return null;
+
+		// No entry found with same key
+		return null;
+	    }
 
 	} finally {
 	    if (lock.isHeldByCurrentThread())
@@ -328,6 +342,12 @@ public class Object2ObjectHeavySynchronizedBucketHashCache<K, E> implements Obje
      *            to operate on the cache.
      * @return the existing element or the one created from the supplier (if
      *         needed).
+     * @throws NullPointerException
+     *             if the supplier function is required and it's null.
+     * @throws RuntimeException
+     *             if the supplier function throws one.
+     * @throws Error
+     *             if the supplier function throws one.
      */
     @Override
     public E getOrAdd(final K key, final Function<? super K, ? extends E> supplier) {
@@ -335,30 +355,57 @@ public class Object2ObjectHeavySynchronizedBucketHashCache<K, E> implements Obje
 	final Object k = maskNull(key);
 	final int hash = Hashs.mix(k.hashCode());
 
-	lock.lock();
 	try {
+	    loop: for (;;) {
+		lock.lock();
 
-	    final int index = hash & mask;
+		int index = hash & mask;
 
-	    // Search entry
-	    final Entry<E> firstEntry = table[index];
-	    for (Entry<E> p = firstEntry; p != null; p = p.next)
-		if (hash == p.hash && k.equals(p.key)) {
+		// Search entry
+		final Entry<E> firstEntry = table[index];
+		for (Entry<E> p = firstEntry; p != null; p = p.next)
+		    if (hash == p.hash && k.equals(p.key)) {
+			lock.unlock();
+			synchronized (p) {
+			    final E e = p.element;
+			    if (e != null || p.key != null)
+				return e;
+			}
+			// Entry was removed or abandoned after supplier threw
+			// an unchecked throwable in getOrAdd method, spin.
+			continue loop;
+		    }
+
+		// Insert new entry as first entry in list
+		final Entry<E> entry = table[index] = new Entry<>(k, hash, firstEntry);
+		grow();
+
+		synchronized (entry) {
 		    lock.unlock();
-		    synchronized (p) {
-			return p.element;
+		    try {
+			return entry.element = supplier.apply(key);
+		    } catch (RuntimeException | Error e) {
+			// Recovery code: remove the new entry that was added
+			// for the computed element.
+			lock.lock();
+			index = hash & mask;
+			for (Entry<E> p = table[index], prev = null; p != null; p = (prev = p).next)
+			    if (entry == p) {
+				if (prev == null)
+				    table[index] = p.next;
+				else
+				    prev.next = p.next;
+				p.next = null;
+				p.key = null;
+				shrink();
+				break;
+			    }
+
+			lock.unlock();
+			throw e;
 		    }
 		}
-
-	    // Insert new entry as first entry in list
-	    final Entry<E> entry = table[index] = new Entry<>(k, hash, firstEntry);
-	    grow();
-
-	    synchronized (entry) {
-		lock.unlock();
-		return entry.element = supplier.apply(key);
 	    }
-
 	} finally {
 	    if (lock.isHeldByCurrentThread())
 		lock.unlock();
@@ -374,28 +421,20 @@ public class Object2ObjectHeavySynchronizedBucketHashCache<K, E> implements Obje
 	final Object k = maskNull(key);
 	final int hash = Hashs.mix(k.hashCode());
 
-	lock.lock();
 	try {
-
+	    lock.lock();
 	    final int index = hash & mask;
-
-	    Entry<E> p = table[index];
-	    Entry<E> prev = null;
-	    while (p != null) {
-		final Entry<E> next = p.next;
+	    for (Entry<E> p = table[index], prev = null; p != null; prev = p, p = p.next)
 		if (hash == p.hash && k.equals(p.key)) {
 		    if (prev == null)
-			table[index] = next;
+			table[index] = p.next;
 		    else
-			prev.next = next;
+			prev.next = p.next;
 		    p.next = null;
 		    p.key = null;
 		    shrink();
 		    break;
 		}
-		prev = p;
-		p = next;
-	    }
 	} finally {
 	    if (lock.isHeldByCurrentThread())
 		lock.unlock();
@@ -407,8 +446,8 @@ public class Object2ObjectHeavySynchronizedBucketHashCache<K, E> implements Obje
      */
     @Override
     public int size() {
-	lock.lock();
 	try {
+	    lock.lock();
 	    return size;
 	} finally {
 	    if (lock.isHeldByCurrentThread())
@@ -425,8 +464,8 @@ public class Object2ObjectHeavySynchronizedBucketHashCache<K, E> implements Obje
 	final String separator = ", ";
 	builder.append('[');
 
-	lock.lock();
 	try {
+	    lock.lock();
 
 	    // Iterate over all elements and append them
 	    final Entry<E>[] tab = table;
@@ -435,6 +474,11 @@ public class Object2ObjectHeavySynchronizedBucketHashCache<K, E> implements Obje
 		    final E element;
 		    synchronized (entry) {
 			element = entry.element;
+			if (element == null && entry.key == null)
+			    // Entry was removed or abandoned after supplier
+			    // threw an unchecked throwable in getOrAdd method,
+			    // spin.
+			    continue;
 		    }
 		    builder.append(element);
 		    builder.append(separator);
@@ -446,7 +490,7 @@ public class Object2ObjectHeavySynchronizedBucketHashCache<K, E> implements Obje
 	}
 
 	if (builder.lastIndexOf(separator) >= 0) {
-	    // Had any elements, delete last separator
+	    // Had some elements, delete last separator
 	    final int length = builder.length();
 	    builder.delete(length - 2, length);
 	}
@@ -559,7 +603,7 @@ public class Object2ObjectHeavySynchronizedBucketHashCache<K, E> implements Obje
 	 * The entry key. Can be
 	 * {@link Object2ObjectHeavySynchronizedBucketHashCache#NULL}.
 	 */
-	Object key;
+	volatile Object key;
 
 	/**
 	 * The hash of the key.
@@ -569,12 +613,12 @@ public class Object2ObjectHeavySynchronizedBucketHashCache<K, E> implements Obje
 	/**
 	 * The element.
 	 */
-	E element;
+	volatile E element;
 
 	/**
 	 * The next entry in the linked list of the entries.
 	 */
-	Entry<E> next;
+	volatile Entry<E> next;
 
 	/**
 	 * Construct new Entry.
