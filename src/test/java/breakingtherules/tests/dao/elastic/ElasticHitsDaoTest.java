@@ -34,7 +34,7 @@ public class ElasticHitsDaoTest extends TestBase {
 
     private static boolean jobInitialized = false;
 
-    @Test
+//    @Test
     public void manyHitsExistAfterAdding() throws IOException {
 	checkJob();
 	final int SIZE = 10;
@@ -46,7 +46,7 @@ public class ElasticHitsDaoTest extends TestBase {
 	assertTrue(hits.getSize() >= SIZE);
     }
 
-    @Test
+//    @Test
     public void numberOfHitsIsCorrect() throws IOException, ParseException {
 	checkJob();
 	final int SIZE = 10;
@@ -61,7 +61,7 @@ public class ElasticHitsDaoTest extends TestBase {
 	assertEquals(endIndex - beginIndex, hits.getData().size());
     }
 
-    @Test
+//    @Test
     public void singleHitExistsAfterAdding() throws IOException {
 	checkJob();
 	final Hit newHit = createHit();
@@ -70,14 +70,14 @@ public class ElasticHitsDaoTest extends TestBase {
 	assertTrue(hits.getSize() > 0);
     }
 
-    @AfterClass
+//    @AfterClass
     public static void deleteFakeJobAndCleanDao() throws IOException {
 	if (jobInitialized)
 	    hitsDao.deleteJob(JOB_NAME);
 	hitsDao.cleanup();
     }
 
-    @BeforeClass
+//    @BeforeClass
     public static void initDaoAndJob() throws Exception {
 	try {
 	    hitsDao = new ElasticHitsDao();

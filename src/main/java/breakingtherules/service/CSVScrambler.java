@@ -124,13 +124,13 @@ public class CSVScrambler implements Runnable {
      *            All the arguments for the scrambler,
      *            {@link CSVScrambler.CSVScramblerRunner}
      */
-    public static void main(final String[] args) {
-	try {
-	    CSVScramblerRunner.run(args);
-	} catch (final Exception e) {
-	    e.printStackTrace();
-	}
-    }
+//    public static void main(final String[] args) {
+//	try {
+//	    CSVScramblerRunner.run(args);
+//	} catch (final Exception e) {
+//	    e.printStackTrace();
+//	}
+//    }
 
     /**
      * Build a tree of the IP attribute of the this in the input file

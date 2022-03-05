@@ -1,6 +1,6 @@
 target/
+bin/
 repository/
-src/main/java/breakingtherules/application/Main.java
+.classpath
+.project
 .sass-cache
-
-/bin/
