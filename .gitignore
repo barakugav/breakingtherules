@@ -3,4 +3,5 @@ bin/
 repository/
 .classpath
 .project
+.settings
 .sass-cache

@@ -1,6 +1,7 @@
 package breakingtherules.dao.elastic;
 
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -27,7 +28,6 @@ import org.elasticsearch.index.IndexNotFoundException;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.node.Node;
-import org.elasticsearch.node.NodeBuilder;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
 
@@ -84,14 +84,14 @@ public class ElasticHitsDao implements HitsDao {
      * Create an ElasticHitsDao
      */
     public ElasticHitsDao() {
-	final NodeBuilder nodeBuilder = NodeBuilder.nodeBuilder();
-	final Builder settingsBuilder = Settings.settingsBuilder();
+	final Builder settingsBuilder = Settings.builder();
 	settingsBuilder.put("http.enabled", false);
-	nodeBuilder.settings(settingsBuilder);
-	nodeBuilder.clusterName(ElasticDaoConfig.CLUSTER_NAME);
-	nodeBuilder.client(true);
+//	nodeBuilder.settings(settingsBuilder);
+//	nodeBuilder.clusterName(ElasticDaoConfig.CLUSTER_NAME);
+//	nodeBuilder.client(true);
 
-	m_elasticNode = nodeBuilder.node();
+//	m_elasticNode = nodeBuilder.node();
+	m_elasticNode = null; // broken, NoderBuilder was removed
 	m_elasticClient = m_elasticNode.client();
 	m_totalHitsCache = new HashMap<>();
     }
@@ -157,7 +157,11 @@ public class ElasticHitsDao implements HitsDao {
      * connection to other ElasticSearch nodes
      */
     public void cleanup() {
-	m_elasticNode.close();
+	try {
+		m_elasticNode.close();
+	} catch (IOException e) {
+		throw new UncheckedIOException(e);
+	}
     }
 
     /**
@@ -181,7 +185,7 @@ public class ElasticHitsDao implements HitsDao {
 	srchRequest.setSize(ElasticDaoConfig.DELETION_THRESHOLD);
 
 	final SearchHits hitsRes = srchRequest.get().getHits();
-	if (hitsRes.totalHits() > ElasticDaoConfig.DELETION_THRESHOLD)
+	if (hitsRes.getTotalHits() > ElasticDaoConfig.DELETION_THRESHOLD)
 	    throw new IllegalArgumentException(
 		    "Job is too big to delete programatically. Please delete manually through ElasticSearch.");
 	if (hitsRes.getTotalHits() == 0)
@@ -215,7 +219,7 @@ public class ElasticHitsDao implements HitsDao {
 	    srchRequest.setSize(0);
 	    srchRequest.setTerminateAfter(1);
 	    final SearchResponse response = srchRequest.get();
-	    return response.getHits().totalHits() > 0;
+	    return response.getHits().getTotalHits() > 0;
 
 	} catch (@SuppressWarnings("unused") final IndexNotFoundException e) {
 	    return false;

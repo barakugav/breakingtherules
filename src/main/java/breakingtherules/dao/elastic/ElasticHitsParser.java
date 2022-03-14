@@ -46,7 +46,7 @@ class ElasticHitsParser extends AbstractParser {
      * @return A firewall Hit object with the values from the search
      */
     Hit parseHit(final SearchHit searchHit) {
-	final Map<String, Object> fields = searchHit.getSource();
+	final Map<String, Object> fields = searchHit.getSourceAsMap();
 
 	final List<Attribute> attrs = new ArrayList<>(3);
 

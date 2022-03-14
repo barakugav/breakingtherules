@@ -10,7 +10,7 @@ Install [Maven](https://maven.apache.org/run.html)
 
 After cloning, in the project root, install dependencies using Maven:
 ```bash
-maven clean install
+mvn clean install
 ```
 
 ## Usage
